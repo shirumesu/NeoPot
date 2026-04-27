@@ -1,3 +1,5 @@
+import type { ServiceCatalog } from '@/types/service';
+
 export enum ServiceType {
     TRANSLATE = 'translate',
     RECOGNIZE = 'recognize',
@@ -42,7 +44,7 @@ export const INSTANCE_NAME_CONFIG_KEY = 'instanceName';
 
 export function whetherAvailableService(
     serviceInstanceKey: string,
-    availableServices: Record<ServiceSourceType, Record<string, any>>
+    availableServices: Record<ServiceSourceType, ServiceCatalog>
 ) {
     const serviceSourceType = getServiceSouceType(serviceInstanceKey);
     const serviceName = getServiceName(serviceInstanceKey);

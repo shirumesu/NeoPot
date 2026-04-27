@@ -1,81 +1,102 @@
 import fetch from 'node-fetch';
-import fs from 'fs';
+import fs from 'fs/promises';
+
+const REPO = 'shirumesu/NeoPot';
+const API_BASE = `https://api.github.com/repos/${REPO}`;
+
+const platformAssets = {
+    'windows-x86_64': (version) => `neopot_${version}_x64_fix_webview2_runtime-setup.exe`,
+    'windows-i686': (version) => `neopot_${version}_x86_fix_webview2_runtime-setup.exe`,
+    'windows-aarch64': (version) => `neopot_${version}_arm64_fix_webview2_runtime-setup.exe`,
+};
 
 async function resolveUpdater() {
-    if (process.env.GITHUB_TOKEN === undefined) {
+    const token = process.env.GITHUB_TOKEN;
+    if (token === undefined) {
         throw new Error('GITHUB_TOKEN is required');
     }
 
-    const TOKEN = process.env.GITHUB_TOKEN;
-    let version = await getVersion(TOKEN);
-    let changelog = await getChangeLog(TOKEN);
+    const release = await getRelease(token);
+    const version = normalizeVersion(process.env.VERSION ?? release.tag_name);
+    const changelog = release.body ?? '';
 
-    const windows_x86_64 = `https://dl.pot-app.com/https://github.com/pot-app/pot-desktop/releases/download/${version}/pot_${version}_x64_fix_webview2_runtime-setup.nsis.zip`;
-    const windows_x86_64_sig = await getSignature(`https://github.com/pot-app/pot-desktop/releases/download/${version}/pot_${version}_x64_fix_webview2_runtime-setup.nsis.zip.sig`);
-    const windows_i686 = `https://dl.pot-app.com/https://github.com/pot-app/pot-desktop/releases/download/${version}/pot_${version}_x86_fix_webview2_runtime-setup.nsis.zip`;
-    const windows_i686_sig = await getSignature(`https://github.com/pot-app/pot-desktop/releases/download/${version}/pot_${version}_x86_fix_webview2_runtime-setup.nsis.zip.sig`);
-    const windows_aarch64 = `https://dl.pot-app.com/https://github.com/pot-app/pot-desktop/releases/download/${version}/pot_${version}_arm64_fix_webview2_runtime-setup.nsis.zip`;
-    const windows_aarch64_sig = await getSignature(`https://github.com/pot-app/pot-desktop/releases/download/${version}/pot_${version}_arm64_fix_webview2_runtime-setup.nsis.zip.sig`);
+    const platforms = {};
+    for (const [platform, assetNameFactory] of Object.entries(platformAssets)) {
+        const assetName = assetNameFactory(version);
+        platforms[platform] = await getPlatformUpdate(release, assetName);
+    }
 
-    let updateData = {
-        name: version,
+    const updateData = {
+        version,
         notes: changelog,
-        pub_date: new Date().toISOString(),
-        platforms: {
-            'windows-x86_64': { signature: windows_x86_64_sig, url: windows_x86_64 },
-            'windows-i686': { signature: windows_i686_sig, url: windows_i686 },
-            'windows-aarch64': { signature: windows_aarch64_sig, url: windows_aarch64 }
-        },
+        pub_date: release.published_at ?? new Date().toISOString(),
+        platforms,
     };
-    fs.writeFile('./update-fix-runtime.json', JSON.stringify(updateData), (e) => {
-        console.log(e);
-    });
+
+    await fs.writeFile('./update-fix-runtime.json', `${JSON.stringify(updateData, null, 2)}\n`);
 }
 
-async function getVersion(token) {
-    const res = await fetch('https://api.github.com/repos/pot-app/pot-desktop/releases/latest', {
+async function getRelease(token) {
+    const tagName = process.env.RELEASE_TAG ?? process.env.GITHUB_REF_NAME;
+    const releaseUrl = tagName
+        ? `${API_BASE}/releases/tags/${encodeURIComponent(tagName)}`
+        : `${API_BASE}/releases/latest`;
+
+    const res = await fetch(releaseUrl, {
         method: 'GET',
         headers: {
             Authorization: `Bearer ${token}`,
+            Accept: 'application/vnd.github+json',
         },
     });
 
-    if (res.ok) {
-        let data = await res.json();
-        if (data['tag_name']) {
-            return data['tag_name'];
-        }
+    if (!res.ok) {
+        throw new Error(`Failed to read release metadata: ${res.status} ${res.statusText}`);
     }
+
+    return res.json();
 }
 
-async function getChangeLog(token) {
-    const res = await fetch('https://api.github.com/repos/pot-app/pot-desktop/releases/latest', {
-        method: 'GET',
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-    });
+async function getPlatformUpdate(release, assetName) {
+    const asset = findAsset(release, assetName);
+    const signatureAsset = findAsset(release, `${assetName}.sig`);
+    const signature = await readAssetText(signatureAsset.browser_download_url);
 
-    if (res.ok) {
-        let data = await res.json();
-        if (data['body']) {
-            let changelog_md = data['body'];
-
-            return changelog_md;
-        }
-    }
+    return {
+        signature,
+        url: asset.browser_download_url,
+    };
 }
 
-async function getSignature(url) {
+function findAsset(release, assetName) {
+    const asset = release.assets?.find((item) => item.name === assetName);
+    if (!asset) {
+        throw new Error(`Missing release asset: ${assetName}`);
+    }
+    return asset;
+}
+
+async function readAssetText(url) {
     const response = await fetch(url, {
         method: 'GET',
         headers: { 'Content-Type': 'application/octet-stream' },
     });
-    if (response.ok) {
-        return response.text();
-    } else {
-        return '';
+
+    if (!response.ok) {
+        throw new Error(`Failed to read asset: ${url}`);
     }
+
+    return response.text();
 }
 
-resolveUpdater().catch(console.error);
+function normalizeVersion(version) {
+    if (!version) {
+        throw new Error('Release version is missing');
+    }
+    return version.replace(/^v/, '');
+}
+
+resolveUpdater().catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
+});

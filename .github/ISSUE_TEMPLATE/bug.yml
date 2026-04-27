@@ -7,7 +7,7 @@ body:
       attributes:
           value: |
               # ⬆️ Please give a concise and clear title ⬆️
-              ## Thank you for your feedback, pot has become better because of it!
+              ## Thank you for your feedback. NeoPot becomes better because of it.
               ### Please confirm the following before submitting a new issue.
               - I have carefully reviewed the official website's usage documentation.
               - I have searched through the historical issues but could not find an answer.
@@ -29,7 +29,6 @@ body:
           options:
               - Windows
               - Linux
-              - MacOS
       validations:
           required: true
     - type: input
@@ -53,7 +52,7 @@ body:
     - type: textarea
       attributes:
           label: Log File
-          description: 'pot.log file content'
+          description: 'neopot log file content'
     - type: textarea
       attributes:
           label: Additional Information

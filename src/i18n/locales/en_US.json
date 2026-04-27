@@ -7,7 +7,8 @@
             "write_clipboard": "Write to Clipboard",
             "plugin": "Plugin",
             "coming": "Coming soon…",
-            "clear": "Clear"
+            "clear": "Clear",
+            "test": "Test"
         },
         "languages": {
             "auto": "Auto Detect",
@@ -55,14 +56,14 @@
                 "app_font": "Font",
                 "app_fallback_font": "Fallback Font",
                 "font_size": {
-                    "title": "Font Size",
                     "10": "Extra Small (10px)",
                     "12": "Very Small (12px)",
                     "14": "Small (14px)",
                     "16": "Standard (16px)",
                     "18": "Large (18px)",
                     "20": "Very Large (20px)",
-                    "24": "Extra Large (24px)"
+                    "24": "Extra Large (24px)",
+                    "title": "Font Size"
                 },
                 "default_font": "Default",
                 "theme": {
@@ -108,14 +109,14 @@
                 "delete_newline": "Delete Newline",
                 "remember_language": "Remember Target Language",
                 "font_size": {
-                    "title": "Font Size",
                     "10": "Very Very Small (10px)",
                     "12": "Very Small (12px)",
                     "14": "Small (14px)",
                     "16": "Standard (16px)",
                     "18": "Large (18px)",
                     "20": "Very Large (20px)",
-                    "24": "Very Very Large (24px)"
+                    "24": "Very Very Large (24px)",
+                    "title": "Font Size"
                 },
                 "window_position": "Window Position",
                 "mouse": "Follow the Mouse",
@@ -170,7 +171,8 @@
                 "install_plugin": "Install Plugin",
                 "view_plugin_list": "View Plugin List",
                 "uninstall_success": "Plugin Uninstall Successfully",
-                "homepage": "Homepage"
+                "homepage": "Homepage",
+                "test_success": "Test Succeeded"
             },
             "history": {
                 "label": "History",
@@ -255,6 +257,16 @@
                     "request_path": "Request Path",
                     "stream": "Stream Mode",
                     "model": "Model",
+                    "advanced_options": "Advanced Options",
+                    "advanced_description": "Leave blank to use the model or Ollama defaults. Thinking mode only applies to models that support it.",
+                    "thinking_mode": "Thinking Mode",
+                    "thinking_default": "Use Model Default",
+                    "thinking_on": "Enable Thinking",
+                    "thinking_off": "Disable Thinking",
+                    "temperature": "Temperature",
+                    "top_p": "Top P",
+                    "top_k": "Top K",
+                    "use_model_default": "Leave blank to use defaults",
                     "install_model": "Install",
                     "ready": "Ready",
                     "not_installed": "This model has not been installed yet, click to download and install now",

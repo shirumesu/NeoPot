@@ -1,5 +1,5 @@
-import { fetch, Body } from '@tauri-apps/api/http';
-import { invoke } from '@tauri-apps/api';
+import { fetch, Body } from '@/utils/tauri_http';
+import { invoke } from '@tauri-apps/api/core';
 import { store } from './store';
 import { v4 as uuidv4 } from 'uuid';
 

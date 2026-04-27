@@ -1,26 +1,34 @@
 [package]
-name = "pot"
-version = "0.0.0"
-description = "Pot App"
-authors = ["pot-app"]
+name = "neopot"
+version = "1.0.0-beta"
+description = "NeoPot"
+authors = ["shirumesu"]
 license = "GPL-3.0-only"
-repository = "https://github.com/pot-app/pot-desktop"
+repository = "https://github.com/shirumesu/NeoPot"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [build-dependencies]
-tauri-build = { version = "1.5", features = [] }
+tauri-build = { version = "2.5.6", features = [] }
 
 [dependencies]
 
-tauri = { version = "1.8", features = [ "dialog-save", "dialog-open", "fs-all", "protocol-asset", "shell-all", "clipboard-all", "os-all", "http-all", "http-multipart", "updater", "notification-all", "global-shortcut-all", "window-all", "path-all", "system-tray", "devtools"] }
-tauri-plugin-single-instance = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
-tauri-plugin-autostart = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
-tauri-plugin-fs-watch = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
-tauri-plugin-store = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
-tauri-plugin-log = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
-tauri-plugin-sql = { git= "https://github.com/tauri-apps/plugins-workspace", branch = "v1",features = ["sqlite"] }
+tauri = { version = "2.10.3", features = [ "protocol-asset", "devtools", "tray-icon"] }
+tauri-plugin-single-instance = { version = "2.4.1" }
+tauri-plugin-autostart = { version = "2.5.1" }
+tauri-plugin-fs = { version = "2.5.0", features = ["watch"] }
+tauri-plugin-store = { version = "2.4.2" }
+tauri-plugin-log = { version = "2.8.0" }
+tauri-plugin-sql = {features = ["sqlite"] , version = "2.4.0" }
+tauri-plugin-http = "2.5.8"
+tauri-plugin-opener = "2.5.3"
+tauri-plugin-dialog = "2.7.0"
+tauri-plugin-clipboard-manager = "2.3.2"
+tauri-plugin-global-shortcut = "2.3.1"
+tauri-plugin-os = "2.3.2"
+tauri-plugin-process = "2.3.1"
+tauri-plugin-updater = "2.10.1"
 serde = { version = "1.0", features = ["derive"] }
 selection = "1.2.0"
 serde_json = "1.0"
@@ -40,10 +48,7 @@ walkdir = "2.5"
 thiserror = "1.0"
 font-kit = "0.14.2"
 image = "0.25.4"
-
-[target.'cfg(target_os = "macos")'.dependencies]
-macos-accessibility-client = "0.0.1"
-window-shadows = "0.2"
+tauri-plugin-notification = "2.3.3"
 
 [target.'cfg(windows)'.dependencies]
 windows = {version="0.58.0",features= ["Win32_UI_WindowsAndMessaging", "Win32_Foundation", "Graphics_Imaging", "Media_Ocr", "Foundation", "Globalization", "Storage", "Storage_Streams"] }

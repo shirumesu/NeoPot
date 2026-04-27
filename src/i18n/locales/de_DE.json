@@ -7,7 +7,8 @@
             "write_clipboard": "In die Zwischenablage schreiben",
             "plugin": "Plugin",
             "coming": "Bald verfügbar…",
-            "clear": "Leeren"
+            "clear": "Leeren",
+            "test": "Test"
         },
         "languages": {
             "auto": "Automatisch erkennen",
@@ -55,14 +56,14 @@
                 "app_font": "Schriftart",
                 "app_fallback_font": "Fallback-Schriftart",
                 "font_size": {
-                    "title": "Schriftgröße",
                     "10": "Sehr klein (10px)",
                     "12": "Extra klein (12px)",
                     "14": "Klein (14px)",
                     "16": "Standard (16px)",
                     "18": "Groß (18px)",
                     "20": "Extra groß (20px)",
-                    "24": "Sehr groß (24px)"
+                    "24": "Sehr groß (24px)",
+                    "title": "Schriftgröße"
                 },
                 "default_font": "Standard",
                 "theme": {
@@ -107,14 +108,14 @@
                 "delete_newline": "Automatisches Löschen von Zeilenumbrüchen",
                 "remember_language": "Zielsprache merken",
                 "font_size": {
-                    "title": "Schriftgröße",
                     "10": "Sehr klein (10px)",
                     "12": "Extra klein (12px)",
                     "14": "Klein (14px)",
                     "16": "Standard (16px)",
                     "18": "Groß (18px)",
                     "20": "Extra groß (20px)",
-                    "24": "Sehr groß (24px)"
+                    "24": "Sehr groß (24px)",
+                    "title": "Schriftgröße"
                 },
                 "window_position": "Fensterposition",
                 "mouse": "Der Maus folgen",
@@ -169,7 +170,8 @@
                 "install_plugin": "Externes Plugin installieren",
                 "view_plugin_list": "Plugin-Liste anzeigen",
                 "uninstall_success": "Plugin erfolgreich deinstalliert",
-                "homepage": "Plugin-Homepage"
+                "homepage": "Plugin-Homepage",
+                "test_success": "Test erfolgreich"
             },
             "history": {
                 "label": "Verlauf",

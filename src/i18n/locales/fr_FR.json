@@ -266,7 +266,8 @@
             "ok": "Ok",
             "save": "Enregistrer",
             "clear": "Effacer",
-            "coming": "À venir…"
+            "coming": "À venir…",
+            "test": "Test"
         },
         "config": {
             "general": {
@@ -304,13 +305,13 @@
                 "title": "Paramètres généraux",
                 "default_font": "Défaut",
                 "font_size": {
-                    "20": "Très large (20px)",
-                    "18": "Large (18px)",
+                    "10": "Extra petit (10px)",
+                    "12": "Très petit (12px)",
                     "14": "Petit (14px)",
                     "16": "Standard (16px)",
-                    "12": "Très petit (12px)",
+                    "18": "Large (18px)",
+                    "20": "Très large (20px)",
                     "24": "Extra large (24px)",
-                    "10": "Extra petit (10px)",
                     "title": "Taille de la police"
                 },
                 "app_font": "Police de caractères",
@@ -350,14 +351,14 @@
                 "incremental_translate": "Traduction incrémentale",
                 "target_language": "Langue cible",
                 "font_size": {
-                    "14": "Petit (14px)",
-                    "title": "Taille de la police",
-                    "24": "Très très grand (24px)",
-                    "20": "Très grand (20px)",
-                    "12": "Très petit (12px)",
-                    "16": "Normal (16px)",
                     "10": "Très très petit (10px)",
-                    "18": "Grand (18px)"
+                    "12": "Très petit (12px)",
+                    "14": "Petit (14px)",
+                    "16": "Normal (16px)",
+                    "18": "Grand (18px)",
+                    "20": "Très grand (20px)",
+                    "24": "Très très grand (24px)",
+                    "title": "Taille de la police"
                 },
                 "history_disable": "Désactiver l'historique"
             },
@@ -416,7 +417,8 @@
                 "title": "Paramètres de service",
                 "add_builtin_service": "Ajouter un service intégré",
                 "label": "Service",
-                "test_failed": "Le test a échoué"
+                "test_failed": "Le test a échoué",
+                "test_success": "Test réussi"
             },
             "about": {
                 "title": "À propos de l'application",

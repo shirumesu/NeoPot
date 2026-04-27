@@ -7,7 +7,8 @@
             "write_clipboard": "写入剪贴板",
             "plugin": "插件",
             "coming": "敬请期待…",
-            "clear": "清空"
+            "clear": "清空",
+            "test": "测试"
         },
         "languages": {
             "auto": "自动检测",
@@ -55,14 +56,14 @@
                 "app_font": "字体",
                 "app_fallback_font": "后备字体",
                 "font_size": {
-                    "title": "字体大小",
                     "10": "极小 (10px)",
                     "12": "特小 (12px)",
                     "14": "小 (14px)",
                     "16": "标准 (16px)",
                     "18": "大 (18px)",
                     "20": "特大 (20px)",
-                    "24": "超大 (24px)"
+                    "24": "超大 (24px)",
+                    "title": "字体大小"
                 },
                 "default_font": "默认",
                 "theme": {
@@ -108,14 +109,14 @@
                 "delete_newline": "自动删除换行",
                 "remember_language": "记住目标语言",
                 "font_size": {
-                    "title": "字体大小",
                     "10": "极小 (10px)",
                     "12": "特小 (12px)",
                     "14": "小 (14px)",
                     "16": "标准 (16px)",
                     "18": "大 (18px)",
                     "20": "特大 (20px)",
-                    "24": "超大 (24px)"
+                    "24": "超大 (24px)",
+                    "title": "字体大小"
                 },
                 "window_position": "窗口位置",
                 "mouse": "跟随鼠标",
@@ -170,7 +171,8 @@
                 "install_plugin": "安装外部插件",
                 "view_plugin_list": "查看插件列表",
                 "uninstall_success": "插件卸载成功",
-                "homepage": "插件主页"
+                "homepage": "插件主页",
+                "test_success": "测试成功"
             },
             "history": {
                 "label": "历史记录",
@@ -202,7 +204,7 @@
                 "website": "官网",
                 "github": "GitHub",
                 "feedback": "问题反馈",
-                "issue": "议题",
+                "issue": "Issue",
                 "email": "邮件",
                 "community": "社区交流",
                 "check_update": "检查更新",
@@ -255,6 +257,16 @@
                     "request_path": "请求地址",
                     "stream": "流式输出",
                     "model": "模型",
+                    "advanced_options": "高级参数",
+                    "advanced_description": "留空表示沿用模型或 Ollama 默认值。思考模式仅在支持的模型上生效。",
+                    "thinking_mode": "思考模式",
+                    "thinking_default": "跟随模型默认",
+                    "thinking_on": "开启思考",
+                    "thinking_off": "关闭思考",
+                    "temperature": "Temperature",
+                    "top_p": "Top P",
+                    "top_k": "Top K",
+                    "use_model_default": "留空使用默认值",
                     "install_model": "安装",
                     "ready": "就绪",
                     "not_installed": "该模型还未安装，点击立即下载安装",

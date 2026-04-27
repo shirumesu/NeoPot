@@ -16,35 +16,46 @@ pub fn get_text(state: tauri::State<StringWrapper>) -> String {
 #[tauri::command]
 pub fn reload_store() {
     let state = APP.get().unwrap().state::<StoreWrapper>();
-    let mut store = state.0.lock().unwrap();
-    store.load().unwrap();
+    state.0.reload().unwrap();
 }
 
 #[tauri::command]
-pub fn cut_image(left: u32, top: u32, width: u32, height: u32, app_handle: tauri::AppHandle) {
+pub fn cut_image(
+    left: u32,
+    top: u32,
+    width: u32,
+    height: u32,
+    app_handle: tauri::AppHandle,
+) -> Result<(), String> {
     use dirs::cache_dir;
     use image::GenericImage;
     info!("Cut image: {}x{}+{}+{}", width, height, left, top);
-    let mut app_cache_dir_path = cache_dir().expect("Get Cache Dir Failed");
-    app_cache_dir_path.push(&app_handle.config().tauri.bundle.identifier);
+    let mut app_cache_dir_path = cache_dir().ok_or_else(|| "Get Cache Dir Failed".to_string())?;
+    app_cache_dir_path.push(&app_handle.config().identifier);
     app_cache_dir_path.push("pot_screenshot.png");
     if !app_cache_dir_path.exists() {
-        return;
+        return Err("Screenshot file does not exist".to_string());
     }
     let mut img = match image::open(&app_cache_dir_path) {
         Ok(v) => v,
         Err(e) => {
             error!("{:?}", e.to_string());
-            return;
+            return Err(e.to_string());
         }
     };
+    if left >= img.width() || top >= img.height() {
+        return Err("Screenshot crop origin is outside of the image".to_string());
+    }
+    let width = width.min(img.width() - left);
+    let height = height.min(img.height() - top);
     let img2 = img.sub_image(left, top, width, height);
     app_cache_dir_path.pop();
     app_cache_dir_path.push("pot_screenshot_cut.png");
     match img2.to_image().save(&app_cache_dir_path) {
-        Ok(_) => {}
+        Ok(_) => Ok(()),
         Err(e) => {
             error!("{:?}", e.to_string());
+            Err(e.to_string())
         }
     }
 }
@@ -56,7 +67,7 @@ pub fn get_base64(app_handle: tauri::AppHandle) -> String {
     use std::fs::File;
     use std::io::Read;
     let mut app_cache_dir_path = cache_dir().expect("Get Cache Dir Failed");
-    app_cache_dir_path.push(&app_handle.config().tauri.bundle.identifier);
+    app_cache_dir_path.push(&app_handle.config().identifier);
     app_cache_dir_path.push("pot_screenshot_cut.png");
     if !app_cache_dir_path.exists() {
         return "".to_string();
@@ -82,7 +93,7 @@ pub fn copy_img(app_handle: tauri::AppHandle, width: usize, height: usize) -> Re
     use std::borrow::Cow;
 
     let mut app_cache_dir_path = cache_dir().expect("Get Cache Dir Failed");
-    app_cache_dir_path.push(&app_handle.config().tauri.bundle.identifier);
+    app_cache_dir_path.push(&app_handle.config().identifier);
     app_cache_dir_path.push("pot_screenshot_cut.png");
     let data = ImageReader::open(app_cache_dir_path)?.decode()?;
 
@@ -95,36 +106,191 @@ pub fn copy_img(app_handle: tauri::AppHandle, width: usize, height: usize) -> Re
     Ok(result)
 }
 
+fn normalize_proxy_host(host: &str) -> String {
+    let trimmed = host.trim().trim_end_matches('/');
+    trimmed
+        .strip_prefix("http://")
+        .or_else(|| trimmed.strip_prefix("https://"))
+        .unwrap_or(trimmed)
+        .to_string()
+}
+
+fn normalize_no_proxy(no_proxy: &str) -> String {
+    let mut values: Vec<String> = no_proxy
+        .split(',')
+        .map(|value| value.trim().to_string())
+        .filter(|value| !value.is_empty())
+        .collect();
+
+    for required in ["localhost", "127.0.0.1", "::1"] {
+        if !values.iter().any(|value| value.eq_ignore_ascii_case(required)) {
+            values.push(required.to_string());
+        }
+    }
+
+    values.join(",")
+}
+
 #[tauri::command]
-pub fn set_proxy() -> Result<bool, ()> {
+pub fn set_proxy() -> Result<bool, String> {
     let host = match get("proxy_host") {
-        Some(v) => v.as_str().unwrap().to_string(),
-        None => return Err(()),
+        Some(v) => v.as_str().unwrap_or("").trim().to_string(),
+        None => return Err("Missing proxy host".to_string()),
     };
     let port = match get("proxy_port") {
-        Some(v) => v.as_i64().unwrap(),
-        None => return Err(()),
+        Some(v) => match v.as_i64() {
+            Some(port) => port.to_string(),
+            None => v.as_str().unwrap_or("").trim().to_string(),
+        },
+        None => return Err("Missing proxy port".to_string()),
     };
     let no_proxy = match get("no_proxy") {
-        Some(v) => v.as_str().unwrap().to_string(),
-        None => return Err(()),
+        Some(v) => normalize_no_proxy(v.as_str().unwrap_or("")),
+        None => normalize_no_proxy(""),
     };
-    let proxy = format!("http://{}:{}", host, port);
+    let host = normalize_proxy_host(&host);
+    if host.is_empty() || port.is_empty() {
+        return Err("Missing proxy host or port".to_string());
+    }
+    let username = get("proxy_username")
+        .and_then(|v| v.as_str().map(|s| s.trim().to_string()))
+        .unwrap_or_default();
+    let password = get("proxy_password")
+        .and_then(|v| v.as_str().map(|s| s.trim().to_string()))
+        .unwrap_or_default();
+    let auth = if username.is_empty() {
+        String::new()
+    } else if password.is_empty() {
+        format!("{}@", username)
+    } else {
+        format!("{}:{}@", username, password)
+    };
+    let proxy = format!("http://{}{}:{}", auth, host, port);
 
-    std::env::set_var("http_proxy", &proxy);
-    std::env::set_var("https_proxy", &proxy);
-    std::env::set_var("all_proxy", &proxy);
-    std::env::set_var("no_proxy", &no_proxy);
+    for key in ["http_proxy", "HTTP_PROXY"] {
+        std::env::set_var(key, &proxy);
+    }
+    for key in ["https_proxy", "HTTPS_PROXY"] {
+        std::env::set_var(key, &proxy);
+    }
+    for key in ["all_proxy", "ALL_PROXY"] {
+        std::env::set_var(key, &proxy);
+    }
+    for key in ["no_proxy", "NO_PROXY"] {
+        std::env::set_var(key, &no_proxy);
+    }
     Ok(true)
 }
 
 #[tauri::command]
-pub fn unset_proxy() -> Result<bool, ()> {
-    std::env::remove_var("http_proxy");
-    std::env::remove_var("https_proxy");
-    std::env::remove_var("all_proxy");
-    std::env::remove_var("no_proxy");
+pub fn unset_proxy() -> Result<bool, String> {
+    for key in [
+        "http_proxy",
+        "HTTP_PROXY",
+        "https_proxy",
+        "HTTPS_PROXY",
+        "all_proxy",
+        "ALL_PROXY",
+        "no_proxy",
+        "NO_PROXY",
+    ] {
+        std::env::remove_var(key);
+    }
     Ok(true)
+}
+
+fn build_ollama_url(request_path: &str, endpoint: &str) -> String {
+    let mut base = request_path.trim().trim_end_matches('/').to_string();
+    if !base.starts_with("http://") && !base.starts_with("https://") {
+        base = format!("http://{}", base);
+    }
+
+    let endpoint = endpoint.trim_start_matches('/');
+    if base.ends_with(endpoint) {
+        base
+    } else {
+        format!("{}/{}", base, endpoint)
+    }
+}
+
+async fn ollama_post(request_path: String, endpoint: &str, body: Value) -> Result<Value, String> {
+    let url = build_ollama_url(&request_path, endpoint);
+    let client = reqwest::Client::builder()
+        .no_proxy()
+        .build()
+        .map_err(|e| e.to_string())?;
+    let response = client
+        .post(url)
+        .json(&body)
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+    let status = response.status();
+    let text = response.text().await.map_err(|e| e.to_string())?;
+
+    if !status.is_success() {
+        return Err(format!("Http Status: {}\n{}", status.as_u16(), text));
+    }
+
+    serde_json::from_str(&text).map_err(|e| e.to_string())
+}
+
+#[tauri::command(async)]
+pub async fn ollama_tags(request_path: String) -> Result<Value, String> {
+    let url = build_ollama_url(&request_path, "api/tags");
+    let client = reqwest::Client::builder()
+        .no_proxy()
+        .build()
+        .map_err(|e| e.to_string())?;
+    let response = client.get(url).send().await.map_err(|e| e.to_string())?;
+    let status = response.status();
+    let text = response.text().await.map_err(|e| e.to_string())?;
+
+    if !status.is_success() {
+        return Err(format!("Http Status: {}\n{}", status.as_u16(), text));
+    }
+
+    serde_json::from_str(&text).map_err(|e| e.to_string())
+}
+
+#[tauri::command(async)]
+pub async fn ollama_chat(request_path: String, mut body: Value) -> Result<Value, String> {
+    if let Some(object) = body.as_object_mut() {
+        object.insert("stream".to_string(), Value::Bool(false));
+    }
+
+    ollama_post(request_path, "api/chat", body).await
+}
+
+#[tauri::command(async)]
+pub async fn ollama_pull(request_path: String, mut body: Value) -> Result<Value, String> {
+    if let Some(object) = body.as_object_mut() {
+        object.insert("stream".to_string(), Value::Bool(false));
+    }
+
+    ollama_post(request_path, "api/pull", body).await
+}
+
+#[tauri::command]
+pub fn open_config_dir(app_handle: tauri::AppHandle) -> Result<(), String> {
+    use tauri::Manager;
+    use tauri_plugin_opener::OpenerExt;
+
+    let config_root = dirs::config_dir().ok_or_else(|| "Get Config Dir Failed".to_string())?;
+    let upstream_config_dir = config_root.join("neopot");
+    let config_dir = if upstream_config_dir.exists() {
+        upstream_config_dir
+    } else {
+        app_handle
+            .path()
+            .app_config_dir()
+            .map_err(|e| e.to_string())?
+    };
+
+    app_handle
+        .opener()
+        .open_path(config_dir.to_string_lossy().to_string(), None::<&str>)
+        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -162,8 +328,7 @@ pub fn install_plugin(path_list: Vec<String>) -> Result<i32, Error> {
             return Err(Error::Error("Invalid Plugin: miss main.js".into()));
         }
         let config_path = dirs::config_dir().unwrap();
-        let config_path =
-            config_path.join(APP.get().unwrap().config().tauri.bundle.identifier.clone());
+        let config_path = config_path.join(APP.get().unwrap().config().identifier.clone());
         let config_path = config_path.join("plugins");
         let config_path = config_path.join(plugin_type);
         let plugin_path = config_path.join(file_name);
@@ -187,7 +352,7 @@ pub fn run_binary(
     use std::process::Command;
 
     let config_path = dirs::config_dir().unwrap();
-    let config_path = config_path.join(APP.get().unwrap().config().tauri.bundle.identifier.clone());
+    let config_path = config_path.join(APP.get().unwrap().config().identifier.clone());
     let config_path = config_path.join("plugins");
     let config_path = config_path.join(plugin_type);
     let plugin_path = config_path.join(plugin_name);
@@ -218,7 +383,7 @@ pub fn font_list() -> Result<Vec<String>, Error> {
 }
 
 #[tauri::command]
-pub fn open_devtools(window: tauri::Window) {
+pub fn open_devtools(window: tauri::WebviewWindow) {
     if !window.is_devtools_open() {
         window.open_devtools();
     } else {

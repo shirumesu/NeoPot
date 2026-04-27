@@ -7,7 +7,8 @@
             "write_clipboard": "寫入剪貼簿",
             "plugin": "外掛程式",
             "coming": "即將推出…",
-            "clear": "清除"
+            "clear": "清除",
+            "test": "测试"
         },
         "languages": {
             "auto": "自動偵測",
@@ -79,14 +80,14 @@
                 "app_font": "字型",
                 "app_fallback_font": "備用字型",
                 "font_size": {
-                    "title": "字型大小",
                     "10": "特小（10px）",
                     "12": "非常小（12px）",
                     "14": "小（14px）",
+                    "16": "標準（16px）",
                     "18": "大（18px）",
                     "20": "非常大（20px）",
                     "24": "特大（24px）",
-                    "16": "標準（16px）"
+                    "title": "字型大小"
                 },
                 "default_font": "預設",
                 "dev_mode": "開發者模式"
@@ -125,14 +126,14 @@
                 "yandex": "Yandex",
                 "local": "本地",
                 "font_size": {
+                    "10": "非常小（10px）",
+                    "12": "很小（12px）",
+                    "14": "小（14px）",
+                    "16": "標準（16px）",
                     "18": "大（18px）",
                     "20": "很大（20px）",
                     "24": "非常大（24px）",
-                    "16": "標準（16px）",
-                    "10": "非常小（10px）",
-                    "title": "字型大小",
-                    "12": "很小（12px）",
-                    "14": "小（14px）"
+                    "title": "字型大小"
                 }
             },
             "recognize": {
@@ -170,7 +171,8 @@
                 "install_plugin": "安裝外掛程式",
                 "uninstall_success": "外掛程式移除成功",
                 "homepage": "外掛程式首頁",
-                "view_plugin_list": "檢視外掛程式列表"
+                "view_plugin_list": "檢視外掛程式列表",
+                "test_success": "測試成功"
             },
             "history": {
                 "label": "歷史記錄",

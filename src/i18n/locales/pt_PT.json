@@ -7,7 +7,8 @@
             "write_clipboard": "Escrever na Área de Transferência",
             "save": "Gravar",
             "clear": "Claro",
-            "coming": "Brevemente…"
+            "coming": "Brevemente…",
+            "test": "Test"
         },
         "services": {
             "help": "Guia de Configuração",
@@ -298,13 +299,13 @@
                 },
                 "server_port_change": "A porta de escuta foi alterada. Reinicie a aplicação para que as alterações tenham efeito",
                 "font_size": {
-                    "20": "Muito Grande (20px)",
-                    "18": "Grande (18px)",
+                    "10": "Extra pequeno (10px)",
+                    "12": "Muito Pequena (12px)",
                     "14": "Pequena (14px)",
                     "16": "Padrão (16px)",
-                    "12": "Muito Pequena (12px)",
+                    "18": "Grande (18px)",
+                    "20": "Muito Grande (20px)",
                     "24": "Extragrande (24px)",
-                    "10": "Extra pequeno (10px)",
                     "title": "Tamanho da Fonte"
                 },
                 "app_font": "Fonte",
@@ -323,14 +324,14 @@
                 "target": "Destino",
                 "title": "Configurações de Tradução",
                 "font_size": {
-                    "14": "Pequena (14px)",
-                    "title": "Tamanho da Fonte",
-                    "24": "Muito, Muito Grande (24px)",
-                    "20": "Muito Grande (20px)",
-                    "12": "Muito Pequena (12px)",
-                    "16": "Padrão (16px)",
                     "10": "Muito, Muito Pequena (10px)",
-                    "18": "Grande (18px)"
+                    "12": "Muito Pequena (12px)",
+                    "14": "Pequena (14px)",
+                    "16": "Padrão (16px)",
+                    "18": "Grande (18px)",
+                    "20": "Muito Grande (20px)",
+                    "24": "Muito, Muito Grande (24px)",
+                    "title": "Tamanho da Fonte"
                 },
                 "google": "Google",
                 "detect_engine": "Mecanismo de Detecção de Idioma",
@@ -416,7 +417,8 @@
                 "title": "Configuração do Serviço",
                 "add_builtin_service": "Adicionar Serviço Integrado",
                 "label": "Serviço",
-                "test_failed": "Teste Falhou"
+                "test_failed": "Teste Falhou",
+                "test_success": "Teste concluído"
             },
             "about": {
                 "title": "Sobre a Aplicação",

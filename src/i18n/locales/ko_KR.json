@@ -5,7 +5,8 @@
             "cancel": "취소",
             "save": "저장",
             "write_clipboard": "클립보드에 작성",
-            "plugin": "플러그인"
+            "plugin": "플러그인",
+            "test": "Test"
         },
         "services": {
             "translate": {
@@ -100,14 +101,14 @@
                 "app_font": "글꼴",
                 "app_fallback_font": "대체 글꼴",
                 "font_size": {
-                    "title": "글꼴 크기",
                     "10": "최소 크기 (10px)",
                     "12": "아주 작게 (12px)",
                     "14": "작게 (14px)",
                     "16": "보통 (16px)",
                     "18": "크게 (18px)",
                     "20": "아주 크게 (20px)",
-                    "24": "최대 크기 (24px)"
+                    "24": "최대 크기 (24px)",
+                    "title": "글꼴 크기"
                 },
                 "default_font": "기본 글꼴",
                 "theme": {
@@ -153,14 +154,14 @@
                 "delete_newline": "줄바꿈 삭제",
                 "remember_language": "도착 언어 유지",
                 "font_size": {
-                    "title": "글꼴 크기",
                     "10": "최소 크기 (10px)",
                     "12": "아주 작게 (12px)",
                     "14": "작게 (14px)",
                     "16": "보통 (16px)",
                     "18": "크게 (18px)",
                     "20": "아주 크게 (20px)",
-                    "24": "최대 크기 (24px)"
+                    "24": "최대 크기 (24px)",
+                    "title": "글꼴 크기"
                 },
                 "window_position": "창 팝업 위치",
                 "mouse": "마우스 위치 기준",
@@ -215,7 +216,8 @@
                 "install_plugin": "플러그인 설치",
                 "view_plugin_list": "지원되는 플러그인 목록",
                 "uninstall_success": "플러그인이 삭제되었습니다",
-                "homepage": "홈페이지"
+                "homepage": "홈페이지",
+                "test_success": "테스트 성공"
             },
             "history": {
                 "label": "기록",

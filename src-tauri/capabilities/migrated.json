@@ -1,0 +1,75 @@
+{
+  "identifier": "migrated",
+  "description": "permissions that were migrated from v1",
+  "local": true,
+  "windows": [
+    "daemon",
+    "config",
+    "translate",
+    "recognize",
+    "screenshot",
+    "updater"
+  ],
+  "permissions": [
+    "core:default",
+    "fs:allow-read-file",
+    "fs:allow-read-text-file",
+    "fs:allow-read-dir",
+    "fs:allow-remove",
+    "fs:allow-exists",
+    "fs:allow-watch",
+    {
+      "identifier": "fs:scope",
+      "allow": [
+        "$APPCONFIG/**",
+        "$APPCACHE/**"
+      ]
+    },
+    "core:window:allow-create",
+    "core:window:allow-set-resizable",
+    "core:window:allow-maximize",
+    "core:window:allow-unmaximize",
+    "core:window:allow-minimize",
+    "core:window:allow-show",
+    "core:window:allow-hide",
+    "core:window:allow-close",
+    "core:window:allow-current-monitor",
+    "core:window:allow-set-always-on-top",
+    "core:window:allow-set-focus",
+    "core:window:allow-start-dragging",
+    "dialog:allow-open",
+    "dialog:allow-save",
+    "store:default",
+    "sql:allow-load",
+    "sql:allow-select",
+    "sql:allow-execute",
+    "sql:allow-close",
+    "updater:allow-check",
+    "updater:allow-download-and-install",
+    "process:allow-restart",
+    "autostart:allow-is-enabled",
+    "autostart:allow-enable",
+    "autostart:allow-disable",
+    "log:allow-log",
+    "opener:default",
+    "opener:allow-open-path",
+    {
+      "identifier": "http:default",
+      "allow": [
+        {
+          "url": "http://*:*"
+        },
+        {
+          "url": "https://*:*"
+        }
+      ]
+    },
+    "notification:default",
+    "global-shortcut:allow-is-registered",
+    "global-shortcut:allow-unregister",
+    "os:allow-version",
+    "os:allow-os-type",
+    "os:allow-arch",
+    "clipboard-manager:allow-write-text"
+  ]
+}

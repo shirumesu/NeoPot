@@ -2,11 +2,12 @@ use crate::config::{get, set};
 use crate::window::{input_translate, ocr_recognize, ocr_translate, selection_translate};
 use crate::APP;
 use log::{info, warn};
-use tauri::{AppHandle, GlobalShortcutManager};
+use tauri::AppHandle;
+use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
 
 fn register<F>(app_handle: &AppHandle, name: &str, handler: F, key: &str) -> Result<(), String>
 where
-    F: Fn() + Send + 'static,
+    F: Fn() + Send + Sync + 'static,
 {
     let hotkey = {
         if key.is_empty() {
@@ -23,10 +24,14 @@ where
     };
 
     if !hotkey.is_empty() {
-        match app_handle
-            .global_shortcut_manager()
-            .register(hotkey.as_str(), handler)
-        {
+        match app_handle.global_shortcut().on_shortcut(
+            hotkey.as_str(),
+            move |_app, _shortcut, event| {
+                if event.state == ShortcutState::Pressed {
+                    handler();
+                }
+            },
+        ) {
             Ok(()) => {
                 info!("Registered global shortcut: {} for {}", hotkey, name);
             }

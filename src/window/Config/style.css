@@ -1,5 +1,16 @@
 .config-item {
-    margin: 10px 0;
     display: flex;
+    align-items: center;
     justify-content: space-between;
+    gap: 16px;
+    margin: 12px 0;
+    min-height: 40px;
+}
+
+.config-item > :first-child {
+    flex: 0 0 auto;
+}
+
+.config-item > :last-child {
+    min-width: 0;
 }

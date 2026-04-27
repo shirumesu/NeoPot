@@ -1,133 +1,84 @@
 {
-    "build": {
-        "beforeDevCommand": "pnpm dev",
-        "beforeBuildCommand": "pnpm build",
-        "devPath": "http://localhost:1420",
-        "distDir": "../dist",
-        "withGlobalTauri": false
+  "build": {
+    "beforeDevCommand": "pnpm dev",
+    "beforeBuildCommand": "pnpm build",
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:1420"
+  },
+  "bundle": {
+    "active": true,
+    "category": "Utility",
+    "copyright": "GPLv3",
+    "targets": "all",
+    "longDescription": "A text translation and OCR app for Windows and Linux",
+    "shortDescription": "NeoPot",
+    "externalBin": [],
+    "resources": [],
+    "licenseFile": "../LICENSE",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "linux": {
+      "deb": {
+        "depends": [
+          "libxdo-dev",
+          "libxcb1",
+          "libxrandr2",
+          "tesseract-ocr"
+        ]
+      },
+      "rpm": {
+        "depends": [
+          "libxdo-dev",
+          "libxcb1",
+          "libxrandr2",
+          "tesseract-ocr"
+        ]
+      }
     },
-    "package": {
-        "productName": "pot",
-        "version": "3.0.7"
-    },
-    "tauri": {
-        "allowlist": {
-            "all": false,
-            "shell": {
-                "all": true,
-                "open": ".*"
-            },
-            "path": {
-                "all": true
-            },
-            "window": {
-                "all": true
-            },
-            "clipboard": {
-                "all": true
-            },
-            "globalShortcut": {
-                "all": true
-            },
-            "notification": {
-                "all": true
-            },
-            "http": {
-                "all": true,
-                "request": true,
-                "scope": [
-                    "http://**",
-                    "https://**"
-                ]
-            },
-            "os": {
-                "all": true
-            },
-            "protocol": {
-                "asset": true,
-                "assetScope": [
-                    "$CACHE/**",
-                    "$CONFIG/**"
-                ]
-            },
-            "fs": {
-                "all": true,
-                "scope": [
-                    "$APPCONFIG/**",
-                    "$APPCACHE/**"
-                ]
-            },
-            "dialog": {
-                "open": true,
-                "save": true
-            }
-        },
-        "bundle": {
-            "active": true,
-            "category": "Utility",
-            "copyright": "GPLv3",
-            "targets": "all",
-            "identifier": "com.pot-app.desktop",
-            "longDescription": "A cross-platform text translation and ocr software",
-            "shortDescription": "Pot App",
-            "externalBin": [],
-            "resources": [],
-            "icon": [
-                "icons/32x32.png",
-                "icons/128x128.png",
-                "icons/128x128@2x.png",
-                "icons/icon.icns",
-                "icons/icon.ico"
-            ],
-            "deb": {
-                "depends": [
-                    "libxdo-dev",
-                    "libxcb1",
-                    "libxrandr2",
-                    "tesseract-ocr"
-                ]
-            },
-            "rpm": {
-                "depends": [
-                    "libxdo-dev",
-                    "libxcb1",
-                    "libxrandr2",
-                    "tesseract-ocr"
-                ]
-            },
-            "macOS": {
-                "entitlements": null,
-                "exceptionDomain": "",
-                "frameworks": [],
-                "providerShortName": null,
-                "signingIdentity": null
-            }
-        },
-        "security": {
-            "csp": "default-src * data: ; img-src * 'self' asset: https: data: ; style-src * 'unsafe-inline'; worker-src 'self' blob: ; script-src * 'unsafe-eval';",
-            "devCsp": "default-src * data: ; img-src * 'self' asset: https: data: ; style-src * 'unsafe-inline'; worker-src 'self' blob: ; script-src * 'unsafe-eval';"
-        },
-        "windows": [
-            {
-                "title": "Daemon",
-                "label": "daemon",
-                "visible": false,
-                "url": "daemon.html",
-                "additionalBrowserArgs": "--disable-web-security"
-            }
-        ],
-        "systemTray": {
-            "iconPath": "icons/icon.png",
-            "iconAsTemplate": true
-        },
-        "updater": {
-            "active": true,
-            "dialog": false,
-            "endpoints": [
-                "https://dl.pot-app.com/https://github.com/pot-app/pot-desktop/releases/download/updater/update.json",
-                "https://github.com/pot-app/pot-desktop/releases/download/updater/update.json"
-            ],
-            "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDVBRTQxQTNDQjM5QzQzM0EKUldRNlE1eXpQQnJrV21mM1Bram5LRlF6UDA3K0Jab2FYL2lZSWhXTE5McWs2NUdJS0dtYkd5VGMK"
-        }
+    "createUpdaterArtifacts": true
+  },
+  "productName": "NeoPot",
+  "mainBinaryName": "neopot",
+  "version": "1.0.0-beta",
+  "identifier": "neopot",
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://github.com/shirumesu/NeoPot/releases/download/updater/update.json"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDVENzNFMzhGNzM3Q0MxRgpSV1FmekRmM09EN1hCVmNvSVZNZ3JRaUMvWmRpc1RDVjlobjFRRlcySW0zWmNOZElxc0tFQ3ZEVgo="
     }
+  },
+  "app": {
+    "withGlobalTauri": false,
+    "trayIcon": {
+      "iconPath": "icons/icon.png",
+      "iconAsTemplate": true
+    },
+    "security": {
+      "assetProtocol": {
+        "scope": [
+          "$CACHE/**",
+          "$CONFIG/**"
+        ],
+        "enable": true
+      },
+      "devCsp": "default-src 'self' asset: data: blob: https: http:; img-src 'self' asset: data: https: http: blob:; style-src 'self' 'unsafe-inline'; worker-src 'self' blob:; script-src 'self' blob:; connect-src 'self' ipc: http://ipc.localhost https: http: ws: wss:;",
+      "csp": "default-src 'self' asset: data: blob:; img-src 'self' asset: data: https: http://localhost:* http://127.0.0.1:* blob:; style-src 'self' 'unsafe-inline'; worker-src 'self' blob:; script-src 'self' blob:; connect-src 'self' ipc: http://ipc.localhost https: http://localhost:* http://127.0.0.1:*;"
+    },
+    "windows": [
+      {
+        "title": "Daemon",
+        "label": "daemon",
+        "visible": false,
+        "url": "daemon.html",
+        "useHttpsScheme": true
+      }
+    ]
+  }
 }

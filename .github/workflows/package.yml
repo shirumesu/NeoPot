@@ -1,8 +1,10 @@
 name: Package
+
 on:
     push:
         branches: [master]
-        tags-ignore: [updater]
+        tags: ['v*']
+
 permissions: write-all
 
 jobs:
@@ -16,24 +18,27 @@ jobs:
               with:
                   fetch-depth: 0
 
-            - name: Install git
+            - name: Resolve version
+              id: outputstep
               run: |
-                  sudo apt-get update
-                  sudo apt-get install -y git
-            - id: outputstep
+                  VERSION="$(git describe --tags | sed 's/-[0-9]*-.*//g' | sed 's/^v//')"
+                  echo "VERSION=${VERSION}" >> "$GITHUB_OUTPUT"
+
+            - name: Change version
               run: |
-                  echo "VERSION=$(git describe --tags | sed 's/-[0-9]*-.*//g')" >> "$GITHUB_OUTPUT"
-            - name: Change Version for Windows
-              run: |
-                  sed -i "s/\"version\":.*/\"version\": \"$(git describe --tags | sed 's/-[0-9]*-.*//g')\",/g" package.json
+                  VERSION="${{ steps.outputstep.outputs.VERSION }}"
 
-                  sed -i "s/\"version\":.*/\"version\": \"$(git describe --tags | sed 's/-[0-9]*-.*//g')\"/g" src-tauri/tauri.conf.json
+                  tmp="$(mktemp)"
+                  jq --arg version "$VERSION" '.version = $version' package.json > "$tmp" && mv "$tmp" package.json
 
-                  sed -i "s/version = \"0.0.0\"/version = \"$(git describe --tags | sed 's/-[0-9]*-.*//g')\"/g" src-tauri/Cargo.toml
+                  tmp="$(mktemp)"
+                  jq --arg version "$VERSION" '.version = $version' src-tauri/tauri.conf.json > "$tmp" && mv "$tmp" src-tauri/tauri.conf.json
 
-                  echo $(git describe --tags | sed 's/-[0-9]*-.*//g')
+                  sed -i "0,/version = \".*\"/s//version = \"${VERSION}\"/" src-tauri/Cargo.toml
 
-            - name: Upload Artifacts for Windows
+                  echo "${VERSION}"
+
+            - name: Upload source
               uses: actions/upload-artifact@v4
               with:
                   name: source
@@ -48,124 +53,26 @@ jobs:
               uses: actions/checkout@v4
               with:
                   fetch-depth: 0
-            - name: Build Popclipext
-              run: |
-                  cd .scripts/popclip
-                  bash ./build.sh
-                  cd ../..
-            - name: Build SnipDo
+
+            - name: Build SnipDo extension
               run: |
                   cd .scripts/snipdo
                   bash ./build.sh
-                  cd ../..
-            - name: Upload Artifacts
-              uses: actions/upload-artifact@v4
-              with:
-                  name: Pot.popclipextz
-                  path: .scripts/popclip/Pot.popclipextz
-                  if-no-files-found: error
-            - name: Upload Artifacts
-              uses: actions/upload-artifact@v4
-              with:
-                  name: pot.pbar
-                  path: .scripts/snipdo/pot.pbar
-                  if-no-files-found: error
-            - name: Upload Release
-              if: startsWith(github.ref, 'refs/tags')
-              uses: softprops/action-gh-release@v1
-              with:
-                  body_path: CHANGELOG
-                  token: ${{ secrets.GITHUB_TOKEN }}
-                  files: .scripts/popclip/Pot.popclipextz
-            - name: Upload Release
-              if: startsWith(github.ref, 'refs/tags')
-              uses: softprops/action-gh-release@v1
-              with:
-                  body_path: CHANGELOG
-                  token: ${{ secrets.GITHUB_TOKEN }}
-                  files: .scripts/snipdo/pot.pbar
 
-    build-for-macos:
-        needs: change-version
-        strategy:
-            fail-fast: false
-            matrix:
-                platform: [macos-latest]
-                target: [aarch64-apple-darwin, x86_64-apple-darwin]
+            - name: Upload SnipDo artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: neopot.pbar
+                  path: .scripts/snipdo/neopot.pbar
+                  if-no-files-found: error
 
-        runs-on: ${{ matrix.platform }}
-        steps:
-            - uses: actions/download-artifact@v4
-              with:
-                  name: source
-            - name: Setup Nodejs
-              uses: actions/setup-node@v4
-              with:
-                  node-version: 21
-            - name: Install Rust Stable
-              uses: dtolnay/rust-toolchain@stable
-            - name: install dependencies
-              run: |
-                  rustup target add ${{ matrix.target }}
-            - name: Setup pnpm
-              uses: pnpm/action-setup@v4
-              with:
-                  version: 9
-            - name: Install Dependencies
-              run: pnpm install
-            - name: Code Format
-              run: pnpm prettier --write .
-            - name: Build and Package
-              run: |
-                  export TAURI_PRIVATE_KEY="${{ secrets.TAURI_PRIVATE_KEY }}"
-                  export TAURI_KEY_PASSWORD="${{ secrets.TAURI_KEY_PASSWORD }}"
-                  export APPLE_SIGNING_IDENTITY="${{ secrets.APPLE_SIGNING_IDENTITY }}"
-                  export APPLE_CERTIFICATE="${{ secrets.APPLE_CERTIFICATE }}"
-                  export APPLE_CERTIFICATE_PASSWORD="${{ secrets.APPLE_CERTIFICATE_PASSWORD }}"
-                  export APPLE_TEAM_ID="${{ secrets.APPLE_TEAM_ID }}"
-                  export APPLE_API_ISSUER="${{ secrets.APPLE_API_ISSUER }}"
-                  export APPLE_API_KEY="${{ secrets.APPLE_API_KEY }}"
-                  export APPLE_ID="${{ secrets.APPLE_ID }}"
-                  export APPLE_PASSWORD="${{ secrets.APPLE_PASSWORD }}"
-                  pnpm tauri build --target ${{ matrix.target }}
-                  sudo chmod +x src-tauri/resources/*
-                  chmod +x src-tauri/resources/*
-            - name: Change File Name
-              if: matrix.target == 'aarch64-apple-darwin'
-              run: |
-                  sudo mv src-tauri/target/aarch64-apple-darwin/release/bundle/macos/pot.app.tar.gz src-tauri/target/aarch64-apple-darwin/release/bundle/macos/pot_${{needs.change-version.outputs.version}}_aarch64.app.tar.gz
-                  sudo mv src-tauri/target/aarch64-apple-darwin/release/bundle/macos/pot.app.tar.gz.sig src-tauri/target/aarch64-apple-darwin/release/bundle/macos/pot_${{needs.change-version.outputs.version}}_aarch64.app.tar.gz.sig
-            - name: Change File Name
-              if: matrix.target == 'x86_64-apple-darwin'
-              run: |
-                  sudo mv src-tauri/target/x86_64-apple-darwin/release/bundle/macos/pot.app.tar.gz src-tauri/target/x86_64-apple-darwin/release/bundle/macos/pot_${{needs.change-version.outputs.version}}_x64.app.tar.gz
-                  sudo mv src-tauri/target/x86_64-apple-darwin/release/bundle/macos/pot.app.tar.gz.sig src-tauri/target/x86_64-apple-darwin/release/bundle/macos/pot_${{needs.change-version.outputs.version}}_x64.app.tar.gz.sig
-            - name: Upload Artifacts
-              uses: actions/upload-artifact@v4
-              with:
-                  name: macos_${{ matrix.target }}_dmg
-                  path: src-tauri/target/${{ matrix.target }}/release/bundle/dmg/*.dmg
-                  if-no-files-found: error
-            - name: Upload Artifacts
-              uses: actions/upload-artifact@v4
-              with:
-                  name: macos_${{ matrix.target }}_updater
-                  path: src-tauri/target/${{ matrix.target }}/release/bundle/macos/*.app*
-                  if-no-files-found: error
-            - name: Upload Release
+            - name: Upload SnipDo release asset
               if: startsWith(github.ref, 'refs/tags')
               uses: softprops/action-gh-release@v1
               with:
                   body_path: CHANGELOG
                   token: ${{ secrets.GITHUB_TOKEN }}
-                  files: src-tauri/target/${{ matrix.target }}/release/bundle/dmg/*.dmg
-            - name: Upload Release
-              if: startsWith(github.ref, 'refs/tags')
-              uses: softprops/action-gh-release@v1
-              with:
-                  body_path: CHANGELOG
-                  token: ${{ secrets.GITHUB_TOKEN }}
-                  files: src-tauri/target/${{ matrix.target }}/release/bundle/macos/*.app*
+                  files: .scripts/snipdo/neopot.pbar
 
     build-for-windows:
         needs: change-version
@@ -175,13 +82,13 @@ jobs:
                 platform: [windows-latest]
                 target: [x86_64-pc-windows-msvc, i686-pc-windows-msvc, aarch64-pc-windows-msvc]
                 include:
-                    - os: windows-latest
+                    - arch: x64
                       target: x86_64-pc-windows-msvc
                       toolchain: stable-x86_64-pc-windows-msvc
-                    - os: windows-latest
+                    - arch: x86
                       target: i686-pc-windows-msvc
                       toolchain: stable-i686-pc-windows-msvc
-                    - os: windows-latest
+                    - arch: arm64
                       target: aarch64-pc-windows-msvc
                       toolchain: stable-aarch64-pc-windows-msvc
         runs-on: ${{ matrix.platform }}
@@ -189,36 +96,47 @@ jobs:
             - uses: actions/download-artifact@v4
               with:
                   name: source
-            - name: Setup Nodejs
+
+            - name: Setup Node.js
               uses: actions/setup-node@v4
               with:
-                  node-version: 21
-            - name: Install Rust Stable
+                  node-version: 24
+
+            - name: Install Rust
               uses: dtolnay/rust-toolchain@stable
-            - name: install dependencies
+
+            - name: Install Rust target
               run: |
                   rustup target add ${{ matrix.target }}
                   rustup toolchain install --force-non-host ${{ matrix.toolchain }}
+
             - name: Setup pnpm
               uses: pnpm/action-setup@v4
               with:
                   version: 9
-            - name: Install Dependencies
+
+            - name: Install dependencies
               run: pnpm install
-            - name: Code Format
+
+            - name: Code format
               run: pnpm prettier --write .
-            - name: Build and Package
+
+            - name: Build and package
               run: |
-                  $env:TAURI_PRIVATE_KEY="${{ secrets.TAURI_PRIVATE_KEY }}"
-                  $env:TAURI_KEY_PASSWORD="${{ secrets.TAURI_KEY_PASSWORD }}"
+                  $env:TAURI_SIGNING_PRIVATE_KEY="${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}"
+                  $env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD="${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}"
                   pnpm tauri build -b nsis,updater --target ${{ matrix.target }}
-            - name: Upload Artifacts
+                  Rename-Item .\src-tauri\target\${{ matrix.target }}\release\bundle\nsis\NeoPot_${{needs.change-version.outputs.version}}_${{ matrix.arch }}-setup.exe neopot_${{needs.change-version.outputs.version}}_${{ matrix.arch }}-setup.exe
+                  Rename-Item .\src-tauri\target\${{ matrix.target }}\release\bundle\nsis\NeoPot_${{needs.change-version.outputs.version}}_${{ matrix.arch }}-setup.exe.sig neopot_${{needs.change-version.outputs.version}}_${{ matrix.arch }}-setup.exe.sig
+
+            - name: Upload artifacts
               uses: actions/upload-artifact@v4
               with:
                   name: windows_${{ matrix.target }}
                   path: src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*setup*
                   if-no-files-found: error
-            - name: Upload Release
+
+            - name: Upload release assets
               if: startsWith(github.ref, 'refs/tags')
               uses: softprops/action-gh-release@v1
               with:
@@ -234,16 +152,13 @@ jobs:
                 platform: [windows-latest]
                 target: [x86_64-pc-windows-msvc, i686-pc-windows-msvc, aarch64-pc-windows-msvc]
                 include:
-                    - os: windows-latest
-                      arch: x64
+                    - arch: x64
                       target: x86_64-pc-windows-msvc
                       toolchain: stable-x86_64-pc-windows-msvc
-                    - os: windows-latest
-                      arch: x86
+                    - arch: x86
                       target: i686-pc-windows-msvc
                       toolchain: stable-i686-pc-windows-msvc
-                    - os: windows-latest
-                      arch: arm64
+                    - arch: arm64
                       target: aarch64-pc-windows-msvc
                       toolchain: stable-aarch64-pc-windows-msvc
         runs-on: ${{ matrix.platform }}
@@ -251,45 +166,54 @@ jobs:
             - uses: actions/download-artifact@v4
               with:
                   name: source
-            - name: Setup Nodejs
+
+            - name: Setup Node.js
               uses: actions/setup-node@v4
               with:
-                  node-version: 21
-            - name: Install Rust Stable
+                  node-version: 24
+
+            - name: Install Rust
               uses: dtolnay/rust-toolchain@stable
-            - name: install dependencies
+
+            - name: Install Rust target
               run: |
                   rustup target add ${{ matrix.target }}
                   rustup toolchain install --force-non-host ${{ matrix.toolchain }}
+
             - name: Setup pnpm
               uses: pnpm/action-setup@v4
               with:
                   version: 9
-            - name: Install Dependencies
+
+            - name: Install dependencies
               run: pnpm install
-            - name: Code Format
+
+            - name: Code format
               run: pnpm prettier --write .
-            - name: Download WebView2 Runtime
+
+            - name: Download WebView2 runtime
               run: |
-                  invoke-webrequest -uri https://github.com/westinyang/WebView2RuntimeArchive/releases/download/109.0.1518.78/Microsoft.WebView2.FixedVersionRuntime.109.0.1518.78.${{ matrix.arch }}.cab -outfile Microsoft.WebView2.FixedVersionRuntime.109.0.1518.78.${{ matrix.arch }}.cab
+                  Invoke-WebRequest -Uri https://github.com/westinyang/WebView2RuntimeArchive/releases/download/109.0.1518.78/Microsoft.WebView2.FixedVersionRuntime.109.0.1518.78.${{ matrix.arch }}.cab -OutFile Microsoft.WebView2.FixedVersionRuntime.109.0.1518.78.${{ matrix.arch }}.cab
                   Expand .\Microsoft.WebView2.FixedVersionRuntime.109.0.1518.78.${{ matrix.arch }}.cab -F:* ./src-tauri
                   Remove-Item .\src-tauri\tauri.windows.conf.json
                   Rename-Item .\src-tauri\webview.${{ matrix.arch }}.json tauri.windows.conf.json
-            - name: Build and Package
+
+            - name: Build and package
               run: |
-                  $env:TAURI_PRIVATE_KEY="${{ secrets.TAURI_PRIVATE_KEY }}"
-                  $env:TAURI_KEY_PASSWORD="${{ secrets.TAURI_KEY_PASSWORD }}"
+                  $env:TAURI_SIGNING_PRIVATE_KEY="${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}"
+                  $env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD="${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}"
                   pnpm tauri build -b nsis,updater --target ${{ matrix.target }}
-                  Rename-Item .\src-tauri\target\${{ matrix.target }}\release\bundle\nsis\pot_${{needs.change-version.outputs.version}}_${{ matrix.arch }}-setup.exe pot_${{needs.change-version.outputs.version}}_${{ matrix.arch }}_fix_webview2_runtime-setup.exe
-                  Rename-Item .\src-tauri\target\${{ matrix.target }}\release\bundle\nsis\pot_${{needs.change-version.outputs.version}}_${{ matrix.arch }}-setup.nsis.zip pot_${{needs.change-version.outputs.version}}_${{ matrix.arch }}_fix_webview2_runtime-setup.nsis.zip
-                  Rename-Item .\src-tauri\target\${{ matrix.target }}\release\bundle\nsis\pot_${{needs.change-version.outputs.version}}_${{ matrix.arch }}-setup.nsis.zip.sig pot_${{needs.change-version.outputs.version}}_${{ matrix.arch }}_fix_webview2_runtime-setup.nsis.zip.sig
-            - name: Upload Artifacts
+                  Rename-Item .\src-tauri\target\${{ matrix.target }}\release\bundle\nsis\NeoPot_${{needs.change-version.outputs.version}}_${{ matrix.arch }}-setup.exe neopot_${{needs.change-version.outputs.version}}_${{ matrix.arch }}_fix_webview2_runtime-setup.exe
+                  Rename-Item .\src-tauri\target\${{ matrix.target }}\release\bundle\nsis\NeoPot_${{needs.change-version.outputs.version}}_${{ matrix.arch }}-setup.exe.sig neopot_${{needs.change-version.outputs.version}}_${{ matrix.arch }}_fix_webview2_runtime-setup.exe.sig
+
+            - name: Upload artifacts
               uses: actions/upload-artifact@v4
               with:
                   name: windows_fix_webview_runtime_${{ matrix.target }}
                   path: src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*setup*
                   if-no-files-found: error
-            - name: Upload Release
+
+            - name: Upload release assets
               if: startsWith(github.ref, 'refs/tags')
               uses: softprops/action-gh-release@v1
               with:
@@ -311,65 +235,77 @@ jobs:
                         armv7-unknown-linux-gnueabihf,
                     ]
                 include:
-                    - os: ubuntu-latest
-                      target: x86_64-unknown-linux-gnu
+                    - target: x86_64-unknown-linux-gnu
                       toolchain: stable-x86_64-unknown-linux-gnu
-                    - os: ubuntu-latest
-                      target: i686-unknown-linux-gnu
+                    - target: i686-unknown-linux-gnu
                       toolchain: stable-i686-unknown-linux-gnu
-                    - os: ubuntu-latest
-                      target: aarch64-unknown-linux-gnu
+                    - target: aarch64-unknown-linux-gnu
                       toolchain: stable-aarch64-unknown-linux-gnu
-                    - os: ubuntu-latest
-                      target: armv7-unknown-linux-gnueabihf
+                    - target: armv7-unknown-linux-gnueabihf
                       toolchain: stable-armv7-unknown-linux-gnueabihf
         runs-on: ${{ matrix.platform }}
         steps:
             - uses: actions/download-artifact@v4
               with:
                   name: source
+
             - name: Build for Linux
               uses: ./.github/actions/build-for-linux
               env:
-                  TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
-                  TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+                  TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+                  TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
               with:
                   target: ${{ matrix.target }}
                   toolchain: ${{ matrix.toolchain }}
-            - name: Upload Artifacts
+
+            - name: Normalize Linux artifact names
+              run: |
+                  for file in src-tauri/target/${{ matrix.target }}/release/bundle/{deb,rpm,appimage}/NeoPot_*; do
+                    [ -e "$file" ] || continue
+                    dir="$(dirname "$file")"
+                    base="$(basename "$file")"
+                    mv "$file" "$dir/${base/NeoPot_/neopot_}"
+                  done
+
+            - name: Upload deb artifact
               uses: actions/upload-artifact@v4
               with:
                   name: linux_${{ matrix.target }}_deb
                   path: src-tauri/target/${{ matrix.target }}/release/bundle/deb/*.deb
                   if-no-files-found: error
-            - name: Upload Artifacts
+
+            - name: Upload rpm artifact
               uses: actions/upload-artifact@v4
               with:
                   name: linux_${{ matrix.target }}_rpm
                   path: src-tauri/target/${{ matrix.target }}/release/bundle/rpm/*.rpm
                   if-no-files-found: error
-            - name: Upload Artifacts
+
+            - name: Upload AppImage artifact
               if: matrix.target == 'x86_64-unknown-linux-gnu'
               uses: actions/upload-artifact@v4
               with:
                   name: linux_${{ matrix.target }}_appimage
                   path: src-tauri/target/${{ matrix.target }}/release/bundle/appimage/*.AppImage*
                   if-no-files-found: error
-            - name: Upload Release
+
+            - name: Upload AppImage release assets
               if: startsWith(github.ref, 'refs/tags') && matrix.target == 'x86_64-unknown-linux-gnu'
               uses: softprops/action-gh-release@v1
               with:
                   body_path: CHANGELOG
                   token: ${{ secrets.GITHUB_TOKEN }}
                   files: src-tauri/target/${{ matrix.target }}/release/bundle/appimage/*.AppImage*
-            - name: Upload Release
+
+            - name: Upload deb release assets
               if: startsWith(github.ref, 'refs/tags')
               uses: softprops/action-gh-release@v1
               with:
                   body_path: CHANGELOG
                   token: ${{ secrets.GITHUB_TOKEN }}
                   files: src-tauri/target/${{ matrix.target }}/release/bundle/deb/*.deb
-            - name: Upload Release
+
+            - name: Upload rpm release assets
               if: startsWith(github.ref, 'refs/tags')
               uses: softprops/action-gh-release@v1
               with:
@@ -377,20 +313,8 @@ jobs:
                   token: ${{ secrets.GITHUB_TOKEN }}
                   files: src-tauri/target/${{ matrix.target }}/release/bundle/rpm/*.rpm
 
-    trigger-docs-update:
-        needs: [build-for-macos, build-for-windows, build-for-linux]
-        runs-on: ubuntu-latest
-        if: startsWith(github.ref, 'refs/tags')
-        steps:
-            - name: Trigger update
-              run: |
-                  curl -X POST https://api.github.com/repos/pot-app/pot-docs/dispatches \
-                    -H "Accept: application/vnd.github.everest-preview+json" \
-                    -H "Authorization: token ${{ secrets.TOKEN }}" \
-                    -d '{"event_type": "plugins-updated"}'
-
     release-update:
-        needs: [build-for-macos, build-for-windows, build-for-linux, build-for-windows-fix-runtime]
+        needs: [build-for-windows, build-for-linux, build-for-windows-fix-runtime]
         runs-on: ubuntu-latest
         if: startsWith(github.ref, 'refs/tags')
         steps:
@@ -398,90 +322,40 @@ jobs:
               uses: actions/checkout@v4
               with:
                   fetch-depth: 0
-            - name: Install git
+
+            - name: Resolve version
               run: |
-                  sudo apt-get update
-                  sudo apt-get install -y git curl
-            - name: Get Tag Name
-              run: |
-                  echo "VERSION=$(git describe --tags | sed 's/-[0-9]*-.*//g')" >> $GITHUB_ENV
-                  echo "VERSION=$(git describe --tags | sed 's/-[0-9]*-.*//g')"
+                  VERSION="$(git describe --tags | sed 's/-[0-9]*-.*//g' | sed 's/^v//')"
+                  echo "VERSION=${VERSION}" >> "$GITHUB_ENV"
+                  echo "RELEASE_TAG=${GITHUB_REF_NAME}" >> "$GITHUB_ENV"
+                  echo "VERSION=${VERSION}"
+
             - name: Setup pnpm
               uses: pnpm/action-setup@v4
               with:
                   version: 9
-            - name: pnpm install
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 24
+
+            - name: Install dependencies
               run: pnpm install
-            - name: Release updater file
+
+            - name: Release updater files
               run: |
                   pnpm run updater
                   pnpm run updater:fixRuntime
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-            - name: Upload Release
+
+            - name: Upload updater metadata
               uses: softprops/action-gh-release@v1
               with:
-                  body: ${{env.VERSION}}
+                  body: ${{ env.VERSION }}
                   tag_name: updater
                   token: ${{ secrets.GITHUB_TOKEN }}
                   files: |
                       update.json
                       update-fix-runtime.json
-
-    homebrew:
-        name: Update Homebrew cask
-        needs: build-for-macos
-        runs-on: macos-latest
-        if: startsWith(github.ref, 'refs/tags')
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@v4
-              with:
-                  fetch-depth: 0
-            - name: Get Tag Name
-              run: |
-                  echo "VERSION=$(git describe --tags | sed 's/-[0-9]*-.*//g')" >> $GITHUB_ENV
-                  echo "VERSION=$(git describe --tags | sed 's/-[0-9]*-.*//g')"
-            - name: Set up Homebrew
-              uses: Homebrew/actions/setup-homebrew@master
-            - name: Set up Git
-              run: |
-                  # sudo apt-get install git -y
-                  git config --global user.email support@pot-app.com
-                  git config --global user.name pot-app
-            - name: Update Homebrew cask
-              env:
-                  HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.TOKEN }}
-              run: |
-                  brew tap pot-app/homebrew-tap
-                  brew update
-                  brew bump-cask-pr pot --version ${{ env.VERSION }} --no-browse
-
-    winget:
-        name: Update WinGet Package
-        needs: build-for-windows
-        runs-on: ubuntu-latest
-        if: startsWith(github.ref, 'refs/tags')
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@v4
-              with:
-                  fetch-depth: 0
-            - name: Install git
-              run: |
-                  sudo apt-get update
-                  sudo apt-get install -y git
-            - name: Get Tag Name
-              run: |
-                  echo "VERSION=$(git describe --tags | sed 's/-[0-9]*-.*//g')" >> $GITHUB_ENV
-                  echo "VERSION=$(git describe --tags | sed 's/-[0-9]*-.*//g')"
-            - name: Upload WinGet
-              if: startsWith(github.ref, 'refs/tags')
-              uses: vedantmgoyal2009/winget-releaser@v2
-              with:
-                  identifier: Pylogmon.pot
-                  version: ${{env.VERSION}}
-                  installers-regex: '\.exe$'
-                  token: ${{ secrets.TOKEN }}
-                  fork-user: Pylogmon
-              continue-on-error: true

@@ -7,7 +7,8 @@
             "write_clipboard": "Scrivi negli appunti",
             "save": "Salva",
             "clear": "Pulisci",
-            "coming": "Prossimamente…"
+            "coming": "Prossimamente…",
+            "test": "Test"
         },
         "services": {
             "help": "Guida alla configurazione",
@@ -245,14 +246,14 @@
                 "target": "Obbiettivo",
                 "title": "Impostazioni di traduzione",
                 "font_size": {
-                    "14": "Piccolo (14px)",
-                    "title": "Dimensione del font",
-                    "24": "Molto molto grande (24px)",
-                    "20": "Molto grande (20px)",
-                    "12": "Molto piccolo (12px)",
-                    "16": "Standard (16px)",
                     "10": "Molto molto piccolo (10px)",
-                    "18": "Grande (18px)"
+                    "12": "Molto piccolo (12px)",
+                    "14": "Piccolo (14px)",
+                    "16": "Standard (16px)",
+                    "18": "Grande (18px)",
+                    "20": "Molto grande (20px)",
+                    "24": "Molto molto grande (24px)",
+                    "title": "Dimensione del font"
                 },
                 "google": "Google",
                 "detect_engine": "Motore di rilevamento della lingua",
@@ -325,13 +326,13 @@
                 },
                 "server_port_change": "La porta di ascolto è stata modificata. Riavviare l'applicazione affinché le modifiche abbiano effetto",
                 "font_size": {
-                    "20": "Molto grande (20px)",
-                    "18": "Grande (18px)",
+                    "10": "Molto molto piccolo (10px)",
+                    "12": "Molto piccolo (12px)",
                     "14": "Piccolo (14px)",
                     "16": "Standard (16px)",
-                    "12": "Molto piccolo (12px)",
+                    "18": "Grande (18px)",
+                    "20": "Molto grande (20px)",
                     "24": "Molto molto grande (24px)",
-                    "10": "Molto molto piccolo (10px)",
                     "title": "Dimensione del font"
                 },
                 "app_font": "Font",
@@ -378,7 +379,8 @@
                 "title": "Impostazioni del servizio",
                 "add_builtin_service": "Aggiungi servizio integrato",
                 "label": "Servizio",
-                "test_failed": "Test non riuscito"
+                "test_failed": "Test non riuscito",
+                "test_success": "Test riuscito"
             },
             "about": {
                 "title": "Informazioni sull'applicazione",

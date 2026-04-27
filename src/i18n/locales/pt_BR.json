@@ -7,7 +7,8 @@
             "write_clipboard": "Escrever na Área de Transferência",
             "plugin": "Plugin",
             "coming": "Em breve…",
-            "clear": "Claro"
+            "clear": "Claro",
+            "test": "Test"
         },
         "languages": {
             "auto": "Detectar Automaticamente",
@@ -53,14 +54,14 @@
                 "app_language": "Idioma de Exibição",
                 "app_theme": "Tema",
                 "font_size": {
-                    "14": "Pequena (14px)",
-                    "title": "Tamanho da Fonte",
-                    "24": "Extragrande (24px)",
-                    "20": "Muito Grande (20px)",
-                    "12": "Muito Pequena (12px)",
-                    "16": "Padrão (16px)",
                     "10": "Extra pequeno (10px)",
-                    "18": "Grande (18px)"
+                    "12": "Muito Pequena (12px)",
+                    "14": "Pequena (14px)",
+                    "16": "Padrão (16px)",
+                    "18": "Grande (18px)",
+                    "20": "Muito Grande (20px)",
+                    "24": "Extragrande (24px)",
+                    "title": "Tamanho da Fonte"
                 },
                 "theme": {
                     "light": "Luz",
@@ -125,14 +126,14 @@
                 "yandex": "Yandex",
                 "niutrans": "NiuTrans",
                 "font_size": {
-                    "14": "Pequena (14px)",
-                    "title": "Tamanho da Fonte",
-                    "24": "Muito, Muito Grande (24px)",
-                    "20": "Muito Grande (20px)",
-                    "12": "Muito Pequena (12px)",
-                    "16": "Padrão (16px)",
                     "10": "Muito, Muito Pequena (10px)",
-                    "18": "Grande (18px)"
+                    "12": "Muito Pequena (12px)",
+                    "14": "Pequena (14px)",
+                    "16": "Padrão (16px)",
+                    "18": "Grande (18px)",
+                    "20": "Muito Grande (20px)",
+                    "24": "Muito, Muito Grande (24px)",
+                    "title": "Tamanho da Fonte"
                 }
             },
             "recognize": {
@@ -170,7 +171,8 @@
                 "install_plugin": "Instalar Plug-in",
                 "uninstall_success": "Plug-in desinstalado com sucesso",
                 "homepage": "Homepage",
-                "view_plugin_list": "Exibir Lista de Plugins"
+                "view_plugin_list": "Exibir Lista de Plugins",
+                "test_success": "Teste concluído"
             },
             "history": {
                 "label": "Histórico",

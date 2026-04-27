@@ -1,10 +1,10 @@
-## 3.0.7 (2025-5-10)
+## 1.0.0-beta (2026-4-29)
 
-### New feature:
+### Refactoring:
 
--   signed macOS app
-
-### Bugs fixed:
-
--   fix screenshot on macOS
--   rm tray click event on macOS
+- Migration from Tauri v1 to Tauri v2
+- Upgrade to Node 24 LTS
+- Upgrade React 18 to React 19
+- Upgrade Vite to Vite 8
+- Upgrade NextUI to HeroUI
+- Migration from Javascript to Typescript
