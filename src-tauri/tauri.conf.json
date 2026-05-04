@@ -44,7 +44,7 @@
   },
   "productName": "NeoPot",
   "mainBinaryName": "neopot",
-  "version": "1.0.0-beta",
+  "version": "1.0.0",
   "identifier": "neopot",
   "plugins": {
     "updater": {

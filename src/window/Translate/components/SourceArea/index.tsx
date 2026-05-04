@@ -197,6 +197,12 @@ export default function SourceArea(props) {
         }
     };
 
+    const handleNewTextRef = useRef(handleNewText);
+
+    useEffect(() => {
+        handleNewTextRef.current = handleNewText;
+    }, [handleNewText]);
+
     const handleSpeak = async () => {
         const instanceKey = ttsServiceList[0];
         let detected = detectLanguage;
@@ -232,33 +238,31 @@ export default function SourceArea(props) {
     };
 
     useEffect(() => {
-        if (hideWindow !== null) {
-            let disposed = false;
-            let removeListener = null;
-            const unlistenPromise = listen('new_text', (event) => {
-                appWindow.setFocus();
-                handleNewText(event.payload);
-            });
-            unlistenPromise.then((unlisten) => {
-                if (disposed) {
-                    unlisten();
-                } else {
-                    removeListener = unlisten;
-                }
-            });
+        let disposed = false;
+        let removeListener = null;
+        const unlistenPromise = listen('new_text', (event) => {
+            appWindow.setFocus();
+            handleNewTextRef.current(event.payload);
+        });
+        unlistenPromise.then((unlisten) => {
+            if (disposed) {
+                unlisten();
+            } else {
+                removeListener = unlisten;
+            }
+        });
 
-            return () => {
-                disposed = true;
-                if (removeListener) {
-                    removeListener();
-                } else {
-                    unlistenPromise.then((unlisten) => {
-                        unlisten();
-                    });
-                }
-            };
-        }
-    }, [handleNewText, hideWindow]);
+        return () => {
+            disposed = true;
+            if (removeListener) {
+                removeListener();
+            } else {
+                unlistenPromise.then((unlisten) => {
+                    unlisten();
+                });
+            }
+        };
+    }, []);
 
     useEffect(() => {
         if (ttsServiceList && getServiceSouceType(ttsServiceList[0]) === ServiceSourceType.PLUGIN) {

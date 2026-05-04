@@ -4129,7 +4129,7 @@ dependencies = [
 
 [[package]]
 name = "neopot"
-version = "1.0.0-beta"
+version = "1.0.0"
 dependencies = [
  "arboard",
  "base64 0.22.1",

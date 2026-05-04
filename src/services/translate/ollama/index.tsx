@@ -1,6 +1,8 @@
 // @ts-nocheck
+import { Ollama } from 'ollama/browser';
+
+import { fetch } from '@/utils/tauri_http';
 import { Language } from './info';
-import { invoke } from '@tauri-apps/api/core';
 
 const THINKING_MODE_DEFAULT = 'default';
 const THINKING_MODE_ON = 'on';
@@ -16,17 +18,6 @@ function normalizeHost(requestPath) {
     }
 
     return normalized.replace(/\/+$/, '');
-}
-
-function buildChatUrl(requestPath) {
-    const apiUrl = new URL(normalizeHost(requestPath));
-
-    if (!apiUrl.pathname.endsWith('/api/chat')) {
-        const normalizedPath = apiUrl.pathname.replace(/\/+$/, '');
-        apiUrl.pathname = `${normalizedPath}/api/chat`;
-    }
-
-    return apiUrl;
 }
 
 function parseOptionalFloat(value, fieldName) {
@@ -104,6 +95,10 @@ function applyThinkingMode(promptList, model, thinkingMode) {
     return normalizedPromptList;
 }
 
+function isGemma4Model(model) {
+    return model?.toLowerCase().startsWith('gemma4');
+}
+
 function resolveThinkValue(thinkingMode) {
     if (thinkingMode === THINKING_MODE_ON) {
         return true;
@@ -123,79 +118,37 @@ function resolveModel(model) {
     return model;
 }
 
-async function readErrorResponse(response) {
-    try {
-        const data = await response.json();
-        if (typeof data?.error === 'string') {
-            return data.error;
-        }
-        return JSON.stringify(data);
-    } catch {
-        try {
-            return await response.text();
-        } catch {
-            return '';
-        }
-    }
+function createClient(requestPath) {
+    return new Ollama({
+        host: normalizeHost(requestPath),
+        fetch,
+    });
+}
+
+export async function getModels(requestPath) {
+    return createClient(requestPath).list();
+}
+
+export async function pullModel(requestPath, model) {
+    return createClient(requestPath).pull({ model, stream: false });
 }
 
 async function readStreamResponse(response, setResult) {
-    if (!response.body) {
-        throw 'Missing response body';
-    }
-
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = '';
     let target = '';
 
-    try {
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) {
-                break;
-            }
-
-            buffer += decoder.decode(value, { stream: true });
-            const lines = buffer.split('\n');
-            buffer = lines.pop() || '';
-
-            for (const line of lines) {
-                const trimmedLine = line.trim();
-                if (!trimmedLine) {
-                    continue;
-                }
-
-                const part = JSON.parse(trimmedLine);
-                if (part.error) {
-                    throw part.error;
-                }
-
-                const content = part.message?.content || '';
-                if (!content) {
-                    continue;
-                }
-
-                target += content;
-                if (setResult) {
-                    setResult(`${target}_`);
-                } else {
-                    await reader.cancel();
-                    return '[STREAM]';
-                }
-            }
+    for await (const part of response) {
+        const content = part.message?.content || '';
+        if (!content) {
+            continue;
         }
 
-        buffer += decoder.decode();
-        if (buffer.trim()) {
-            const part = JSON.parse(buffer.trim());
-            if (part.error) {
-                throw part.error;
-            }
-            target += part.message?.content || '';
+        target += content;
+        if (setResult) {
+            setResult(`${target}_`);
+        } else {
+            response.abort();
+            return '[STREAM]';
         }
-    } finally {
-        reader.releaseLock();
     }
 
     if (setResult) {
@@ -227,22 +180,22 @@ export async function translate(text, from, to, options = {}) {
     const requestBody = {
         model,
         messages: promptList,
-        stream: false,
+        stream: !!stream,
     };
     const modelOptions = buildOptions(config);
-    const think = resolveThinkValue(thinkingMode);
+    const think = isGemma4Model(model) ? undefined : resolveThinkValue(thinkingMode);
 
-    if (modelOptions) {
-        requestBody.options = modelOptions;
-    }
-    if (think !== undefined) {
-        requestBody.think = think;
+    requestBody.options = modelOptions;
+    requestBody.think = think;
+
+    const client = createClient(requestPath);
+
+    if (stream) {
+        const response = await client.chat(requestBody);
+        return readStreamResponse(response, setResult);
     }
 
-    const result = await invoke('ollama_chat', {
-        requestPath: normalizeHost(requestPath),
-        body: requestBody,
-    });
+    const result = await client.chat(requestBody);
     const target = result.message?.content?.trim();
 
     if (target) {

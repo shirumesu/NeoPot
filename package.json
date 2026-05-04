@@ -1,11 +1,12 @@
 {
     "name": "neopot",
     "private": true,
-    "version": "1.0.0-beta",
+    "version": "1.0.0",
     "type": "module",
     "scripts": {
-        "dev": "vite",
-        "build": "vite build",
+        "clean:dist": "node -e \"fs.rmSync('dist', { recursive: true, force: true })\"",
+        "dev": "pnpm run clean:dist && vite",
+        "build": "pnpm run clean:dist && vite build",
         "dev:browser-smoke": "vite --mode browser-smoke",
         "typecheck": "tsc --noEmit -p tsconfig.json",
         "lint": "pnpm run typecheck",

@@ -112,6 +112,7 @@ pub fn config_window() {
 }
 
 fn translate_window() -> WebviewWindow {
+    info!("[translate_window] called");
     use mouse_position::mouse_position::{Mouse, Position};
     // Mouse physical position
     let mut mouse_position = match Mouse::get_mouse_position() {
@@ -122,9 +123,11 @@ fn translate_window() -> WebviewWindow {
         }
     };
     let (window, exists) = build_window("translate", "Translate");
+    info!("[translate_window] built, exists={}", exists);
     if exists {
         window.show().unwrap();
         window.set_focus().unwrap();
+        info!("[translate_window] existing window shown and focused");
         return window;
     }
     window.set_skip_taskbar(true).unwrap();
@@ -210,6 +213,7 @@ fn translate_window() -> WebviewWindow {
                 .unwrap();
         }
     }
+    info!("[translate_window] new window configured, showing");
     window
 }
 
@@ -259,6 +263,7 @@ pub fn text_translate(text: String) {
 }
 
 pub fn image_translate() {
+    info!("[image_translate] called");
     let app_handle = APP.get().unwrap();
     let state: tauri::State<StringWrapper> = app_handle.state();
     state
@@ -266,16 +271,25 @@ pub fn image_translate() {
         .lock()
         .unwrap()
         .replace_range(.., "[IMAGE_TRANSLATE]");
+    info!("[image_translate] state set to [IMAGE_TRANSLATE]");
     let window = translate_window();
+    info!("[image_translate] translate_window obtained, label={}", window.label());
+    window.show().unwrap();
+    window.set_focus().unwrap();
+    info!("[image_translate] window shown and focused, emitting new_text");
     window.emit("new_text", "[IMAGE_TRANSLATE]").unwrap();
+    info!("[image_translate] new_text emitted");
 }
 
 pub fn recognize_window() {
+    info!("[recognize_window] called");
     let (window, exists) = build_window("recognize", "Recognize");
+    info!("[recognize_window] built, exists={}", exists);
     if exists {
         window.show().unwrap();
         window.set_focus().unwrap();
         window.emit("new_image", "").unwrap();
+        info!("[recognize_window] existing window shown, focused, new_image emitted");
         return;
     }
     let width = match get("recognize_window_width") {
@@ -304,35 +318,47 @@ pub fn recognize_window() {
     window.show().unwrap();
     window.set_focus().unwrap();
     window.emit("new_image", "").unwrap();
+    info!("[recognize_window] new window shown, focused, new_image emitted");
 }
 
 fn screenshot_window() -> WebviewWindow {
+    info!("[screenshot_window] creating");
     let (window, _exists) = build_window("screenshot", "Screenshot");
+    info!("[screenshot_window] built, setting properties");
 
     window.set_skip_taskbar(true).unwrap();
     window.set_fullscreen(true).unwrap();
 
     window.set_always_on_top(true).unwrap();
     let _ = window.emit("capture_screenshot", "");
+    info!("[screenshot_window] capture_screenshot emitted");
     window
 }
 
 pub fn ocr_recognize() {
+    info!("[ocr_recognize] called");
     {
         let window = screenshot_window();
+        info!("[ocr_recognize] screenshot_window created, listening for success");
         let window_ = window.clone();
         window.listen("success", move |event| {
+            info!("[ocr_recognize] success event received");
             recognize_window();
+            info!("[ocr_recognize] recognize_window done");
             window_.unlisten(event.id())
         });
     }
 }
 pub fn ocr_translate() {
+    info!("[ocr_translate] called");
     {
         let window = screenshot_window();
+        info!("[ocr_translate] screenshot_window created, listening for success");
         let window_ = window.clone();
         window.listen("success", move |event| {
+            info!("[ocr_translate] success event received");
             image_translate();
+            info!("[ocr_translate] image_translate done");
             window_.unlisten(event.id())
         });
     }

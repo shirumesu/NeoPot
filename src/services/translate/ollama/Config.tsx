@@ -23,9 +23,8 @@ import React, { useEffect, useState } from 'react';
 
 import { useConfig } from '../../../hooks/useConfig';
 import { useToastStyle } from '../../../hooks';
-import { translate } from './index';
+import { getModels as getOllamaModels, pullModel as pullOllamaModel, translate } from './index';
 import { Language } from './index';
-import { invoke } from '@tauri-apps/api/core';
 
 const THINKING_MODE_DEFAULT = 'default';
 const THINKING_MODE_ON = 'on';
@@ -110,9 +109,7 @@ export function Config(props) {
 
     async function getModels() {
         try {
-            const list = await invoke('ollama_tags', {
-                requestPath: normalizeHost(serviceConfig.requestPath),
-            });
+            const list = await getOllamaModels(normalizeHost(serviceConfig.requestPath));
             setInstalledModels(list);
             const models = list.models?.map((model) => model.name) ?? [];
             if (
@@ -135,10 +132,7 @@ export function Config(props) {
         setProgress(0);
         setPullingStatus(serviceConfig.model);
         try {
-            await invoke('ollama_pull', {
-                requestPath: normalizeHost(serviceConfig.requestPath),
-                body: { model: serviceConfig.model, stream: false },
-            });
+            await pullOllamaModel(normalizeHost(serviceConfig.requestPath), serviceConfig.model);
             await getModels();
         } catch (e) {
             toast.error(e.toString(), { style: toastStyle });

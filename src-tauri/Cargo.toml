@@ -1,6 +1,6 @@
 [package]
 name = "neopot"
-version = "1.0.0-beta"
+version = "1.0.0"
 description = "NeoPot"
 authors = ["shirumesu"]
 license = "GPL-3.0-only"

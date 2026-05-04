@@ -4,7 +4,7 @@ import { appCacheDir, join } from '@tauri-apps/api/path';
 import { currentMonitor } from '@tauri-apps/api/window';
 import { convertFileSrc } from '@tauri-apps/api/core';
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
-import { warn } from '@tauri-apps/plugin-log';
+import { warn, info } from '@tauri-apps/plugin-log';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 const appWindow = getCurrentWebviewWindow()
@@ -30,6 +30,8 @@ export default function Screenshot() {
             const appCacheDirPath = await appCacheDir();
             const filePath = await join(appCacheDirPath, 'pot_screenshot.png');
             setImgurl(`${convertFileSrc(filePath)}?t=${Date.now()}`);
+            await appWindow.show();
+            await appWindow.setFocus();
         } catch (e) {
             setError(e.toString());
             await appWindow.show();
@@ -84,6 +86,7 @@ export default function Screenshot() {
                         setIsDown(true);
                         setMouseDownX(e.clientX);
                         setMouseDownY(e.clientY);
+                        info(`[Screenshot] mouseDown: clientX=${e.clientX}, clientY=${e.clientY}`);
                     } else {
                         void appWindow.close();
                     }
@@ -96,17 +99,19 @@ export default function Screenshot() {
                     }
                 }}
                 onMouseUp={async (e) => {
+                    const monitor = await currentMonitor();
+                    const dpi = monitor.size.width / window.innerWidth;
+                    info(`[Screenshot] mouseUp: clientX=${e.clientX}, clientY=${e.clientY}, mouseDownX=${mouseDownX}, mouseDownY=${mouseDownY}, monitorWidth=${monitor.size.width}, winWidth=${window.innerWidth}, dpi=${dpi}, isMoved=${isMoved}`);
                     appWindow.hide();
                     setIsDown(false);
                     setIsMoved(false);
-                    const imgWidth = imgRef.current.naturalWidth;
-                    const dpi = imgWidth / window.innerWidth;
                     const left = Math.floor(Math.min(mouseDownX, e.clientX) * dpi);
                     const top = Math.floor(Math.min(mouseDownY, e.clientY) * dpi);
                     const right = Math.floor(Math.max(mouseDownX, e.clientX) * dpi);
                     const bottom = Math.floor(Math.max(mouseDownY, e.clientY) * dpi);
                     const width = right - left;
                     const height = bottom - top;
+                    info(`[Screenshot] crop: left=${left}, top=${top}, width=${width}, height=${height}`);
                     if (width <= 0 || height <= 0) {
                         warn('Screenshot area is too small');
                         await appWindow.close();
