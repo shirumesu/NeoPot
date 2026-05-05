@@ -12,6 +12,9 @@
         "lint": "pnpm run typecheck",
         "test": "node --test \"spec/test/*.test.mjs\"",
         "preview": "vite preview",
+        "tauri:dev:no-watch": "tauri dev --no-watch",
+        "tauri:build:debug": "tauri build --debug --no-bundle --config src-tauri/tauri.fast.conf.json",
+        "tauri:build:fast": "tauri build --no-bundle --config src-tauri/tauri.fast.conf.json",
         "tauri": "tauri",
         "updater": "node updater/updater.mjs",
         "updater:fixRuntime": "node updater/updater-for-fix-runtime.mjs"
@@ -19,6 +22,7 @@
     "dependencies": {
         "@heroui/react": "^2.8.10",
         "@heroui/theme": "^2.4.26",
+        "@paddleocr/paddleocr-js": "^0.3.2",
         "@react-spring/web": "^9.7.5",
         "@tauri-apps/api": "^2.10.1",
         "@tauri-apps/plugin-autostart": "2.5.1",
@@ -55,7 +59,6 @@
         "react-router-dom": "^6.30.2",
         "react-spinners": "^0.14.1",
         "react-use-measure": "^2.1.1",
-        "tesseract.js": "^5.1.1",
         "uuid": "^14.0.0"
     },
     "devDependencies": {

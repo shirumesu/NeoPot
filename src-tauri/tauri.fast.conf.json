@@ -1,0 +1,8 @@
+{
+    "build": {
+        "beforeBuildCommand": ""
+    },
+    "bundle": {
+        "active": false
+    }
+}

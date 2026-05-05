@@ -22,11 +22,10 @@ export default function Recognize(props) {
     } = useDisclosure();
     const { isOpen: isSelectOpen, onOpen: onSelectOpen, onOpenChange: onSelectOpenChange } = useDisclosure();
     const { isOpen: isConfigOpen, onOpen: onConfigOpen, onOpenChange: onConfigOpenChange } = useDisclosure();
-    const [currentConfigKey, setCurrentConfigKey] = useState('system');
+    const [currentConfigKey, setCurrentConfigKey] = useState('local_model');
     // now it's service instance list
     const [recognizeServiceInstanceList, setRecognizeServiceInstanceList] = useConfig('recognize_service_list', [
-        'system',
-        'tesseract',
+        'local_model',
     ]);
 
     const { t } = useTranslation();

@@ -75,13 +75,13 @@
                 "title": "تنظیمات عمومی",
                 "default_font": "پیشفرض",
                 "font_size": {
-                    "20": "خیلی بزرگ (20px)",
-                    "18": "بزرگ (18px)",
+                    "10": "خیلی خیلی کوچک (10px)",
+                    "12": "خیلی کوچک (12px)",
                     "14": "کوچک (14px)",
                     "16": "استاندارد (16px)",
-                    "12": "خیلی کوچک (12px)",
+                    "18": "بزرگ (18px)",
+                    "20": "خیلی بزرگ (20px)",
                     "24": "خیلی خیلی بزرگ (24px)",
-                    "10": "خیلی خیلی کوچک (10px)",
                     "title": "اندازه فونت"
                 },
                 "app_font": "فونت",
@@ -118,6 +118,14 @@
             "copy_text": "کپی",
             "delete_space": "پاک کردن فاصله",
             "copy_img": "کپی عکس"
+        },
+        "services": {
+            "recognize": {
+                "local_model": {
+                    "title": "Local Model OCR",
+                    "description": "Uses the bundled PaddleOCR.js PP-OCRv5 local model assets in the app. Recognition does not use a cloud OCR API."
+                }
+            }
         }
     }
 }

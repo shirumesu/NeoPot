@@ -1,6 +1,5 @@
 // @ts-nocheck
-import * as _system from './system';
-import * as _tesseract from './tesseract';
+import * as _local_model from './local_model';
 import * as _baidu_ocr from './baidu';
 import * as _baidu_accurate_ocr from './baidu_accurate';
 import * as _baidu_img_ocr from './baidu_img';
@@ -15,8 +14,7 @@ import * as _volcengine_ocr from './volcengine';
 import * as _volcengine_multi_lang_ocr from './volcengine_multi_lang';
 import * as _qrcode from './qrcode';
 
-export const system = _system;
-export const tesseract = _tesseract;
+export const local_model = _local_model;
 export const baidu_ocr = _baidu_ocr;
 export const baidu_accurate_ocr = _baidu_accurate_ocr;
 export const baidu_img_ocr = _baidu_img_ocr;

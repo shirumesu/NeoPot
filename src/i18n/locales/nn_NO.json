@@ -49,9 +49,11 @@
                 "tencent_accurate_ocr": {},
                 "iflytek_ocr": {},
                 "qrcode": {},
-                "tesseract": {},
                 "tencent_img_ocr": {},
-                "system": {}
+                "local_model": {
+                    "title": "Local Model OCR",
+                    "description": "Uses the bundled PaddleOCR.js PP-OCRv5 local model assets in the app. Recognition does not use a cloud OCR API."
+                }
             },
             "collection": {
                 "anki": {},

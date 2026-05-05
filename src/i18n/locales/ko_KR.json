@@ -53,7 +53,13 @@
             },
             "help": "설정 방법 안내",
             "no_need": "즉시 사용 가능합니다 (설정 불필요)",
-            "instance_name": "설명 이름"
+            "instance_name": "설명 이름",
+            "recognize": {
+                "local_model": {
+                    "title": "Local Model OCR",
+                    "description": "Uses the bundled PaddleOCR.js PP-OCRv5 local model assets in the app. Recognition does not use a cloud OCR API."
+                }
+            }
         },
         "languages": {
             "auto": "자동 감지",

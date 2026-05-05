@@ -9,14 +9,14 @@
                     "light": "Ýagty"
                 },
                 "font_size": {
-                    "14": "Kiçi (14px)",
-                    "12": "Örän kiçi (12px)",
                     "10": "Goşmaça kiçi (10px)",
-                    "title": "Şrift ölçegi",
+                    "12": "Örän kiçi (12px)",
+                    "14": "Kiçi (14px)",
                     "16": "Standart (16px)",
                     "18": "Uly (18px)",
                     "20": "Örän uly (20px)",
-                    "24": "Goşmaça Uly (24px)"
+                    "24": "Goşmaça Uly (24px)",
+                    "title": "Şrift ölçegi"
                 },
                 "transparent": "Transparent Täsiri",
                 "proxy": {
@@ -81,6 +81,14 @@
             "plugin": "Plugin",
             "coming": "Tiz ýakynda…",
             "clear": "Arassala"
+        },
+        "services": {
+            "recognize": {
+                "local_model": {
+                    "title": "Local Model OCR",
+                    "description": "Uses the bundled PaddleOCR.js PP-OCRv5 local model assets in the app. Recognition does not use a cloud OCR API."
+                }
+            }
         }
     }
 }

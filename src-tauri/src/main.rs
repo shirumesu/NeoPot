@@ -10,7 +10,6 @@ mod hotkey;
 mod lang_detect;
 mod screenshot;
 mod server;
-mod system_ocr;
 mod tray;
 mod updater;
 mod window;
@@ -26,7 +25,6 @@ use once_cell::sync::OnceCell;
 use screenshot::screenshot;
 use server::*;
 use std::sync::Mutex;
-use system_ocr::*;
 use tauri::Manager;
 use tauri_plugin_log::{Target, TargetKind};
 use tauri_plugin_notification::NotificationExt;
@@ -146,7 +144,6 @@ fn main() {
             cut_image,
             get_base64,
             copy_img,
-            system_ocr,
             set_proxy,
             unset_proxy,
             open_config_dir,

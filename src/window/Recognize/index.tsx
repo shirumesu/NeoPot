@@ -56,7 +56,7 @@ export default function Recognize() {
     const [pluginList, setPluginList] = useAtom(pluginListAtom);
     const [closeOnBlur] = useConfig('recognize_close_on_blur', false);
     const [pined, setPined] = useState(false);
-    const [serviceInstanceList] = useConfig('recognize_service_list', ['system', 'tesseract']);
+    const [serviceInstanceList] = useConfig('recognize_service_list', ['local_model']);
     const [pluginLoadError, setPluginLoadError] = useState(null);
     const [serviceConfigError, setServiceConfigError] = useState(null);
     const [serviceInstanceConfigMap, setServiceInstanceConfigMap] = useState({});

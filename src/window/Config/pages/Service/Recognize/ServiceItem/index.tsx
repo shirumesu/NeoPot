@@ -11,7 +11,6 @@ import {
     getServiceSouceType,
 } from '../../../../../../utils/service_instance';
 import * as builtinServices from '../../../../../../services/recognize';
-import { osType } from '../../../../../../utils/env';
 import { useConfig } from '../../../../../../hooks';
 
 interface PluginInfo {
@@ -57,11 +56,7 @@ export default function ServiceItem(props: ServiceItemProps) {
                     {serviceSourceType === ServiceSourceType.BUILDIN && (
                         <>
                             <img
-                                src={
-                                    serviceName === 'system'
-                                        ? `logo/${osType}.svg`
-                                        : builtinServiceMap[serviceName].info.icon
-                                }
+                                src={builtinServiceMap[serviceName].info.icon}
                                 className='h-[24px] w-[24px] my-auto'
                                 draggable={false}
                             />

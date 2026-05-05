@@ -389,6 +389,10 @@
                 "volcengine_multi_lang_ocr": {
                     "appid": "מזהה אפליקציה",
                     "secret": "סודי"
+                },
+                "local_model": {
+                    "title": "Local Model OCR",
+                    "description": "Uses the bundled PaddleOCR.js PP-OCRv5 local model assets in the app. Recognition does not use a cloud OCR API."
                 }
             },
             "collection": {

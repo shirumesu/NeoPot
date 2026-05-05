@@ -12,7 +12,6 @@ import { languageList } from '../../../utils/language';
 import { useConfig } from '../../../hooks';
 import { textAtom } from '../TextArea';
 import { pluginListAtom } from '..';
-import { osType } from '../../../utils/env';
 import {
     ServiceSourceType,
     getServiceSouceType,
@@ -65,10 +64,7 @@ export default function ControlArea(props) {
                                     src={
                                         getServiceSouceType(currentServiceInstanceKey) === ServiceSourceType.PLUGIN
                                             ? pluginList[getServiceName(currentServiceInstanceKey)].icon
-                                            : builtinService[getServiceName(currentServiceInstanceKey)].info.icon ===
-                                                'system'
-                                              ? `logo/${osType}.svg`
-                                              : builtinService[getServiceName(currentServiceInstanceKey)].info.icon
+                                            : builtinService[getServiceName(currentServiceInstanceKey)].info.icon
                                     }
                                 />
                             }
@@ -100,9 +96,7 @@ export default function ControlArea(props) {
                                             src={
                                                 getServiceSouceType(instanceKey) === ServiceSourceType.PLUGIN
                                                     ? pluginList[getServiceName(instanceKey)].icon
-                                                    : builtinService[getServiceName(instanceKey)].info.icon === 'system'
-                                                      ? `logo/${osType}.svg`
-                                                      : builtinService[getServiceName(instanceKey)].info.icon
+                                                    : builtinService[getServiceName(instanceKey)].info.icon
                                             }
                                         />
                                     }

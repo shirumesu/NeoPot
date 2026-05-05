@@ -343,12 +343,6 @@
                 }
             },
             "recognize": {
-                "system": {
-                    "title": "System OCR"
-                },
-                "tesseract": {
-                    "title": "Tesseract.js"
-                },
                 "baidu_ocr": {
                     "title": "Baidu OCR",
                     "client_id": "API-Schlüssel",
@@ -413,6 +407,10 @@
                 },
                 "qrcode": {
                     "title": "QR-Code-Erkennung"
+                },
+                "local_model": {
+                    "title": "Local Model OCR",
+                    "description": "Uses the bundled PaddleOCR.js PP-OCRv5 local model assets in the app. Recognition does not use a cloud OCR API."
                 }
             },
             "tts": {

@@ -11,7 +11,6 @@ import {
     whetherPluginService,
 } from '../../../../../../utils/service_instance';
 import * as builtinServices from '../../../../../../services/recognize';
-import { osType } from '../../../../../../utils/env';
 import { PluginConfig } from '../../PluginConfig';
 
 export default function ConfigModal(props) {
@@ -39,11 +38,7 @@ export default function ConfigModal(props) {
                             {serviceSourceType === ServiceSourceType.BUILDIN && (
                                 <>
                                     <img
-                                        src={
-                                            serviceName === 'system'
-                                                ? `logo/${osType}.svg`
-                                                : builtinServices[serviceName].info.icon
-                                        }
+                                        src={builtinServices[serviceName].info.icon}
                                         className='h-[24px] w-[24px] my-auto'
                                         draggable={false}
                                     />

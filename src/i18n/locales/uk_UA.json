@@ -249,12 +249,6 @@
                     "title": "iFlyTek OCR",
                     "appid": "App ID"
                 },
-                "system": {
-                    "title": "Системний OCR"
-                },
-                "tesseract": {
-                    "title": "Tesseract.js"
-                },
                 "tencent_accurate_ocr": {
                     "title": "Tencent OCR (Точний)",
                     "secret_id": "Secret ID",
@@ -288,6 +282,10 @@
                     "title": "VolcEngine OCR",
                     "appid": "App ID",
                     "secret": "Secret"
+                },
+                "local_model": {
+                    "title": "Local Model OCR",
+                    "description": "Uses the bundled PaddleOCR.js PP-OCRv5 local model assets in the app. Recognition does not use a cloud OCR API."
                 }
             },
             "collection": {

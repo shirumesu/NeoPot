@@ -372,12 +372,6 @@
                 }
             },
             "recognize": {
-                "system": {
-                    "title": "系统 OCR"
-                },
-                "tesseract": {
-                    "title": "Tesseract.js"
-                },
                 "baidu_ocr": {
                     "title": "百度 OCR",
                     "client_id": "API Key",
@@ -442,6 +436,10 @@
                 },
                 "qrcode": {
                     "title": "二维码识别"
+                },
+                "local_model": {
+                    "title": "本地模型 OCR",
+                    "description": "使用应用内置的 PaddleOCR.js PP-OCRv5 本地模型资源识别。识别过程不调用云端 OCR API。"
                 }
             },
             "tts": {

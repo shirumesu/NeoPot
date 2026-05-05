@@ -458,15 +458,13 @@
                 "qrcode": {
                     "title": "رمز الاستجابة السريعة"
                 },
-                "system": {
-                    "title": "نظام التعرف البصري على الحروف"
-                },
-                "tesseract": {
-                    "title": "تيسيراكت دوت جي إس"
-                },
                 "simple_latex_ocr": {
                     "title": "لاتيك البسيط",
                     "token": "رمز"
+                },
+                "local_model": {
+                    "title": "Local Model OCR",
+                    "description": "Uses the bundled PaddleOCR.js PP-OCRv5 local model assets in the app. Recognition does not use a cloud OCR API."
                 }
             }
         }

@@ -345,12 +345,6 @@
                     "apisecret": "பநிஇ மறைபொருள்",
                     "apikey": "பநிஇ விசை"
                 },
-                "system": {
-                    "title": "கணினி OCR"
-                },
-                "tesseract": {
-                    "title": "Tesseract.js"
-                },
                 "baidu_ocr": {
                     "title": "பைடு ஓ.சி.ஆர்",
                     "client_id": "பநிஇ விசை",
@@ -409,6 +403,10 @@
                 },
                 "qrcode": {
                     "title": "QR குறியீடு"
+                },
+                "local_model": {
+                    "title": "Local Model OCR",
+                    "description": "Uses the bundled PaddleOCR.js PP-OCRv5 local model assets in the app. Recognition does not use a cloud OCR API."
                 }
             },
             "help": "உள்ளமைவு வழிகாட்டி",

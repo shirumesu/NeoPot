@@ -28,7 +28,7 @@ const appWindow = getCurrentWebviewWindow()
 export const sourceTextAtom = atom('');
 export const detectLanguageAtom = atom('');
 
-const DEFAULT_RECOGNIZE_SERVICE_LIST = ['system', 'tesseract'];
+const DEFAULT_RECOGNIZE_SERVICE_LIST = ['local_model'];
 const DEFAULT_TTS_SERVICE_LIST = ['lingva_tts'];
 
 export default function SourceArea(props) {
