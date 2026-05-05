@@ -39,6 +39,10 @@ pub static APP: OnceCell<tauri::AppHandle> = OnceCell::new();
 pub struct StringWrapper(pub Mutex<String>);
 
 fn main() {
+    // Ensure localhost requests bypass Windows system proxies before the HTTP plugin exists.
+    std::env::set_var("no_proxy", "localhost,127.0.0.1,::1");
+    std::env::set_var("NO_PROXY", "localhost,127.0.0.1,::1");
+
     tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, _, cwd| {
             app.notification()
@@ -82,6 +86,7 @@ fn main() {
             // Init Config
             info!("Init Config Store");
             init_config(app);
+            set_no_proxy_from_config();
             // Check First Run
             if is_first_run() {
                 // Open Config Window

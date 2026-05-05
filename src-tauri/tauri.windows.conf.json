@@ -6,7 +6,6 @@
         }
     },
     "bundle": {
-        "targets": ["nsis"],
         "windows": {
             "certificateThumbprint": null,
             "digestAlgorithm": "sha256",

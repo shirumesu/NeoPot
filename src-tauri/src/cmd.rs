@@ -115,7 +115,7 @@ fn normalize_proxy_host(host: &str) -> String {
         .to_string()
 }
 
-fn normalize_no_proxy(no_proxy: &str) -> String {
+pub fn normalize_no_proxy(no_proxy: &str) -> String {
     let mut values: Vec<String> = no_proxy
         .split(',')
         .map(|value| value.trim().to_string())
@@ -131,6 +131,17 @@ fn normalize_no_proxy(no_proxy: &str) -> String {
     values.join(",")
 }
 
+pub fn set_no_proxy_from_config() {
+    let no_proxy = match get("no_proxy") {
+        Some(v) => normalize_no_proxy(v.as_str().unwrap_or("")),
+        None => normalize_no_proxy(""),
+    };
+
+    for key in ["no_proxy", "NO_PROXY"] {
+        std::env::set_var(key, &no_proxy);
+    }
+}
+
 #[tauri::command]
 pub fn set_proxy() -> Result<bool, String> {
     let host = match get("proxy_host") {
@@ -143,10 +154,6 @@ pub fn set_proxy() -> Result<bool, String> {
             None => v.as_str().unwrap_or("").trim().to_string(),
         },
         None => return Err("Missing proxy port".to_string()),
-    };
-    let no_proxy = match get("no_proxy") {
-        Some(v) => normalize_no_proxy(v.as_str().unwrap_or("")),
-        None => normalize_no_proxy(""),
     };
     let host = normalize_proxy_host(&host);
     if host.is_empty() || port.is_empty() {
@@ -176,9 +183,7 @@ pub fn set_proxy() -> Result<bool, String> {
     for key in ["all_proxy", "ALL_PROXY"] {
         std::env::set_var(key, &proxy);
     }
-    for key in ["no_proxy", "NO_PROXY"] {
-        std::env::set_var(key, &no_proxy);
-    }
+    set_no_proxy_from_config();
     Ok(true)
 }
 
@@ -191,11 +196,10 @@ pub fn unset_proxy() -> Result<bool, String> {
         "HTTPS_PROXY",
         "all_proxy",
         "ALL_PROXY",
-        "no_proxy",
-        "NO_PROXY",
     ] {
         std::env::remove_var(key);
     }
+    set_no_proxy_from_config();
     Ok(true)
 }
 

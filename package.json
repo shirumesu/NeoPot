@@ -12,9 +12,6 @@
         "lint": "pnpm run typecheck",
         "test": "node --test \"spec/test/*.test.mjs\"",
         "preview": "vite preview",
-        "tauri:dev:no-watch": "tauri dev --no-watch",
-        "tauri:build:debug": "tauri build --debug --no-bundle --config src-tauri/tauri.fast.conf.json",
-        "tauri:build:fast": "tauri build --no-bundle --config src-tauri/tauri.fast.conf.json",
         "tauri": "tauri",
         "updater": "node updater/updater.mjs",
         "updater:fixRuntime": "node updater/updater-for-fix-runtime.mjs"
