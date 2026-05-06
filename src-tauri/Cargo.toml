@@ -21,7 +21,7 @@ tauri-plugin-fs = { version = "2.5.0", features = ["watch"] }
 tauri-plugin-store = { version = "2.4.2" }
 tauri-plugin-log = { version = "2.8.0" }
 tauri-plugin-sql = {features = ["sqlite"] , version = "2.4.0" }
-tauri-plugin-http = "2.5.8"
+tauri-plugin-http = { version = "2.5.8", features = ["unsafe-headers"] }
 tauri-plugin-opener = "2.5.3"
 tauri-plugin-dialog = "2.7.0"
 tauri-plugin-clipboard-manager = "2.3.2"
