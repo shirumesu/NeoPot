@@ -6,7 +6,7 @@ const API_BASE = `https://api.github.com/repos/${REPO}`;
 
 const platformAssets = {
     'windows-x86_64': (version) => `neopot_${version}_x64-setup.exe`,
-    'linux-x86_64': (version) => `neopot_${version}_amd64.AppImage.tar.gz`,
+    'linux-x86_64': (version) => `neopot_${version}_amd64.AppImage`,
 };
 
 async function resolveUpdater() {
