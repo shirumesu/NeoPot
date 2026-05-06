@@ -11,7 +11,7 @@ rustup toolchain install --force-non-host "$INPUT_TOOLCHAIN"
 
 if [ "$INPUT_TARGET" = "x86_64-unknown-linux-gnu" ]; then
     apt-get update
-    apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libayatana-appindicator3-dev librsvg2-dev patchelf libxdo-dev libxcb1 libxrandr2 libdbus-1-3
+    apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf libxdo-dev libxcb1 libxrandr2 libdbus-1-3
 else
     echo "Unknown target: $INPUT_TARGET" && exit 1
 fi
