@@ -220,12 +220,13 @@ jobs:
 
             - name: Normalize Linux artifact names
               run: |
-                  for file in src-tauri/target/${{ env.LINUX_TARGET }}/release/bundle/{deb,rpm,appimage}/NeoPot_*; do
-                    [ -e "$file" ] || continue
+                  while IFS= read -r -d '' file; do
                     dir="$(dirname "$file")"
                     base="$(basename "$file")"
-                    mv "$file" "$dir/${base/NeoPot_/neopot_}"
-                  done
+                    normalized="${base/NeoPot_/neopot_}"
+                    normalized="${normalized/NeoPot-/neopot-}"
+                    mv "$file" "$dir/$normalized"
+                  done < <(find "src-tauri/target/${{ env.LINUX_TARGET }}/release/bundle" -type f \( -name 'NeoPot_*' -o -name 'NeoPot-*' \) -print0)
 
             - name: Upload deb artifact
               uses: actions/upload-artifact@v4
