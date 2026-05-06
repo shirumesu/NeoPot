@@ -71,6 +71,7 @@ jobs:
               with:
                   body_path: CHANGELOG
                   token: ${{ secrets.GITHUB_TOKEN }}
+                  overwrite_files: true
                   files: .scripts/snipdo/neopot.pbar
 
     build-for-windows:
@@ -130,6 +131,7 @@ jobs:
               with:
                   body_path: CHANGELOG
                   token: ${{ secrets.GITHUB_TOKEN }}
+                  overwrite_files: true
                   files: src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/*setup*
 
     build-for-windows-fix-runtime:
@@ -196,6 +198,7 @@ jobs:
               with:
                   body_path: CHANGELOG
                   token: ${{ secrets.GITHUB_TOKEN }}
+                  overwrite_files: true
                   files: src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/*setup*
 
     build-for-linux:
@@ -254,6 +257,7 @@ jobs:
               with:
                   body_path: CHANGELOG
                   token: ${{ secrets.GITHUB_TOKEN }}
+                  overwrite_files: true
                   files: src-tauri/target/x86_64-unknown-linux-gnu/release/bundle/appimage/*.AppImage*
 
             - name: Upload deb release assets
@@ -262,6 +266,7 @@ jobs:
               with:
                   body_path: CHANGELOG
                   token: ${{ secrets.GITHUB_TOKEN }}
+                  overwrite_files: true
                   files: src-tauri/target/x86_64-unknown-linux-gnu/release/bundle/deb/*.deb
 
             - name: Upload rpm release assets
@@ -270,6 +275,7 @@ jobs:
               with:
                   body_path: CHANGELOG
                   token: ${{ secrets.GITHUB_TOKEN }}
+                  overwrite_files: true
                   files: src-tauri/target/x86_64-unknown-linux-gnu/release/bundle/rpm/*.rpm
 
     release-update:
@@ -315,6 +321,7 @@ jobs:
                   body: ${{ env.VERSION }}
                   tag_name: updater
                   token: ${{ secrets.GITHUB_TOKEN }}
+                  overwrite_files: true
                   files: |
                       update.json
                       update-fix-runtime.json
