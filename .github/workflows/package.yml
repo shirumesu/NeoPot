@@ -220,6 +220,7 @@ jobs:
 
             - name: Normalize Linux artifact names
               run: |
+                  sudo chown -R "$USER:$USER" "src-tauri/target/${{ env.LINUX_TARGET }}/release/bundle"
                   while IFS= read -r -d '' file; do
                     dir="$(dirname "$file")"
                     base="$(basename "$file")"
