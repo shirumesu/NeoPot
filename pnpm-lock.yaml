@@ -101,9 +101,6 @@ importers:
       next-themes:
         specifier: ^0.3.0
         version: 0.3.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
-      ollama:
-        specifier: ^0.5.9
-        version: 0.5.9
       react:
         specifier: ^19.2.5
         version: 19.2.5
@@ -2702,9 +2699,6 @@ packages:
     resolution: {integrity: sha512-rJgTQnkUnH1sFw8yT6VSU3zD3sWmu6sZhIseY8VX+GRu3P6F7Fu+JNDoXfklElbLJSnc3FUQHVe4cU5hj+BcUg==}
     engines: {node: '>=0.10.0'}
 
-  ollama@0.5.9:
-    resolution: {integrity: sha512-F/KZuDRC+ZsVCuMvcOYuQ6zj42/idzCkkuknGyyGVmNStMZ/sU3jQpvhnl4SyC0+zBzLiKNZJnJeuPFuieWZvQ==}
-
   onnxruntime-common@1.25.1:
     resolution: {integrity: sha512-kKvYQFdos4LWJqhZ+nmKu3NT8NXzw8I5x9fNUKe1rNKcPfNKnYXUtW7JBpcKFsvLtrJashRgVYSbFap4cHxvNg==}
 
@@ -3033,9 +3027,6 @@ packages:
   web-streams-polyfill@3.3.3:
     resolution: {integrity: sha512-d2JWLCivmZYTSIoge9MsgFCZrt571BikcWGYkjC1khllbTeDlGqZ2D8vD8E/lJa8WGWbb7Plm8/XJYV7IJHZZw==}
     engines: {node: '>= 8'}
-
-  whatwg-fetch@3.6.20:
-    resolution: {integrity: sha512-EqhiFU6daOA8kpjOWTL0olhVOF3i7OrFzSYiGsEMB8GcXS+RrzauAERX65xMeNWVqxA6HXH2m69Z9LaKKdisfg==}
 
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
@@ -6464,10 +6455,6 @@ snapshots:
 
   object-assign@4.1.1: {}
 
-  ollama@0.5.9:
-    dependencies:
-      whatwg-fetch: 3.6.20
-
   onnxruntime-common@1.25.1: {}
 
   onnxruntime-web@1.25.1:
@@ -6831,7 +6818,5 @@ snapshots:
   void-elements@3.1.0: {}
 
   web-streams-polyfill@3.3.3: {}
-
-  whatwg-fetch@3.6.20: {}
 
   zwitch@2.0.4: {}

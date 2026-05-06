@@ -1,8 +1,8 @@
 // @ts-nocheck
-import { Ollama } from 'ollama/browser';
-
-import { fetch } from '@/utils/tauri_http';
+import { fetch, Body } from '@/utils/tauri_http';
 import { Language } from './info';
+
+const OLLAMA_HEADERS = { Origin: 'http://localhost' };
 
 const THINKING_MODE_DEFAULT = 'default';
 const THINKING_MODE_ON = 'on';
@@ -118,44 +118,119 @@ function resolveModel(model) {
     return model;
 }
 
-function createClient(requestPath) {
-    return new Ollama({
-        host: normalizeHost(requestPath),
-        fetch,
-    });
-}
-
 export async function getModels(requestPath) {
-    return createClient(requestPath).list();
+    const host = normalizeHost(requestPath);
+    const res = await fetch(`${host}/api/tags`, { headers: OLLAMA_HEADERS });
+
+    if (res.ok) {
+        return res.data;
+    }
+
+    throw `Failed to list models: HTTP ${res.status}`;
 }
 
 export async function pullModel(requestPath, model) {
-    return createClient(requestPath).pull({ model, stream: false });
+    const host = normalizeHost(requestPath);
+    const res = await fetch(`${host}/api/pull`, {
+        method: 'POST',
+        headers: OLLAMA_HEADERS,
+        body: Body.json({ name: model, stream: false }),
+    });
+
+    if (res.ok) {
+        return res.data;
+    }
+
+    throw `Failed to pull model: HTTP ${res.status}`;
 }
 
-async function readStreamResponse(response, setResult) {
-    let target = '';
+function parseNdjson(text) {
+    return text
+        .split('\n')
+        .filter((line) => line.trim() !== '')
+        .map((line) => {
+            try {
+                return JSON.parse(line);
+            } catch {
+                return null;
+            }
+        })
+        .filter(Boolean);
+}
 
-    for await (const part of response) {
-        const content = part.message?.content || '';
-        if (!content) {
-            continue;
+function handleStreamPart(part, state, setResult) {
+    const content = part.message?.content || '';
+    if (!content) {
+        return null;
+    }
+
+    state.target += content;
+    if (setResult) {
+        setResult(`${state.target}_`);
+        return null;
+    }
+
+    return '[STREAM]';
+}
+
+async function readStreamResponse(res, setResult) {
+    const state = { target: '' };
+
+    if (!res.body?.getReader) {
+        const chunks = parseNdjson(await res.text());
+        for (const part of chunks) {
+            const result = handleStreamPart(part, state, setResult);
+            if (result) {
+                return result;
+            }
+        }
+    } else {
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) {
+                break;
+            }
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || '';
+
+            for (const line of lines) {
+                if (line.trim() === '') {
+                    continue;
+                }
+
+                const [part] = parseNdjson(line);
+                if (!part) {
+                    continue;
+                }
+
+                const result = handleStreamPart(part, state, setResult);
+                if (result) {
+                    await reader.cancel();
+                    return result;
+                }
+            }
         }
 
-        target += content;
-        if (setResult) {
-            setResult(`${target}_`);
-        } else {
-            response.abort();
-            return '[STREAM]';
+        buffer += decoder.decode();
+        for (const part of parseNdjson(buffer)) {
+            const result = handleStreamPart(part, state, setResult);
+            if (result) {
+                return result;
+            }
         }
     }
 
     if (setResult) {
-        setResult(target.trim());
+        setResult(state.target.trim());
     }
 
-    return target.trim();
+    return state.target.trim();
 }
 
 export async function translate(text, from, to, options = {}) {
@@ -188,14 +263,23 @@ export async function translate(text, from, to, options = {}) {
     requestBody.options = modelOptions;
     requestBody.think = think;
 
-    const client = createClient(requestPath);
+    const host = normalizeHost(requestPath);
+    const res = await fetch(`${host}/api/chat`, {
+        method: 'POST',
+        headers: OLLAMA_HEADERS,
+        body: Body.json(requestBody),
+        skipData: !!stream,
+    });
 
-    if (stream) {
-        const response = await client.chat(requestBody);
-        return readStreamResponse(response, setResult);
+    if (!res.ok) {
+        throw `Ollama chat failed: HTTP ${res.status}`;
     }
 
-    const result = await client.chat(requestBody);
+    if (stream) {
+        return readStreamResponse(res, setResult);
+    }
+
+    const result = res.data;
     const target = result.message?.content?.trim();
 
     if (target) {

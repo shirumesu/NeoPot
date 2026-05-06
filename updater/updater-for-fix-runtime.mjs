@@ -6,8 +6,6 @@ const API_BASE = `https://api.github.com/repos/${REPO}`;
 
 const platformAssets = {
     'windows-x86_64': (version) => `neopot_${version}_x64_fix_webview2_runtime-setup.exe`,
-    'windows-i686': (version) => `neopot_${version}_x86_fix_webview2_runtime-setup.exe`,
-    'windows-aarch64': (version) => `neopot_${version}_arm64_fix_webview2_runtime-setup.exe`,
 };
 
 async function resolveUpdater() {
