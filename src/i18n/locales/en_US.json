@@ -467,6 +467,8 @@
             "speak": "Speak",
             "copy": "Copy",
             "retry": "Try again",
+            "show_preview": "Show preview",
+            "show_source": "Show source",
             "delete_newline": "Delete Newline",
             "translate_back": "Translation back to the original"
         },

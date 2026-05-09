@@ -1,7 +1,7 @@
 {
     "name": "neopot",
     "private": true,
-    "version": "1.0.0",
+    "version": "1.0.1",
     "type": "module",
     "scripts": {
         "clean:dist": "node -e \"fs.rmSync('dist', { recursive: true, force: true })\"",
@@ -55,6 +55,7 @@
         "react-router-dom": "^6.30.2",
         "react-spinners": "^0.14.1",
         "react-use-measure": "^2.1.1",
+        "remark-gfm": "^4.0.1",
         "uuid": "^14.0.0"
     },
     "devDependencies": {

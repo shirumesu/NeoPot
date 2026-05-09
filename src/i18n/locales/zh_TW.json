@@ -454,6 +454,8 @@
             "speak": "朗讀",
             "copy": "複製",
             "retry": "重試",
+            "show_preview": "顯示預覽",
+            "show_source": "顯示原始碼",
             "delete_newline": "刪除換行",
             "translate_back": "翻譯回原文"
         },

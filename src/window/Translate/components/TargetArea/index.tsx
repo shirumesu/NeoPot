@@ -22,7 +22,9 @@ import { TbTransformFilled } from 'react-icons/tb';
 import { HiOutlineVolumeUp } from 'react-icons/hi';
 import { semanticColors } from '@heroui/theme';
 import toast, { Toaster } from 'react-hot-toast';
-import { MdContentCopy } from 'react-icons/md';
+import { MdArticle, MdCode, MdContentCopy } from 'react-icons/md';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { useTranslation } from 'react-i18next';
 import Database from '@tauri-apps/plugin-sql';
 import { GiCycle } from 'react-icons/gi';
@@ -52,6 +54,88 @@ import {
 
 let translateID = [];
 
+const MARKDOWN_PATTERNS = [
+    /^#{1,6}\s+\S/m,
+    /^>\s+\S/m,
+    /^[-*+]\s+\S/m,
+    /^\d+\.\s+\S/m,
+    /^```/m,
+    /`[^`\n]+`/,
+    /\[[^\]]+\]\([^)]+\)/,
+    /^-{3,}\s*$/m,
+    /^\|.+\|\s*$/m,
+];
+
+function isMarkdownLike(value) {
+    if (typeof value !== 'string') return false;
+    const text = value.trim();
+    if (text.length < 3) return false;
+
+    return MARKDOWN_PATTERNS.some((pattern) => pattern.test(text));
+}
+
+function MarkdownResult({ value, appFontSize }) {
+    return (
+        <div
+            className='select-text break-words text-default-700'
+            style={{ fontSize: `${appFontSize}px` }}
+        >
+            <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                    h1: ({ children }) => <h1 className='mb-2 text-[1.35em] font-semibold'>{children}</h1>,
+                    h2: ({ children }) => <h2 className='mb-2 mt-3 text-[1.2em] font-semibold'>{children}</h2>,
+                    h3: ({ children }) => <h3 className='mb-1.5 mt-3 text-[1.1em] font-semibold'>{children}</h3>,
+                    h4: ({ children }) => <h4 className='mb-1.5 mt-2 font-semibold'>{children}</h4>,
+                    p: ({ children }) => <p className='mb-2 leading-relaxed last:mb-0'>{children}</p>,
+                    ul: ({ children }) => <ul className='mb-2 list-disc space-y-1 pl-5'>{children}</ul>,
+                    ol: ({ children }) => <ol className='mb-2 list-decimal space-y-1 pl-5'>{children}</ol>,
+                    li: ({ children }) => <li className='leading-relaxed'>{children}</li>,
+                    blockquote: ({ children }) => (
+                        <blockquote className='mb-2 border-l-2 border-default-300 pl-3 text-default-500'>
+                            {children}
+                        </blockquote>
+                    ),
+                    a: ({ href, children }) => (
+                        <a
+                            href={href}
+                            target='_blank'
+                            rel='noreferrer'
+                            className='text-primary underline underline-offset-2'
+                        >
+                            {children}
+                        </a>
+                    ),
+                    code: ({ className, children }) => (
+                        <code
+                            className={`${className ?? ''} rounded-small bg-default-100 px-1 py-0.5 font-mono text-[0.92em]`}
+                        >
+                            {children}
+                        </code>
+                    ),
+                    pre: ({ children }) => (
+                        <pre className='mb-2 overflow-x-auto rounded-small bg-default-100 p-2 leading-relaxed [&_code]:block [&_code]:bg-transparent [&_code]:p-0'>
+                            {children}
+                        </pre>
+                    ),
+                    hr: () => <hr className='my-3 border-default-200' />,
+                    table: ({ children }) => (
+                        <div className='mb-2 overflow-x-auto'>
+                            <table className='min-w-full border-collapse text-left'>{children}</table>
+                        </div>
+                    ),
+                    th: ({ children }) => (
+                        <th className='border border-default-200 bg-default-100 px-2 py-1 font-semibold'>{children}</th>
+                    ),
+                    td: ({ children }) => <td className='border border-default-200 px-2 py-1'>{children}</td>,
+                }}
+            >
+                {value}
+            </ReactMarkdown>
+        </div>
+    );
+}
+
 export default function TargetArea(props) {
     const { index, name, translateServiceInstanceList, pluginList, serviceInstanceConfigMap } = props;
 
@@ -71,6 +155,7 @@ export default function TargetArea(props) {
 
     const [result, setResult] = useState('');
     const [error, setError] = useState('');
+    const [resultViewMode, setResultViewMode] = useState(null);
 
     const sourceText = useAtomValue(sourceTextAtom);
     const sourceLanguage = useAtomValue(sourceLanguageAtom);
@@ -97,6 +182,7 @@ export default function TargetArea(props) {
     useEffect(() => {
         setResult('');
         setError('');
+        setResultViewMode(null);
         if (
             sourceText.trim() !== '' &&
             sourceLanguage &&
@@ -334,7 +420,7 @@ export default function TargetArea(props) {
                 textAreaRef.current.style.height = textAreaRef.current.scrollHeight + 'px';
             }
         }
-    }, [result]);
+    }, [result, resultViewMode]);
 
     // refresh tts config
     useEffect(() => {
@@ -382,6 +468,8 @@ export default function TargetArea(props) {
         from: { height: 0 },
         to: { height: hide ? 0 : bounds.height },
     });
+    const canPreviewMarkdown = typeof result === 'string' && result !== '' && isMarkdownLike(result);
+    const activeResultViewMode = resultViewMode ?? (canPreviewMarkdown ? 'markdown' : 'source');
 
     return (
         <Card
@@ -506,12 +594,19 @@ export default function TargetArea(props) {
                     {/* result content */}
                     <CardBody className={`p-[12px] pb-0 ${hide && 'h-0 p-0'}`}>
                         {typeof result === 'string' ? (
-                            <textarea
-                                ref={textAreaRef}
-                                className={`text-[${appFontSize}px] h-0 resize-none bg-transparent select-text outline-none`}
-                                readOnly
-                                value={result}
-                            />
+                            activeResultViewMode === 'markdown' && canPreviewMarkdown ? (
+                                <MarkdownResult
+                                    value={result}
+                                    appFontSize={appFontSize}
+                                />
+                            ) : (
+                                <textarea
+                                    ref={textAreaRef}
+                                    className={`text-[${appFontSize}px] h-0 w-full resize-none overflow-hidden bg-transparent select-text outline-none`}
+                                    readOnly
+                                    value={result}
+                                />
+                            )
                         ) : (
                             <div>
                                 {result['pronunciations'] &&
@@ -641,6 +736,31 @@ export default function TargetArea(props) {
                         className={`bg-content1 rounded-none rounded-b-[10px] flex px-[12px] p-[5px] ${hide && 'hidden'}`}
                     >
                         <ButtonGroup>
+                            {/* markdown preview toggle */}
+                            <Tooltip
+                                content={
+                                    activeResultViewMode === 'markdown'
+                                        ? t('translate.show_source')
+                                        : t('translate.show_preview')
+                                }
+                            >
+                                <Button
+                                    isIconOnly
+                                    variant='light'
+                                    size='sm'
+                                    className={`${!canPreviewMarkdown && 'hidden'}`}
+                                    isDisabled={!canPreviewMarkdown}
+                                    onPress={() => {
+                                        setResultViewMode(activeResultViewMode === 'markdown' ? 'source' : 'markdown');
+                                    }}
+                                >
+                                    {activeResultViewMode === 'markdown' ? (
+                                        <MdCode className='text-[16px]' />
+                                    ) : (
+                                        <MdArticle className='text-[16px]' />
+                                    )}
+                                </Button>
+                            </Tooltip>
                             {/* speak button */}
                             <Tooltip content={t('translate.speak')}>
                                 <Button
@@ -680,6 +800,7 @@ export default function TargetArea(props) {
                                     isDisabled={typeof result !== 'string' || result === ''}
                                     onPress={async () => {
                                         setError('');
+                                        setResultViewMode(null);
                                         let newTargetLanguage = sourceLanguage;
                                         if (sourceLanguage === 'auto') {
                                             newTargetLanguage = detectLanguage;
@@ -803,6 +924,7 @@ export default function TargetArea(props) {
                                     onPress={() => {
                                         setError('');
                                         setResult('');
+                                        setResultViewMode(null);
                                         translate();
                                     }}
                                 >
