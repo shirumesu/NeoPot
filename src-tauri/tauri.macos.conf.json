@@ -1,7 +1,7 @@
 {
     "app": {
         "trayIcon": {
-            "iconPath": "icons_mac/tray.ico",
+            "iconPath": "icons/mac/tray.ico",
             "iconAsTemplate": true
         }
     },
@@ -10,11 +10,11 @@
             "resources/*"
         ],
         "icon": [
-            "icons_mac/32x32.png",
-            "icons_mac/128x128.png",
-            "icons_mac/128x128@2x.png",
-            "icons_mac/icon.icns",
-            "icons_mac/icon.ico"
+            "icons/mac/32x32.png",
+            "icons/mac/128x128.png",
+            "icons/mac/128x128@2x.png",
+            "icons/mac/icon.icns",
+            "icons/mac/icon.ico"
         ]
     }
 }
