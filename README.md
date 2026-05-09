@@ -52,17 +52,17 @@
 | 划词翻译 | 输入翻译 | 外部调用 |
 | --- | --- | --- |
 | 选中文字后按下快捷键翻译 | 呼出翻译窗口后输入文本并回车 | 通过本地 HTTP 接口被其他工具调用 |
-| <img src="asset/eg1.gif" alt="划词翻译演示" /> | <img src="asset/eg2.gif" alt="输入翻译演示" /> | <img src="asset/eg3.gif" alt="外部调用演示" /> |
+| <img src="docs/assets/readme/eg1.gif" alt="划词翻译演示" /> | <img src="docs/assets/readme/eg2.gif" alt="输入翻译演示" /> | <img src="docs/assets/readme/eg3.gif" alt="外部调用演示" /> |
 
 | 剪贴板监听 | 截图 OCR | 截图翻译 |
 | --- | --- | --- |
 | 开启监听后复制文本即可翻译 | 框选屏幕区域并识别文字 | 框选屏幕区域并翻译识别结果 |
-| <img src="asset/eg4.gif" alt="剪贴板监听演示" /> | <img src="asset/eg5.gif" alt="截图 OCR 演示" /> | <img src="asset/eg6.gif" alt="截图翻译演示" /> |
+| <img src="docs/assets/readme/eg4.gif" alt="剪贴板监听演示" /> | <img src="docs/assets/readme/eg5.gif" alt="截图 OCR 演示" /> | <img src="docs/assets/readme/eg6.gif" alt="截图翻译演示" /> |
 
 <p align="center">
-  <img src="asset/1.png" width="31%" alt="NeoPot screenshot 1" />
-  <img src="asset/2.png" width="31%" alt="NeoPot screenshot 2" />
-  <img src="asset/3.png" width="31%" alt="NeoPot screenshot 3" />
+  <img src="docs/assets/readme/1.png" width="31%" alt="NeoPot screenshot 1" />
+  <img src="docs/assets/readme/2.png" width="31%" alt="NeoPot screenshot 2" />
+  <img src="docs/assets/readme/3.png" width="31%" alt="NeoPot screenshot 3" />
 </p>
 
 ## 主要功能
@@ -289,14 +289,7 @@ pnpm tauri build
 
 ## 未来TODO
 
-- [ ] 逐步替换移除 Pot 的相关资源  
 - [ ] 验证每个具体的服务，修改/删除/维护  
-
-## 已知问题
-
-- 文字识别 / 截图功能有可能无法被正常唤起  
-- 代理设置后部分服务可能不可用  
-- 设置填入内容时有可能丢失内容加载回原本的内容
 
 ## 致谢
 

@@ -1,11 +1,11 @@
 {
     "name": "NeoPot Translation",
     "identifier": "com.shirumesu.neopot.snipdoext.desktop",
-    "icon": "pot.png",
+    "icon": "neopot.png",
     "actions": [
         {
             "title": "NeoPot Translation",
-            "icon": "pot.png",
+            "icon": "neopot.png",
             "powershellFile": "pot.ps1"
         }
     ]

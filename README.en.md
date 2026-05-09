@@ -52,17 +52,17 @@
 | Selection Translation | Input Translation | External Invocation |
 | --- | --- | --- |
 | Select text and press a shortcut to translate it | Open the translation window, enter text, and press Enter | Invoke NeoPot from other tools through the local HTTP API |
-| <img src="asset/eg1.gif" alt="Selection translation demo" /> | <img src="asset/eg2.gif" alt="Input translation demo" /> | <img src="asset/eg3.gif" alt="External invocation demo" /> |
+| <img src="docs/assets/readme/eg1.gif" alt="Selection translation demo" /> | <img src="docs/assets/readme/eg2.gif" alt="Input translation demo" /> | <img src="docs/assets/readme/eg3.gif" alt="External invocation demo" /> |
 
 | Clipboard Monitoring | Screenshot OCR | Screenshot Translation |
 | --- | --- | --- |
 | Translate copied text after enabling clipboard monitoring | Select a screen region and recognize text | Select a screen region and translate the recognized result |
-| <img src="asset/eg4.gif" alt="Clipboard monitoring demo" /> | <img src="asset/eg5.gif" alt="Screenshot OCR demo" /> | <img src="asset/eg6.gif" alt="Screenshot translation demo" /> |
+| <img src="docs/assets/readme/eg4.gif" alt="Clipboard monitoring demo" /> | <img src="docs/assets/readme/eg5.gif" alt="Screenshot OCR demo" /> | <img src="docs/assets/readme/eg6.gif" alt="Screenshot translation demo" /> |
 
 <p align="center">
-  <img src="asset/1.png" width="31%" alt="NeoPot screenshot 1" />
-  <img src="asset/2.png" width="31%" alt="NeoPot screenshot 2" />
-  <img src="asset/3.png" width="31%" alt="NeoPot screenshot 3" />
+  <img src="docs/assets/readme/1.png" width="31%" alt="NeoPot screenshot 1" />
+  <img src="docs/assets/readme/2.png" width="31%" alt="NeoPot screenshot 2" />
+  <img src="docs/assets/readme/3.png" width="31%" alt="NeoPot screenshot 3" />
 </p>
 
 ## Main Features
