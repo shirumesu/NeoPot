@@ -16,6 +16,7 @@ import TargetArea from './components/TargetArea';
 import { osType } from '../../utils/env';
 import { useConfig } from '../../hooks';
 import { saveStore, setStoreValue, store } from '../../utils/store';
+import { isValidServiceInstanceKey } from '../../utils/service_instance';
 import { info } from '@tauri-apps/plugin-log';
 const appWindow = getCurrentWebviewWindow()
 
@@ -92,6 +93,18 @@ export default function Translate() {
     const [pluginLoadError, setPluginLoadError] = useState(null);
     const [serviceConfigError, setServiceConfigError] = useState(null);
     const [serviceInstanceConfigMap, setServiceInstanceConfigMap] = useState({});
+    const validTranslateServiceInstanceList = Array.isArray(translateServiceInstanceList)
+        ? translateServiceInstanceList.filter(isValidServiceInstanceKey)
+        : [];
+    const validRecognizeServiceInstanceList = Array.isArray(recognizeServiceInstanceList)
+        ? recognizeServiceInstanceList.filter(isValidServiceInstanceKey)
+        : [];
+    const validTtsServiceInstanceList = Array.isArray(ttsServiceInstanceList)
+        ? ttsServiceInstanceList.filter(isValidServiceInstanceKey)
+        : [];
+    const validCollectionServiceInstanceList = Array.isArray(collectionServiceInstanceList)
+        ? collectionServiceInstanceList.filter(isValidServiceInstanceKey)
+        : [];
     // 是否自动关闭窗口
     useEffect(() => {
         if (closeOnBlur !== null && !closeOnBlur) {
@@ -202,16 +215,16 @@ export default function Translate() {
     const loadServiceInstanceConfigMap = async () => {
         try {
             const config = {};
-            for (const serviceInstanceKey of translateServiceInstanceList) {
+            for (const serviceInstanceKey of validTranslateServiceInstanceList) {
                 config[serviceInstanceKey] = (await store.get(serviceInstanceKey)) ?? {};
             }
-            for (const serviceInstanceKey of recognizeServiceInstanceList) {
+            for (const serviceInstanceKey of validRecognizeServiceInstanceList) {
                 config[serviceInstanceKey] = (await store.get(serviceInstanceKey)) ?? {};
             }
-            for (const serviceInstanceKey of ttsServiceInstanceList) {
+            for (const serviceInstanceKey of validTtsServiceInstanceList) {
                 config[serviceInstanceKey] = (await store.get(serviceInstanceKey)) ?? {};
             }
-            for (const serviceInstanceKey of collectionServiceInstanceList) {
+            for (const serviceInstanceKey of validCollectionServiceInstanceList) {
                 config[serviceInstanceKey] = (await store.get(serviceInstanceKey)) ?? {};
             }
             setServiceConfigError(null);
@@ -324,7 +337,7 @@ export default function Translate() {
                                 <Spacer y={2} />
                             </div>
                             {isServiceConfigReady
-                                ? translateServiceInstanceList.map((serviceInstanceKey, index) => {
+                                ? validTranslateServiceInstanceList.map((serviceInstanceKey, index) => {
                                       const config = serviceInstanceConfigMap[serviceInstanceKey] ?? {};
                                       const enable = config['enable'] ?? true;
 
