@@ -49,6 +49,7 @@ import {
     getDisplayInstanceName,
     getServiceName,
     getServiceSouceType,
+    isValidServiceInstanceKey,
     whetherPluginService,
 } from '../../../../utils/service_instance';
 
@@ -82,7 +83,7 @@ function isMarkdownLike(value) {
 function MarkdownResult({ value, appFontSize }) {
     return (
         <div
-            className='select-text break-words text-default-700'
+            className='select-text whitespace-pre-wrap break-words text-default-700'
             style={{ fontSize: `${appFontSize}px` }}
         >
             <ReactMarkdown
@@ -151,8 +152,12 @@ export default function TargetArea(props) {
     }
 
     const [appFontSize] = useConfig('app_font_size', 16);
-    const [collectionServiceList] = useConfig('collection_service_list', []);
+    const [rawCollectionServiceList] = useConfig('collection_service_list', []);
+    const collectionServiceList = Array.isArray(rawCollectionServiceList)
+        ? rawCollectionServiceList.filter(isValidServiceInstanceKey)
+        : [];
     const [ttsServiceList] = useConfig('tts_service_list', ['lingva_tts']);
+    const ttsServiceInstanceKey = Array.isArray(ttsServiceList) ? ttsServiceList.find(isValidServiceInstanceKey) : null;
     const [translateSecondLanguage] = useConfig('translate_second_language', 'en');
     const [historyDisable] = useConfig('history_disable', false);
     const [isLoading, setIsLoading] = useState(false);
@@ -429,18 +434,21 @@ export default function TargetArea(props) {
 
     // refresh tts config
     useEffect(() => {
-        if (ttsServiceList && getServiceSouceType(ttsServiceList[0]) === ServiceSourceType.PLUGIN) {
-            readTextFile(`plugins/tts/${getServiceName(ttsServiceList[0])}/info.json`, {
+        if (ttsServiceInstanceKey && getServiceSouceType(ttsServiceInstanceKey) === ServiceSourceType.PLUGIN) {
+            readTextFile(`plugins/tts/${getServiceName(ttsServiceInstanceKey)}/info.json`, {
                 baseDir: BaseDirectory.AppConfig,
             }).then((infoStr) => {
                 setTtsPluginInfo(JSON.parse(infoStr));
             });
         }
-    }, [ttsServiceList]);
+    }, [ttsServiceInstanceKey]);
 
     // handle tts speak
     const handleSpeak = async () => {
-        const instanceKey = ttsServiceList[0];
+        const instanceKey = ttsServiceInstanceKey;
+        if (!instanceKey) {
+            throw new Error('TTS service not configured');
+        }
         if (getServiceSouceType(instanceKey) === ServiceSourceType.PLUGIN) {
             const pluginConfig = serviceInstanceConfigMap[instanceKey];
             if (!(targetLanguage in ttsPluginInfo.language)) {
@@ -772,7 +780,7 @@ export default function TargetArea(props) {
                                     isIconOnly
                                     variant='light'
                                     size='sm'
-                                    isDisabled={typeof result !== 'string' || result === ''}
+                                    isDisabled={typeof result !== 'string' || result === '' || !ttsServiceInstanceKey}
                                     onPress={() => {
                                         handleSpeak().catch((e) => {
                                             toast.error(e.toString(), { style: toastStyle });

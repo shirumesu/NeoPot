@@ -106,9 +106,6 @@ jobs:
             - name: Install dependencies
               run: pnpm install
 
-            - name: Code format
-              run: pnpm prettier --write .
-
             - name: Build and package
               run: |
                   $env:TAURI_SIGNING_PRIVATE_KEY="${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}"
@@ -164,9 +161,6 @@ jobs:
 
             - name: Install dependencies
               run: pnpm install
-
-            - name: Code format
-              run: pnpm prettier --write .
 
             - name: Download WebView2 runtime
               run: |

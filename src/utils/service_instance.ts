@@ -12,6 +12,10 @@ export enum ServiceSourceType {
     PLUGIN = 'plugin',
 }
 
+export function isValidServiceInstanceKey(serviceInstanceKey: unknown): serviceInstanceKey is string {
+    return typeof serviceInstanceKey === 'string' && serviceInstanceKey.trim() !== '';
+}
+
 export function getServiceSouceType(serviceInstanceKey: string): ServiceSourceType {
     if (serviceInstanceKey.startsWith('plugin')) {
         return ServiceSourceType.PLUGIN;

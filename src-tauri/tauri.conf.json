@@ -24,25 +24,17 @@
     ],
     "linux": {
       "deb": {
-        "depends": [
-          "libxdo-dev",
-          "libxcb1",
-          "libxrandr2"
-        ]
+        "depends": ["libxdo-dev", "libxcb1", "libxrandr2"]
       },
       "rpm": {
-        "depends": [
-          "libxdo-dev",
-          "libxcb1",
-          "libxrandr2"
-        ]
+        "depends": ["libxdo-dev", "libxcb1", "libxrandr2"]
       }
     },
     "createUpdaterArtifacts": true
   },
   "productName": "NeoPot",
   "mainBinaryName": "neopot",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "identifier": "neopot",
   "plugins": {
     "updater": {
@@ -60,10 +52,7 @@
     },
     "security": {
       "assetProtocol": {
-        "scope": [
-          "$CACHE/**",
-          "$CONFIG/**"
-        ],
+        "scope": ["$CACHE/**", "$CONFIG/**"],
         "enable": true
       },
       "devCsp": "default-src 'self' asset: data: blob: https: http:; img-src 'self' asset: data: https: http: blob:; style-src 'self' 'unsafe-inline'; worker-src 'self' blob:; script-src 'self' blob: 'unsafe-eval'; connect-src 'self' ipc: http://ipc.localhost https: http: ws: wss:;",

@@ -13,7 +13,12 @@ import { useTranslation } from 'react-i18next';
 import { HiTranslate } from 'react-icons/hi';
 import { LuDelete } from 'react-icons/lu';
 import { atom, useAtom } from 'jotai';
-import { getServiceName, getServiceSouceType, ServiceSourceType } from '../../../../utils/service_instance';
+import {
+    getServiceName,
+    getServiceSouceType,
+    isValidServiceInstanceKey,
+    ServiceSourceType,
+} from '../../../../utils/service_instance';
 import { useConfig, useSyncAtom, useVoice, useToastStyle } from '../../../../hooks';
 import { invoke_plugin } from '../../../../utils/invoke_plugin';
 import { tauriCommand } from '../../../../utils/tauri_adapter';
@@ -42,6 +47,7 @@ export default function SourceArea(props) {
     const [recognizeLanguage] = useConfig('recognize_language', 'auto');
     const [recognizeServiceList] = useConfig('recognize_service_list', DEFAULT_RECOGNIZE_SERVICE_LIST);
     const [ttsServiceList] = useConfig('tts_service_list', DEFAULT_TTS_SERVICE_LIST);
+    const ttsServiceInstanceKey = Array.isArray(ttsServiceList) ? ttsServiceList.find(isValidServiceInstanceKey) : null;
     const [hideWindow] = useConfig('translate_hide_window', false);
     const [hideSource] = useConfig('hide_source', false);
     const [ttsPluginInfo, setTtsPluginInfo] = useState();
@@ -204,7 +210,10 @@ export default function SourceArea(props) {
     }, [handleNewText]);
 
     const handleSpeak = async () => {
-        const instanceKey = ttsServiceList[0];
+        const instanceKey = ttsServiceInstanceKey;
+        if (!instanceKey) {
+            throw new Error('TTS service not configured');
+        }
         let detected = detectLanguage;
         if (detected === '') {
             detected = await detect(sourceText);
@@ -265,14 +274,14 @@ export default function SourceArea(props) {
     }, []);
 
     useEffect(() => {
-        if (ttsServiceList && getServiceSouceType(ttsServiceList[0]) === ServiceSourceType.PLUGIN) {
-            readTextFile(`plugins/tts/${getServiceName(ttsServiceList[0])}/info.json`, {
+        if (ttsServiceInstanceKey && getServiceSouceType(ttsServiceInstanceKey) === ServiceSourceType.PLUGIN) {
+            readTextFile(`plugins/tts/${getServiceName(ttsServiceInstanceKey)}/info.json`, {
                 baseDir: BaseDirectory.AppConfig,
             }).then((infoStr) => {
                 setTtsPluginInfo(JSON.parse(infoStr));
             });
         }
-    }, [ttsServiceList]);
+    }, [ttsServiceInstanceKey]);
 
     useEffect(() => {
         if (initialTextLoadedRef.current) {
