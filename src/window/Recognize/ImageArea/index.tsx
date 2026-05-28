@@ -1,11 +1,11 @@
 // @ts-nocheck
 import { Card, CardBody, CardFooter, Button, Tooltip } from '@heroui/react';
-import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
+import { getCurrentWebviewWindow } from '@/utils/electron_compat/webviewWindow';
 import React, { useEffect, useRef } from 'react';
-import { listen } from '@tauri-apps/api/event';
+import { listen } from '@/utils/electron_compat/event';
 import { MdContentCopy } from 'react-icons/md';
 import { useTranslation } from 'react-i18next';
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from '@/utils/electron_compat/core';
 import { atom, useAtom } from 'jotai';
 
 import { useConfig } from '../../../hooks';

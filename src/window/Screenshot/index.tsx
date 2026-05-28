@@ -1,17 +1,18 @@
 // @ts-nocheck
 import React, { useEffect, useState, useRef } from 'react';
-import { appCacheDir, join } from '@tauri-apps/api/path';
-import { currentMonitor } from '@tauri-apps/api/window';
-import { convertFileSrc } from '@tauri-apps/api/core';
-import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
-import { warn, info } from '@tauri-apps/plugin-log';
-import { invoke } from '@tauri-apps/api/core';
-import { listen } from '@tauri-apps/api/event';
+import { appCacheDir, join } from '@/utils/electron_compat/path';
+import { currentMonitor } from '@/utils/electron_compat/window';
+import { convertFileSrc } from '@/utils/electron_compat/core';
+import { getCurrentWebviewWindow } from '@/utils/electron_compat/webviewWindow';
+import { warn, info } from '@/utils/electron_compat/log';
+import { invoke } from '@/utils/electron_compat/core';
+import { listen } from '@/utils/electron_compat/event';
 const appWindow = getCurrentWebviewWindow()
 
 export default function Screenshot() {
     const [imgurl, setImgurl] = useState('');
     const [error, setError] = useState('');
+    const [action, setAction] = useState('recognize');
     const [isMoved, setIsMoved] = useState(false);
     const [isDown, setIsDown] = useState(false);
     const [mouseDownX, setMouseDownX] = useState(0);
@@ -26,10 +27,14 @@ export default function Screenshot() {
             setError('');
             const monitor = await currentMonitor();
             const position = monitor?.position ?? { x: 0, y: 0 };
-            await invoke('screenshot', { x: position.x, y: position.y });
-            const appCacheDirPath = await appCacheDir();
-            const filePath = await join(appCacheDirPath, 'pot_screenshot.png');
-            setImgurl(`${convertFileSrc(filePath)}?t=${Date.now()}`);
+            const dataUrl = await invoke('screenshot', { x: position.x, y: position.y });
+            if (typeof dataUrl === 'string' && dataUrl.length > 0) {
+                setImgurl(dataUrl);
+            } else {
+                const appCacheDirPath = await appCacheDir();
+                const filePath = await join(appCacheDirPath, 'pot_screenshot.png');
+                setImgurl(`${convertFileSrc(filePath)}?t=${Date.now()}`);
+            }
             await appWindow.show();
             await appWindow.setFocus();
         } catch (e) {
@@ -41,7 +46,10 @@ export default function Screenshot() {
 
     useEffect(() => {
         void captureScreenshot();
-        const unlisten = listen('capture_screenshot', () => {
+        const unlisten = listen('capture_screenshot', (event) => {
+            if (event.payload === 'translate' || event.payload === 'recognize') {
+                setAction(event.payload);
+            }
             void captureScreenshot();
         });
 
@@ -118,7 +126,7 @@ export default function Screenshot() {
                     } else {
                         try {
                             await invoke('cut_image', { left, top, width, height });
-                            await appWindow.emit('success');
+                            await invoke('screenshot_complete', { action });
                             await appWindow.close();
                         } catch (error) {
                             setError(error.toString());

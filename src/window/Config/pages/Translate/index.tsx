@@ -12,7 +12,7 @@ import React from 'react';
 
 import { languageList } from '../../../../utils/language';
 import { useConfig } from '../../../../hooks/useConfig';
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from '@/utils/electron_compat/core';
 
 export default function Translate() {
     const [sourceLanguage, setSourceLanguage] = useConfig('translate_source_language', 'auto');

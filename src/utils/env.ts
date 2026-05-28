@@ -1,5 +1,5 @@
-import { type, arch as archFn, version } from '@tauri-apps/plugin-os';
-import { getVersion } from '@tauri-apps/api/app';
+import { type, arch as archFn, version } from '@/utils/electron_compat/os';
+import { getVersion } from '@/utils/electron_compat/app';
 
 export let osType = '';
 export let arch = '';

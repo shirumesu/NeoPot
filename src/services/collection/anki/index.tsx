@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { fetch, Body } from '@/utils/tauri_http';
+import { fetch, Body } from '@/utils/electron_http';
 import { store } from '../../../utils/store';
 
 export async function collection(source, target, options = {}) {

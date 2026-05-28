@@ -1,10 +1,10 @@
-import { appCacheDir, appConfigDir, join } from "@tauri-apps/api/path";
-import { readFile, readTextFile } from "@tauri-apps/plugin-fs";
-import { invoke } from "@tauri-apps/api/core";
-import Database from "@tauri-apps/plugin-sql";
+import { appCacheDir, appConfigDir, join } from "@/utils/electron_compat/path";
+import { readFile, readTextFile } from "@/utils/electron_compat/fs";
+import { invoke } from "@/utils/electron_compat/core";
+import Database from "@/utils/electron_compat/sql";
 import CryptoJS from "crypto-js";
 import { osType } from "./env";
-import * as http from "@/utils/tauri_http";
+import * as http from "@/utils/electron_http";
 
 async function loadPluginEntrypoint(script, pluginType) {
     const moduleSource = `${script}\nexport default typeof ${pluginType} !== 'undefined' ? ${pluginType} : undefined;\n`;

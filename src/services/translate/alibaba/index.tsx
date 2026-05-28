@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { fetch } from '@/utils/tauri_http';
+import { fetch } from '@/utils/electron_http';
 import HmacSHA1 from 'crypto-js/hmac-sha1';
 import base64 from 'crypto-js/enc-base64';
 

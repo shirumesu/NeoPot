@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { fetch, Body } from '@/utils/tauri_http';
+import { fetch, Body } from '@/utils/electron_http';
 import { v4 as uuidv4 } from 'uuid';
 
 export async function translate(text, from, to) {

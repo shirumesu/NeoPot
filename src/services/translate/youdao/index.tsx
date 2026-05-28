@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { fetch } from '@/utils/tauri_http';
+import { fetch } from '@/utils/electron_http';
 import CryptoJS from 'crypto-js';
 import { nanoid } from 'nanoid';
 

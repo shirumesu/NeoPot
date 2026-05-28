@@ -1,13 +1,12 @@
 // @ts-nocheck
-import { readDir, BaseDirectory, readTextFile, exists } from '@tauri-apps/plugin-fs';
-import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
-import { currentMonitor } from '@tauri-apps/api/window';
-import { appConfigDir, join } from '@tauri-apps/api/path';
-import { convertFileSrc } from '@tauri-apps/api/core';
+import { readDir, BaseDirectory, readTextFile, exists } from '@/utils/electron_compat/fs';
+import { getCurrentWebviewWindow } from '@/utils/electron_compat/webviewWindow';
+import { appConfigDir, join } from '@/utils/electron_compat/path';
+import { convertFileSrc } from '@/utils/electron_compat/core';
 import { Spacer, Button } from '@heroui/react';
 import { AiFillCloseCircle } from 'react-icons/ai';
 import React, { useState, useEffect } from 'react';
-import { listen } from '@tauri-apps/api/event';
+import { listen } from '@/utils/electron_compat/event';
 import { BsPinFill } from 'react-icons/bs';
 
 import LanguageArea from './components/LanguageArea';
@@ -15,9 +14,9 @@ import SourceArea from './components/SourceArea';
 import TargetArea from './components/TargetArea';
 import { osType } from '../../utils/env';
 import { useConfig } from '../../hooks';
-import { saveStore, setStoreValue, store } from '../../utils/store';
+import { getStoreValue, saveStore, setStoreValue } from '../../utils/store';
 import { isValidServiceInstanceKey } from '../../utils/service_instance';
-import { info } from '@tauri-apps/plugin-log';
+import { info } from '@/utils/electron_compat/log';
 const appWindow = getCurrentWebviewWindow()
 
 let blurTimeout = null;
@@ -129,9 +128,6 @@ export default function Translate() {
                 moveTimeout = setTimeout(async () => {
                     if (appWindow.label === 'translate') {
                         let position = await appWindow.outerPosition();
-                        const monitor = await currentMonitor();
-                        const factor = monitor.scaleFactor;
-                        position = position.toLogical(factor);
                         await setStoreValue('translate_window_position_x', parseInt(position.x), { save: false });
                         await setStoreValue('translate_window_position_y', parseInt(position.y), { save: false });
                         await saveStore();
@@ -155,9 +151,6 @@ export default function Translate() {
                 resizeTimeout = setTimeout(async () => {
                     if (appWindow.label === 'translate') {
                         let size = await appWindow.outerSize();
-                        const monitor = await currentMonitor();
-                        const factor = monitor.scaleFactor;
-                        size = size.toLogical(factor);
                         await setStoreValue('translate_window_height', parseInt(size.height), { save: false });
                         await setStoreValue('translate_window_width', parseInt(size.width), { save: false });
                         await saveStore();
@@ -216,16 +209,16 @@ export default function Translate() {
         try {
             const config = {};
             for (const serviceInstanceKey of validTranslateServiceInstanceList) {
-                config[serviceInstanceKey] = (await store.get(serviceInstanceKey)) ?? {};
+                config[serviceInstanceKey] = (await getStoreValue(serviceInstanceKey)) ?? {};
             }
             for (const serviceInstanceKey of validRecognizeServiceInstanceList) {
-                config[serviceInstanceKey] = (await store.get(serviceInstanceKey)) ?? {};
+                config[serviceInstanceKey] = (await getStoreValue(serviceInstanceKey)) ?? {};
             }
             for (const serviceInstanceKey of validTtsServiceInstanceList) {
-                config[serviceInstanceKey] = (await store.get(serviceInstanceKey)) ?? {};
+                config[serviceInstanceKey] = (await getStoreValue(serviceInstanceKey)) ?? {};
             }
             for (const serviceInstanceKey of validCollectionServiceInstanceList) {
-                config[serviceInstanceKey] = (await store.get(serviceInstanceKey)) ?? {};
+                config[serviceInstanceKey] = (await getStoreValue(serviceInstanceKey)) ?? {};
             }
             setServiceConfigError(null);
             setServiceInstanceConfigMap({ ...config });

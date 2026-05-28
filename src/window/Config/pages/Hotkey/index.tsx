@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { unregister, isRegistered } from '@tauri-apps/plugin-global-shortcut';
+import { unregister, isRegistered } from '@/utils/electron_compat/globalShortcut';
 import toast, { Toaster } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { CardBody } from '@heroui/react';
@@ -11,7 +11,7 @@ import React from 'react';
 import { useConfig } from '../../../../hooks/useConfig';
 import { useToastStyle } from '../../../../hooks';
 import { osType } from '../../../../utils/env';
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from '@/utils/electron_compat/core';
 
 const keyMap = {
     Backquote: '`',

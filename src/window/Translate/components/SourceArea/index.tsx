@@ -1,12 +1,12 @@
 // @ts-nocheck
 import { Button, Card, CardBody, CardFooter, ButtonGroup, Chip, Tooltip, Spacer } from '@heroui/react';
-import { BaseDirectory, readTextFile } from '@tauri-apps/plugin-fs';
+import { BaseDirectory, readTextFile } from '@/utils/electron_compat/fs';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { writeText } from '@tauri-apps/plugin-clipboard-manager';
+import { writeText } from '@/utils/electron_compat/clipboard';
 import { HiOutlineVolumeUp } from 'react-icons/hi';
-import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
+import { getCurrentWebviewWindow } from '@/utils/electron_compat/webviewWindow';
 import toast, { Toaster } from 'react-hot-toast';
-import { listen } from '@tauri-apps/api/event';
+import { listen } from '@/utils/electron_compat/event';
 import { MdContentCopy } from 'react-icons/md';
 import { MdSmartButton } from 'react-icons/md';
 import { useTranslation } from 'react-i18next';
@@ -21,13 +21,13 @@ import {
 } from '../../../../utils/service_instance';
 import { useConfig, useSyncAtom, useVoice, useToastStyle } from '../../../../hooks';
 import { invoke_plugin } from '../../../../utils/invoke_plugin';
-import { tauriCommand } from '../../../../utils/tauri_adapter';
+import { electronCommand } from '../../../../utils/electron_command';
 import * as recognizeServices from '../../../../services/recognize';
 import * as builtinTtsServices from '../../../../services/tts';
 import detect from '../../../../utils/lang_detect';
 import { store } from '../../../../utils/store';
-import { info } from '@tauri-apps/plugin-log';
-import { debug } from '@tauri-apps/plugin-log';
+import { info } from '@/utils/electron_compat/log';
+import { debug } from '@/utils/electron_compat/log';
 const appWindow = getCurrentWebviewWindow()
 
 export const sourceTextAtom = atom('');
@@ -80,7 +80,7 @@ export default function SourceArea(props) {
             setSourceText('', true);
         } else if (text === '[IMAGE_TRANSLATE]') {
             setWindowType('[IMAGE_TRANSLATE]');
-            const base64 = await tauriCommand('get_base64');
+            const base64 = await electronCommand('get_base64');
             const serviceInstanceKey = recognizeServiceList[0];
             if (getServiceSouceType(serviceInstanceKey) === ServiceSourceType.PLUGIN) {
                 if (recognizeLanguage in pluginList['recognize'][getServiceName(serviceInstanceKey)].language) {
@@ -295,7 +295,7 @@ export default function SourceArea(props) {
             hideWindow !== null
         ) {
             initialTextLoadedRef.current = true;
-            tauriCommand('get_text').then((v) => {
+            electronCommand('get_text').then((v) => {
                 handleNewText(v);
             });
         }

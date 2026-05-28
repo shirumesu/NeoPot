@@ -6,7 +6,7 @@ import { DropdownMenu } from '@heroui/react';
 import { DropdownItem } from '@heroui/react';
 import { Dropdown } from '@heroui/react';
 import { useTranslation } from 'react-i18next';
-import { openUrl as open } from '@tauri-apps/plugin-opener';
+import { openUrl as open } from '@/utils/electron_compat/opener';
 import React from 'react';
 
 import { useConfig } from '../../../../../hooks';

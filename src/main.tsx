@@ -1,6 +1,6 @@
 import { ThemeProvider as NextThemesProvider } from 'next-themes';
 import { HeroUIProvider } from '@heroui/react';
-import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
+import { getCurrentWebviewWindow } from '@/utils/electron_compat/webviewWindow';
 import ReactDOM from 'react-dom/client';
 
 import { initStore } from './utils/store.js';

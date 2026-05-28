@@ -13,10 +13,10 @@ import {
     Tooltip,
 } from '@heroui/react';
 import { BiCollapseVertical, BiExpandVertical } from 'react-icons/bi';
-import { BaseDirectory, readTextFile } from '@tauri-apps/plugin-fs';
-import { sendNotification } from '@tauri-apps/plugin-notification';
+import { BaseDirectory, readTextFile } from '@/utils/electron_compat/fs';
+import { sendNotification } from '@/utils/electron_compat/notification';
 import React, { useEffect, useState, useRef } from 'react';
-import { writeText } from '@tauri-apps/plugin-clipboard-manager';
+import { writeText } from '@/utils/electron_compat/clipboard';
 import { PulseLoader } from 'react-spinners';
 import { TbTransformFilled } from 'react-icons/tb';
 import { HiOutlineVolumeUp } from 'react-icons/hi';
@@ -26,7 +26,7 @@ import { MdArticle, MdCode, MdContentCopy } from 'react-icons/md';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useTranslation } from 'react-i18next';
-import Database from '@tauri-apps/plugin-sql';
+import Database from '@/utils/electron_compat/sql';
 import { GiCycle } from 'react-icons/gi';
 import { useTheme } from 'next-themes';
 import { useAtomValue } from 'jotai';
@@ -42,7 +42,7 @@ import { invoke_plugin } from '../../../../utils/invoke_plugin';
 import * as builtinServices from '../../../../services/translate';
 import * as builtinTtsServices from '../../../../services/tts';
 
-import { info, error as logError } from '@tauri-apps/plugin-log';
+import { info, error as logError } from '@/utils/electron_compat/log';
 import {
     INSTANCE_NAME_CONFIG_KEY,
     ServiceSourceType,

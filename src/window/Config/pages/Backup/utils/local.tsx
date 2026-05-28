@@ -1,6 +1,6 @@
 // @ts-nocheck
-import { save, open } from '@tauri-apps/plugin-dialog';
-import { invoke } from '@tauri-apps/api/core';
+import { save, open } from '@/utils/electron_compat/dialog';
+import { invoke } from '@/utils/electron_compat/core';
 import { reloadStoreFromDisk } from '../../../../../utils/store';
 
 export async function backup() {

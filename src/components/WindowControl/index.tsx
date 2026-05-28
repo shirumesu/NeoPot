@@ -1,7 +1,7 @@
 import { VscChromeClose, VscChromeMinimize, VscChromeMaximize, VscChromeRestore } from 'react-icons/vsc';
 import React, { useEffect, useState } from 'react';
-import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
-import { listen } from '@tauri-apps/api/event';
+import { getCurrentWebviewWindow } from '@/utils/electron_compat/webviewWindow';
+import { listen } from '@/utils/electron_compat/event';
 import { Button } from '@heroui/react';
 
 import { osType } from '../../utils/env';

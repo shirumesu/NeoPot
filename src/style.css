@@ -12,6 +12,19 @@ body {
     overflow: hidden;
 }
 
+[data-tauri-drag-region='true'] {
+    -webkit-app-region: drag;
+}
+
+button,
+input,
+textarea,
+select,
+a,
+[role='button'] {
+    -webkit-app-region: no-drag;
+}
+
 html {
     border-radius: 10px !important;
     background: transparent !important;

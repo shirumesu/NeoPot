@@ -1,9 +1,9 @@
 // @ts-nocheck
 import { Divider, Button, Popover, PopoverTrigger, PopoverContent } from '@heroui/react';
-import { appLogDir } from '@tauri-apps/api/path';
+import { appLogDir } from '@/utils/electron_compat/path';
 import { useTranslation } from 'react-i18next';
-import { openPath, openUrl as open } from '@tauri-apps/plugin-opener';
-import { invoke } from '@tauri-apps/api/core';
+import { openPath, openUrl as open } from '@/utils/electron_compat/opener';
+import { invoke } from '@/utils/electron_compat/core';
 import React from 'react';
 
 import { appVersion } from '../../../../utils/env';

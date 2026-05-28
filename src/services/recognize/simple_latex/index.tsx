@@ -1,6 +1,6 @@
 // @ts-nocheck
-import { readFile, BaseDirectory } from '@tauri-apps/plugin-fs';
-import { fetch, Body } from '@/utils/tauri_http';
+import { readFile, BaseDirectory } from '@/utils/electron_compat/fs';
+import { fetch, Body } from '@/utils/electron_http';
 
 export async function recognize(base64, language, options = {}) {
     const { config } = options;

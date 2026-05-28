@@ -1,17 +1,17 @@
 // @ts-nocheck
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from '@heroui/react';
-import { remove, BaseDirectory } from '@tauri-apps/plugin-fs';
-import { openUrl as openInBrowser } from '@tauri-apps/plugin-opener';
+import { remove, BaseDirectory } from '@/utils/electron_compat/fs';
+import { openUrl as openInBrowser } from '@/utils/electron_compat/opener';
 import toast, { Toaster } from 'react-hot-toast';
 import { MdDeleteOutline } from 'react-icons/md';
 import { useTranslation } from 'react-i18next';
-import { open } from '@tauri-apps/plugin-dialog';
-import { invoke } from '@tauri-apps/api/core';
+import { open } from '@/utils/electron_compat/dialog';
+import { invoke } from '@/utils/electron_compat/core';
 import React, { useState } from 'react';
 
 import { createServiceInstanceKey } from '../../../../../utils/service_instance';
 import { useToastStyle } from '../../../../../hooks';
-import { emit } from '@tauri-apps/api/event';
+import { emit } from '@/utils/electron_compat/event';
 
 export default function SelectPluginModal(props) {
     const { isOpen, onOpenChange, setCurrentConfigKey, onConfigOpen, pluginType, pluginList, deleteService } = props;

@@ -8,7 +8,7 @@ import { DropdownItem } from '@heroui/react';
 import toast, { Toaster } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { Dropdown } from '@heroui/react';
-import { openUrl as open } from '@tauri-apps/plugin-opener';
+import { openUrl as open } from '@/utils/electron_compat/opener';
 import React, { useState } from 'react';
 
 import { useConfig } from '../../../hooks/useConfig';

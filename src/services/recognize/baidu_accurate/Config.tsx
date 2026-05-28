@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { INSTANCE_NAME_CONFIG_KEY } from '../../../utils/service_instance';
 import { Button, Input } from '@heroui/react';
-import { openUrl as open } from '@tauri-apps/plugin-opener';
+import { openUrl as open } from '@/utils/electron_compat/opener';
 import React, { useState } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';

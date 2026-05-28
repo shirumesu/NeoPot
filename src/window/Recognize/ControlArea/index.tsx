@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { Dropdown, DropdownItem, DropdownMenu, DropdownTrigger, Button } from '@heroui/react';
 import { atom, useAtom, useSetAtom, useAtomValue } from 'jotai';
-import { fetch, Body } from '@/utils/tauri_http';
+import { fetch, Body } from '@/utils/electron_http';
 import { useTranslation } from 'react-i18next';
 import { HiTranslate } from 'react-icons/hi';
 import { GiCycle } from 'react-icons/gi';

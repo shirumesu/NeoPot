@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { Language } from './info';
 import * as jose from 'jose';
-import { info } from '@tauri-apps/plugin-log';
+import { info } from '@/utils/electron_compat/log';
 
 export async function translate(text, from, to, options = {}) {
     const { config, setResult, detect } = options;

@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { Card, CardBody, CardFooter, Button, Skeleton, ButtonGroup, Tooltip } from '@heroui/react';
-import { sendNotification } from '@tauri-apps/plugin-notification';
-import { writeText } from '@tauri-apps/plugin-clipboard-manager';
+import { sendNotification } from '@/utils/electron_compat/notification';
+import { writeText } from '@/utils/electron_compat/clipboard';
 import { atom, useAtom, useAtomValue } from 'jotai';
 import React, { useEffect, useState } from 'react';
 import { CgSpaceBetween } from 'react-icons/cg';

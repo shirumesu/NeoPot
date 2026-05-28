@@ -1,7 +1,7 @@
 // @ts-nocheck
-import { invoke } from '@tauri-apps/api/core';
-import { Body, fetch } from '@/utils/tauri_http';
-import { appConfigDir, join } from '@tauri-apps/api/path';
+import { invoke } from '@/utils/electron_compat/core';
+import { Body, fetch } from '@/utils/electron_http';
+import { appConfigDir, join } from '@/utils/electron_compat/path';
 
 export async function backup(token, name) {
     const appConfigDirPath = await appConfigDir();

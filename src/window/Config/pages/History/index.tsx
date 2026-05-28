@@ -1,15 +1,15 @@
 // @ts-nocheck
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure } from '@heroui/react';
 import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell } from '@heroui/react';
-import { readDir, BaseDirectory, readTextFile, exists } from '@tauri-apps/plugin-fs';
+import { readDir, BaseDirectory, readTextFile, exists } from '@/utils/electron_compat/fs';
 import { Textarea, Button, ButtonGroup } from '@heroui/react';
-import { appConfigDir, join } from '@tauri-apps/api/path';
-import { convertFileSrc } from '@tauri-apps/api/core';
+import { appConfigDir, join } from '@/utils/electron_compat/path';
+import { convertFileSrc } from '@/utils/electron_compat/core';
 import React, { useEffect, useState } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 import { Pagination } from '@heroui/react';
 import { useTranslation } from 'react-i18next';
-import Database from '@tauri-apps/plugin-sql';
+import Database from '@/utils/electron_compat/sql';
 
 import * as builtinCollectionServices from '../../../../services/collection';
 import { invoke_plugin } from '../../../../utils/invoke_plugin';

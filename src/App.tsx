@@ -1,8 +1,8 @@
-import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
+import { getCurrentWebviewWindow } from '@/utils/electron_compat/webviewWindow';
 import { MemoryRouter } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { warn } from '@tauri-apps/plugin-log';
-import { useEffect, type ComponentType, type KeyboardEvent as ReactKeyboardEvent } from 'react';
+import { warn } from '@/utils/electron_compat/log';
+import { useEffect, useState, type ComponentType, type KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { useTheme } from 'next-themes';
 
 import Screenshot from './window/Screenshot';
@@ -10,7 +10,7 @@ import Translate from './window/Translate';
 import Recognize from './window/Recognize';
 import Updater from './window/Updater';
 import { store } from './utils/store.js';
-import { tauriCommand } from './utils/tauri_adapter';
+import { electronCommand } from './utils/electron_command';
 import Config from './window/Config';
 import ErrorBoundary from './components/ErrorBoundary';
 import { useConfig } from './hooks';
@@ -56,6 +56,7 @@ function getInitialConfigRoute() {
 }
 
 export default function App() {
+    const [windowLabel, setWindowLabel] = useState<string | null>(null);
     const [devMode] = useConfig<boolean>('dev_mode', false);
     const [appTheme] = useConfig<string>('app_theme', 'system');
     const [appLanguage] = useConfig<string>('app_language', 'en');
@@ -72,19 +73,42 @@ export default function App() {
     }, []);
 
     useEffect(() => {
+        let cancelled = false;
+
+        async function syncWindowLabel() {
+            const label = window.neoPot
+                ? await window.neoPot.app.getWindowLabel()
+                : appWindow.label;
+
+            if (!cancelled) {
+                setWindowLabel(label);
+            }
+        }
+
+        void syncWindowLabel();
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
+    useEffect(() => {
         const onKeyDown = async (e: KeyboardEvent | ReactKeyboardEvent) => {
             const allowKeys = ['c', 'v', 'x', 'a', 'z', 'y'];
             if (e.ctrlKey && !allowKeys.includes(e.key.toLowerCase())) {
                 e.preventDefault();
             }
             if (devMode && e.key === 'F12') {
-                await tauriCommand('open_devtools');
+                await electronCommand('open_devtools');
             }
             if (e.key.startsWith('F') && e.key.length > 1) {
                 e.preventDefault();
             }
             if (e.key === 'Escape') {
-                await appWindow.close();
+                if (window.neoPot) {
+                    await window.neoPot.app.closeCurrentWindow();
+                } else {
+                    await appWindow.close();
+                }
             }
         };
 
@@ -128,13 +152,14 @@ export default function App() {
         }
     }, [appFont, appFallbackFont, appFontSize]);
 
-    const CurrentWindow = windowMap[appWindow.label];
+    const label = windowLabel ?? appWindow.label;
+    const CurrentWindow = windowMap[label];
 
     if (!CurrentWindow) {
         return null;
     }
 
-    if (appWindow.label === 'config') {
+    if (label === 'config') {
         return (
             <MemoryRouter initialEntries={[getInitialConfigRoute()]}>
                 <ErrorBoundary fallbackTitle='Config window render failed'>
@@ -145,7 +170,7 @@ export default function App() {
     }
 
     return (
-        <ErrorBoundary fallbackTitle={`${appWindow.label} window render failed`}>
+        <ErrorBoundary fallbackTitle={`${label} window render failed`}>
             <CurrentWindow />
         </ErrorBoundary>
     );

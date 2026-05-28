@@ -4,7 +4,7 @@ import { Input, Button, Switch, Textarea } from '@heroui/react';
 import { MdDeleteOutline } from 'react-icons/md';
 import toast, { Toaster } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
-import { openUrl as open } from '@tauri-apps/plugin-opener';
+import { openUrl as open } from '@/utils/electron_compat/opener';
 import React, { useState } from 'react';
 
 import { useConfig } from '../../../hooks/useConfig';

@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from '@/utils/electron_compat/core';
 
 export async function backup(url, username, password, name) {
     return await invoke('webdav', {

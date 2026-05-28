@@ -1,16 +1,16 @@
 // @ts-nocheck
-import { readDir, BaseDirectory, readTextFile, exists } from '@tauri-apps/plugin-fs';
-import { appConfigDir, join } from '@tauri-apps/api/path';
-import { convertFileSrc } from '@tauri-apps/api/core';
-import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
+import { readDir, BaseDirectory, readTextFile, exists } from '@/utils/electron_compat/fs';
+import { appConfigDir, join } from '@/utils/electron_compat/path';
+import { convertFileSrc } from '@/utils/electron_compat/core';
+import { getCurrentWebviewWindow } from '@/utils/electron_compat/webviewWindow';
 import React, { useState, useEffect } from 'react';
-import { listen } from '@tauri-apps/api/event';
+import { listen } from '@/utils/electron_compat/event';
 import { Button } from '@heroui/react';
 import { BsPinFill } from 'react-icons/bs';
 import { atom, useAtom } from 'jotai';
 
 import WindowControl from '../../components/WindowControl';
-import { store } from '../../utils/store';
+import { getStoreValue } from '../../utils/store';
 import { osType } from '../../utils/env';
 import { useConfig } from '../../hooks';
 import ControlArea from './ControlArea';
@@ -93,7 +93,7 @@ export default function Recognize() {
         try {
             const config = {};
             for (const serviceInstanceKey of serviceInstanceList) {
-                config[serviceInstanceKey] = (await store.get(serviceInstanceKey)) ?? {};
+                config[serviceInstanceKey] = (await getStoreValue(serviceInstanceKey)) ?? {};
             }
             setServiceConfigError(null);
             setServiceInstanceConfigMap({ ...config });

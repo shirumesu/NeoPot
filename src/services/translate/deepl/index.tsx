@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { fetch, Body } from '@/utils/tauri_http';
+import { fetch, Body } from '@/utils/electron_http';
 
 export async function translate(text, from, to, options = {}) {
     const { config } = options;

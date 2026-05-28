@@ -1,10 +1,10 @@
 // @ts-nocheck
-import { readDir, BaseDirectory, readTextFile, exists } from '@tauri-apps/plugin-fs';
-import { listen } from '@tauri-apps/api/event';
+import { readDir, BaseDirectory, readTextFile, exists } from '@/utils/electron_compat/fs';
+import { listen } from '@/utils/electron_compat/event';
 import { useTranslation } from 'react-i18next';
 import { Tabs, Tab } from '@heroui/react';
-import { appConfigDir, join } from '@tauri-apps/api/path';
-import { convertFileSrc } from '@tauri-apps/api/core';
+import { appConfigDir, join } from '@/utils/electron_compat/path';
+import { convertFileSrc } from '@/utils/electron_compat/core';
 import React, { useEffect, useState } from 'react';
 import Translate from './Translate';
 import Recognize from './Recognize';

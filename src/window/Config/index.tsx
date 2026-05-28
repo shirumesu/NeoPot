@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { useLocation, useRoutes } from 'react-router-dom';
 import React, { useEffect, useState } from 'react';
-import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
+import { getCurrentWebviewWindow } from '@/utils/electron_compat/webviewWindow';
 import { Card, Divider } from '@heroui/react';
 import { useTranslation } from 'react-i18next';
 

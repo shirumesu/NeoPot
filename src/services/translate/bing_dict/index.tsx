@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { fetch } from '@/utils/tauri_http';
+import { fetch } from '@/utils/electron_http';
 const DISPLAY_FORMAT_DEFAULT = '发音, 快速释义, 变形';
 
 export async function translate(text, from, to) {

@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { readTextFile, BaseDirectory } from '@tauri-apps/plugin-fs';
+import { readTextFile, BaseDirectory } from '@/utils/electron_compat/fs';
 import { DropdownTrigger } from '@heroui/react';
 import { useDisclosure } from '@heroui/react';
 import toast, { Toaster } from 'react-hot-toast';
@@ -8,7 +8,7 @@ import { DropdownItem } from '@heroui/react';
 import { useTranslation } from 'react-i18next';
 import { CardBody } from '@heroui/react';
 import { Dropdown } from '@heroui/react';
-import { warn } from '@tauri-apps/plugin-log';
+import { warn } from '@/utils/electron_compat/log';
 import { Button } from '@heroui/react';
 import { Input } from '@heroui/react';
 import { Card } from '@heroui/react';

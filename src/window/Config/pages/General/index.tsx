@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { enable, isEnabled, disable } from '@tauri-apps/plugin-autostart';
+import { enable, isEnabled, disable } from '@/utils/electron_compat/autostart';
 import { DropdownTrigger } from '@heroui/react';
 import React, { useState, useEffect } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
@@ -8,13 +8,13 @@ import { DropdownItem } from '@heroui/react';
 import { useTranslation } from 'react-i18next';
 import { CardBody } from '@heroui/react';
 import { Dropdown } from '@heroui/react';
-import { info } from '@tauri-apps/plugin-log';
+import { info } from '@/utils/electron_compat/log';
 import { Button } from '@heroui/react';
 import { Switch } from '@heroui/react';
 import 'flag-icons/css/flag-icons.min.css';
 import { Input } from '@heroui/react';
 import { Card } from '@heroui/react';
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from '@/utils/electron_compat/core';
 import { useTheme } from 'next-themes';
 
 import { useConfig } from '../../../../hooks/useConfig';

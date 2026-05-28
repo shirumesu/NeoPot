@@ -1,9 +1,9 @@
 // @ts-nocheck
 import { Code, Card, CardBody, Button, Progress, Skeleton } from '@heroui/react';
-import { check } from '@tauri-apps/plugin-updater';
+import { check } from '@/utils/electron_compat/updater';
 import React, { useEffect, useState } from 'react';
-import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
-import { relaunch } from '@tauri-apps/plugin-process';
+import { getCurrentWebviewWindow } from '@/utils/electron_compat/webviewWindow';
+import { relaunch } from '@/utils/electron_compat/process';
 import toast, { Toaster } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import ReactMarkdown from 'react-markdown';

@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { fetch, Body } from '@/utils/tauri_http';
+import { fetch, Body } from '@/utils/electron_http';
 import { Language } from './info';
 
 const OLLAMA_HEADERS = { Origin: 'http://localhost' };
