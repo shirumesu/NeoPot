@@ -46,6 +46,7 @@
       "general": {
         "auto_start": "הפעלה אוטומטית",
         "check_update": "עדכון אוטומטי",
+        "close_to_tray": "מזער למגש המערכת בעת סגירה",
         "theme": {
           "dark": "כהה",
           "system": "מערכת",

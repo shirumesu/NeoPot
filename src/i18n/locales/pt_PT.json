@@ -310,6 +310,7 @@
         "server_port": "Porta de Escuta",
         "proxy_error": "Por favor preencha o host e a porta",
         "check_update": "Procurar Atualização",
+        "close_to_tray": "Minimizar para a área de notificação ao fechar",
         "app_language": "Idioma de Exibição",
         "transparent": "Efeito de Transparência",
         "title": "Configurações Gerais",

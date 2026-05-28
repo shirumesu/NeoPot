@@ -6,6 +6,7 @@ import VitePlugin from '@electron-forge/plugin-vite'
 const packagedRuntimePathPrefixes = [
   '/.vite',
   '/package.json',
+  '/public',
   '/node_modules/better-sqlite3',
   '/node_modules/bindings',
   '/node_modules/file-uri-to-path',
@@ -33,7 +34,13 @@ const config: ForgeConfig = {
   makers: [
     {
       name: '@electron-forge/maker-squirrel',
-      config: {},
+      config: {
+        name: 'neopot',
+        iconUrl: 'https://raw.githubusercontent.com/shirumesu/Neopot/refactor/electron/public/icon.ico',
+        setupExe: 'NeoPot-Setup.exe',
+        setupMsi: 'NeoPot-Setup.msi',
+        setupIcon: path.resolve('public', 'icon.ico'),
+      },
     },
     {
       name: '@electron-forge/maker-deb',

@@ -10,6 +10,7 @@ import type {
 
 type IpcChannel =
   | 'app:get-window-label'
+  | 'app:get-version'
   | 'app:close-current-window'
   | 'app:hide-current-window'
   | 'app:show-current-window'
@@ -39,6 +40,7 @@ type IpcChannel =
 
 const channels = new Set<IpcChannel>([
   'app:get-window-label',
+  'app:get-version',
   'app:close-current-window',
   'app:hide-current-window',
   'app:show-current-window',
@@ -78,6 +80,7 @@ async function invokeChecked<TResult>(channel: IpcChannel, payload?: unknown): P
 const api: NeoPotElectronApi = {
   app: {
     getWindowLabel: () => invokeChecked<WindowLabel>('app:get-window-label'),
+    getVersion: () => invokeChecked<string>('app:get-version'),
     closeCurrentWindow: () => invokeChecked<void>('app:close-current-window'),
     hideCurrentWindow: () => invokeChecked<void>('app:hide-current-window'),
     showCurrentWindow: () => invokeChecked<void>('app:show-current-window'),

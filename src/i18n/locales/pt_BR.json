@@ -49,6 +49,7 @@
         "title": "Configurações Gerais",
         "auto_start": "Iniciar Automaticamente",
         "check_update": "Checar por Atualização",
+        "close_to_tray": "Minimizar para a bandeja ao fechar",
         "server_port": "Porta de Escuta",
         "server_port_change": "A porta de escuta foi alterada. Reinicie o aplicativo para que as alterações tenham efeito",
         "app_language": "Idioma de Exibição",

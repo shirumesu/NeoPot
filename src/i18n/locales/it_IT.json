@@ -337,6 +337,7 @@
         "server_port": "Porta in ascolto",
         "proxy_error": "Inserisci l'host e la porta",
         "check_update": "Controlla aggiornamento",
+        "close_to_tray": "Riduci nell’area di notifica alla chiusura",
         "app_language": "Lingua dell'applicazione",
         "transparent": "Effetto trasparente",
         "title": "Impostazioni Generali",

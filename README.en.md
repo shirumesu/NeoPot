@@ -22,15 +22,14 @@
 
 <p align="center">
   <img alt="License" src="https://img.shields.io/github/license/shirumesu/NeoPot.svg" />
-  <img alt="Tauri" src="https://img.shields.io/badge/Tauri-2.10-blue?logo=tauri" />
+  <img alt="Electron" src="https://img.shields.io/badge/Electron-41-blue?logo=electron" />
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.6-blue?logo=typescript&logoColor=white" />
-  <img alt="Rust" src="https://img.shields.io/badge/Rust-1.80%2B-orange?logo=rust&logoColor=white" />
   <img alt="Windows" src="https://img.shields.io/badge/Windows-supported-blue?logo=windows&logoColor=white" />
   <img alt="Linux" src="https://img.shields.io/badge/Linux-supported-yellow?logo=linux&logoColor=white" />
 </p>
 
-> NeoPot is maintained as a continuation of Pot Desktop, with migrations to Tauri v2, HeroUI, and TypeScript completed.
-> A macOS version is not published for now. macOS distribution requires an Apple Developer account, and the current CI, updater, and installation instructions are only targeted at Windows and Linux.
+> NeoPot is maintained as a continuation of Pot Desktop, with migrations to Electron, HeroUI, and TypeScript completed.
+> A macOS version is not published for now. macOS distribution requires an Apple Developer account, and the current installation instructions are only targeted at Windows and Linux.
 > The early development versions currently focus on migration, refactoring, and feature updates. Some Pot Desktop resources or websites may still be used temporarily and will be gradually removed or replaced as soon as possible.
 
 ## Table of Contents
@@ -233,7 +232,7 @@ Windows users can install SnipDo from the Microsoft Store, then download the `ne
 
 ## Wayland Support
 
-Tauri’s global shortcut solution has limited support for Wayland. Wayland users can bind shortcuts through their desktop environment or window manager, then use `curl` to call NeoPot’s local HTTP API.
+Linux global shortcuts may be limited by the desktop environment on Wayland. Wayland users can bind shortcuts through their desktop environment or window manager, then use `curl` to call NeoPot’s local HTTP API.
 
 Hyprland external screenshot example:
 
@@ -255,7 +254,6 @@ Verified environment:
 
 - Node.js `>= 24.0.0`
 - pnpm `>= 9`
-- Rust `>= 1.80.0`
 
 Clone the repository:
 
@@ -284,9 +282,9 @@ Common commands:
 
 ```bash
 pnpm dev
-pnpm run build
-pnpm run typecheck
-pnpm tauri build
+pnpm lint
+pnpm test
+pnpm make
 ```
 
 ## Future TODO

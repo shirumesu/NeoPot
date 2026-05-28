@@ -49,6 +49,7 @@
         "title": "General Settings",
         "auto_start": "Auto Startup",
         "check_update": "Check Update",
+        "close_to_tray": "Minimize to tray on close",
         "server_port": "Listening Port",
         "server_port_change": "The listening port has been changed, Please restart the application for the changes to take effect",
         "app_language": "Display Language",

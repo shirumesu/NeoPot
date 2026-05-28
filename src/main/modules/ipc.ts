@@ -1,5 +1,6 @@
 import {
   BrowserWindow,
+  app,
   clipboard,
   ipcMain,
   nativeImage,
@@ -258,6 +259,10 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
     'app:get-window-label': (event, payload) => {
       assertNoPayload(payload)
       return options.getWindowLabel(event)
+    },
+    'app:get-version': (_event, payload) => {
+      assertNoPayload(payload)
+      return app.getVersion()
     },
     'app:close-current-window': (event, payload) => {
       assertNoPayload(payload)

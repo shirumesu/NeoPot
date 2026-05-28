@@ -298,6 +298,7 @@
         "server_port": "Port d'écoute",
         "proxy_error": "Veuillez compléter l'hôte et le port",
         "check_update": "Vérifier les mises à jour",
+        "close_to_tray": "Réduire dans la zone de notification à la fermeture",
         "app_language": "Langue d'affichage",
         "transparent": "Effet de transparence",
         "title": "Paramètres généraux",

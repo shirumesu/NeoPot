@@ -22,15 +22,14 @@
 
 <p align="center">
   <img alt="License" src="https://img.shields.io/github/license/shirumesu/NeoPot.svg" />
-  <img alt="Tauri" src="https://img.shields.io/badge/Tauri-2.10-blue?logo=tauri" />
+  <img alt="Electron" src="https://img.shields.io/badge/Electron-41-blue?logo=electron" />
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.6-blue?logo=typescript&logoColor=white" />
-  <img alt="Rust" src="https://img.shields.io/badge/Rust-1.80%2B-orange?logo=rust&logoColor=white" />
   <img alt="Windows" src="https://img.shields.io/badge/Windows-supported-blue?logo=windows&logoColor=white" />
   <img alt="Linux" src="https://img.shields.io/badge/Linux-supported-yellow?logo=linux&logoColor=white" />
 </p>
 
-> NeoPot 基于 Pot Desktop 继续维护，并完成 Tauri v2、HeroUI、TypeScript 迁移。
-> macOS 版本暂不发布。原因是 macOS 分发需要 Apple Developer 账号；当前 CI、updater 和安装说明只面向 Windows 与 Linux。
+> NeoPot 基于 Pot Desktop 继续维护，并迁移到 Electron、HeroUI 和 TypeScript。
+> macOS 版本暂不发布。原因是 macOS 分发需要 Apple Developer 账号；当前安装说明只面向 Windows 与 Linux。
 > 目前早期开发版本重心在移植重构和功能更新，仍可能沿用部分 pot desktop 资源或是网站，后续会尽快逐步移除替换。
 
 ## 目录
@@ -231,7 +230,7 @@ Windows 用户可以从 Microsoft Store 安装 SnipDo，然后在 NeoPot Release
 
 ## Wayland 支持
 
-Tauri 的全局快捷键方案对 Wayland 支持有限。Wayland 用户可以通过桌面环境或窗口管理器绑定快捷键，再用 `curl` 调用 NeoPot 的本地 HTTP 接口。
+Linux 全局快捷键在 Wayland 下可能受桌面环境限制。Wayland 用户可以通过桌面环境或窗口管理器绑定快捷键，再用 `curl` 调用 NeoPot 的本地 HTTP 接口。
 
 Hyprland 外部截图示例：
 
@@ -253,7 +252,6 @@ windowrulev2 = move cursor 0 0, class:(neopot), title:(Translator|Screenshot Tra
 
 - Node.js `>= 24.0.0`
 - pnpm `>= 9`
-- Rust `>= 1.80.0`
 
 拉取代码：
 
@@ -282,9 +280,9 @@ sudo apt-get install -y \
 
 ```bash
 pnpm dev
-pnpm run build
-pnpm run typecheck
-pnpm tauri build
+pnpm lint
+pnpm test
+pnpm make
 ```
 
 ## 未来TODO

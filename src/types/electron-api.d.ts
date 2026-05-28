@@ -29,6 +29,7 @@ export interface WindowBounds {
 export interface NeoPotElectronApi {
   app: {
     getWindowLabel(): Promise<WindowLabel>
+    getVersion(): Promise<string>
     closeCurrentWindow(): Promise<void>
     hideCurrentWindow(): Promise<void>
     showCurrentWindow(): Promise<void>

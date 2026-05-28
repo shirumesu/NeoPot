@@ -49,6 +49,7 @@
         "title": "一般設定",
         "auto_start": "開機自動啟動",
         "check_update": "啟動時檢查更新",
+        "close_to_tray": "關閉時縮小至系統匣",
         "server_port": "監聽連接埠",
         "server_port_change": "監聽連接埠已變更，請重新啟動應用程式以使變更生效",
         "app_language": "顯示語言",

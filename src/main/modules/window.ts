@@ -8,6 +8,7 @@ import {
   type BrowserWindowConstructorOptions,
   type WebContents,
 } from 'electron'
+import { getConfig } from './config'
 
 export type WindowLabel = 'config' | 'translate' | 'recognize' | 'screenshot' | 'updater'
 
@@ -16,6 +17,7 @@ declare const MAIN_WINDOW_VITE_NAME: string
 
 const windows = new Map<WindowLabel, BrowserWindow>()
 const windowLabelsByWebContentsId = new Map<number, WindowLabel>()
+let appIsQuitting = false
 
 interface WindowDefinition {
   width: number
@@ -186,6 +188,15 @@ function createBrowserWindow(label: WindowLabel): BrowserWindow {
   window.on('blur', () => emitWindowEvent(window, 'tauri://blur'))
   window.on('move', () => emitWindowEvent(window, 'tauri://move'))
   window.on('resize', () => emitWindowEvent(window, 'tauri://resize'))
+  window.on('close', (event) => {
+    const closeToTray = getConfig('close_to_tray') !== false
+    if (label !== 'config' || appIsQuitting || !closeToTray) {
+      return
+    }
+
+    event.preventDefault()
+    window.hide()
+  })
 
   window.on('closed', () => {
     windows.delete(label)
@@ -238,4 +249,8 @@ export function getCurrentWindowLabel(webContents: WebContents): WindowLabel {
 
 export function getWindow(label: WindowLabel): BrowserWindow | undefined {
   return windows.get(label)
+}
+
+export function markAppQuitting(): void {
+  appIsQuitting = true
 }
