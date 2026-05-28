@@ -146,7 +146,10 @@ export async function userInfo(token) {
   })
   if (res.ok) {
     const result = res.data
-    if (result.hasOwnProperty('avatar') && result.hasOwnProperty('name')) {
+    if (
+      Object.prototype.hasOwnProperty.call(result, 'avatar') &&
+      Object.prototype.hasOwnProperty.call(result, 'name')
+    ) {
       return { avatar: result['avatar'], name: result['name'] }
     } else {
       throw new Error(`Can not find avatar or name: ${JSON.stringify(result)}`)

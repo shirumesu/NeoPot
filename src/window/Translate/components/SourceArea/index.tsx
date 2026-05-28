@@ -81,7 +81,7 @@ export default function SourceArea(props) {
     (text) => {
       const trimmedText = text.trim()
       if (deleteNewline) {
-        return trimmedText.replace(/\-\s+/g, '').replace(/\s+/g, ' ')
+        return trimmedText.replace(/-\s+/g, '').replace(/\s+/g, ' ')
       }
 
       return trimmedText
@@ -494,7 +494,7 @@ export default function SourceArea(props) {
                   variant="light"
                   size="sm"
                   onPress={() => {
-                    const newText = sourceText.replace(/\-\s+/g, '').replace(/\s+/g, ' ')
+                    const newText = sourceText.replace(/-\s+/g, '').replace(/\s+/g, ' ')
                     setSourceText(newText)
                     detect_language(newText).then(() => {
                       syncSourceText()

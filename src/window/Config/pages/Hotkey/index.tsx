@@ -84,11 +84,12 @@ export default function Hotkey() {
         code = code.substring(5)
       } else if (code.startsWith('Intl')) {
         code = code.substring(4)
-      } else if (/F\d+/.test(code)) {
-      } else if (keyMap[code] !== undefined) {
-        code = keyMap[code]
-      } else {
-        code = ''
+      } else if (!/F\d+/.test(code)) {
+        if (keyMap[code] !== undefined) {
+          code = keyMap[code]
+        } else {
+          code = ''
+        }
       }
       setKey(`${newValue}${newValue.length > 0 && code.length > 0 ? '+' : ''}${code}`)
     }

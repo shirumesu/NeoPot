@@ -77,7 +77,7 @@ export async function translate(text, from, to, options = {}) {
             return target.trim()
           }
           const str = temp + new TextDecoder().decode(value).replaceAll(/\s+/g, ' ')
-          const matchs = str.match(/{ \"text\": \".*\" } ],/)
+          const matchs = str.match(/{ "text": ".*" } ],/)
           if (matchs) {
             for (let match of matchs) {
               let result = JSON.parse(match.slice(0, -2))

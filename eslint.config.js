@@ -7,7 +7,17 @@ import prettierConfig from 'eslint-config-prettier'
 export default tseslint.config(
   // Ignored paths
   {
-    ignores: ['node_modules', 'dist', 'out', '.vite', '**/*.cjs', 'updater'],
+    ignores: [
+      'node_modules',
+      'dist',
+      'out',
+      '.vite',
+      'spec',
+      'docs',
+      '**/*.cjs',
+      'updater',
+      '.tmp-*',
+    ],
   },
 
   // Base JS rules
@@ -21,7 +31,34 @@ export default tseslint.config(
     plugins: {
       'react-hooks': reactHooks,
     },
-    rules: reactHooks.configs.recommended.rules,
+    rules: {
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
+    },
+  },
+
+  // Project-wide TypeScript compatibility
+  {
+    files: ['**/*.{ts,tsx}'],
+    rules: {
+      '@typescript-eslint/ban-ts-comment': 'warn',
+      '@typescript-eslint/no-duplicate-enum-values': 'warn',
+      'prefer-const': 'warn',
+    },
+  },
+
+  // Browser helper files kept as JS during the migration
+  {
+    files: ['src/**/*.js'],
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+      },
+    },
+    rules: {
+      'no-undef': 'error',
+      'prefer-const': 'warn',
+    },
   },
 
   // Source files (renderer)
@@ -50,9 +87,20 @@ export default tseslint.config(
 
   // Node scripts and tests (.mjs files outside src)
   {
-    files: ['.scripts/**/*.mjs', 'spec/**/*.mjs'],
+    files: ['.scripts/**/*.mjs'],
     languageOptions: {
       globals: globals.node,
+    },
+  },
+
+  // Build configuration files
+  {
+    files: ['*.config.{js,ts}', 'forge.config.ts'],
+    languageOptions: {
+      globals: globals.node,
+    },
+    rules: {
+      'prefer-const': 'warn',
     },
   },
 

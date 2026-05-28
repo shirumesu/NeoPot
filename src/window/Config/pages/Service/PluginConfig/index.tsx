@@ -61,7 +61,7 @@ export function PluginConfig(props) {
                 <h3 className="my-auto select-none cursor-default">{x.display}</h3>
                 {x.type === 'input' && (
                   <Input
-                    value={`${pluginConfig.hasOwnProperty(x.key) ? pluginConfig[x.key] : ''}`}
+                    value={`${Object.prototype.hasOwnProperty.call(pluginConfig, x.key) ? pluginConfig[x.key] : ''}`}
                     variant="bordered"
                     className="max-w-[60%]"
                     onValueChange={(value) => {
@@ -78,7 +78,7 @@ export function PluginConfig(props) {
                       <Button variant="bordered" className="max-w-[60%]">
                         {
                           x.options[
-                            pluginConfig.hasOwnProperty(x.key)
+                            Object.prototype.hasOwnProperty.call(pluginConfig, x.key)
                               ? pluginConfig[x.key]
                               : Object.keys(x.options)[0]
                           ]
@@ -106,7 +106,7 @@ export function PluginConfig(props) {
               <div key={x.key} className={`config-item`}>
                 <h3 className="my-auto select-none cursor-default">{x.display}</h3>
                 <Input
-                  value={`${pluginConfig.hasOwnProperty(x.key) ? pluginConfig[x.key] : ''}`}
+                  value={`${Object.prototype.hasOwnProperty.call(pluginConfig, x.key) ? pluginConfig[x.key] : ''}`}
                   variant="bordered"
                   className="max-w-[60%]"
                   onValueChange={(value) => {

@@ -3,7 +3,7 @@ import { defineConfig } from 'vite'
 import { resolve } from 'path'
 
 // https://vitejs.dev/config/
-export default defineConfig(async ({ mode }) => ({
+export default defineConfig(async () => ({
   plugins: [react()],
   resolve: {
     alias: {
