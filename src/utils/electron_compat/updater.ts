@@ -1,3 +1,3 @@
 export async function check() {
-    return null;
+  return null
 }

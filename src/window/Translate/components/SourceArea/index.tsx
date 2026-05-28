@@ -8,203 +8,174 @@ import {
   Chip,
   Tooltip,
   Spacer,
-} from "@heroui/react";
-import { BaseDirectory, readTextFile } from "@/utils/electron_compat/fs";
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { writeText } from "@/utils/electron_compat/clipboard";
-import { HiOutlineVolumeUp } from "react-icons/hi";
-import { getCurrentWebviewWindow } from "@/utils/electron_compat/webviewWindow";
-import toast, { Toaster } from "react-hot-toast";
-import { listen } from "@/utils/electron_compat/event";
-import { MdContentCopy } from "react-icons/md";
-import { MdSmartButton } from "react-icons/md";
-import { useTranslation } from "react-i18next";
-import { HiTranslate } from "react-icons/hi";
-import { LuDelete } from "react-icons/lu";
-import { atom, useAtom } from "jotai";
+} from '@heroui/react'
+import { BaseDirectory, readTextFile } from '@/utils/electron_compat/fs'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { writeText } from '@/utils/electron_compat/clipboard'
+import { HiOutlineVolumeUp } from 'react-icons/hi'
+import { getCurrentWebviewWindow } from '@/utils/electron_compat/webviewWindow'
+import toast, { Toaster } from 'react-hot-toast'
+import { listen } from '@/utils/electron_compat/event'
+import { MdContentCopy } from 'react-icons/md'
+import { MdSmartButton } from 'react-icons/md'
+import { useTranslation } from 'react-i18next'
+import { HiTranslate } from 'react-icons/hi'
+import { LuDelete } from 'react-icons/lu'
+import { atom, useAtom } from 'jotai'
 import {
   getServiceName,
   getServiceSouceType,
   isValidServiceInstanceKey,
   ServiceSourceType,
-} from "../../../../utils/service_instance";
-import {
-  useConfig,
-  useSyncAtom,
-  useVoice,
-  useToastStyle,
-} from "../../../../hooks";
-import { invoke_plugin } from "../../../../utils/invoke_plugin";
-import { electronCommand } from "../../../../utils/electron_command";
-import * as recognizeServices from "../../../../services/recognize";
-import * as builtinTtsServices from "../../../../services/tts";
-import detect from "../../../../utils/lang_detect";
-import { store } from "../../../../utils/store";
-import { info } from "@/utils/electron_compat/log";
-import { debug } from "@/utils/electron_compat/log";
-const appWindow = getCurrentWebviewWindow();
+} from '../../../../utils/service_instance'
+import { useConfig, useSyncAtom, useVoice, useToastStyle } from '../../../../hooks'
+import { invoke_plugin } from '../../../../utils/invoke_plugin'
+import { electronCommand } from '../../../../utils/electron_command'
+import * as recognizeServices from '../../../../services/recognize'
+import * as builtinTtsServices from '../../../../services/tts'
+import detect from '../../../../utils/lang_detect'
+import { store } from '../../../../utils/store'
+import { info } from '@/utils/electron_compat/log'
+import { debug } from '@/utils/electron_compat/log'
+const appWindow = getCurrentWebviewWindow()
 
-export const sourceTextAtom = atom("");
-export const detectLanguageAtom = atom("");
+export const sourceTextAtom = atom('')
+export const detectLanguageAtom = atom('')
 
-const DEFAULT_RECOGNIZE_SERVICE_LIST = ["local_model"];
-const DEFAULT_TTS_SERVICE_LIST = ["lingva_tts"];
+const DEFAULT_RECOGNIZE_SERVICE_LIST = ['local_model']
+const DEFAULT_TTS_SERVICE_LIST = ['lingva_tts']
 
 export default function SourceArea(props) {
-  const { pluginList, serviceInstanceConfigMap } = props;
-  const [appFontSize] = useConfig("app_font_size", 16);
-  const [sourceText, setSourceText, syncSourceText] =
-    useSyncAtom(sourceTextAtom);
-  const [detectLanguage, setDetectLanguage] = useAtom(detectLanguageAtom);
-  const [incrementalTranslate] = useConfig("incremental_translate", false);
-  const [dynamicTranslate] = useConfig("dynamic_translate", false);
-  const [deleteNewline] = useConfig("translate_delete_newline", false);
-  const [recognizeLanguage] = useConfig("recognize_language", "auto");
-  const [recognizeServiceList] = useConfig(
-    "recognize_service_list",
-    DEFAULT_RECOGNIZE_SERVICE_LIST,
-  );
-  const [ttsServiceList] = useConfig(
-    "tts_service_list",
-    DEFAULT_TTS_SERVICE_LIST,
-  );
+  const { pluginList, serviceInstanceConfigMap } = props
+  const [appFontSize] = useConfig('app_font_size', 16)
+  const [sourceText, setSourceText, syncSourceText] = useSyncAtom(sourceTextAtom)
+  const [detectLanguage, setDetectLanguage] = useAtom(detectLanguageAtom)
+  const [incrementalTranslate] = useConfig('incremental_translate', false)
+  const [dynamicTranslate] = useConfig('dynamic_translate', false)
+  const [deleteNewline] = useConfig('translate_delete_newline', false)
+  const [recognizeLanguage] = useConfig('recognize_language', 'auto')
+  const [recognizeServiceList] = useConfig('recognize_service_list', DEFAULT_RECOGNIZE_SERVICE_LIST)
+  const [ttsServiceList] = useConfig('tts_service_list', DEFAULT_TTS_SERVICE_LIST)
   const ttsServiceInstanceKey = Array.isArray(ttsServiceList)
     ? ttsServiceList.find(isValidServiceInstanceKey)
-    : null;
-  const [hideWindow] = useConfig("translate_hide_window", false);
-  const [hideSource] = useConfig("hide_source", false);
-  const [ttsPluginInfo, setTtsPluginInfo] = useState();
-  const [windowType, setWindowType] = useState("[SELECTION_TRANSLATE]");
-  const toastStyle = useToastStyle();
-  const { t } = useTranslation();
-  const textAreaRef = useRef();
-  const initialTextLoadedRef = useRef(false);
-  const sourceTextChangeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null,
-  );
-  const speak = useVoice();
+    : null
+  const [hideWindow] = useConfig('translate_hide_window', false)
+  const [hideSource] = useConfig('hide_source', false)
+  const [ttsPluginInfo, setTtsPluginInfo] = useState()
+  const [windowType, setWindowType] = useState('[SELECTION_TRANSLATE]')
+  const toastStyle = useToastStyle()
+  const { t } = useTranslation()
+  const textAreaRef = useRef()
+  const initialTextLoadedRef = useRef(false)
+  const sourceTextChangeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const speak = useVoice()
 
   const detect_language = useCallback(
     async (text) => {
-      setDetectLanguage(await detect(text));
+      setDetectLanguage(await detect(text))
     },
     [setDetectLanguage],
-  );
+  )
 
   const normalizeInputText = useCallback(
     (text) => {
-      const trimmedText = text.trim();
+      const trimmedText = text.trim()
       if (deleteNewline) {
-        return trimmedText.replace(/\-\s+/g, "").replace(/\s+/g, " ");
+        return trimmedText.replace(/\-\s+/g, '').replace(/\s+/g, ' ')
       }
 
-      return trimmedText;
+      return trimmedText
     },
     [deleteNewline],
-  );
+  )
 
   const commitSourceText = useCallback(
     async (newText) => {
       const nextText = incrementalTranslate
-        ? [sourceText.trim(), newText].filter(Boolean).join("\n")
-        : newText;
+        ? [sourceText.trim(), newText].filter(Boolean).join('\n')
+        : newText
 
-      setSourceText(nextText);
-      await detect_language(nextText);
-      syncSourceText(nextText);
+      setSourceText(nextText)
+      await detect_language(nextText)
+      syncSourceText(nextText)
     },
-    [
-      detect_language,
-      incrementalTranslate,
-      setSourceText,
-      sourceText,
-      syncSourceText,
-    ],
-  );
+    [detect_language, incrementalTranslate, setSourceText, sourceText, syncSourceText],
+  )
 
   const handleNewText = useCallback(
     async (text) => {
-      text = text.trim();
+      text = text.trim()
       if (hideWindow) {
-        appWindow.hide();
+        appWindow.hide()
       } else {
-        appWindow.show();
-        appWindow.setFocus();
+        appWindow.show()
+        appWindow.setFocus()
       }
       // 清空检测语言
-      setDetectLanguage("");
-      if (text === "[INPUT_TRANSLATE]") {
-        setWindowType("[INPUT_TRANSLATE]");
-        appWindow.show();
-        appWindow.setFocus();
-        setSourceText("", true);
-      } else if (text === "[IMAGE_TRANSLATE]") {
-        setWindowType("[IMAGE_TRANSLATE]");
-        const base64 = await electronCommand("get_base64");
-        const serviceInstanceKey = recognizeServiceList[0];
-        if (
-          getServiceSouceType(serviceInstanceKey) === ServiceSourceType.PLUGIN
-        ) {
+      setDetectLanguage('')
+      if (text === '[INPUT_TRANSLATE]') {
+        setWindowType('[INPUT_TRANSLATE]')
+        appWindow.show()
+        appWindow.setFocus()
+        setSourceText('', true)
+      } else if (text === '[IMAGE_TRANSLATE]') {
+        setWindowType('[IMAGE_TRANSLATE]')
+        const base64 = await electronCommand('get_base64')
+        const serviceInstanceKey = recognizeServiceList[0]
+        if (getServiceSouceType(serviceInstanceKey) === ServiceSourceType.PLUGIN) {
           if (
             recognizeLanguage in
-            pluginList["recognize"][getServiceName(serviceInstanceKey)].language
+            pluginList['recognize'][getServiceName(serviceInstanceKey)].language
           ) {
-            const pluginConfig = serviceInstanceConfigMap[serviceInstanceKey];
+            const pluginConfig = serviceInstanceConfigMap[serviceInstanceKey]
 
-            let [func, utils] = await invoke_plugin(
-              "recognize",
-              getServiceName(serviceInstanceKey),
-            );
+            let [func, utils] = await invoke_plugin('recognize', getServiceName(serviceInstanceKey))
             func(
               base64,
-              pluginList["recognize"][getServiceName(serviceInstanceKey)]
-                .language[recognizeLanguage],
+              pluginList['recognize'][getServiceName(serviceInstanceKey)].language[
+                recognizeLanguage
+              ],
               {
                 config: pluginConfig,
                 utils,
               },
             ).then(
               (v) => {
-                void commitSourceText(normalizeInputText(v));
+                void commitSourceText(normalizeInputText(v))
               },
               (e) => {
-                setSourceText(e.toString());
+                setSourceText(e.toString())
               },
-            );
+            )
           } else {
-            setSourceText("Language not supported");
+            setSourceText('Language not supported')
           }
         } else {
-          if (
-            recognizeLanguage in
-            recognizeServices[getServiceName(serviceInstanceKey)].Language
-          ) {
-            const instanceConfig = serviceInstanceConfigMap[serviceInstanceKey];
+          if (recognizeLanguage in recognizeServices[getServiceName(serviceInstanceKey)].Language) {
+            const instanceConfig = serviceInstanceConfigMap[serviceInstanceKey]
             recognizeServices[getServiceName(serviceInstanceKey)]
               .recognize(
                 base64,
-                recognizeServices[getServiceName(serviceInstanceKey)].Language[
-                  recognizeLanguage
-                ],
+                recognizeServices[getServiceName(serviceInstanceKey)].Language[recognizeLanguage],
                 {
                   config: instanceConfig,
                 },
               )
               .then(
                 (v) => {
-                  void commitSourceText(normalizeInputText(v));
+                  void commitSourceText(normalizeInputText(v))
                 },
                 (e) => {
-                  setSourceText(e.toString());
+                  setSourceText(e.toString())
                 },
-              );
+              )
           } else {
-            setSourceText("Language not supported");
+            setSourceText('Language not supported')
           }
         }
       } else {
-        setWindowType("[SELECTION_TRANSLATE]");
-        await commitSourceText(normalizeInputText(text));
+        setWindowType('[SELECTION_TRANSLATE]')
+        await commitSourceText(normalizeInputText(text))
       }
     },
     [
@@ -220,114 +191,106 @@ export default function SourceArea(props) {
       setSourceText,
       syncSourceText,
     ],
-  );
+  )
 
   const keyDown = (event) => {
-    if (event.key === "Enter" && !event.shiftKey) {
-      event.preventDefault();
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault()
       detect_language(sourceText).then(() => {
-        syncSourceText();
-      });
+        syncSourceText()
+      })
     }
-    if (event.key === "Escape") {
-      appWindow.close();
+    if (event.key === 'Escape') {
+      appWindow.close()
     }
-  };
+  }
 
-  const handleNewTextRef = useRef(handleNewText);
+  const handleNewTextRef = useRef(handleNewText)
 
   useEffect(() => {
-    handleNewTextRef.current = handleNewText;
-  }, [handleNewText]);
+    handleNewTextRef.current = handleNewText
+  }, [handleNewText])
 
   const handleSpeak = async () => {
-    const instanceKey = ttsServiceInstanceKey;
+    const instanceKey = ttsServiceInstanceKey
     if (!instanceKey) {
-      throw new Error("TTS service not configured");
+      throw new Error('TTS service not configured')
     }
-    let detected = detectLanguage;
-    if (detected === "") {
-      detected = await detect(sourceText);
-      setDetectLanguage(detected);
+    let detected = detectLanguage
+    if (detected === '') {
+      detected = await detect(sourceText)
+      setDetectLanguage(detected)
     }
     if (getServiceSouceType(instanceKey) === ServiceSourceType.PLUGIN) {
       if (!(detected in ttsPluginInfo.language)) {
-        throw new Error("Language not supported");
+        throw new Error('Language not supported')
       }
-      const pluginConfig = serviceInstanceConfigMap[instanceKey];
-      let [func, utils] = await invoke_plugin(
-        "tts",
-        getServiceName(instanceKey),
-      );
+      const pluginConfig = serviceInstanceConfigMap[instanceKey]
+      let [func, utils] = await invoke_plugin('tts', getServiceName(instanceKey))
       let data = await func(sourceText, ttsPluginInfo.language[detected], {
         config: pluginConfig,
         utils,
-      });
-      speak(data);
+      })
+      speak(data)
     } else {
-      if (
-        !(detected in builtinTtsServices[getServiceName(instanceKey)].Language)
-      ) {
-        throw new Error("Language not supported");
+      if (!(detected in builtinTtsServices[getServiceName(instanceKey)].Language)) {
+        throw new Error('Language not supported')
       }
-      const instanceConfig = serviceInstanceConfigMap[instanceKey];
+      const instanceConfig = serviceInstanceConfigMap[instanceKey]
       let data = await builtinTtsServices[getServiceName(instanceKey)].tts(
         sourceText,
         builtinTtsServices[getServiceName(instanceKey)].Language[detected],
         {
           config: instanceConfig,
         },
-      );
-      speak(data);
+      )
+      speak(data)
     }
-  };
+  }
 
   useEffect(() => {
-    let disposed = false;
-    let removeListener = null;
-    const unlistenPromise = listen("new_text", (event) => {
-      appWindow.setFocus();
-      handleNewTextRef.current(event.payload);
-    });
+    let disposed = false
+    let removeListener = null
+    const unlistenPromise = listen('new_text', (event) => {
+      appWindow.setFocus()
+      handleNewTextRef.current(event.payload)
+    })
     unlistenPromise.then((unlisten) => {
       if (disposed) {
-        unlisten();
+        unlisten()
       } else {
-        removeListener = unlisten;
+        removeListener = unlisten
       }
-    });
+    })
 
     return () => {
-      disposed = true;
+      disposed = true
       if (removeListener) {
-        removeListener();
+        removeListener()
       } else {
         unlistenPromise.then((unlisten) => {
-          unlisten();
-        });
+          unlisten()
+        })
       }
-    };
-  }, []);
+    }
+  }, [])
 
   useEffect(() => {
     if (
       ttsServiceInstanceKey &&
       getServiceSouceType(ttsServiceInstanceKey) === ServiceSourceType.PLUGIN
     ) {
-      readTextFile(
-        `plugins/tts/${getServiceName(ttsServiceInstanceKey)}/info.json`,
-        {
-          baseDir: BaseDirectory.AppConfig,
-        },
-      ).then((infoStr) => {
-        setTtsPluginInfo(JSON.parse(infoStr));
-      });
+      readTextFile(`plugins/tts/${getServiceName(ttsServiceInstanceKey)}/info.json`, {
+        baseDir: BaseDirectory.AppConfig,
+      }).then((infoStr) => {
+        setTtsPluginInfo(JSON.parse(infoStr))
+      })
     }
-  }, [ttsServiceInstanceKey]);
+  }, [ttsServiceInstanceKey])
 
   useEffect(() => {
     if (initialTextLoadedRef.current) {
-      return;
+      return
     }
     if (
       deleteNewline !== null &&
@@ -336,10 +299,10 @@ export default function SourceArea(props) {
       recognizeServiceList !== null &&
       hideWindow !== null
     ) {
-      initialTextLoadedRef.current = true;
-      electronCommand("get_text").then((v) => {
-        handleNewText(v);
-      });
+      initialTextLoadedRef.current = true
+      electronCommand('get_text').then((v) => {
+        handleNewText(v)
+      })
     }
   }, [
     deleteNewline,
@@ -348,146 +311,138 @@ export default function SourceArea(props) {
     recognizeServiceList,
     hideWindow,
     handleNewText,
-  ]);
+  ])
 
   useEffect(() => {
-    textAreaRef.current.style.height = "50px";
-    textAreaRef.current.style.height = textAreaRef.current.scrollHeight + "px";
-  }, [sourceText]);
+    textAreaRef.current.style.height = '50px'
+    textAreaRef.current.style.height = textAreaRef.current.scrollHeight + 'px'
+  }, [sourceText])
 
   const changeSourceText = async (text) => {
-    setDetectLanguage("");
-    await setSourceText(text);
+    setDetectLanguage('')
+    await setSourceText(text)
     if (dynamicTranslate) {
       if (sourceTextChangeTimerRef.current) {
-        clearTimeout(sourceTextChangeTimerRef.current);
+        clearTimeout(sourceTextChangeTimerRef.current)
       }
       sourceTextChangeTimerRef.current = setTimeout(() => {
         detect_language(text).then(() => {
-          syncSourceText();
-        });
-      }, 1000);
+          syncSourceText()
+        })
+      }, 1000)
     }
-  };
+  }
 
   const transformVarName = function (str) {
-    let str2 = str;
+    let str2 = str
 
     // snake_case to SNAKE_CASE
     if (/_[a-z]/.test(str2)) {
       str2 = str2
-        .split("_")
+        .split('_')
         .map((it) => it.toLocaleUpperCase())
-        .join("_");
+        .join('_')
     }
     if (str2 !== str) {
-      return str2;
+      return str2
     }
 
     // SNAKE_CASE to kebab-case
     if (/^[A-Z]+(_[A-Z]+)*$/.test(str2)) {
       str2 = str2
-        .split("_")
+        .split('_')
         .map((it) => it.toLocaleLowerCase())
-        .join("-");
+        .join('-')
     }
     if (str2 !== str) {
-      return str2;
+      return str2
     }
 
     // kebab-case to dot.notation
     if (/-/.test(str2)) {
       str2 = str2
-        .split("-")
+        .split('-')
         .map((it) => it.toLocaleLowerCase())
-        .join(".");
+        .join('.')
     }
     if (str2 !== str) {
-      return str2;
+      return str2
     }
 
     // dot.notation to space separated
     if (/\.[a-z]/.test(str2)) {
-      str2 = str2.replaceAll(/(\.)([a-z])/g, (_, _2, it) => " " + it);
+      str2 = str2.replaceAll(/(\.)([a-z])/g, (_, _2, it) => ' ' + it)
     }
     if (str2 !== str) {
-      return str2;
+      return str2
     }
 
     // space separated to Title Case
     if (/\s[a-z]/.test(str2)) {
-      str2 = str2.replaceAll(
-        /\s([a-z])/g,
-        (_, it) => " " + it.toLocaleUpperCase(),
-      );
-      str2 = str2.substring(0, 1).toLocaleUpperCase() + str2.substring(1);
+      str2 = str2.replaceAll(/\s([a-z])/g, (_, it) => ' ' + it.toLocaleUpperCase())
+      str2 = str2.substring(0, 1).toLocaleUpperCase() + str2.substring(1)
     }
     if (str2 !== str) {
-      return str2;
+      return str2
     }
 
     // Title Case to CamelCase
     if (/\s[A-Z]/.test(str2)) {
-      str2 = str2.replaceAll(/\s([A-Z])/g, (_, it) => it);
-      str2 = str2.substring(0, 1).toLocaleLowerCase() + str2.substring(1);
+      str2 = str2.replaceAll(/\s([A-Z])/g, (_, it) => it)
+      str2 = str2.substring(0, 1).toLocaleLowerCase() + str2.substring(1)
     }
     if (str2 !== str) {
-      return str2;
+      return str2
     }
 
     // CamelCase to PascalCase
     if (/^[a-z]+[A-Z]+/.test(str2)) {
-      str2 = str2.substring(0, 1).toLocaleUpperCase() + str2.substring(1);
+      str2 = str2.substring(0, 1).toLocaleUpperCase() + str2.substring(1)
     }
     if (str2 !== str) {
-      return str2;
+      return str2
     }
 
     // PascalCase to snake_case
     if (/[^\s][A-Z]/.test(str2)) {
       str2 = str2.replaceAll(/[A-Z]/g, (it, offset) => {
-        return (offset == 0 ? "" : "_") + it.toLocaleLowerCase();
-      });
+        return (offset == 0 ? '' : '_') + it.toLocaleLowerCase()
+      })
     }
 
-    return str2;
-  };
+    return str2
+  }
   useEffect(() => {
-    const element = textAreaRef.current;
+    const element = textAreaRef.current
     if (!element) {
-      return;
+      return
     }
 
     const onKeyDown = async (event) => {
-      if (event.altKey && event.shiftKey && event.code === "KeyU") {
-        const originText = element.value;
-        const selectionStart = element.selectionStart;
-        const selectionEnd = element.selectionEnd;
-        const selectionText = originText.substring(
-          selectionStart,
-          selectionEnd,
-        );
+      if (event.altKey && event.shiftKey && event.code === 'KeyU') {
+        const originText = element.value
+        const selectionStart = element.selectionStart
+        const selectionEnd = element.selectionEnd
+        const selectionText = originText.substring(selectionStart, selectionEnd)
 
-        const convertedText = transformVarName(selectionText);
+        const convertedText = transformVarName(selectionText)
         const targetText =
           originText.substring(0, selectionStart) +
           convertedText +
-          originText.substring(selectionEnd);
+          originText.substring(selectionEnd)
 
-        await changeSourceText(targetText);
-        element.selectionStart = selectionStart;
-        element.selectionEnd = selectionStart + convertedText.length;
+        await changeSourceText(targetText)
+        element.selectionStart = selectionStart
+        element.selectionEnd = selectionStart + convertedText.length
       }
-    };
+    }
 
-    element.addEventListener("keydown", onKeyDown);
-    return () => element.removeEventListener("keydown", onKeyDown);
-  }, []);
+    element.addEventListener('keydown', onKeyDown)
+    return () => element.removeEventListener('keydown', onKeyDown)
+  }, [])
 
   return (
-    <div
-      className={hideSource && windowType !== "[INPUT_TRANSLATE]" && "hidden"}
-    >
+    <div className={hideSource && windowType !== '[INPUT_TRANSLATE]' && 'hidden'}>
       <Card shadow="none" className="bg-content1 rounded-[10px] mt-px pb-0">
         <Toaster />
         <CardBody className="bg-content1 p-3 pb-0 max-h-[40vh] overflow-y-auto">
@@ -498,8 +453,8 @@ export default function SourceArea(props) {
             value={sourceText}
             onKeyDown={keyDown}
             onChange={(e) => {
-              const v = e.target.value;
-              changeSourceText(v);
+              const v = e.target.value
+              changeSourceText(v)
             }}
           />
         </CardBody>
@@ -507,76 +462,69 @@ export default function SourceArea(props) {
         <CardFooter className="bg-content1 rounded-none rounded-b-[10px] flex justify-between px-3 p-1.25">
           <div className="flex justify-start">
             <ButtonGroup className="mr-1.25">
-              <Tooltip content={t("translate.speak")}>
+              <Tooltip content={t('translate.speak')}>
                 <Button
                   isIconOnly
                   variant="light"
                   size="sm"
                   onPress={() => {
                     handleSpeak().catch((e) => {
-                      toast.error(e.toString(), { style: toastStyle });
-                    });
+                      toast.error(e.toString(), { style: toastStyle })
+                    })
                   }}
                 >
                   <HiOutlineVolumeUp className="text-[16px]" />
                 </Button>
               </Tooltip>
-              <Tooltip content={t("translate.copy")}>
+              <Tooltip content={t('translate.copy')}>
                 <Button
                   isIconOnly
                   variant="light"
                   size="sm"
                   onPress={() => {
-                    writeText(sourceText);
+                    writeText(sourceText)
                   }}
                 >
                   <MdContentCopy className="text-[16px]" />
                 </Button>
               </Tooltip>
-              <Tooltip content={t("translate.delete_newline")}>
+              <Tooltip content={t('translate.delete_newline')}>
                 <Button
                   isIconOnly
                   variant="light"
                   size="sm"
                   onPress={() => {
-                    const newText = sourceText
-                      .replace(/\-\s+/g, "")
-                      .replace(/\s+/g, " ");
-                    setSourceText(newText);
+                    const newText = sourceText.replace(/\-\s+/g, '').replace(/\s+/g, ' ')
+                    setSourceText(newText)
                     detect_language(newText).then(() => {
-                      syncSourceText();
-                    });
+                      syncSourceText()
+                    })
                   }}
                 >
                   <MdSmartButton className="text-[16px]" />
                 </Button>
               </Tooltip>
-              <Tooltip content={t("common.clear")}>
+              <Tooltip content={t('common.clear')}>
                 <Button
                   variant="light"
                   size="sm"
                   isIconOnly
-                  isDisabled={sourceText === ""}
+                  isDisabled={sourceText === ''}
                   onPress={() => {
-                    setSourceText("");
+                    setSourceText('')
                   }}
                 >
                   <LuDelete className="text-[16px]" />
                 </Button>
               </Tooltip>
             </ButtonGroup>
-            {detectLanguage !== "" && (
-              <Chip
-                size="sm"
-                color="secondary"
-                variant="dot"
-                className="my-auto"
-              >
+            {detectLanguage !== '' && (
+              <Chip size="sm" color="secondary" variant="dot" className="my-auto">
                 {t(`languages.${detectLanguage}`)}
               </Chip>
             )}
           </div>
-          <Tooltip content={t("translate.translate")}>
+          <Tooltip content={t('translate.translate')}>
             <Button
               size="sm"
               color="primary"
@@ -586,8 +534,8 @@ export default function SourceArea(props) {
               startContent={<HiTranslate className="text-[16px]" />}
               onPress={() => {
                 detect_language(sourceText).then(() => {
-                  syncSourceText();
-                });
+                  syncSourceText()
+                })
               }}
             />
           </Tooltip>
@@ -595,5 +543,5 @@ export default function SourceArea(props) {
       </Card>
       <Spacer y={2} />
     </div>
-  );
+  )
 }

@@ -1,0 +1,6 @@
+node_modules
+dist
+out
+.vite
+pnpm-lock.yaml
+*.cjs

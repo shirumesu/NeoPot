@@ -1,13 +1,13 @@
-let enabled = false;
+let enabled = false
 
 export async function enable() {
-    enabled = true;
+  enabled = true
 }
 
 export async function disable() {
-    enabled = false;
+  enabled = false
 }
 
 export async function isEnabled() {
-    return enabled;
+  return enabled
 }

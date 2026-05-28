@@ -1,15 +1,15 @@
 export async function info(...args: unknown[]) {
-    console.info(...args);
+  console.info(...args)
 }
 
 export async function warn(...args: unknown[]) {
-    console.warn(...args);
+  console.warn(...args)
 }
 
 export async function debug(...args: unknown[]) {
-    console.debug(...args);
+  console.debug(...args)
 }
 
 export async function error(...args: unknown[]) {
-    console.error(...args);
+  console.error(...args)
 }

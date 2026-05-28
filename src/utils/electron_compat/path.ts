@@ -1,17 +1,17 @@
-const joinSegments = (...segments: string[]) => segments.filter(Boolean).join('/');
+const joinSegments = (...segments: string[]) => segments.filter(Boolean).join('/')
 
 export async function appConfigDir() {
-    return '';
+  return ''
 }
 
 export async function appCacheDir() {
-    return '';
+  return ''
 }
 
 export async function appLogDir() {
-    return '';
+  return ''
 }
 
 export async function join(...segments: string[]) {
-    return joinSegments(...segments);
+  return joinSegments(...segments)
 }

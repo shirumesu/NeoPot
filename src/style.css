@@ -1,19 +1,19 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 @config "../tailwind.config.cjs";
 
 html,
 body,
 #root {
-    margin: 0;
-    min-height: 100%;
+  margin: 0;
+  min-height: 100%;
 }
 
 body {
-    overflow: hidden;
+  overflow: hidden;
 }
 
 [data-tauri-drag-region='true'] {
-    -webkit-app-region: drag;
+  -webkit-app-region: drag;
 }
 
 button,
@@ -22,24 +22,24 @@ textarea,
 select,
 a,
 [role='button'] {
-    -webkit-app-region: no-drag;
+  -webkit-app-region: no-drag;
 }
 
 html {
-    border-radius: 10px !important;
-    background: transparent !important;
-    overflow: hidden;
+  border-radius: 10px !important;
+  background: transparent !important;
+  overflow: hidden;
 }
 
 *::-webkit-scrollbar {
-    width: 5px;
+  width: 5px;
 }
 
 *::-webkit-scrollbar-thumb {
-    background: #c0c1c550;
-    border-radius: 5px;
+  background: #c0c1c550;
+  border-radius: 5px;
 }
 
 *::-webkit-scrollbar-thumb:hover {
-    background: #c0c1c550;
+  background: #c0c1c550;
 }

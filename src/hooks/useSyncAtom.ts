@@ -1,12 +1,12 @@
-import { PrimitiveAtom, useAtom } from 'jotai';
+import { PrimitiveAtom, useAtom } from 'jotai'
 
-import { useGetState } from './useGetState';
+import { useGetState } from './useGetState'
 
 export const useSyncAtom = <T>(atom: PrimitiveAtom<T>) => {
-    const [atomValue, setAtomValue] = useAtom(atom);
-    const [localValue, setLocalValue, getLocalValue] = useGetState(atomValue);
+  const [atomValue, setAtomValue] = useAtom(atom)
+  const [localValue, setLocalValue, getLocalValue] = useGetState(atomValue)
 
-    const syncAtom = (nextValue?: T) => setAtomValue(nextValue ?? getLocalValue());
+  const syncAtom = (nextValue?: T) => setAtomValue(nextValue ?? getLocalValue())
 
-    return [localValue, setLocalValue, syncAtom];
-};
+  return [localValue, setLocalValue, syncAtom]
+}

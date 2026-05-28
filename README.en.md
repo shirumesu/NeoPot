@@ -49,14 +49,14 @@
 
 ## Feature Preview
 
-| Selection Translation | Input Translation | External Invocation |
-| --- | --- | --- |
-| Select text and press a shortcut to translate it | Open the translation window, enter text, and press Enter | Invoke NeoPot from other tools through the local HTTP API |
+| Selection Translation                                                     | Input Translation                                                     | External Invocation                                                     |
+| ------------------------------------------------------------------------- | --------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Select text and press a shortcut to translate it                          | Open the translation window, enter text, and press Enter              | Invoke NeoPot from other tools through the local HTTP API               |
 | <img src="docs/assets/readme/eg1.gif" alt="Selection translation demo" /> | <img src="docs/assets/readme/eg2.gif" alt="Input translation demo" /> | <img src="docs/assets/readme/eg3.gif" alt="External invocation demo" /> |
 
-| Clipboard Monitoring | Screenshot OCR | Screenshot Translation |
-| --- | --- | --- |
-| Translate copied text after enabling clipboard monitoring | Select a screen region and recognize text | Select a screen region and translate the recognized result |
+| Clipboard Monitoring                                                     | Screenshot OCR                                                     | Screenshot Translation                                                     |
+| ------------------------------------------------------------------------ | ------------------------------------------------------------------ | -------------------------------------------------------------------------- |
+| Translate copied text after enabling clipboard monitoring                | Select a screen region and recognize text                          | Select a screen region and translate the recognized result                 |
 | <img src="docs/assets/readme/eg4.gif" alt="Clipboard monitoring demo" /> | <img src="docs/assets/readme/eg5.gif" alt="Screenshot OCR demo" /> | <img src="docs/assets/readme/eg6.gif" alt="Screenshot translation demo" /> |
 
 <p align="center">
@@ -173,13 +173,13 @@ The release page provides `deb`, `rpm`, and `AppImage` packages. On Debian/Ubunt
 
 ```bash
 sudo apt-get install ./neopot_{version}_amd64.deb
-````
+```
 
 Arch, Manjaro, Flatpak, Homebrew, Winget, and other distribution channels have not been connected to NeoPot yet. Use GitHub Releases as the source of truth.
 
 ## Plugin System
 
-* [ ] TODO…  
+- [ ] TODO…
 
 Due to the architecture upgrade, the original `.potext` format will most likely not be supported. The refactored version provides an installation entry: go to `Preferences -> Service Settings -> Add External Plugin -> Install External Plugin` and select the corresponding file to install it. Availability is not guaranteed for now.
 
@@ -253,9 +253,9 @@ windowrulev2 = move cursor 0 0, class:(neopot), title:(Translator|Screenshot Tra
 
 Verified environment:
 
-* Node.js `>= 24.0.0`
-* pnpm `>= 9`
-* Rust `>= 1.80.0`
+- Node.js `>= 24.0.0`
+- pnpm `>= 9`
+- Rust `>= 1.80.0`
 
 Clone the repository:
 
@@ -291,14 +291,14 @@ pnpm tauri build
 
 ## Future TODO
 
-* [ ] Gradually replace and remove Pot-related resources  
-* [ ] Verify each specific service and update, remove, or maintain them as needed  
+- [ ] Gradually replace and remove Pot-related resources
+- [ ] Verify each specific service and update, remove, or maintain them as needed
 
 ## Known Issues
 
-* Text recognition / screenshot features may fail to launch properly  
-* Some services may become unavailable after proxy settings are configured  
-* Content entered in settings may be lost and reset to the original content  
+- Text recognition / screenshot features may fail to launch properly
+- Some services may become unavailable after proxy settings are configured
+- Content entered in settings may be lost and reset to the original content
 
 ## Acknowledgements
 

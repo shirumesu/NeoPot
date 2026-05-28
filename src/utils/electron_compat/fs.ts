@@ -1,27 +1,27 @@
 export enum BaseDirectory {
-    AppConfig = 'AppConfig',
-    AppCache = 'AppCache',
-    AppLog = 'AppLog',
+  AppConfig = 'AppConfig',
+  AppCache = 'AppCache',
+  AppLog = 'AppLog',
 }
 
 export async function readDir() {
-    return [];
+  return []
 }
 
 export async function readTextFile() {
-    return '';
+  return ''
 }
 
 export async function readFile() {
-    return new Uint8Array();
+  return new Uint8Array()
 }
 
 export async function exists() {
-    return false;
+  return false
 }
 
 export async function remove() {}
 
 export async function watch(_path?: string, _handler?: (...args: unknown[]) => void) {
-    return () => {};
+  return () => {}
 }

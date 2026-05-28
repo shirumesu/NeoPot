@@ -1,17 +1,17 @@
 class ElectronCompatDatabase {
-    static async load(_url: string) {
-        return new ElectronCompatDatabase();
-    }
+  static async load(_url: string) {
+    return new ElectronCompatDatabase()
+  }
 
-    async select() {
-        return [];
-    }
+  async select() {
+    return []
+  }
 
-    async execute() {
-        return { rowsAffected: 0 };
-    }
+  async execute() {
+    return { rowsAffected: 0 }
+  }
 
-    async close() {}
+  async close() {}
 }
 
-export default ElectronCompatDatabase;
+export default ElectronCompatDatabase
