@@ -1,15 +1,16 @@
 import { BrowserWindow, clipboard, ipcMain, nativeImage, type IpcMainInvokeEvent, type Rectangle } from 'electron';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import { getRedactedConfig, setConfig } from './config';
 import { translate as translateService } from '../services';
 import { installPlugin, listPlugins } from '../plugins/installer';
-import type { WindowLabel } from './window';
+import { getRedactedConfig, setConfig } from './config';
 import {
     isGlobalShortcutRegistered,
     registerGlobalShortcutByName,
     unregisterGlobalShortcut,
 } from './hotkey';
+import { rendererHttpRequest } from './http';
+import { detectLanguage } from './lang-detect';
 import {
     captureDisplayForPoint,
     getCaptureDataUrl,
@@ -18,10 +19,11 @@ import {
     getLastCroppedDataUrl,
 } from './screenshot';
 import { updateTrayMenu } from './tray';
+import type { WindowLabel } from './window';
 import {
     getCurrentWorkflowText,
-    inputTranslate,
     imageTranslate,
+    inputTranslate,
     ocrRecognize,
     ocrTranslate,
     recognizeWindow,
@@ -183,6 +185,18 @@ const assertCommandPayload = (payload: unknown): { command: string; payload?: Re
     };
 };
 
+const assertTextPayload = (payload: unknown): string => {
+    if (!isRecord(payload) || typeof payload.text !== 'string') {
+        throw new NeoPotError({
+            code: 'IPC_INVALID_PAYLOAD',
+            message: 'Expected text string.',
+            field: 'text',
+        });
+    }
+
+    return payload.text;
+};
+
 const normalizeError = (error: unknown): NeoPotErrorPayload => {
     if (error instanceof NeoPotError) {
         return {
@@ -247,14 +261,10 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
             BrowserWindow.fromWebContents(event.sender)?.focus();
         },
         'app:set-current-window-always-on-top': (event, payload) => {
-            BrowserWindow.fromWebContents(event.sender)?.setAlwaysOnTop(
-                assertBooleanPayload(payload, 'alwaysOnTop')
-            );
+            BrowserWindow.fromWebContents(event.sender)?.setAlwaysOnTop(assertBooleanPayload(payload, 'alwaysOnTop'));
         },
         'app:set-current-window-resizable': (event, payload) => {
-            BrowserWindow.fromWebContents(event.sender)?.setResizable(
-                assertBooleanPayload(payload, 'resizable')
-            );
+            BrowserWindow.fromWebContents(event.sender)?.setResizable(assertBooleanPayload(payload, 'resizable'));
         },
         'app:set-current-window-bounds': (event, payload) => {
             BrowserWindow.fromWebContents(event.sender)?.setBounds(assertWindowBoundsPayload(payload));
@@ -348,6 +358,10 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
                 }
                 case 'get_text':
                     return getCurrentWorkflowText();
+                case 'lang_detect':
+                    return detectLanguage(assertTextPayload(args));
+                case 'http_request':
+                    return rendererHttpRequest(args);
                 case 'font_list':
                     return listSystemFonts();
                 case 'update_tray':
@@ -416,13 +430,6 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
 
     for (const [channel, handler] of Object.entries(handlers)) {
         ipcMain.handle(channel, async (event, payload) => {
-            if (!handlers[channel]) {
-                throw new NeoPotError({
-                    code: 'IPC_UNKNOWN_CHANNEL',
-                    message: `Unknown IPC channel: ${channel}`,
-                });
-            }
-
             try {
                 return await handler(event, payload);
             } catch (error) {

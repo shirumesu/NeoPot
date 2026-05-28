@@ -1,5 +1,9 @@
 import { app, BrowserWindow } from 'electron';
 
+if (process.platform === 'win32') {
+    app.setAppUserModelId('NeoPot');
+}
+
 if (!app.isPackaged) {
     app.disableHardwareAcceleration();
     app.commandLine.appendSwitch('disable-gpu');

@@ -2,13 +2,13 @@ const BODY_KIND = Symbol('electron-http-body-kind');
 
 export const Body = {
     json(data) {
-        return { [BODY_KIND]: 'json', data };
+        return { [BODY_KIND]: 'json', kind: 'json', data };
     },
     text(data) {
-        return { [BODY_KIND]: 'text', data };
+        return { [BODY_KIND]: 'text', kind: 'text', data };
     },
     form(data) {
-        return { [BODY_KIND]: 'form', data };
+        return { [BODY_KIND]: 'form', kind: 'form', data };
     },
 };
 
@@ -70,6 +70,57 @@ async function readResponseData(response, responseType) {
     }
 }
 
+function headersToObject(headers) {
+    if (!headers) {
+        return {};
+    }
+
+    if (headers instanceof Headers) {
+        return Object.fromEntries(headers.entries());
+    }
+
+    return headers;
+}
+
+function normalizeCommandBody(body) {
+    if (!body || typeof body !== 'object' || !body[BODY_KIND]) {
+        return body;
+    }
+
+    return {
+        kind: body.kind,
+        data: body.data,
+    };
+}
+
+function createCommandResponse(result, responseType) {
+    const headers = new Headers(result.headers || {});
+    const data =
+        responseType === 3 && Array.isArray(result.data)
+            ? new Uint8Array(result.data).buffer
+            : result.data;
+
+    return {
+        ok: result.ok,
+        status: result.status,
+        statusText: result.statusText,
+        headers,
+        data,
+        async text() {
+            return typeof data === 'string' ? data : JSON.stringify(data);
+        },
+        async json() {
+            return typeof data === 'string' ? JSON.parse(data) : data;
+        },
+        async arrayBuffer() {
+            return data instanceof ArrayBuffer ? data : new TextEncoder().encode(String(data)).buffer;
+        },
+        clone() {
+            return createCommandResponse(result, responseType);
+        },
+    };
+}
+
 export async function fetch(input, init = {}) {
     const { responseType, query, skipData, ...requestInit } = init;
     const url = new URL(input);
@@ -80,6 +131,18 @@ export async function fetch(input, init = {}) {
                 url.searchParams.set(key, value);
             }
         });
+    }
+
+    if (window.neoPot?.command) {
+        const result = await window.neoPot.command.invoke('http_request', {
+            url: url.href,
+            method: requestInit.method,
+            headers: headersToObject(requestInit.headers),
+            body: normalizeCommandBody(requestInit.body),
+            responseType,
+        });
+        const response = createCommandResponse(result, responseType);
+        return skipData ? response : response;
     }
 
     const response = await globalThis.fetch(url.href, normalizeBody(requestInit));

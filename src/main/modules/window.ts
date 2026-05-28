@@ -1,5 +1,6 @@
+import { existsSync } from 'node:fs';
 import path from 'node:path';
-import { BrowserWindow, Menu, screen, type BrowserWindowConstructorOptions, type WebContents } from 'electron';
+import { app, BrowserWindow, Menu, screen, type BrowserWindowConstructorOptions, type WebContents } from 'electron';
 
 export type WindowLabel = 'config' | 'translate' | 'recognize' | 'screenshot' | 'updater';
 
@@ -60,6 +61,15 @@ const windowDefinitions: Record<WindowLabel, WindowDefinition> = {
     },
 };
 
+function getAppIconPath(): string {
+    const candidates = [
+        path.join(app.getAppPath(), 'public', 'icon.png'),
+        path.join(process.cwd(), 'public', 'icon.png'),
+    ];
+
+    return candidates.find((candidate) => existsSync(candidate)) ?? candidates[0];
+}
+
 function rendererUrl(label: WindowLabel): string | null {
     if (!MAIN_WINDOW_VITE_DEV_SERVER_URL) {
         return null;
@@ -112,6 +122,7 @@ function createBrowserWindow(label: WindowLabel): BrowserWindow {
         fullscreen: definition.fullscreen,
         alwaysOnTop: definition.alwaysOnTop,
         resizable: definition.resizable,
+        icon: getAppIconPath(),
         webPreferences: {
             preload: path.join(__dirname, 'preload.cjs'),
             contextIsolation: true,
