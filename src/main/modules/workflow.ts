@@ -2,9 +2,14 @@ import { openWindow, sendToWindow } from './window';
 import { readSelectedText } from './selection';
 
 let currentWorkflowText = '';
+let currentScreenshotAction: 'recognize' | 'translate' = 'recognize';
 
 export function getCurrentWorkflowText(): string {
     return currentWorkflowText;
+}
+
+export function getCurrentScreenshotAction(): 'recognize' | 'translate' {
+    return currentScreenshotAction;
 }
 
 export async function openConfig(): Promise<void> {
@@ -40,11 +45,13 @@ export async function recognizeWindow(): Promise<void> {
 }
 
 export async function ocrRecognize(): Promise<void> {
+    currentScreenshotAction = 'recognize';
     await openWindow('screenshot');
     sendToWindow('screenshot', 'capture_screenshot', 'recognize');
 }
 
 export async function ocrTranslate(): Promise<void> {
+    currentScreenshotAction = 'translate';
     await openWindow('screenshot');
     sendToWindow('screenshot', 'capture_screenshot', 'translate');
 }

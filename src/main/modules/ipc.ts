@@ -21,6 +21,7 @@ import {
 import { updateTrayMenu } from './tray';
 import type { WindowLabel } from './window';
 import {
+    getCurrentScreenshotAction,
     getCurrentWorkflowText,
     imageTranslate,
     inputTranslate,
@@ -341,7 +342,7 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
                         height: Number(args?.height ?? 0),
                     });
                 case 'screenshot_complete':
-                    if (args?.action === 'translate') {
+                    if (getCurrentScreenshotAction() === 'translate') {
                         await imageTranslate();
                     } else {
                         await recognizeWindow();

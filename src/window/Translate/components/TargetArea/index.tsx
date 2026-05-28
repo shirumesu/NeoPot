@@ -64,7 +64,6 @@ const MARKDOWN_PATTERNS = [
   /`[^`\n]+`/,
   /\[[^\]]+\]\([^)]+\)/,
   /^-{3,}\s*$/m,
-  /^\|.+\|\s*$/m,
   /(?<!\w)\*\*[^\s*][^*\n]*\*\*(?!\w)/,
   /(?<!\w)__[^\s_][^_\n]*__(?!\w)/,
   /(?<!\w)\*[^\s*][^*\n]*\*(?!\w)/,
@@ -72,18 +71,24 @@ const MARKDOWN_PATTERNS = [
   /~~[^\s~][^~\n]*~~/,
 ];
 
+const MARKDOWN_TABLE_SEPARATOR_PATTERN =
+  /^\s*\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)+\|?\s*$/m;
+
 function isMarkdownLike(value) {
   if (typeof value !== "string") return false;
   const text = value.trim();
   if (text.length < 3) return false;
 
-  return MARKDOWN_PATTERNS.some((pattern) => pattern.test(text));
+  return (
+    MARKDOWN_TABLE_SEPARATOR_PATTERN.test(text) ||
+    MARKDOWN_PATTERNS.some((pattern) => pattern.test(text))
+  );
 }
 
 function MarkdownResult({ value, appFontSize }) {
   return (
     <div
-      className="select-text whitespace-pre-wrap wrap-break-word text-default-700"
+      className="select-text whitespace-pre-wrap break-words text-default-700"
       style={{ fontSize: `${appFontSize}px` }}
     >
       <ReactMarkdown

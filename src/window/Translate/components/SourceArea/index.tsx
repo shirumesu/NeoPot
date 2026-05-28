@@ -91,6 +91,37 @@ export default function SourceArea(props) {
     [setDetectLanguage],
   );
 
+  const normalizeInputText = useCallback(
+    (text) => {
+      const trimmedText = text.trim();
+      if (deleteNewline) {
+        return trimmedText.replace(/\-\s+/g, "").replace(/\s+/g, " ");
+      }
+
+      return trimmedText;
+    },
+    [deleteNewline],
+  );
+
+  const commitSourceText = useCallback(
+    async (newText) => {
+      const nextText = incrementalTranslate
+        ? [sourceText.trim(), newText].filter(Boolean).join("\n")
+        : newText;
+
+      setSourceText(nextText);
+      await detect_language(nextText);
+      syncSourceText(nextText);
+    },
+    [
+      detect_language,
+      incrementalTranslate,
+      setSourceText,
+      sourceText,
+      syncSourceText,
+    ],
+  );
+
   const handleNewText = useCallback(
     async (text) => {
       text = text.trim();
@@ -134,22 +165,7 @@ export default function SourceArea(props) {
               },
             ).then(
               (v) => {
-                let newText = v.trim();
-                if (deleteNewline) {
-                  newText = v.replace(/\-\s+/g, "").replace(/\s+/g, " ");
-                } else {
-                  newText = v.trim();
-                }
-                if (incrementalTranslate) {
-                  setSourceText((old) => {
-                    return old + " " + newText;
-                  });
-                } else {
-                  setSourceText(newText);
-                }
-                detect_language(newText).then(() => {
-                  syncSourceText();
-                });
+                void commitSourceText(normalizeInputText(v));
               },
               (e) => {
                 setSourceText(e.toString());
@@ -176,22 +192,7 @@ export default function SourceArea(props) {
               )
               .then(
                 (v) => {
-                  let newText = v.trim();
-                  if (deleteNewline) {
-                    newText = v.replace(/\-\s+/g, "").replace(/\s+/g, " ");
-                  } else {
-                    newText = v.trim();
-                  }
-                  if (incrementalTranslate) {
-                    setSourceText((old) => {
-                      return old + " " + newText;
-                    });
-                  } else {
-                    setSourceText(newText);
-                  }
-                  detect_language(newText).then(() => {
-                    syncSourceText();
-                  });
+                  void commitSourceText(normalizeInputText(v));
                 },
                 (e) => {
                   setSourceText(e.toString());
@@ -203,29 +204,14 @@ export default function SourceArea(props) {
         }
       } else {
         setWindowType("[SELECTION_TRANSLATE]");
-        let newText = text.trim();
-        if (deleteNewline) {
-          newText = text.replace(/\-\s+/g, "").replace(/\s+/g, " ");
-        } else {
-          newText = text.trim();
-        }
-        if (incrementalTranslate) {
-          setSourceText((old) => {
-            return old + " " + newText;
-          });
-        } else {
-          setSourceText(newText);
-        }
-        detect_language(newText).then(() => {
-          syncSourceText();
-        });
+        await commitSourceText(normalizeInputText(text));
       }
     },
     [
-      deleteNewline,
+      commitSourceText,
       detect_language,
       hideWindow,
-      incrementalTranslate,
+      normalizeInputText,
       pluginList,
       recognizeLanguage,
       recognizeServiceList,

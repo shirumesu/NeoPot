@@ -6,7 +6,7 @@ export const useSyncAtom = <T>(atom: PrimitiveAtom<T>) => {
     const [atomValue, setAtomValue] = useAtom(atom);
     const [localValue, setLocalValue, getLocalValue] = useGetState(atomValue);
 
-    const syncAtom = () => setAtomValue(getLocalValue());
+    const syncAtom = (nextValue?: T) => setAtomValue(nextValue ?? getLocalValue());
 
     return [localValue, setLocalValue, syncAtom];
 };

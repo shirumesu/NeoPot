@@ -161,7 +161,13 @@ export default function App() {
 
     if (label === 'config') {
         return (
-            <MemoryRouter initialEntries={[getInitialConfigRoute()]}>
+            <MemoryRouter
+                initialEntries={[getInitialConfigRoute()]}
+                future={{
+                    v7_relativeSplatPath: true,
+                    v7_startTransition: true,
+                }}
+            >
                 <ErrorBoundary fallbackTitle='Config window render failed'>
                     <CurrentWindow />
                 </ErrorBoundary>

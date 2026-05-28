@@ -105,6 +105,35 @@ function positionTranslateWindow(window: BrowserWindow) {
     window.setPosition(x, y);
 }
 
+function emitWindowEvent(window: BrowserWindow, event: string): void {
+    if (window.isDestroyed() || window.webContents.isDestroyed()) {
+        return;
+    }
+
+    window.webContents.send('app:event', {
+        event,
+    });
+}
+
+function showWindowInForeground(window: BrowserWindow, label: WindowLabel): void {
+    const restoreAlwaysOnTop = window.isAlwaysOnTop();
+
+    if (label === 'translate' && !restoreAlwaysOnTop) {
+        window.setAlwaysOnTop(true);
+    }
+
+    window.show();
+    window.focus();
+
+    if (label === 'translate' && !restoreAlwaysOnTop) {
+        setTimeout(() => {
+            if (!window.isDestroyed() && !window.webContents.isDestroyed() && !restoreAlwaysOnTop) {
+                window.setAlwaysOnTop(false);
+            }
+        }, 300);
+    }
+}
+
 function createBrowserWindow(label: WindowLabel): BrowserWindow {
     Menu.setApplicationMenu(null);
 
@@ -143,9 +172,13 @@ function createBrowserWindow(label: WindowLabel): BrowserWindow {
         } else if (label === 'config' || label === 'recognize' || label === 'updater') {
             window.center();
         }
-        window.show();
-        window.focus();
+        showWindowInForeground(window, label);
     });
+
+    window.on('focus', () => emitWindowEvent(window, 'tauri://focus'));
+    window.on('blur', () => emitWindowEvent(window, 'tauri://blur'));
+    window.on('move', () => emitWindowEvent(window, 'tauri://move'));
+    window.on('resize', () => emitWindowEvent(window, 'tauri://resize'));
 
     window.on('closed', () => {
         windows.delete(label);
@@ -179,8 +212,7 @@ export function focusWindow(label: WindowLabel): void {
     if (label === 'translate') {
         positionTranslateWindow(window);
     }
-    window.show();
-    window.focus();
+    showWindowInForeground(window, label);
 }
 
 export function sendToWindow(label: WindowLabel, event: string, payload: unknown): void {

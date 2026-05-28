@@ -9,7 +9,8 @@
   "scripts": {
     "clean": "node .scripts/clean.mjs .vite dist out",
     "clean:dist": "node .scripts/clean.mjs dist",
-    "dev": "electron-forge start",
+    "dev": "node .scripts/dev.mjs",
+    "dev:debug": "node .scripts/dev.mjs --debug",
     "build": "npm run clean:dist && vite build",
     "dev:browser-smoke": "vite --mode browser-smoke",
     "package": "electron-forge package",
