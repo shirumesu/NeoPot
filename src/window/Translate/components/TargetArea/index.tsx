@@ -601,7 +601,7 @@ export default function TargetArea(props) {
                           getServiceName(currentTranslateServiceInstanceKey)
                         ].icon
                       }
-                      className="h-[20px] my-auto"
+                      className="h-5 my-auto"
                     />
                   ) : (
                     <img
@@ -610,7 +610,7 @@ export default function TargetArea(props) {
                           getServiceName(currentTranslateServiceInstanceKey)
                         ].info.icon
                       }
-                      className="h-[20px] my-auto"
+                      className="h-5 my-auto"
                     />
                   )
                 }
@@ -646,7 +646,7 @@ export default function TargetArea(props) {
                             pluginList["translate"][getServiceName(instanceKey)]
                               .icon
                           }
-                          className="h-[20px] my-auto"
+                          className="h-5 my-auto"
                         />
                       ) : (
                         <img
@@ -654,7 +654,7 @@ export default function TargetArea(props) {
                             builtinServices[getServiceName(instanceKey)].info
                               .icon
                           }
-                          className="h-[20px] my-auto"
+                          className="h-5 my-auto"
                         />
                       )
                     }
@@ -696,7 +696,7 @@ export default function TargetArea(props) {
             size="sm"
             isIconOnly
             variant="light"
-            className="h-[20px] w-[20px]"
+            className="h-5 w-5"
             onPress={() => setHide(!hide)}
           >
             {hide ? (
@@ -710,7 +710,7 @@ export default function TargetArea(props) {
       <animated.div style={{ ...springs }}>
         <div ref={boundRef}>
           {/* result content */}
-          <CardBody className={`p-[12px] pb-0 ${hide && "h-0 p-0"}`}>
+          <CardBody className={`p-3 pb-0 ${hide && "h-0 p-0"}`}>
             {typeof result === "string" ? (
               activeResultViewMode === "markdown" && canPreviewMarkdown ? (
                 <MarkdownResult value={result} appFontSize={appFontSize} />
@@ -730,14 +730,14 @@ export default function TargetArea(props) {
                       <div key={nanoid()}>
                         {pronunciation["region"] && (
                           <span
-                            className={`text-[${appFontSize}px] mr-[12px] text-default-500`}
+                            className={`text-[${appFontSize}px] mr-3 text-default-500`}
                           >
                             {pronunciation["region"]}
                           </span>
                         )}
                         {pronunciation["symbol"] && (
                           <span
-                            className={`text-[${appFontSize}px] mr-[12px] text-default-500`}
+                            className={`text-[${appFontSize}px] mr-3 text-default-500`}
                           >
                             {pronunciation["symbol"]}
                           </span>
@@ -765,7 +765,7 @@ export default function TargetArea(props) {
                                 {index === 0 ? (
                                   <>
                                     <span
-                                      className={`text-[${appFontSize - 2}px] text-default-500 mr-[12px]`}
+                                      className={`text-[${appFontSize - 2}px] text-default-500 mr-3`}
                                     >
                                       {explanations["trait"]}
                                     </span>
@@ -807,9 +807,7 @@ export default function TargetArea(props) {
                   result["sentence"].map((sentence, index) => {
                     return (
                       <div key={nanoid()}>
-                        <span
-                          className={`text-[${appFontSize - 2}px] mr-[12px]`}
-                        >
+                        <span className={`text-[${appFontSize - 2}px] mr-3`}>
                           {index + 1}.
                         </span>
                         <>
@@ -850,7 +848,7 @@ export default function TargetArea(props) {
             )}
           </CardBody>
           <CardFooter
-            className={`bg-content1 rounded-none rounded-b-[10px] flex px-[12px] p-[5px] ${hide && "hidden"}`}
+            className={`bg-content1 rounded-none rounded-b-[10px] flex px-3 p-1.25 ${hide && "hidden"}`}
           >
             <ButtonGroup>
               {/* markdown preview toggle */}
@@ -1143,7 +1141,7 @@ export default function TargetArea(props) {
                                 getServiceName(collectionServiceInstanceName)
                               ].info.icon
                         }
-                        className="h-[16px] w-[16px]"
+                        className="h-4 w-4"
                       />
                     </Button>
                   );
