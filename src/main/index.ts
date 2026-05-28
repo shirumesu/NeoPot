@@ -120,20 +120,12 @@ function handleSquirrelStartupEvent(): boolean {
     case '--squirrel-install':
     case '--squirrel-updated':
       installSquirrelAppIcon(installedIconPath)
-      runUpdateExe([
-        '--createShortcut',
-        exeName,
-        '--shortcut-locations=Desktop,StartMenu',
-      ])
+      runUpdateExe(['--createShortcut', exeName, '--shortcut-locations=Desktop,StartMenu'])
       setTimeout(() => app.quit(), 1000)
       return true
     case '--squirrel-uninstall':
       removeSquirrelAppIcon(installedIconPath)
-      runUpdateExe([
-        '--removeShortcut',
-        exeName,
-        '--shortcut-locations=Desktop,StartMenu',
-      ])
+      runUpdateExe(['--removeShortcut', exeName, '--shortcut-locations=Desktop,StartMenu'])
       setTimeout(() => app.quit(), 1000)
       return true
     case '--squirrel-obsolete':

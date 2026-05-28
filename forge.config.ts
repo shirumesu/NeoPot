@@ -36,7 +36,8 @@ const config: ForgeConfig = {
       name: '@electron-forge/maker-squirrel',
       config: {
         name: 'neopot',
-        iconUrl: 'https://raw.githubusercontent.com/shirumesu/Neopot/refactor/electron/public/icon.ico',
+        iconUrl:
+          'https://raw.githubusercontent.com/shirumesu/Neopot/refactor/electron/public/icon.ico',
         setupExe: 'NeoPot-Setup.exe',
         setupMsi: 'NeoPot-Setup.msi',
         setupIcon: path.resolve('public', 'icon.ico'),
