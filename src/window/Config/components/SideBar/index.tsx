@@ -7,8 +7,6 @@ import { useTranslation } from 'react-i18next'
 import { PiTextboxFill } from 'react-icons/pi'
 import { MdKeyboardAlt } from 'react-icons/md'
 import { MdExtension } from 'react-icons/md'
-import { AiFillCloud } from 'react-icons/ai'
-import { FaHistory } from 'react-icons/fa'
 import { Button } from '@heroui/react'
 import React from 'react'
 
@@ -82,30 +80,6 @@ export default function SideBar() {
         startContent={<MdExtension className="text-[24px]" />}
       >
         <div className="w-full">{t('config.service.label')}</div>
-      </Button>
-      <Button
-        fullWidth
-        size="lg"
-        variant={setStyle('/history')}
-        className="mb-[5px]"
-        onPress={() => {
-          navigate('/history')
-        }}
-        startContent={<FaHistory className="text-[24px]" />}
-      >
-        <div className="w-full">{t('config.history.label')}</div>
-      </Button>
-      <Button
-        fullWidth
-        size="lg"
-        variant={setStyle('/backup')}
-        className="mb-[5px]"
-        onPress={() => {
-          navigate('/backup')
-        }}
-        startContent={<AiFillCloud className="text-[24px]" />}
-      >
-        <div className="w-full">{t('config.backup.label')}</div>
       </Button>
       <Button
         fullWidth

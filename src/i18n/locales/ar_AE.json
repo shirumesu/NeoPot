@@ -71,7 +71,6 @@
           "dark": "غامق",
           "system": "النظام"
         },
-        "transparent": "تأثير الشفافية",
         "dev_mode": "وضع المطور",
         "proxy": {
           "host": "المضيف",
@@ -100,7 +99,6 @@
         "auto_copy": "نسخ تلقائي",
         "source": "المصدر",
         "disable": "معطل",
-        "history_disable": "عطل السجل",
         "target_language": "اللغة المستهدفة",
         "second_language": "اللغة المستهدفة الثانوية",
         "target": "المستهدف",
@@ -164,7 +162,6 @@
         "tts": "النص إلى كلام",
         "recognize": "التعرف",
         "least": "فضلا احتفظ بواحد على الأقل",
-        "collection": "المجموعة",
         "add_builtin_service": "أضف خدمة مضمنة",
         "add_external_service": "أضف امتداد",
         "add_service": "أضف خدمة",
@@ -174,30 +171,6 @@
         "uninstall_success": "أزيل الملحق بنجاح",
         "homepage": "الصفحة الرئيسية",
         "test_success": "نجح الاختبار"
-      },
-      "backup": {
-        "username": "اسم المستخدم",
-        "password": "كلمة السر",
-        "label": "نسخة احتياطية",
-        "title": "اعدادات النسخ الاحتياطي",
-        "type": "نوع الخدمة",
-        "webdav": "ويب داف",
-        "local": "محلي",
-        "webdav_url": "عنوان ويب داف",
-        "logout": "تسجيل خروج",
-        "login_success": "نجح تسجيل الدخول",
-        "backup": "نسخة احتياطية",
-        "restore": "استعد",
-        "list": "قائمة النُسخ الاحتياطية",
-        "load_success": "حمل النسخ الإحتياطي بنجاح",
-        "backup_success": "نسخ احتياطي ناجح",
-        "aliyun": "Aliyun drive",
-        "aliyun_login_first": "يرجى مسح الرمز ضوئياً لتسجيل الدخول أولاً.",
-        "empty": "لم تنسخ نسخة احتياطية بعد"
-      },
-      "history": {
-        "label": "السجل",
-        "title": "السجل"
       },
       "about": {
         "label": "حول",
@@ -241,28 +214,14 @@
       "copy": "انسخ",
       "translate": "ترجمة",
       "speak": "تكلم",
-      "add_collection_success": "تمت الإضافة إلى المجموعة بنجاح",
       "recognizing": "جاري التعرف",
-      "translate_back": "إعادة الترجمة الى النص الاصلي"
+      "translate_back": "إعادة الترجمة الى النص الاصلي",
+      "tts_not_configured": "No TTS service configured"
     },
     "services": {
-      "collection": {
-        "anki": {
-          "port": "منفذ",
-          "title": "أنكي"
-        },
-        "eudic": {
-          "title": "يوديك",
-          "name": "اسم المجموعة",
-          "token": "رمز"
-        }
-      },
       "help": "إرشاد التكوين",
       "no_need": "لا يتطلب أي تكوين",
       "translate": {
-        "lingva": {
-          "title": "lingva"
-        },
         "deepl": {
           "title": "DeepL",
           "custom_url": "عنوان DeepLX",
@@ -391,12 +350,7 @@
         }
       },
       "instance_name": "اسم التكوين",
-      "tts": {
-        "lingva_tts": {
-          "request_path": "مسار الطلب",
-          "title": "مترجم النصوص لينجفا"
-        }
-      },
+      "tts": {},
       "recognize": {
         "tencent_accurate_ocr": {
           "secret_id": "المعرف السري",

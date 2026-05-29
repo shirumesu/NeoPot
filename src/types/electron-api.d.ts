@@ -30,6 +30,7 @@ export interface NeoPotElectronApi {
   app: {
     getWindowLabel(): Promise<WindowLabel>
     getVersion(): Promise<string>
+    rendererReady(): Promise<void>
     closeCurrentWindow(): Promise<void>
     hideCurrentWindow(): Promise<void>
     showCurrentWindow(): Promise<void>
@@ -39,6 +40,8 @@ export interface NeoPotElectronApi {
     setCurrentWindowBounds(bounds: WindowBounds): Promise<void>
     getCurrentWindowBounds(): Promise<Required<WindowBounds>>
     isCurrentWindowMaximized(): Promise<boolean>
+    setAutoStart(enabled: boolean): Promise<void>
+    isAutoStartEnabled(): Promise<boolean>
     minimizeCurrentWindow(): Promise<void>
     maximizeCurrentWindow(): Promise<void>
     unmaximizeCurrentWindow(): Promise<void>

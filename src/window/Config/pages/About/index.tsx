@@ -1,8 +1,6 @@
 // @ts-nocheck
 import { Divider, Button, Popover, PopoverTrigger, PopoverContent } from '@heroui/react'
-import { appLogDir } from '@/utils/electron_compat/path'
 import { useTranslation } from 'react-i18next'
-import { openPath, openUrl as open } from '@/utils/electron_compat/opener'
 import { invoke } from '@/utils/electron_compat/core'
 import React from 'react'
 
@@ -37,7 +35,7 @@ export default function About() {
             className="my-[5px]"
             size="sm"
             onPress={() => {
-              open('https://github.com/shirumesu/NeoPot')
+              invoke('open_url', { url: 'https://github.com/shirumesu/NeoPot' })
             }}
           >
             {t('config.about.github')}
@@ -55,7 +53,7 @@ export default function About() {
                   className="my-[5px]"
                   size="sm"
                   onPress={() => {
-                    open('https://github.com/shirumesu/NeoPot/issues')
+                    invoke('open_url', { url: 'https://github.com/shirumesu/NeoPot/issues' })
                   }}
                 >
                   {t('config.about.issue')}
@@ -104,8 +102,7 @@ export default function About() {
             className="my-[5px]"
             size="sm"
             onPress={async () => {
-              const dir = await appLogDir()
-              openPath(dir)
+              await invoke('open_log_dir')
             }}
           >
             {t('config.about.view_log')}

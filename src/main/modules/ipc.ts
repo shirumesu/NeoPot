@@ -4,6 +4,7 @@ import {
   clipboard,
   ipcMain,
   nativeImage,
+  shell,
   type IpcMainInvokeEvent,
   type Rectangle,
 } from 'electron'
@@ -27,7 +28,7 @@ import {
   getLastCroppedDataUrl,
 } from './screenshot'
 import { updateTrayMenu } from './tray'
-import type { WindowLabel } from './window'
+import { markWindowReady, type WindowLabel } from './window'
 import {
   getCurrentScreenshotAction,
   getCurrentWorkflowText,
@@ -35,6 +36,7 @@ import {
   inputTranslate,
   ocrRecognize,
   ocrTranslate,
+  openUpdater,
   recognizeWindow,
   selectionTranslate,
 } from './workflow'
@@ -208,6 +210,18 @@ const assertTextPayload = (payload: unknown): string => {
   return payload.text
 }
 
+const assertUrlPayload = (payload: unknown): string => {
+  if (!isRecord(payload) || typeof payload.url !== 'string' || payload.url.length === 0) {
+    throw new NeoPotError({
+      code: 'IPC_INVALID_PAYLOAD',
+      message: 'Expected URL string.',
+      field: 'url',
+    })
+  }
+
+  return payload.url
+}
+
 const normalizeError = (error: unknown): NeoPotErrorPayload => {
   if (error instanceof NeoPotError) {
     return {
@@ -264,6 +278,10 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
       assertNoPayload(payload)
       return app.getVersion()
     },
+    'app:renderer-ready': (event, payload) => {
+      assertNoPayload(payload)
+      markWindowReady(options.getWindowLabel(event))
+    },
     'app:close-current-window': (event, payload) => {
       assertNoPayload(payload)
       BrowserWindow.fromWebContents(event.sender)?.close()
@@ -307,6 +325,15 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
     'app:is-current-window-maximized': (event, payload) => {
       assertNoPayload(payload)
       return BrowserWindow.fromWebContents(event.sender)?.isMaximized() ?? false
+    },
+    'app:set-auto-start': (_event, payload) => {
+      app.setLoginItemSettings({
+        openAtLogin: assertBooleanPayload(payload, 'enabled'),
+      })
+    },
+    'app:is-auto-start-enabled': (_event, payload) => {
+      assertNoPayload(payload)
+      return app.getLoginItemSettings().openAtLogin
     },
     'app:minimize-current-window': (event, payload) => {
       assertNoPayload(payload)
@@ -393,11 +420,21 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
         case 'update_tray':
           updateTrayMenu()
           return undefined
+        case 'updater_window':
+          await openUpdater()
+          return undefined
+        case 'open_url':
+          await shell.openExternal(assertUrlPayload(args))
+          return undefined
+        case 'open_log_dir':
+          await shell.openPath(app.getPath('logs'))
+          return undefined
+        case 'open_config_dir':
+          await shell.openPath(app.getPath('userData'))
+          return undefined
         case 'set_proxy':
         case 'unset_proxy':
           return true
-        case 'open_config_dir':
-          return undefined
         case 'open_devtools':
           BrowserWindow.getFocusedWindow()?.webContents.openDevTools({ mode: 'detach' })
           return undefined

@@ -87,7 +87,6 @@
         "server_port_change": "Порт прослуховування змінено. Перезапустіть застосунок, щоб зміни набули чинності",
         "app_language": "Мова інтерфейсу",
         "app_fallback_font": "Запасний шрифт",
-        "transparent": "Ефект прозорості",
         "proxy_change": "Налаштування проксі змінено. Перезапустіть застосунок, щоб зміни набули чинності",
         "proxy_error": "Заповніть хост і порт",
         "tray_click_event": "Дія при кліку на іконку в треї",
@@ -104,7 +103,6 @@
           "24": "Дуже дуже великий (24 пікс.)",
           "title": "Розмір шрифту"
         },
-        "history_disable": "Вимкнути історію",
         "window_position": "Позиція вікна",
         "remember_window_size": "Запам'ятати розмір вікна",
         "mouse": "Слідувати за курсором",
@@ -163,7 +161,6 @@
         "translate": "Переклад",
         "tts": "TTS",
         "recognize": "Розпізнати",
-        "collection": "Словник",
         "least": "Залиште хоча б одну службу",
         "add_builtin_service": "Додати вбудовану службу",
         "add_external_service": "Додати розширення",
@@ -174,30 +171,6 @@
         "uninstall_success": "Плагін успішно видалено",
         "homepage": "Домашня сторінка",
         "test_success": "Тест пройдено"
-      },
-      "history": {
-        "label": "Історія",
-        "title": "Історія"
-      },
-      "backup": {
-        "label": "Резервне копіювання",
-        "title": "Налаштування резервного копіювання",
-        "type": "Тип служби",
-        "webdav": "WebDav",
-        "aliyun": "Aliyun Drive",
-        "local": "Локально",
-        "webdav_url": "WebDav URL",
-        "username": "Ім'я користувача",
-        "password": "Пароль",
-        "logout": "Вийти",
-        "aliyun_login_first": "Спочатку відскануйте QR-код для входу.",
-        "login_success": "Вхід виконано успішно",
-        "backup": "Резервне копіювання",
-        "restore": "Відновлення",
-        "list": "Список резервних копій",
-        "load_success": "Резервну копію завантажено",
-        "backup_success": "Резервну копію створено",
-        "empty": "Резервних копій ще немає"
       },
       "about": {
         "label": "Про застосунок",
@@ -287,17 +260,6 @@
         "local_model": {
           "title": "Local Model OCR",
           "description": "Uses the bundled PaddleOCR.js PP-OCRv5 local model assets in the app. Recognition does not use a cloud OCR API."
-        }
-      },
-      "collection": {
-        "anki": {
-          "port": "Порт",
-          "title": "Анкі (Anki)"
-        },
-        "eudic": {
-          "token": "Токен",
-          "title": "Eudic",
-          "name": "Назва словника"
         }
       },
       "help": "Посібник з налаштування",
@@ -428,17 +390,9 @@
         },
         "ecdict": {
           "title": "ECDict (Онлайн)"
-        },
-        "lingva": {
-          "title": "Lingva"
         }
       },
-      "tts": {
-        "lingva_tts": {
-          "title": "Lingva",
-          "request_path": "Шлях запиту"
-        }
-      },
+      "tts": {},
       "instance_name": "Назва конфігурації"
     },
     "translate": {
@@ -446,10 +400,10 @@
       "retry": "Спробуй знову",
       "copy": "Скопіюй",
       "delete_newline": "Видалити новий рядок",
-      "add_collection_success": "Успішно додано до словника",
       "recognizing": "Розпізнавання…",
       "speak": "Озвучити",
-      "translate_back": "Перекласти назад на мову оригіналу"
+      "translate_back": "Перекласти назад на мову оригіналу",
+      "tts_not_configured": "No TTS service configured"
     },
     "recognize": {
       "translate": "Перекласти",

@@ -108,9 +108,6 @@
         "bing_dict": {
           "title": "Bing Dicionário"
         },
-        "lingva": {
-          "title": "Lingva"
-        },
         "bing": {
           "title": "Bing"
         },
@@ -216,23 +213,7 @@
           "description": "Uses the bundled PaddleOCR.js PP-OCRv5 local model assets in the app. Recognition does not use a cloud OCR API."
         }
       },
-      "collection": {
-        "anki": {
-          "port": "Porta",
-          "title": "Anki"
-        },
-        "eudic": {
-          "token": "Token",
-          "name": "Nome da Coleção",
-          "title": "Eudic"
-        }
-      },
-      "tts": {
-        "lingva_tts": {
-          "title": "Lingva",
-          "request_path": "Caminho do Pedido"
-        }
-      }
+      "tts": {}
     },
     "languages": {
       "mn_cy": "Mongolês (Cirílico)",
@@ -312,7 +293,6 @@
         "check_update": "Procurar Atualização",
         "close_to_tray": "Minimizar para a área de notificação ao fechar",
         "app_language": "Idioma de Exibição",
-        "transparent": "Efeito de Transparência",
         "title": "Configurações Gerais",
         "app_fallback_font": "Fonte Reserva",
         "dev_mode": "Modo de Programador"
@@ -338,7 +318,6 @@
         "yandex": "Yandex",
         "local": "Local",
         "disable": "Desativar",
-        "history_disable": "Desativar Histórico",
         "hide_window": "Ocultar Janela de Tradução",
         "remember_window_size": "Lembrar do Tamanho da Janela",
         "delete_newline": "Apagar Nova Linha",
@@ -360,26 +339,6 @@
         "baidu": "Baidu",
         "incremental_translate": "Tradução Incremental",
         "target_language": "Idioma de Destino"
-      },
-      "backup": {
-        "local": "Local",
-        "empty": "Ainda não fez backup",
-        "restore": "Restaurar",
-        "title": "Configurações de Backup",
-        "webdav": "WebDav",
-        "load_success": "Carregar Backup com Sucesso",
-        "list": "Lista de Backup",
-        "backup": "Backup",
-        "password": "Palavra-passe",
-        "webdav_url": "URL do WebDav",
-        "username": "Nome de utilizador",
-        "backup_success": "Backup com Sucesso",
-        "label": "Backup",
-        "type": "Tipo de Serviço",
-        "logout": "Sair",
-        "login_success": "Sucesso de Login",
-        "aliyun": "Aliyun Drive",
-        "aliyun_login_first": "Por favor, leia o código para fazer login primeiro."
       },
       "recognize": {
         "delete_newline": "Apagar Nova Linha Automaticamente",
@@ -409,7 +368,6 @@
         "homepage": "Homepage",
         "translate": "Traduzir",
         "recognize": "Reconhecimento",
-        "collection": "Coleção",
         "view_plugin_list": "Exibir Lista de Plugins",
         "install_plugin": "Instalar Plug-in",
         "add_external_service": "Adicionar Extensão",
@@ -435,21 +393,17 @@
         "discussion": "Discussão no GitHub",
         "qq_channel": "Canal no QQ",
         "view_log": "Exibir Registro"
-      },
-      "history": {
-        "label": "Histórico",
-        "title": "Histórico"
       }
     },
     "translate": {
       "delete_newline": "Apagar Quebra de Linha",
-      "add_collection_success": "Adicionar à coleção com sucesso",
       "retry": "Tentar novamente",
       "recognizing": "A reconhecer…",
       "translate_back": "Tradução de volta ao original",
       "translate": "Traduzir",
       "copy": "Copiar",
-      "speak": "Falar"
+      "speak": "Falar",
+      "tts_not_configured": "No TTS service configured"
     },
     "updater": {
       "installed": "Instalação concluída, reinicie a aplicação para que as alterações entrem em vigor",

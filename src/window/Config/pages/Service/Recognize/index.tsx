@@ -8,7 +8,7 @@ import { Reorder } from 'framer-motion'
 import { useToastStyle } from '../../../../../hooks'
 import SelectPluginModal from '../SelectPluginModal'
 import { osType } from '../../../../../utils/env'
-import { useConfig, deleteKey } from '../../../../../hooks'
+import { useConfig, deleteKey, isSameConfigValue } from '../../../../../hooks'
 import ServiceItem from './ServiceItem'
 import SelectModal from './SelectModal'
 import ConfigModal from './ConfigModal'
@@ -57,6 +57,13 @@ export default function Recognize(props) {
       setRecognizeServiceInstanceList(newList)
     }
   }
+  const handleServiceReorder = (serviceInstanceList) => {
+    if (isSameConfigValue(recognizeServiceInstanceList, serviceInstanceList)) {
+      return
+    }
+
+    setRecognizeServiceInstanceList(serviceInstanceList)
+  }
 
   return (
     <>
@@ -70,7 +77,7 @@ export default function Recognize(props) {
           <Reorder.Group
             axis="y"
             values={recognizeServiceInstanceList}
-            onReorder={setRecognizeServiceInstanceList}
+            onReorder={handleServiceReorder}
             className="overflow-y-auto h-full"
           >
             {recognizeServiceInstanceList.map((x) => {

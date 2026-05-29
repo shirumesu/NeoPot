@@ -69,7 +69,6 @@
           "dark": "Escuro",
           "system": "Sistema"
         },
-        "transparent": "Efeito de Transparência",
         "proxy": {
           "title": "Proxy",
           "host": "Host",
@@ -104,7 +103,6 @@
         "target": "Destino",
         "source_target": "Origem+Destino",
         "disable": "Desabilitar",
-        "history_disable": "Desabilitar Histórico",
         "incremental_translate": "Tradução Incremental",
         "dynamic_translate": "Tradução Dinâmica",
         "delete_newline": "Excluir Nova Linha",
@@ -163,7 +161,6 @@
         "translate": "Traduzir",
         "tts": "TTS",
         "recognize": "Reconhecimento",
-        "collection": "Coleção",
         "least": "Por favor, mantenha pelo menos um",
         "add_builtin_service": "Adicionar Serviço Integrado",
         "add_external_service": "Adicionar Extensão",
@@ -174,30 +171,6 @@
         "homepage": "Homepage",
         "view_plugin_list": "Exibir Lista de Plugins",
         "test_success": "Teste concluído"
-      },
-      "history": {
-        "label": "Histórico",
-        "title": "Histórico"
-      },
-      "backup": {
-        "label": "Backup",
-        "title": "Configurações de Backup",
-        "type": "Tipo de Serviço",
-        "webdav": "WebDav",
-        "local": "Local",
-        "webdav_url": "URL do WebDav",
-        "username": "Nome de usuário",
-        "password": "Senha",
-        "backup": "Backup",
-        "restore": "Restaurar",
-        "list": "Lista de Backup",
-        "load_success": "Carregar Backup com Sucesso",
-        "backup_success": "Backup com Sucesso",
-        "empty": "Você não fez backup ainda",
-        "logout": "Sair",
-        "login_success": "Entrou com sucesso",
-        "aliyun_login_first": "Por favor, leia o código para fazer login primeiro.",
-        "aliyun": "Aliyun Drive"
       },
       "about": {
         "label": "Sobre",
@@ -244,9 +217,6 @@
         "google": {
           "title": "Google",
           "custom_url": "URL personalizada"
-        },
-        "lingva": {
-          "title": "Lingva"
         },
         "bing": {
           "title": "Bing"
@@ -433,33 +403,17 @@
           "description": "Uses the bundled PaddleOCR.js PP-OCRv5 local model assets in the app. Recognition does not use a cloud OCR API."
         }
       },
-      "tts": {
-        "lingva_tts": {
-          "title": "Lingva",
-          "request_path": "Caminho do Pedido"
-        }
-      },
-      "collection": {
-        "anki": {
-          "title": "Anki",
-          "port": "Porta"
-        },
-        "eudic": {
-          "title": "Eudic",
-          "name": "Nome da Coleção",
-          "token": "Token"
-        }
-      }
+      "tts": {}
     },
     "translate": {
       "translate": "Traduzir",
-      "add_collection_success": "Adicionar à coleção com sucesso",
       "recognizing": "Reconhecendo…",
       "speak": "Falar",
       "copy": "Copiar",
       "delete_newline": "Excluir Quebra de Linha",
       "translate_back": "Tradução de volta ao original",
-      "retry": "Tentar novamente"
+      "retry": "Tentar novamente",
+      "tts_not_configured": "No TTS service configured"
     },
     "recognize": {
       "recognize": "Reconhecimento",

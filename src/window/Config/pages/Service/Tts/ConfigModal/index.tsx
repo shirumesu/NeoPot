@@ -27,9 +27,12 @@ export default function ConfigModal(props) {
   const pluginServiceFlag = whetherPluginService(serviceInstanceKey)
   const serviceName = getServiceName(serviceInstanceKey)
   const { t } = useTranslation()
-  const ConfigComponent = pluginServiceFlag ? PluginConfig : builtinServices[serviceName].Config
+  const builtinService = builtinServices[serviceName]
+  const ConfigComponent = pluginServiceFlag ? PluginConfig : builtinService?.Config
 
-  return pluginServiceFlag && !(serviceName in pluginList) ? (
+  return serviceInstanceKey === '' ||
+    (pluginServiceFlag && !(serviceName in pluginList)) ||
+    (!pluginServiceFlag && !builtinService) ? (
     <></>
   ) : (
     <Modal isOpen={isOpen} onOpenChange={onOpenChange} scrollBehavior="inside">
@@ -40,7 +43,7 @@ export default function ConfigModal(props) {
               {serviceSourceType === ServiceSourceType.BUILDIN && (
                 <>
                   <img
-                    src={builtinServices[serviceName].info.icon}
+                    src={builtinService.info.icon}
                     className="h-[24px] w-[24px] my-auto"
                     draggable={false}
                   />
@@ -65,7 +68,7 @@ export default function ConfigModal(props) {
               <ConfigComponent
                 name={serviceName}
                 instanceKey={serviceInstanceKey}
-                pluginType="translate"
+                pluginType="tts"
                 pluginList={pluginList}
                 updateServiceList={updateServiceInstanceList}
                 onClose={onClose}

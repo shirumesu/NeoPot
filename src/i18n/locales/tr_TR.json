@@ -30,9 +30,6 @@
         "chatglm_summary": {},
         "openai_polish": {},
         "geminipro_summary": {},
-        "lingva": {
-          "title": "Lingva"
-        },
         "bing": {},
         "openai_summary": {}
       },
@@ -55,13 +52,7 @@
           "description": "Uses the bundled PaddleOCR.js PP-OCRv5 local model assets in the app. Recognition does not use a cloud OCR API."
         }
       },
-      "collection": {
-        "anki": {},
-        "eudic": {}
-      },
-      "tts": {
-        "lingva_tts": {}
-      }
+      "tts": {}
     },
     "languages": {},
     "config": {
@@ -74,14 +65,14 @@
       "translate": {
         "font_size": {}
       },
-      "backup": {},
       "recognize": {},
       "hotkey": {},
       "service": {},
-      "about": {},
-      "history": {}
+      "about": {}
     },
-    "translate": {},
+    "translate": {
+      "tts_not_configured": "No TTS service configured"
+    },
     "updater": {},
     "recognize": {}
   }

@@ -1,7 +1,5 @@
-import { addToAnki } from './collection/anki'
 import { recognize as recognizeUnsupported } from './recognize'
 import { translateGoogle, type GoogleTranslateRequest } from './translate/google'
-import { ttsLingva } from './tts/lingva'
 
 export type ServiceErrorCode = 'SERVICE_CONFIG_MISSING' | 'SERVICE_NOT_MIGRATED' | 'SERVICE_TIMEOUT'
 
@@ -85,33 +83,13 @@ export async function recognize(): Promise<ServiceErrorResult> {
 export async function textToSpeech(
   text: string,
   lang: string,
-  config?: { requestPath?: string },
+  _config?: Record<string, unknown>,
 ): Promise<string | ServiceErrorResult> {
   if (!text || !lang) {
-    return serviceError(
-      'SERVICE_CONFIG_MISSING',
-      'TTS request is missing text or language.',
-      'lingva',
-    )
+    return serviceError('SERVICE_CONFIG_MISSING', 'TTS request is missing text or language.', 'tts')
   }
 
-  return ttsLingva(text, lang, config)
-}
-
-export async function addToCollection(
-  source: string,
-  target: unknown,
-  config?: { port?: number },
-): Promise<void | ServiceErrorResult> {
-  if (!source) {
-    return serviceError(
-      'SERVICE_CONFIG_MISSING',
-      'Collection request is missing source text.',
-      'anki',
-    )
-  }
-
-  await addToAnki(source, target, config)
+  return serviceError('SERVICE_NOT_MIGRATED', 'No TTS service is configured.', 'tts')
 }
 
 export function onServiceStream(

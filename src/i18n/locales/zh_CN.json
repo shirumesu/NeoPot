@@ -44,6 +44,10 @@
       "he": "希伯来语"
     },
     "config": {
+      "common": {
+        "save_success": "设置已保存",
+        "save_failed": "设置保存失败"
+      },
       "general": {
         "label": "常规设置",
         "title": "常规设置",
@@ -72,7 +76,6 @@
           "dark": "深色",
           "system": "跟随系统"
         },
-        "transparent": "透明效果",
         "dev_mode": "开发模式",
         "proxy": {
           "title": "网络代理",
@@ -104,7 +107,6 @@
         "target": "译文",
         "source_target": "原文+译文",
         "disable": "禁用",
-        "history_disable": "禁用历史记录",
         "incremental_translate": "增量翻译",
         "dynamic_translate": "动态翻译",
         "delete_newline": "自动删除换行",
@@ -163,7 +165,6 @@
         "translate": "翻译",
         "tts": "语音合成",
         "recognize": "文字识别",
-        "collection": "生词本",
         "least": "请至少保留一个",
         "add_builtin_service": "添加内置服务",
         "add_external_service": "添加外部插件",
@@ -174,30 +175,6 @@
         "uninstall_success": "插件卸载成功",
         "homepage": "插件主页",
         "test_success": "测试成功"
-      },
-      "history": {
-        "label": "历史记录",
-        "title": "历史记录"
-      },
-      "backup": {
-        "label": "备份设置",
-        "title": "备份设置",
-        "type": "服务类型",
-        "webdav": "WebDav",
-        "local": "本地",
-        "aliyun": "阿里云盘",
-        "webdav_url": "WebDav地址",
-        "username": "用户名",
-        "password": "密码",
-        "logout": "退出登录",
-        "aliyun_login_first": "请先扫码登录",
-        "login_success": "登录成功",
-        "backup": "备份",
-        "restore": "恢复备份",
-        "list": "备份列表",
-        "load_success": "载入备份成功",
-        "backup_success": "备份成功",
-        "empty": "您还没有备份"
       },
       "about": {
         "label": "关于应用",
@@ -244,9 +221,6 @@
         "google": {
           "title": "谷歌翻译",
           "custom_url": "自定义 URL"
-        },
-        "lingva": {
-          "title": "Lingva"
         },
         "bing": {
           "title": "必应翻译"
@@ -443,27 +417,10 @@
           "description": "使用应用内置的 PaddleOCR.js PP-OCRv5 本地模型资源识别。识别过程不调用云端 OCR API。"
         }
       },
-      "tts": {
-        "lingva_tts": {
-          "title": "Lingva",
-          "request_path": "请求地址"
-        }
-      },
-      "collection": {
-        "anki": {
-          "title": "Anki",
-          "port": "端口号"
-        },
-        "eudic": {
-          "title": "欧路词典",
-          "name": "生词本名称",
-          "token": "Token"
-        }
-      }
+      "tts": {}
     },
     "translate": {
       "translate": "翻译",
-      "add_collection_success": "添加成功",
       "recognizing": "识别中…",
       "speak": "朗读",
       "copy": "复制",
@@ -471,7 +428,8 @@
       "show_preview": "显示预览",
       "show_source": "显示源码",
       "delete_newline": "删除换行",
-      "translate_back": "翻译回原文"
+      "translate_back": "翻译回原文",
+      "tts_not_configured": "No TTS service configured"
     },
     "recognize": {
       "recognize": "重新识别",

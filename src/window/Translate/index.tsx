@@ -15,7 +15,12 @@ import TargetArea from './components/TargetArea'
 import { osType } from '../../utils/env'
 import { useConfig } from '../../hooks'
 import { getStoreValue, saveStore, setStoreValue } from '../../utils/store'
-import { isValidServiceInstanceKey } from '../../utils/service_instance'
+import {
+  ServiceSourceType,
+  isValidServiceInstanceKey,
+  whetherAvailableService,
+} from '../../utils/service_instance'
+import * as builtinTranslateServices from '../../services/translate'
 import { info } from '@/utils/electron_compat/log'
 const appWindow = getCurrentWebviewWindow()
 
@@ -72,33 +77,36 @@ export default function Translate() {
   const [rememberWindowSize] = useConfig('translate_remember_window_size', false)
   const [translateServiceInstanceList, setTranslateServiceInstanceList] = useConfig(
     'translate_service_list',
-    ['deepl', 'bing', 'lingva', 'yandex', 'google', 'ecdict'],
+    ['deepl', 'bing', 'yandex', 'google', 'ecdict'],
   )
   const [recognizeServiceInstanceList] = useConfig('recognize_service_list', ['local_model'])
-  const [ttsServiceInstanceList] = useConfig('tts_service_list', ['lingva_tts'])
-  const [collectionServiceInstanceList] = useConfig('collection_service_list', [])
+  const [ttsServiceInstanceList] = useConfig('tts_service_list', [])
   const [hideLanguage] = useConfig('hide_language', false)
   const [pined, setPined] = useState(false)
   const [pluginList, setPluginList] = useState({
     translate: {},
     tts: {},
     recognize: {},
-    collection: {},
   })
   const [pluginLoadError, setPluginLoadError] = useState(null)
   const [serviceConfigError, setServiceConfigError] = useState(null)
   const [serviceInstanceConfigMap, setServiceInstanceConfigMap] = useState({})
+  const availableTranslateServices = {
+    [ServiceSourceType.BUILDIN]: builtinTranslateServices,
+    [ServiceSourceType.PLUGIN]: pluginList.translate,
+  }
   const validTranslateServiceInstanceList = Array.isArray(translateServiceInstanceList)
-    ? translateServiceInstanceList.filter(isValidServiceInstanceKey)
+    ? translateServiceInstanceList.filter(
+        (key) =>
+          isValidServiceInstanceKey(key) &&
+          whetherAvailableService(key, availableTranslateServices),
+      )
     : []
   const validRecognizeServiceInstanceList = Array.isArray(recognizeServiceInstanceList)
     ? recognizeServiceInstanceList.filter(isValidServiceInstanceKey)
     : []
   const validTtsServiceInstanceList = Array.isArray(ttsServiceInstanceList)
     ? ttsServiceInstanceList.filter(isValidServiceInstanceKey)
-    : []
-  const validCollectionServiceInstanceList = Array.isArray(collectionServiceInstanceList)
-    ? collectionServiceInstanceList.filter(isValidServiceInstanceKey)
     : []
   // 是否自动关闭窗口
   useEffect(() => {
@@ -167,7 +175,7 @@ export default function Translate() {
 
   const loadPluginList = async () => {
     try {
-      const serviceTypeList = ['translate', 'tts', 'recognize', 'collection']
+      const serviceTypeList = ['translate', 'tts', 'recognize']
       const temp = {}
       for (const serviceType of serviceTypeList) {
         temp[serviceType] = {}
@@ -223,9 +231,6 @@ export default function Translate() {
       for (const serviceInstanceKey of validTtsServiceInstanceList) {
         config[serviceInstanceKey] = (await getStoreValue(serviceInstanceKey)) ?? {}
       }
-      for (const serviceInstanceKey of validCollectionServiceInstanceList) {
-        config[serviceInstanceKey] = (await getStoreValue(serviceInstanceKey)) ?? {}
-      }
       setServiceConfigError(null)
       setServiceInstanceConfigMap({ ...config })
     } catch (error) {
@@ -237,8 +242,7 @@ export default function Translate() {
     if (
       translateServiceInstanceList !== null &&
       recognizeServiceInstanceList !== null &&
-      ttsServiceInstanceList !== null &&
-      collectionServiceInstanceList !== null
+      ttsServiceInstanceList !== null
     ) {
       loadServiceInstanceConfigMap()
     }
@@ -246,14 +250,13 @@ export default function Translate() {
     translateServiceInstanceList,
     recognizeServiceInstanceList,
     ttsServiceInstanceList,
-    collectionServiceInstanceList,
+    pluginList,
   ])
 
   const isServiceConfigReady =
     translateServiceInstanceList !== null &&
     recognizeServiceInstanceList !== null &&
-    ttsServiceInstanceList !== null &&
-    collectionServiceInstanceList !== null
+    ttsServiceInstanceList !== null
 
   const hasInitError = pluginLoadError !== null || serviceConfigError !== null
 
@@ -346,7 +349,7 @@ export default function Translate() {
                         <TargetArea
                           index={index}
                           name={serviceInstanceKey}
-                          translateServiceInstanceList={translateServiceInstanceList}
+                          translateServiceInstanceList={validTranslateServiceInstanceList}
                           pluginList={pluginList}
                           serviceInstanceConfigMap={serviceInstanceConfigMap}
                         />

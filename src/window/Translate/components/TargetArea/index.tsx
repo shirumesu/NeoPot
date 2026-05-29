@@ -26,7 +26,6 @@ import { MdArticle, MdCode, MdContentCopy } from 'react-icons/md'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { useTranslation } from 'react-i18next'
-import Database from '@/utils/electron_compat/sql'
 import { GiCycle } from 'react-icons/gi'
 import { useTheme } from 'next-themes'
 import { useAtomValue } from 'jotai'
@@ -34,7 +33,6 @@ import { nanoid } from 'nanoid'
 import { useSpring, animated } from '@react-spring/web'
 import useMeasure from 'react-use-measure'
 
-import * as builtinCollectionServices from '../../../../services/collection'
 import { sourceLanguageAtom, targetLanguageAtom } from '../LanguageArea'
 import { useConfig, useToastStyle, useVoice } from '../../../../hooks'
 import { sourceTextAtom, detectLanguageAtom } from '../SourceArea'
@@ -162,16 +160,19 @@ export default function TargetArea(props) {
   }
 
   const [appFontSize] = useConfig('app_font_size', 16)
-  const [rawCollectionServiceList] = useConfig('collection_service_list', [])
-  const collectionServiceList = Array.isArray(rawCollectionServiceList)
-    ? rawCollectionServiceList.filter(isValidServiceInstanceKey)
-    : []
-  const [ttsServiceList] = useConfig('tts_service_list', ['lingva_tts'])
+  const [ttsServiceList] = useConfig('tts_service_list', [])
   const ttsServiceInstanceKey = Array.isArray(ttsServiceList)
-    ? ttsServiceList.find(isValidServiceInstanceKey)
+    ? ttsServiceList.find((key) => {
+        if (!isValidServiceInstanceKey(key)) {
+          return false
+        }
+        if (getServiceSouceType(key) === ServiceSourceType.PLUGIN) {
+          return pluginList['tts']?.[getServiceName(key)] !== undefined
+        }
+        return builtinTtsServices[getServiceName(key)] !== undefined
+      })
     : null
   const [translateSecondLanguage] = useConfig('translate_second_language', 'en')
-  const [historyDisable] = useConfig('history_disable', false)
   const [isLoading, setIsLoading] = useState(false)
   const [hide, setHide] = useState(true)
 
@@ -236,30 +237,6 @@ export default function TargetArea(props) {
     serviceInstanceConfigMap,
   ])
 
-  // todo: history panel use service instance key
-  const addToHistory = async (text, source, target, serviceInstanceKey, result) => {
-    const db = await Database.load('sqlite:history.db')
-
-    await db
-      .execute(
-        'INSERT into history (text, source, target, service, result, timestamp) VALUES ($1, $2, $3, $4, $5, $6)',
-        [text, source, target, serviceInstanceKey, result, Date.now()],
-      )
-      .then(
-        (v) => {
-          db.close()
-        },
-        (e) => {
-          db.execute(
-            'CREATE TABLE history(id INTEGER PRIMARY KEY AUTOINCREMENT, text TEXT NOT NULL,source TEXT NOT NULL,target TEXT NOT NULL,service TEXT NOT NULL, result TEXT NOT NULL,timestamp INTEGER NOT NULL)',
-          ).then(() => {
-            db.close()
-            addToHistory(text, source, target, serviceInstanceKey, result)
-          })
-        },
-      )
-  }
-
   function invokeOnce(fn) {
     let isInvoke = false
 
@@ -318,15 +295,6 @@ export default function TargetArea(props) {
             setIsLoading(false)
             if (v !== '') {
               setHideOnce(false)
-            }
-            if (!historyDisable) {
-              addToHistory(
-                sourceText.trim(),
-                detectLanguage,
-                newTargetLanguage,
-                translateServiceName,
-                typeof v === 'string' ? v.trim() : v,
-              )
             }
             if (index === 0 && !clipboardMonitor) {
               switch (autoCopy) {
@@ -404,15 +372,6 @@ export default function TargetArea(props) {
               if (v !== '') {
                 setHideOnce(false)
               }
-              if (!historyDisable) {
-                addToHistory(
-                  sourceText.trim(),
-                  detectLanguage,
-                  newTargetLanguage,
-                  translateServiceName,
-                  typeof v === 'string' ? v.trim() : v,
-                )
-              }
               if (index === 0 && !clipboardMonitor) {
                 switch (autoCopy) {
                   case 'target':
@@ -471,9 +430,14 @@ export default function TargetArea(props) {
     ) {
       readTextFile(`plugins/tts/${getServiceName(ttsServiceInstanceKey)}/info.json`, {
         baseDir: BaseDirectory.AppConfig,
-      }).then((infoStr) => {
-        setTtsPluginInfo(JSON.parse(infoStr))
-      })
+      }).then(
+        (infoStr) => {
+          setTtsPluginInfo(JSON.parse(infoStr))
+        },
+        () => {
+          setTtsPluginInfo(undefined)
+        },
+      )
     }
   }, [ttsServiceInstanceKey])
 
@@ -481,10 +445,13 @@ export default function TargetArea(props) {
   const handleSpeak = async () => {
     const instanceKey = ttsServiceInstanceKey
     if (!instanceKey) {
-      throw new Error('TTS service not configured')
+      throw new Error(t('translate.tts_not_configured'))
     }
     if (getServiceSouceType(instanceKey) === ServiceSourceType.PLUGIN) {
       const pluginConfig = serviceInstanceConfigMap[instanceKey]
+      if (!ttsPluginInfo?.language) {
+        throw new Error(t('translate.tts_not_configured'))
+      }
       if (!(targetLanguage in ttsPluginInfo.language)) {
         throw new Error('Language not supported')
       }
@@ -802,7 +769,7 @@ export default function TargetArea(props) {
                   isIconOnly
                   variant="light"
                   size="sm"
-                  isDisabled={typeof result !== 'string' || result === '' || !ttsServiceInstanceKey}
+                  isDisabled={typeof result !== 'string' || result === ''}
                   onPress={() => {
                     handleSpeak().catch((e) => {
                       toast.error(e.toString(), { style: toastStyle })
@@ -960,77 +927,6 @@ export default function TargetArea(props) {
                   <GiCycle className="text-[16px]" />
                 </Button>
               </Tooltip>
-              {/* available collection service instance */}
-              {collectionServiceList &&
-                collectionServiceList.map((collectionServiceInstanceName) => {
-                  return (
-                    <Button
-                      key={collectionServiceInstanceName}
-                      isIconOnly
-                      variant="light"
-                      size="sm"
-                      onPress={async () => {
-                        if (
-                          getServiceSouceType(collectionServiceInstanceName) ===
-                          ServiceSourceType.PLUGIN
-                        ) {
-                          const pluginConfig =
-                            serviceInstanceConfigMap[collectionServiceInstanceName]
-                          let [func, utils] = await invoke_plugin(
-                            'collection',
-                            getServiceName(collectionServiceInstanceName),
-                          )
-                          func(sourceText.trim(), result.toString(), {
-                            config: pluginConfig,
-                            utils,
-                          }).then(
-                            (_) => {
-                              toast.success(t('translate.add_collection_success'), {
-                                style: toastStyle,
-                              })
-                            },
-                            (e) => {
-                              toast.error(e.toString(), { style: toastStyle })
-                            },
-                          )
-                        } else {
-                          const instanceConfig =
-                            serviceInstanceConfigMap[collectionServiceInstanceName]
-                          builtinCollectionServices[getServiceName(collectionServiceInstanceName)]
-                            .collection(sourceText, result, {
-                              config: instanceConfig,
-                            })
-                            .then(
-                              (_) => {
-                                toast.success(t('translate.add_collection_success'), {
-                                  style: toastStyle,
-                                })
-                              },
-                              (e) => {
-                                toast.error(e.toString(), {
-                                  style: toastStyle,
-                                })
-                              },
-                            )
-                        }
-                      }}
-                    >
-                      <img
-                        src={
-                          getServiceSouceType(collectionServiceInstanceName) ===
-                          ServiceSourceType.PLUGIN
-                            ? pluginList['collection'][
-                                getServiceName(collectionServiceInstanceName)
-                              ].icon
-                            : builtinCollectionServices[
-                                getServiceName(collectionServiceInstanceName)
-                              ].info.icon
-                        }
-                        className="h-4 w-4"
-                      />
-                    </Button>
-                  )
-                })}
             </ButtonGroup>
           </CardFooter>
         </div>

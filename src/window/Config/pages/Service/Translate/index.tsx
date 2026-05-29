@@ -8,7 +8,7 @@ import { Reorder } from 'framer-motion'
 import { useToastStyle } from '../../../../../hooks'
 import SelectPluginModal from '../SelectPluginModal'
 import { osType } from '../../../../../utils/env'
-import { useConfig, deleteKey } from '../../../../../hooks'
+import { useConfig, deleteKey, isSameConfigValue } from '../../../../../hooks'
 import ServiceItem from './ServiceItem'
 import SelectModal from './SelectModal'
 import ConfigModal from './ConfigModal'
@@ -34,7 +34,7 @@ export default function Translate(props) {
   // now it's service instance list
   const [translateServiceInstanceList, setTranslateServiceInstanceList] = useConfig(
     'translate_service_list',
-    ['deepl', 'bing', 'lingva', 'yandex', 'google', 'ecdict'],
+    ['deepl', 'bing', 'yandex', 'google', 'ecdict'],
   )
 
   const { t } = useTranslation()
@@ -57,6 +57,13 @@ export default function Translate(props) {
       setTranslateServiceInstanceList(newList)
     }
   }
+  const handleServiceReorder = (serviceInstanceList) => {
+    if (isSameConfigValue(translateServiceInstanceList, serviceInstanceList)) {
+      return
+    }
+
+    setTranslateServiceInstanceList(serviceInstanceList)
+  }
 
   return (
     <>
@@ -70,7 +77,7 @@ export default function Translate(props) {
           <Reorder.Group
             axis="y"
             values={translateServiceInstanceList}
-            onReorder={setTranslateServiceInstanceList}
+            onReorder={handleServiceReorder}
             className="overflow-y-auto h-full"
           >
             {translateServiceInstanceList.map((x) => {

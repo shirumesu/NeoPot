@@ -112,9 +112,6 @@
           "appid": "ID app",
           "secret": "Segreto"
         },
-        "lingva": {
-          "title": "Lingva"
-        },
         "bing": {
           "title": "Bing"
         }
@@ -189,22 +186,7 @@
           "description": "Uses the bundled PaddleOCR.js PP-OCRv5 local model assets in the app. Recognition does not use a cloud OCR API."
         }
       },
-      "collection": {
-        "anki": {
-          "port": "Porta",
-          "title": "Anki"
-        },
-        "eudic": {
-          "token": "Token",
-          "name": "Nome della raccolta"
-        }
-      },
-      "tts": {
-        "lingva_tts": {
-          "title": "Lingva",
-          "request_path": "Percorso richiesto"
-        }
-      }
+      "tts": {}
     },
     "languages": {
       "mn_cy": "Mongolo (Cirillico)",
@@ -280,22 +262,6 @@
         "incremental_translate": "Traduzione incrementale",
         "target_language": "Lingua di destinazione"
       },
-      "backup": {
-        "local": "Locale",
-        "empty": "Non hai ancora eseguito il backup",
-        "restore": "Ripristina",
-        "title": "Impostazione di backup",
-        "webdav": "WebDav",
-        "load_success": "Caricamento backup riuscito",
-        "list": "Elenco di backup",
-        "backup": "Backup",
-        "password": "Password",
-        "webdav_url": "Url WebDav",
-        "username": "Nome Utente",
-        "backup_success": "Backup riuscito",
-        "label": "Backup",
-        "type": "Tipo di servizio"
-      },
       "general": {
         "auto_start": "Avvio automatico",
         "proxy": {
@@ -339,7 +305,6 @@
         "check_update": "Controlla aggiornamento",
         "close_to_tray": "Riduci nell’area di notifica alla chiusura",
         "app_language": "Lingua dell'applicazione",
-        "transparent": "Effetto trasparente",
         "title": "Impostazioni Generali",
         "app_fallback_font": "Font di riserva"
       },
@@ -371,7 +336,6 @@
         "homepage": "Homepage",
         "translate": "Traduci",
         "recognize": "Riconosci",
-        "collection": "Raccolta",
         "view_plugin_list": "Visualizza l'elenco dei plugin",
         "install_plugin": "Installa plugin",
         "add_external_service": "Aggiungi estensione",
@@ -397,21 +361,17 @@
         "discussion": "Discussione su Github",
         "qq_channel": "Canale QQ",
         "view_log": "Vedi log"
-      },
-      "history": {
-        "label": "Cronologia",
-        "title": "Cronologia"
       }
     },
     "translate": {
       "delete_newline": "Elimina nuova riga",
-      "add_collection_success": "Aggiunta alla raccolta con successo",
       "retry": "Riprova",
       "recognizing": "Riconoscimento in corso…",
       "translate_back": "Traduzione riportata all'originale",
       "translate": "Traduci",
       "copy": "Copia",
-      "speak": "Parla"
+      "speak": "Parla",
+      "tts_not_configured": "No TTS service configured"
     },
     "updater": {
       "installed": "Installazione completata, riavviare l'applicazione affinché le modifiche abbiano effetto",

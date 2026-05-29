@@ -1,7 +1,6 @@
 // @ts-nocheck
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from '@heroui/react'
 import { remove, BaseDirectory } from '@/utils/electron_compat/fs'
-import { openUrl as openInBrowser } from '@/utils/electron_compat/opener'
 import toast, { Toaster } from 'react-hot-toast'
 import { MdDeleteOutline } from 'react-icons/md'
 import { useTranslation } from 'react-i18next'
@@ -36,14 +35,8 @@ export default function SelectPluginModal(props) {
             <ModalHeader>{t('config.service.add_service')}</ModalHeader>
             <ModalBody>
               {Object.keys(pluginList).length === 0 && (
-                <Button
-                  fullWidth
-                  variant="flat"
-                  onPress={() => {
-                    openInBrowser('http://pot-app.com/plugin.html')
-                  }}
-                >
-                  <div className="w-full">{t('config.service.view_plugin_list')}</div>
+                <Button fullWidth variant="flat" isDisabled>
+                  <div className="w-full">Coming soon</div>
                 </Button>
               )}
 

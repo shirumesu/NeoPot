@@ -38,8 +38,6 @@ const configRoutes = new Set([
   '/recognize',
   '/hotkey',
   '/service',
-  '/history',
-  '/backup',
   '/about',
 ])
 

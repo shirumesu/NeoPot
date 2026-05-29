@@ -4,7 +4,6 @@ export enum ServiceType {
   TRANSLATE = 'translate',
   RECOGNIZE = 'recognize',
   TTS = 'tts',
-  COLLECTION = 'collection',
 }
 
 export enum ServiceSourceType {

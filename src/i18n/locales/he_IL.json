@@ -66,7 +66,6 @@
           "title": "גודל גופן"
         },
         "default_font": "ברירת מחדל",
-        "transparent": "אפקט שקוף",
         "proxy": {
           "title": "פרוקסי",
           "username": "שם-משתמש",
@@ -109,7 +108,6 @@
         "title": "הגדרות שירות",
         "translate": "תרגם",
         "recognize": "זהה",
-        "collection": "אוסף",
         "least": "שמור משהו אחד לפחות",
         "add_builtin_service": "הוסף שירות מובנה",
         "add_external_service": "הוסף הרחבה",
@@ -134,7 +132,6 @@
         "source": "מקור",
         "source_target": "מקור+יעד",
         "disable": "מבוטל",
-        "history_disable": "השבת היסטוריה",
         "remember_language": "זכור את שפת היעד",
         "font_size": {
           "10": "קטן מאוד מאוד (10px)",
@@ -163,23 +160,6 @@
         "bing": "Bing",
         "incremental_translate": "תרגום מצטבר"
       },
-      "backup": {
-        "password": "סיסמא",
-        "label": "גיבוי",
-        "title": "הגדרות גיבוי",
-        "type": "סוג שירות",
-        "local": "מקומי",
-        "username": "שם-משתמש",
-        "logout": "צא",
-        "aliyun_login_first": "אנא סרוק את הקוד כדי להיכנס.",
-        "restore": "שחזר",
-        "list": "רשימת גיבויים",
-        "backup_success": "הגיבוי הצליח",
-        "empty": "עדיין לא גיבית כלום",
-        "backup": "גיבוי",
-        "load_success": "טעינת הגיבוי הצליחה",
-        "login_success": "כניסה הושלמה"
-      },
       "about": {
         "email": "דוא\"ל",
         "title": "אודות התוכנה",
@@ -204,10 +184,6 @@
         "auto_copy": "העתקה אוטומטית",
         "hide_window": "הסתר חלון זיהוי",
         "close_on_blur": "סגור את החלון כאשר המיקוד אינו פעיל"
-      },
-      "history": {
-        "label": "היסטוריה",
-        "title": "היסטוריה"
       }
     },
     "updater": {
@@ -250,9 +226,6 @@
           "add": "הוסף הנחיה",
           "install_ollama": "אין אפשרות להתחבר לתוכנת ollama המקומית, אנא הורד, התקן והתחל תחילה את ollama. אם אתה משתמש ב-ollama במכונה אחרת, אנא שנה את כתובת הבקשה.",
           "stream": "מצב הזרמה"
-        },
-        "lingva": {
-          "title": "Lingva"
         },
         "bing": {
           "title": "Bing"
@@ -395,24 +368,15 @@
           "title": "Local Model OCR",
           "description": "Uses the bundled PaddleOCR.js PP-OCRv5 local model assets in the app. Recognition does not use a cloud OCR API."
         }
-      },
-      "collection": {
-        "anki": {
-          "port": "יציאה"
-        },
-        "eudic": {
-          "token": "טוקן",
-          "name": "שם האוסף"
-        }
       }
     },
     "translate": {
       "translate": "תרגם",
-      "add_collection_success": "התןוסף לאוסף בהצלחה",
       "recognizing": "מזהה…",
       "translate_back": "תרגום חזרה למקור",
       "copy": "העתק",
-      "retry": "נסה שוב"
+      "retry": "נסה שוב",
+      "tts_not_configured": "No TTS service configured"
     },
     "recognize": {
       "translate": "תרגם",

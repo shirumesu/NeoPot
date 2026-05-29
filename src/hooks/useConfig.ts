@@ -15,6 +15,20 @@ interface UseConfigOptions {
   sync?: boolean
 }
 
+export const isSameConfigValue = (left: unknown, right: unknown): boolean => {
+  if (Object.is(left, right)) {
+    return true
+  }
+
+  if (Array.isArray(left) && Array.isArray(right)) {
+    return (
+      left.length === right.length && left.every((value, index) => Object.is(value, right[index]))
+    )
+  }
+
+  return false
+}
+
 export const useConfig = <T = unknown>(
   key: string,
   defaultValue: T,
@@ -32,23 +46,51 @@ export const useConfig = <T = unknown>(
     defaultValueRef.current = defaultValue
   }, [defaultValue])
 
+  const persistStoreValue = useCallback(
+    async (v: T) => {
+      await setStoreValue(key, v)
+      emitStoreValueChanged(key, v)
+    },
+    [key],
+  )
+
   const syncToStore = useCallback(
     debounce((v: T) => {
-      void setStoreValue(key, v)
-        .then(() => {
-          emitStoreValueChanged(key, v)
-        })
-        .catch((error: unknown) => {
-          console.error(`Failed to save config key "${key}":`, error)
-        })
+      void persistStoreValue(v).catch((error: unknown) => {
+        console.error(`Failed to save config key "${key}":`, error)
+      })
     }),
-    [key],
+    [key, persistStoreValue],
+  )
+
+  const setProperty = useCallback(
+    (v: T, forceSync = false) => {
+      if (isSameConfigValue(getProperty(), v)) {
+        return Promise.resolve()
+      }
+
+      setPropertyState(v)
+      const isSync = forceSync || sync
+      if (!isSync) {
+        return Promise.resolve()
+      }
+
+      if (forceSync) {
+        return persistStoreValue(v)
+      }
+
+      syncToStore(v)
+      return Promise.resolve()
+    },
+    [getProperty, persistStoreValue, setPropertyState, sync, syncToStore],
   )
 
   const syncToState = useCallback(
     (v: T | null) => {
       if (v !== null) {
-        setPropertyState(v)
+        if (!isSameConfigValue(getProperty(), v)) {
+          setPropertyState(v)
+        }
       } else {
         void getStoreValue(key)
           .then((loadedValue) => {
@@ -65,18 +107,7 @@ export const useConfig = <T = unknown>(
           })
       }
     },
-    [key, setPropertyState],
-  )
-
-  const setProperty = useCallback(
-    (v: T, forceSync = false) => {
-      setPropertyState(v)
-      const isSync = forceSync || sync
-      if (isSync) {
-        syncToStore(v)
-      }
-    },
-    [setPropertyState, sync, syncToStore],
+    [getProperty, key, setPropertyState],
   )
 
   useEffect(() => {

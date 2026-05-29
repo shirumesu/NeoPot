@@ -8,7 +8,7 @@ import {
   type BrowserWindowConstructorOptions,
   type WebContents,
 } from 'electron'
-import { getConfig } from './config'
+import { getConfig, setConfig } from './config'
 
 export type WindowLabel = 'config' | 'translate' | 'recognize' | 'screenshot' | 'updater'
 
@@ -17,7 +17,10 @@ declare const MAIN_WINDOW_VITE_NAME: string
 
 const windows = new Map<WindowLabel, BrowserWindow>()
 const windowLabelsByWebContentsId = new Map<number, WindowLabel>()
+const readyWindows = new Set<WindowLabel>()
+const pendingWindowEvents = new Map<WindowLabel, Array<{ event: string; payload: unknown }>>()
 let appIsQuitting = false
+let translateResizeTimer: NodeJS.Timeout | null = null
 
 interface WindowDefinition {
   width: number
@@ -114,6 +117,29 @@ function positionTranslateWindow(window: BrowserWindow) {
   window.setPosition(x, y)
 }
 
+function getTranslateWindowSize(definition: WindowDefinition): { width: number; height: number } {
+  if (getConfig('translate_remember_window_size') !== true) {
+    return {
+      width: definition.width,
+      height: definition.height,
+    }
+  }
+
+  const width = Number(getConfig('translate_window_width'))
+  const height = Number(getConfig('translate_window_height'))
+  if (!Number.isFinite(width) || !Number.isFinite(height) || width < 240 || height < 180) {
+    return {
+      width: definition.width,
+      height: definition.height,
+    }
+  }
+
+  return {
+    width,
+    height,
+  }
+}
+
 function emitWindowEvent(window: BrowserWindow, event: string): void {
   if (window.isDestroyed() || window.webContents.isDestroyed()) {
     return
@@ -122,6 +148,19 @@ function emitWindowEvent(window: BrowserWindow, event: string): void {
   window.webContents.send('app:event', {
     event,
   })
+}
+
+function flushPendingWindowEvents(label: WindowLabel): void {
+  const window = windows.get(label)
+  if (!window || window.isDestroyed() || window.webContents.isDestroyed()) {
+    return
+  }
+
+  const events = pendingWindowEvents.get(label) ?? []
+  pendingWindowEvents.delete(label)
+  for (const queuedEvent of events) {
+    window.webContents.send('app:event', queuedEvent)
+  }
 }
 
 function showWindowInForeground(window: BrowserWindow, label: WindowLabel): void {
@@ -147,9 +186,10 @@ function createBrowserWindow(label: WindowLabel): BrowserWindow {
   Menu.setApplicationMenu(null)
 
   const definition = windowDefinitions[label]
+  const size = label === 'translate' ? getTranslateWindowSize(definition) : definition
   const options: BrowserWindowConstructorOptions = {
-    width: definition.width,
-    height: definition.height,
+    width: size.width,
+    height: size.height,
     minWidth: definition.minWidth,
     minHeight: definition.minHeight,
     show: false,
@@ -187,7 +227,24 @@ function createBrowserWindow(label: WindowLabel): BrowserWindow {
   window.on('focus', () => emitWindowEvent(window, 'tauri://focus'))
   window.on('blur', () => emitWindowEvent(window, 'tauri://blur'))
   window.on('move', () => emitWindowEvent(window, 'tauri://move'))
-  window.on('resize', () => emitWindowEvent(window, 'tauri://resize'))
+  window.on('resize', () => {
+    emitWindowEvent(window, 'tauri://resize')
+    if (label !== 'translate' || getConfig('translate_remember_window_size') !== true) {
+      return
+    }
+
+    if (translateResizeTimer) {
+      clearTimeout(translateResizeTimer)
+    }
+    translateResizeTimer = setTimeout(() => {
+      if (window.isDestroyed()) {
+        return
+      }
+      const [width, height] = window.getSize()
+      setConfig('translate_window_width', width)
+      setConfig('translate_window_height', height)
+    }, 100)
+  })
   window.on('close', (event) => {
     const closeToTray = getConfig('close_to_tray') !== false
     if (label !== 'config' || appIsQuitting || !closeToTray) {
@@ -201,6 +258,8 @@ function createBrowserWindow(label: WindowLabel): BrowserWindow {
   window.on('closed', () => {
     windows.delete(label)
     windowLabelsByWebContentsId.delete(webContentsId)
+    readyWindows.delete(label)
+    pendingWindowEvents.delete(label)
   })
 
   return window
@@ -236,10 +295,19 @@ export function focusWindow(label: WindowLabel): void {
 export function sendToWindow(label: WindowLabel, event: string, payload: unknown): void {
   const window = windows.get(label)
   if (!window || window.isDestroyed()) {
+    const events = pendingWindowEvents.get(label) ?? []
+    events.push({ event, payload })
+    pendingWindowEvents.set(label, events)
     return
   }
 
-  // window.webContents.send(event, payload);
+  if (!readyWindows.has(label)) {
+    const events = pendingWindowEvents.get(label) ?? []
+    events.push({ event, payload })
+    pendingWindowEvents.set(label, events)
+    return
+  }
+
   window.webContents.send('app:event', { event, payload })
 }
 
@@ -249,6 +317,11 @@ export function getCurrentWindowLabel(webContents: WebContents): WindowLabel {
 
 export function getWindow(label: WindowLabel): BrowserWindow | undefined {
   return windows.get(label)
+}
+
+export function markWindowReady(label: WindowLabel): void {
+  readyWindows.add(label)
+  flushPendingWindowEvents(label)
 }
 
 export function markAppQuitting(): void {

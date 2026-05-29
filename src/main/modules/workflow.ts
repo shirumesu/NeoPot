@@ -27,7 +27,13 @@ export async function textTranslate(text: string): Promise<void> {
 }
 
 export async function selectionTranslate(): Promise<void> {
-  await textTranslate(await readSelectedText())
+  const text = await readSelectedText()
+  if (text.trim() === '') {
+    await openWindow('translate')
+    return
+  }
+
+  await textTranslate(text)
 }
 
 export async function inputTranslate(): Promise<void> {

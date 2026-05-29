@@ -45,6 +45,29 @@ const extraLabels: Record<string, Partial<typeof fallbackLabels>> = {
   },
 }
 
+async function dispatchTrayConfiguredAction(): Promise<void> {
+  const action = getConfig('tray_click_event')
+
+  switch (action) {
+    case 'selection_translate':
+      await selectionTranslate()
+      break
+    case 'input_translate':
+      await inputTranslate()
+      break
+    case 'ocr_recognize':
+      await ocrRecognize()
+      break
+    case 'ocr_translate':
+      await ocrTranslate()
+      break
+    case 'config':
+    default:
+      await openConfig()
+      break
+  }
+}
+
 function getAppIconPath(): string {
   const candidates = [
     path.join(app.getAppPath(), 'public', 'icon.png'),
@@ -110,6 +133,7 @@ export function setupTray(): void {
   const icon = nativeImage.createFromPath(getAppIconPath())
   tray = new Tray(icon)
   tray.setToolTip('NeoPot')
+  tray.on('click', () => void dispatchTrayConfiguredAction())
   updateTrayMenu()
 }
 

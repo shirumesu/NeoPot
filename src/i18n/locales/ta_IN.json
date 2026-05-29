@@ -52,7 +52,6 @@
         "target": "இலக்கு",
         "source_target": "மூல+இலக்கு",
         "disable": "முடக்கு",
-        "history_disable": "வரலாற்றை முடக்கு",
         "incremental_translate": "அதிகரிக்கும் மொழிபெயர்ப்பு",
         "dynamic_translate": "மாறும் மொழிபெயர்ப்பு",
         "delete_newline": "நியூலைனை நீக்கு",
@@ -115,7 +114,6 @@
           "system": "மண்டலம்"
         },
         "default_font": "இயல்புநிலை",
-        "transparent": "வெளிப்படையான விளைவு",
         "dev_mode": "உருவாக்குபவர் பயன்முறை",
         "proxy": {
           "title": "பதிலாள்",
@@ -153,7 +151,6 @@
         "tts": "Tts",
         "translate": "மொழிபெயர்த்திடு",
         "recognize": "அங்கீகரிக்கவும்",
-        "collection": "சேகரிப்பு",
         "least": "தயவுசெய்து குறைந்தபட்சம் ஒன்றை வைத்திருங்கள்",
         "add_builtin_service": "பில்டின் சேவையைச் சேர்க்கவும்",
         "add_external_service": "நீட்டிப்பு சேர்க்கவும்",
@@ -164,30 +161,6 @@
         "uninstall_success": "சொருகி வெற்றிகரமாக நிறுவல் நீக்குகிறது",
         "homepage": "முகப்புப்பக்கம்",
         "test_success": "சோதனை வெற்றி"
-      },
-      "history": {
-        "label": "வரலாறு",
-        "title": "வரலாறு"
-      },
-      "backup": {
-        "label": "காப்புப்பிரதி",
-        "title": "காப்பு அமைப்புகள்",
-        "type": "பணி வகை",
-        "webdav": "Webdav",
-        "aliyun": "ஏலியன் இயக்கி",
-        "local": "உள்ளக",
-        "webdav_url": "WebDav முகவரி",
-        "username": "பயனர்பெயர்",
-        "password": "கடவுச்சொல்",
-        "logout": "வெளியேற்றம்",
-        "aliyun_login_first": "முதலில் உள்நுழைய குறியீட்டை ச்கேன் செய்யுங்கள்.",
-        "login_success": "உள்நுழைவு செய்",
-        "backup": "காப்புப்பிரதி",
-        "restore": "மீட்டமை",
-        "list": "காப்பு பட்டியல்",
-        "load_success": "காப்பு வெற்றியை ஏற்றவும்",
-        "backup_success": "காப்பு செய்",
-        "empty": "நீங்கள் இன்னும் காப்புப் பிரதி எடுக்கவில்லை"
       },
       "about": {
         "label": "பற்றி",
@@ -244,9 +217,6 @@
         "google": {
           "title": "கூகிள்",
           "custom_url": "தனிப்பயன் முகவரி"
-        },
-        "lingva": {
-          "title": "மொழியியல்"
         },
         "bing": {
           "title": "பிங்"
@@ -413,23 +383,7 @@
       "help": "உள்ளமைவு வழிகாட்டி",
       "no_need": "உள்ளமைவு தேவையில்லை",
       "instance_name": "உள்ளமைவு பெயர்",
-      "tts": {
-        "lingva_tts": {
-          "title": "மொழியியல்",
-          "request_path": "கோரிக்கை பாதை"
-        }
-      },
-      "collection": {
-        "anki": {
-          "title": "அங்கி",
-          "port": "துறைமுகம்"
-        },
-        "eudic": {
-          "title": "யூடிக்",
-          "name": "சேகரிப்பு பெயர்",
-          "token": "கிள்ளாக்கு"
-        }
-      }
+      "tts": {}
     },
     "recognize": {
       "delete_space": "இடத்தை நீக்கு",
@@ -461,13 +415,13 @@
     },
     "translate": {
       "translate": "மொழிபெயர்த்திடு",
-      "add_collection_success": "சேகரிப்பில் வெற்றிகரமாக சேர்க்கவும்",
       "recognizing": "அங்கீகரித்தல்…",
       "speak": "பேசுங்கள்",
       "copy": "நகலெடு",
       "retry": "மீண்டும் முயற்சிக்கவும்",
       "delete_newline": "நியூலைனை நீக்கு",
-      "translate_back": "மொழிபெயர்ப்பு மீண்டும் அசலுக்கு"
+      "translate_back": "மொழிபெயர்ப்பு மீண்டும் அசலுக்கு",
+      "tts_not_configured": "No TTS service configured"
     }
   }
 }

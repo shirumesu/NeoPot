@@ -1,17 +1,17 @@
 // @ts-nocheck
 import { Card, Spacer, Button, useDisclosure } from '@heroui/react'
-import toast, { Toaster } from 'react-hot-toast'
+import { Toaster } from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import React, { useState } from 'react'
 import { Reorder } from 'framer-motion'
 
-import { useToastStyle } from '../../../../../hooks'
 import SelectPluginModal from '../SelectPluginModal'
 import { osType } from '../../../../../utils/env'
-import { useConfig, deleteKey } from '../../../../../hooks'
+import { useConfig, deleteKey, isSameConfigValue } from '../../../../../hooks'
 import ServiceItem from './ServiceItem'
 import SelectModal from './SelectModal'
 import ConfigModal from './ConfigModal'
+import * as builtinServices from '../../../../../services/tts'
 
 export default function Tts(props) {
   const { pluginList } = props
@@ -30,23 +30,16 @@ export default function Tts(props) {
     onOpen: onConfigOpen,
     onOpenChange: onConfigOpenChange,
   } = useDisclosure()
-  const [currentConfigKey, setCurrentConfigKey] = useState('lingva_tts')
+  const [currentConfigKey, setCurrentConfigKey] = useState('')
   // now it's service instance list
-  const [ttsServiceInstanceList, setTtsServiceInstanceList] = useConfig('tts_service_list', [
-    'lingva_tts',
-  ])
+  const [ttsServiceInstanceList, setTtsServiceInstanceList] = useConfig('tts_service_list', [])
+  const hasBuiltinServices = Object.keys(builtinServices).length > 0
 
   const { t } = useTranslation()
-  const toastStyle = useToastStyle()
 
   const deleteServiceInstance = (instanceKey) => {
-    if (ttsServiceInstanceList.length === 1) {
-      toast.error(t('config.service.least'), { style: toastStyle })
-      return
-    } else {
-      setTtsServiceInstanceList(ttsServiceInstanceList.filter((x) => x !== instanceKey))
-      deleteKey(instanceKey)
-    }
+    setTtsServiceInstanceList(ttsServiceInstanceList.filter((x) => x !== instanceKey))
+    deleteKey(instanceKey)
   }
   const updateServiceInstanceList = (instanceKey) => {
     if (ttsServiceInstanceList.includes(instanceKey)) {
@@ -55,6 +48,13 @@ export default function Tts(props) {
       const newList = [...ttsServiceInstanceList, instanceKey]
       setTtsServiceInstanceList(newList)
     }
+  }
+  const handleServiceReorder = (serviceInstanceList) => {
+    if (isSameConfigValue(ttsServiceInstanceList, serviceInstanceList)) {
+      return
+    }
+
+    setTtsServiceInstanceList(serviceInstanceList)
   }
 
   return (
@@ -69,7 +69,7 @@ export default function Tts(props) {
           <Reorder.Group
             axis="y"
             values={ttsServiceInstanceList}
-            onReorder={setTtsServiceInstanceList}
+            onReorder={handleServiceReorder}
             className="overflow-y-auto h-full"
           >
             {ttsServiceInstanceList.map((x) => {
@@ -90,10 +90,14 @@ export default function Tts(props) {
         )}
         <Spacer y={2} />
         <div className="flex">
-          <Button fullWidth onPress={onSelectOpen}>
-            {t('config.service.add_builtin_service')}
-          </Button>
-          <Spacer x={2} />
+          {hasBuiltinServices && (
+            <>
+              <Button fullWidth onPress={onSelectOpen}>
+                {t('config.service.add_builtin_service')}
+              </Button>
+              <Spacer x={2} />
+            </>
+          )}
           <Button fullWidth onPress={onSelectPluginOpen}>
             {t('config.service.add_external_service')}
           </Button>

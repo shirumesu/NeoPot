@@ -1,13 +1,11 @@
-let enabled = false
-
 export async function enable() {
-  enabled = true
+  await window.neoPot?.app.setAutoStart(true)
 }
 
 export async function disable() {
-  enabled = false
+  await window.neoPot?.app.setAutoStart(false)
 }
 
 export async function isEnabled() {
-  return enabled
+  return (await window.neoPot?.app.isAutoStartEnabled()) ?? false
 }

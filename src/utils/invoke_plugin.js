@@ -1,7 +1,6 @@
 import { appCacheDir, appConfigDir, join } from '@/utils/electron_compat/path'
 import { readFile, readTextFile } from '@/utils/electron_compat/fs'
 import { invoke } from '@/utils/electron_compat/core'
-import Database from '@/utils/electron_compat/sql'
 import CryptoJS from 'crypto-js'
 import { osType } from './env'
 import * as http from '@/utils/electron_http'
@@ -37,7 +36,6 @@ export async function invoke_plugin(pluginType, pluginName) {
     http,
     readFile,
     readTextFile,
-    Database,
     CryptoJS,
     run,
     cacheDir, // String

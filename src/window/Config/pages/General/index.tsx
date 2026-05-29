@@ -17,10 +17,11 @@ import { Card } from '@heroui/react'
 import { invoke } from '@/utils/electron_compat/core'
 import { useTheme } from 'next-themes'
 
-import { useConfig } from '../../../../hooks/useConfig'
+import { isSameConfigValue, useConfig } from '../../../../hooks/useConfig'
 import { LanguageFlag } from '../../../../utils/language'
 import { useToastStyle } from '../../../../hooks'
 import { osType } from '../../../../utils/env'
+import { getStoreValue } from '../../../../utils/store'
 
 let timer = null
 
@@ -61,7 +62,6 @@ export default function General() {
   const [appFont, setAppFont] = useConfig('app_font', 'default')
   const [appFallbackFont, setAppFallbackFont] = useConfig('app_fallback_font', 'default')
   const [appFontSize, setAppFontSize] = useConfig('app_font_size', 16)
-  const [transparent, setTransparent] = useConfig('transparent', true)
   const [devMode, setDevMode] = useConfig('dev_mode', false)
   const [trayClickEvent, setTrayClickEvent] = useConfig('tray_click_event', 'config')
   const [proxyEnable, setProxyEnable] = useConfig('proxy_enable', false)
@@ -73,6 +73,31 @@ export default function General() {
   const { t, i18n } = useTranslation()
   const { setTheme } = useTheme()
   const toastStyle = useToastStyle()
+  const verifySavedConfig = async (key, value) => {
+    const savedValue = await getStoreValue(key)
+    if (!isSameConfigValue(savedValue, value)) {
+      throw new Error(`Config "${key}" was not saved`)
+    }
+  }
+  const saveAndNotify = async (key, currentValue, setter, value) => {
+    if (isSameConfigValue(currentValue, value)) {
+      return
+    }
+
+    try {
+      await setter(value, true)
+      await verifySavedConfig(key, value)
+      toast.success(t('config.common.save_success'), {
+        duration: 1500,
+        style: toastStyle,
+      })
+    } catch {
+      toast.error(t('config.common.save_failed'), {
+        duration: 3000,
+        style: toastStyle,
+      })
+    }
+  }
 
   const languageName = {
     zh_cn: '简体中文',
@@ -107,22 +132,39 @@ export default function General() {
 
   return (
     <>
-      <Toaster />
+      <Toaster position="top-center" />
       <Card className="mb-[10px]">
         <CardBody>
           <div className="config-item">
             <h3>{t('config.general.auto_start')}</h3>
             <Switch
               isSelected={autoStart}
-              onValueChange={(v) => {
+              onValueChange={async (v) => {
+                if (autoStart === v) {
+                  return
+                }
                 setAutoStart(v)
-                if (v) {
-                  enable().then(() => {
+                try {
+                  if (v) {
+                    await enable()
                     info('Auto start enabled')
-                  })
-                } else {
-                  disable().then(() => {
+                  } else {
+                    await disable()
                     info('Auto start disabled')
+                  }
+                  const verified = await isEnabled()
+                  if (verified !== v) {
+                    throw new Error('Auto start state did not change')
+                  }
+                  toast.success(t('config.common.save_success'), {
+                    duration: 1500,
+                    style: toastStyle,
+                  })
+                } catch {
+                  setAutoStart(!v)
+                  toast.error(t('config.common.save_failed'), {
+                    duration: 3000,
+                    style: toastStyle,
                   })
                 }
               }}
@@ -134,7 +176,7 @@ export default function General() {
               <Switch
                 isSelected={checkUpdate}
                 onValueChange={(v) => {
-                  setCheckUpdate(v)
+                  saveAndNotify('check_update', checkUpdate, setCheckUpdate, v)
                 }}
               />
             )}
@@ -145,7 +187,7 @@ export default function General() {
               <Switch
                 isSelected={closeToTray}
                 onValueChange={(v) => {
-                  setCloseToTray(v)
+                  saveAndNotify('close_to_tray', closeToTray, setCloseToTray, v)
                 }}
               />
             )}
@@ -171,13 +213,13 @@ export default function General() {
                     }, 1000)
                   }
                   if (v === '') {
-                    setServerPort(0)
+                    saveAndNotify('server_port', serverPort, setServerPort, 0)
                   } else if (parseInt(v) > 65535) {
-                    setServerPort(65535)
+                    saveAndNotify('server_port', serverPort, setServerPort, 65535)
                   } else if (parseInt(v) < 0) {
-                    setServerPort(0)
+                    saveAndNotify('server_port', serverPort, setServerPort, 0)
                   } else {
-                    setServerPort(parseInt(v))
+                    saveAndNotify('server_port', serverPort, setServerPort, parseInt(v))
                   }
                 }}
                 className="max-w-[100px]"
@@ -204,7 +246,7 @@ export default function General() {
                   aria-label="app language"
                   className="max-h-[40vh] overflow-y-auto"
                   onAction={(key) => {
-                    setAppLanguage(key)
+                    saveAndNotify('app_language', appLanguage, setAppLanguage, key)
                     i18n.changeLanguage(key)
                     invoke('update_tray', { language: key, copyMode: '' })
                   }}
@@ -337,7 +379,7 @@ export default function General() {
                 <DropdownMenu
                   aria-label="app theme"
                   onAction={(key) => {
-                    setAppTheme(key)
+                    saveAndNotify('app_theme', appTheme, setAppTheme, key)
                     if (key !== 'system') {
                       setTheme(key)
                     } else {
@@ -386,7 +428,7 @@ export default function General() {
                     document.documentElement.style.fontFamily = `"${
                       key === 'default' ? 'sans-serif' : key
                     }","${appFallbackFont === 'default' ? 'sans-serif' : appFallbackFont}"`
-                    setAppFont(key)
+                    saveAndNotify('app_font', appFont, setAppFont, key)
                   }}
                 >
                   <DropdownItem style={{ fontFamily: 'sans-serif' }} key="default">
@@ -426,7 +468,7 @@ export default function General() {
                     document.documentElement.style.fontFamily = `"${
                       appFont === 'default' ? 'sans-serif' : appFont
                     }","${key === 'default' ? 'sans-serif' : key}"`
-                    setAppFallbackFont(key)
+                    saveAndNotify('app_fallback_font', appFallbackFont, setAppFallbackFont, key)
                   }}
                 >
                   <DropdownItem style={{ fontFamily: 'sans-serif' }} key="default">
@@ -455,7 +497,7 @@ export default function General() {
                   className="max-h-[50vh] overflow-y-auto"
                   onAction={(key) => {
                     document.documentElement.style.fontSize = `${key}px`
-                    setAppFontSize(key)
+                    saveAndNotify('app_font_size', appFontSize, setAppFontSize, key)
                   }}
                 >
                   <DropdownItem key={10}>{t(`config.general.font_size.10`)}</DropdownItem>
@@ -479,7 +521,7 @@ export default function General() {
                 <DropdownMenu
                   aria-label="tray click event"
                   onAction={(key) => {
-                    setTrayClickEvent(key)
+                    saveAndNotify('tray_click_event', trayClickEvent, setTrayClickEvent, key)
                   }}
                 >
                   <DropdownItem key="config">{t('config.general.event.config')}</DropdownItem>
@@ -495,24 +537,13 @@ export default function General() {
               </Dropdown>
             )}
           </div>
-          <div className={`config-item ${osType === 'Darwin' && 'hidden'}`}>
-            <h3>{t('config.general.transparent')}</h3>
-            {transparent !== null && (
-              <Switch
-                isSelected={transparent}
-                onValueChange={(v) => {
-                  setTransparent(v)
-                }}
-              />
-            )}
-          </div>
           <div className="config-item">
             <h3>{t('config.general.dev_mode')}</h3>
             {devMode !== null && (
               <Switch
                 isSelected={devMode}
                 onValueChange={(v) => {
-                  setDevMode(v)
+                  saveAndNotify('dev_mode', devMode, setDevMode, v)
                 }}
               />
             )}

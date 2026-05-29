@@ -59,7 +59,6 @@
           "dark": "深色主題",
           "system": "系統主題"
         },
-        "transparent": "透明效果",
         "proxy": {
           "title": "代理伺服器",
           "host": "主機",
@@ -104,7 +103,6 @@
         "target": "譯文",
         "source_target": "原文+譯文",
         "disable": "停用",
-        "history_disable": "停用歷史記錄",
         "incremental_translate": "增量翻譯",
         "dynamic_translate": "動態翻譯",
         "delete_newline": "自動刪除換行",
@@ -163,7 +161,6 @@
         "translate": "翻譯",
         "tts": "語音合成",
         "recognize": "文字辨識",
-        "collection": "收藏",
         "least": "請至少保留一個",
         "add_builtin_service": "新增內建服務",
         "add_external_service": "新增擴充套件",
@@ -174,30 +171,6 @@
         "homepage": "外掛程式首頁",
         "view_plugin_list": "檢視外掛程式列表",
         "test_success": "測試成功"
-      },
-      "history": {
-        "label": "歷史記錄",
-        "title": "歷史記錄"
-      },
-      "backup": {
-        "label": "備份設定",
-        "title": "備份設定",
-        "type": "服務類型",
-        "webdav": "WebDav",
-        "local": "本地",
-        "webdav_url": "WebDav 網址",
-        "username": "使用者名稱",
-        "password": "密碼",
-        "backup": "備份",
-        "restore": "還原",
-        "list": "備份列表",
-        "load_success": "載入備份成功",
-        "backup_success": "備份成功",
-        "empty": "您尚未進行備份",
-        "aliyun_login_first": "請先掃描 QR Code 登入。",
-        "login_success": "登入成功",
-        "aliyun": "阿里雲網盤",
-        "logout": "登出"
       },
       "about": {
         "label": "關於",
@@ -244,9 +217,6 @@
         "google": {
           "title": "Google 翻譯",
           "custom_url": "自訂網址"
-        },
-        "lingva": {
-          "title": "Lingva"
         },
         "bing": {
           "title": "Bing 翻譯"
@@ -430,27 +400,10 @@
           "description": "使用應用程式內建的 PaddleOCR.js PP-OCRv5 本機模型資源辨識。辨識過程不呼叫雲端 OCR API。"
         }
       },
-      "tts": {
-        "lingva_tts": {
-          "title": "Lingva",
-          "request_path": "請求路徑"
-        }
-      },
-      "collection": {
-        "anki": {
-          "title": "Anki",
-          "port": "連接埠"
-        },
-        "eudic": {
-          "title": "歐路詞典",
-          "name": "收藏名稱",
-          "token": "Token"
-        }
-      }
+      "tts": {}
     },
     "translate": {
       "translate": "翻譯",
-      "add_collection_success": "成功加入收藏",
       "recognizing": "辨識中…",
       "speak": "朗讀",
       "copy": "複製",
@@ -458,7 +411,8 @@
       "show_preview": "顯示預覽",
       "show_source": "顯示原始碼",
       "delete_newline": "刪除換行",
-      "translate_back": "翻譯回原文"
+      "translate_back": "翻譯回原文",
+      "tts_not_configured": "No TTS service configured"
     },
     "recognize": {
       "recognize": "辨識",

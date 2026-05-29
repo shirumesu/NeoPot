@@ -72,7 +72,6 @@
         "check_update": "بررسی بروزرسانی",
         "close_to_tray": "هنگام بستن به سینی سیستم کوچک شود",
         "app_language": "زبان برنامه",
-        "transparent": "اثر شفافیت",
         "title": "تنظیمات عمومی",
         "default_font": "پیشفرض",
         "font_size": {
@@ -112,7 +111,8 @@
     },
     "translate": {
       "delete_newline": "پاک کردن خط جدید",
-      "retry": "تلاش مجدد"
+      "retry": "تلاش مجدد",
+      "tts_not_configured": "No TTS service configured"
     },
     "recognize": {
       "delete_newline": "پاک کردن خط جدید",

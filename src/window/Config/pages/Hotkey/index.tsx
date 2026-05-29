@@ -8,10 +8,11 @@ import { Input } from '@heroui/react'
 import { Card } from '@heroui/react'
 import React from 'react'
 
-import { useConfig } from '../../../../hooks/useConfig'
+import { isSameConfigValue, useConfig } from '../../../../hooks/useConfig'
 import { useToastStyle } from '../../../../hooks'
 import { osType } from '../../../../utils/env'
 import { invoke } from '@/utils/electron_compat/core'
+import { getStoreValue } from '../../../../utils/store'
 
 const keyMap = {
   Backquote: '`',
@@ -47,10 +48,18 @@ const keyMap = {
 }
 
 export default function Hotkey() {
-  const [selectionTranslate, setSelectionTranslate] = useConfig('hotkey_selection_translate', '')
-  const [inputTranslate, setInputTranslate] = useConfig('hotkey_input_translate', '')
-  const [ocrRecognize, setOcrRecognize] = useConfig('hotkey_ocr_recognize', '')
-  const [ocrTranslate, setOcrTranslate] = useConfig('hotkey_ocr_translate', '')
+  const [selectionTranslate, setSelectionTranslate] = useConfig('hotkey_selection_translate', '', {
+    sync: false,
+  })
+  const [inputTranslate, setInputTranslate] = useConfig('hotkey_input_translate', '', {
+    sync: false,
+  })
+  const [ocrRecognize, setOcrRecognize] = useConfig('hotkey_ocr_recognize', '', {
+    sync: false,
+  })
+  const [ocrTranslate, setOcrTranslate] = useConfig('hotkey_ocr_translate', '', {
+    sync: false,
+  })
 
   const { t } = useTranslation()
   const toastStyle = useToastStyle()
@@ -95,7 +104,14 @@ export default function Hotkey() {
     }
   }
 
-  function registerHandler(name, key) {
+  async function verifySavedConfig(name, key) {
+    const savedValue = await getStoreValue(name)
+    if (!isSameConfigValue(savedValue, key)) {
+      throw new Error(`Config "${name}" was not saved`)
+    }
+  }
+
+  function registerHandler(name, key, setKey) {
     isRegistered(key).then((res) => {
       if (res) {
         toast.error(t('config.hotkey.is_register'), { style: toastStyle })
@@ -104,11 +120,22 @@ export default function Hotkey() {
           name: name,
           shortcut: key,
         }).then(
-          () => {
-            toast.success(t('config.hotkey.success'), { style: toastStyle })
+          async (registered) => {
+            try {
+              if (!registered) {
+                toast.error(t('config.common.save_failed'), { style: toastStyle })
+                return
+              }
+
+              await setKey(key, true)
+              await verifySavedConfig(name, key)
+              toast.success(t('config.common.save_success'), { style: toastStyle })
+            } catch {
+              toast.error(t('config.common.save_failed'), { style: toastStyle })
+            }
           },
-          (e) => {
-            toast.error(e, { style: toastStyle })
+          () => {
+            toast.error(t('config.common.save_failed'), { style: toastStyle })
           },
         )
       }
@@ -117,7 +144,7 @@ export default function Hotkey() {
 
   return (
     <Card>
-      <Toaster />
+      <Toaster position="top-center" />
       <CardBody>
         <div className="config-item">
           <h3 className="my-auto">{t('config.hotkey.selection_translate')}</h3>
@@ -141,7 +168,11 @@ export default function Hotkey() {
                   variant="flat"
                   className={`${selectionTranslate === '' && 'hidden'}`}
                   onPress={() => {
-                    registerHandler('hotkey_selection_translate', selectionTranslate)
+                    registerHandler(
+                      'hotkey_selection_translate',
+                      selectionTranslate,
+                      setSelectionTranslate,
+                    )
                   }}
                 >
                   {t('common.ok')}
@@ -172,7 +203,7 @@ export default function Hotkey() {
                   variant="flat"
                   className={`${inputTranslate === '' && 'hidden'}`}
                   onPress={() => {
-                    registerHandler('hotkey_input_translate', inputTranslate)
+                    registerHandler('hotkey_input_translate', inputTranslate, setInputTranslate)
                   }}
                 >
                   {t('common.ok')}
@@ -203,7 +234,7 @@ export default function Hotkey() {
                   variant="flat"
                   className={`${ocrRecognize === '' && 'hidden'}`}
                   onPress={() => {
-                    registerHandler('hotkey_ocr_recognize', ocrRecognize)
+                    registerHandler('hotkey_ocr_recognize', ocrRecognize, setOcrRecognize)
                   }}
                 >
                   {t('common.ok')}
@@ -234,7 +265,7 @@ export default function Hotkey() {
                   variant="flat"
                   className={`${ocrTranslate === '' && 'hidden'}`}
                   onPress={() => {
-                    registerHandler('hotkey_ocr_translate', ocrTranslate)
+                    registerHandler('hotkey_ocr_translate', ocrTranslate, setOcrTranslate)
                   }}
                 >
                   {t('common.ok')}

@@ -31,10 +31,9 @@ if (squirrelStartupHandled) {
 }
 
 async function startApp(): Promise<void> {
-  const [clipboard, config, database, hotkey, ipc, server, tray, windowModule] = await Promise.all([
+  const [clipboard, config, hotkey, ipc, server, tray, windowModule] = await Promise.all([
     import('./modules/clipboard'),
     import('./modules/config'),
-    import('./modules/database'),
     import('./modules/hotkey'),
     import('./modules/ipc'),
     import('./modules/server'),
@@ -58,7 +57,6 @@ async function startApp(): Promise<void> {
 
   app.whenReady().then(async () => {
     await config.initializeConfig()
-    database.runMigrations()
     await windowModule.openWindow('config')
     tray.setupTray()
     hotkey.registerGlobalShortcuts('all')

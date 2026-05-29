@@ -56,8 +56,10 @@ export default function ServiceItem(props: ServiceItemProps) {
 
   const serviceSourceType = getServiceSouceType(serviceInstanceKey)
   const serviceName = getServiceName(serviceInstanceKey)
+  const builtinService = builtinServiceMap[serviceName]
 
-  return serviceSourceType === ServiceSourceType.PLUGIN && !(serviceName in pluginList) ? (
+  return (serviceSourceType === ServiceSourceType.PLUGIN && !(serviceName in pluginList)) ||
+    (serviceSourceType === ServiceSourceType.BUILDIN && !builtinService) ? (
     <></>
   ) : (
     serviceInstanceConfig !== null && (
@@ -66,7 +68,7 @@ export default function ServiceItem(props: ServiceItemProps) {
           {serviceSourceType === ServiceSourceType.BUILDIN && (
             <>
               <img
-                src={builtinServiceMap[serviceName].info.icon}
+                src={builtinService.info.icon}
                 className="h-[24px] w-[24px] my-auto"
                 draggable={false}
               />

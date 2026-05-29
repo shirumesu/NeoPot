@@ -8,7 +8,6 @@ import { convertFileSrc } from '@/utils/electron_compat/core'
 import React, { useEffect, useState } from 'react'
 import Translate from './Translate'
 import Recognize from './Recognize'
-import Collection from './Collection'
 import Tts from './Tts'
 import { ServiceType } from '../../../../utils/service_instance'
 
@@ -19,7 +18,7 @@ export default function Service() {
   const { t } = useTranslation()
 
   const loadPluginList = async () => {
-    const serviceTypeList = ['translate', 'tts', 'recognize', 'collection']
+    const serviceTypeList = ['translate', 'tts', 'recognize']
     let temp = {}
     for (const serviceType of serviceTypeList) {
       temp[serviceType] = {}
@@ -74,9 +73,6 @@ export default function Service() {
         </Tab>
         <Tab key="tts" title={t(`config.service.tts`)}>
           <Tts pluginList={pluginList[ServiceType.TTS]} />
-        </Tab>
-        <Tab key="collection" title={t(`config.service.collection`)}>
-          <Collection pluginList={pluginList[ServiceType.COLLECTION]} />
         </Tab>
       </Tabs>
     )

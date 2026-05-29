@@ -80,7 +80,6 @@
         "check_update": "Comprobar la actualización",
         "close_to_tray": "Minimizar a la bandeja al cerrar",
         "app_language": "Idioma de la interfaz",
-        "transparent": "Efecto de transparencia",
         "title": "Ajustes generales",
         "app_fallback_font": "Fuente alternativa",
         "dev_mode": "Modo desarrollador",
@@ -116,7 +115,6 @@
         "label": "Traducir",
         "second_language": "Segundo idioma de destino",
         "auto_copy": "Copiar automático",
-        "history_disable": "Desactivar historial",
         "pre_state": "Recordar posición",
         "remember_window_size": "Recordar tamaño de ventana",
         "niutrans": "NiuTrans",
@@ -162,23 +160,6 @@
         "homepage": "Inicio",
         "uninstall_success": "Complemento desinstalado con éxito",
         "test_success": "Prueba correcta"
-      },
-      "history": {
-        "title": "Historial",
-        "label": "Historial"
-      },
-      "backup": {
-        "label": "Copia de seguridad",
-        "username": "Nombre de usuario",
-        "logout": "Cerrar sesión",
-        "backup": "Copia de seguridad",
-        "load_success": "Cargar copia de seguridad con éxito",
-        "restore": "Restaurar",
-        "title": "Ajustes de copia de seguridad",
-        "login_success": "Inicio de sesión con éxito",
-        "list": "Hacer copia de seguridad de lista",
-        "backup_success": "Copia de seguridad hecha con éxito",
-        "password": "Contraseña"
       },
       "about": {
         "label": "Acerca de",
@@ -275,9 +256,6 @@
         "tencent": {
           "title": "Tencent"
         },
-        "lingva": {
-          "title": "Lingva"
-        },
         "bing": {
           "title": "Bing"
         }
@@ -310,26 +288,14 @@
           "description": "Uses the bundled PaddleOCR.js PP-OCRv5 local model assets in the app. Recognition does not use a cloud OCR API."
         }
       },
-      "collection": {
-        "anki": {
-          "title": "Anki"
-        },
-        "eudic": {
-          "token": "Token",
-          "title": "Eudic"
-        }
-      },
       "help": "Guía de configuración",
-      "tts": {
-        "lingva_tts": {
-          "title": "Lingva"
-        }
-      }
+      "tts": {}
     },
     "translate": {
       "speak": "Hablar",
       "copy": "Copiar",
-      "retry": "Intentar de nuevo"
+      "retry": "Intentar de nuevo",
+      "tts_not_configured": "No TTS service configured"
     }
   }
 }

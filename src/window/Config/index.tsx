@@ -9,13 +9,11 @@ import ErrorBoundary from '../../components/ErrorBoundary'
 import WindowControl from '../../components/WindowControl'
 import SideBar from './components/SideBar'
 import { osType } from '../../utils/env'
-import { useConfig } from '../../hooks'
 import routes from './routes'
 import './style.css'
 const appWindow = getCurrentWebviewWindow()
 
 export default function Config() {
-  const [transparent] = useConfig('transparent', true)
   const { t } = useTranslation()
   const location = useLocation()
   const page = useRoutes(routes)
@@ -31,9 +29,7 @@ export default function Config() {
     <div className="flex h-screen w-screen overflow-hidden">
       <Card
         shadow="none"
-        className={`${
-          transparent ? 'bg-background/90' : 'bg-content1'
-        } h-screen w-[230px] shrink-0 rounded-none ${
+        className={`bg-content1 h-screen w-[230px] shrink-0 rounded-none ${
           osType === 'Linux' && 'rounded-l-[10px] border-1'
         } border-r-1 border-default-100 select-none cursor-default`}
       >

@@ -43,7 +43,7 @@ export const sourceTextAtom = atom('')
 export const detectLanguageAtom = atom('')
 
 const DEFAULT_RECOGNIZE_SERVICE_LIST = ['local_model']
-const DEFAULT_TTS_SERVICE_LIST = ['lingva_tts']
+const DEFAULT_TTS_SERVICE_LIST = []
 
 export default function SourceArea(props) {
   const { pluginList, serviceInstanceConfigMap } = props
@@ -57,7 +57,15 @@ export default function SourceArea(props) {
   const [recognizeServiceList] = useConfig('recognize_service_list', DEFAULT_RECOGNIZE_SERVICE_LIST)
   const [ttsServiceList] = useConfig('tts_service_list', DEFAULT_TTS_SERVICE_LIST)
   const ttsServiceInstanceKey = Array.isArray(ttsServiceList)
-    ? ttsServiceList.find(isValidServiceInstanceKey)
+    ? ttsServiceList.find((key) => {
+        if (!isValidServiceInstanceKey(key)) {
+          return false
+        }
+        if (getServiceSouceType(key) === ServiceSourceType.PLUGIN) {
+          return pluginList['tts']?.[getServiceName(key)] !== undefined
+        }
+        return builtinTtsServices[getServiceName(key)] !== undefined
+      })
     : null
   const [hideWindow] = useConfig('translate_hide_window', false)
   const [hideSource] = useConfig('hide_source', false)
@@ -214,7 +222,7 @@ export default function SourceArea(props) {
   const handleSpeak = async () => {
     const instanceKey = ttsServiceInstanceKey
     if (!instanceKey) {
-      throw new Error('TTS service not configured')
+      throw new Error(t('translate.tts_not_configured'))
     }
     let detected = detectLanguage
     if (detected === '') {
@@ -222,6 +230,9 @@ export default function SourceArea(props) {
       setDetectLanguage(detected)
     }
     if (getServiceSouceType(instanceKey) === ServiceSourceType.PLUGIN) {
+      if (!ttsPluginInfo?.language) {
+        throw new Error(t('translate.tts_not_configured'))
+      }
       if (!(detected in ttsPluginInfo.language)) {
         throw new Error('Language not supported')
       }
@@ -260,6 +271,7 @@ export default function SourceArea(props) {
         unlisten()
       } else {
         removeListener = unlisten
+        void window.neoPot?.app.rendererReady()
       }
     })
 
@@ -282,9 +294,14 @@ export default function SourceArea(props) {
     ) {
       readTextFile(`plugins/tts/${getServiceName(ttsServiceInstanceKey)}/info.json`, {
         baseDir: BaseDirectory.AppConfig,
-      }).then((infoStr) => {
-        setTtsPluginInfo(JSON.parse(infoStr))
-      })
+      }).then(
+        (infoStr) => {
+          setTtsPluginInfo(JSON.parse(infoStr))
+        },
+        () => {
+          setTtsPluginInfo(undefined)
+        },
+      )
     }
   }, [ttsServiceInstanceKey])
 

@@ -10,9 +10,6 @@
     },
     "services": {
       "translate": {
-        "lingva": {
-          "title": "Lingva"
-        },
         "deepl": {
           "title": "DeepL",
           "custom_url": "DeepLX 주소",
@@ -123,7 +120,6 @@
           "dark": "다크",
           "system": "시스템 설정"
         },
-        "transparent": "투명 효과",
         "dev_mode": "개발자 모드",
         "proxy": {
           "title": "프록시 설정",
@@ -155,7 +151,6 @@
         "target": "도착 언어",
         "source_target": "출발 + 도착 언어",
         "disable": "비활성화",
-        "history_disable": "기록 비활성화",
         "incremental_translate": "연속 번역",
         "dynamic_translate": "동적 번역",
         "delete_newline": "줄바꿈 삭제",
@@ -214,7 +209,6 @@
         "translate": "번역",
         "tts": "TTS",
         "recognize": "인식",
-        "collection": "어휘",
         "least": "최소한 하나 이상은 선택해야 합니다",
         "add_builtin_service": "기본 제공 기능 추가",
         "add_external_service": "확장 기능 추가",
@@ -225,30 +219,6 @@
         "uninstall_success": "플러그인이 삭제되었습니다",
         "homepage": "홈페이지",
         "test_success": "테스트 성공"
-      },
-      "history": {
-        "label": "기록",
-        "title": "기록"
-      },
-      "backup": {
-        "label": "백업",
-        "title": "백업 설정",
-        "type": "서비스 유형",
-        "webdav": "WebDav",
-        "aliyun": "알리윤 드라이브(Aliyun Drive)",
-        "local": "로컬 저장",
-        "webdav_url": "WebDav 주소",
-        "username": "사용자명",
-        "password": "비밀번호",
-        "logout": "로그아웃",
-        "aliyun_login_first": "로그인하려면 우선 코드를 스캔하세요.",
-        "login_success": "로그인 성공",
-        "backup": "백업",
-        "restore": "복원",
-        "list": "백업 목록",
-        "load_success": "백업 불러오기에 성공하였습니다",
-        "backup_success": "백업 성공",
-        "empty": "백업한 이력이 없습니다"
       },
       "about": {
         "label": "정보",

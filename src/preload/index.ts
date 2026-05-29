@@ -11,6 +11,7 @@ import type {
 type IpcChannel =
   | 'app:get-window-label'
   | 'app:get-version'
+  | 'app:renderer-ready'
   | 'app:close-current-window'
   | 'app:hide-current-window'
   | 'app:show-current-window'
@@ -20,6 +21,8 @@ type IpcChannel =
   | 'app:set-current-window-bounds'
   | 'app:get-current-window-bounds'
   | 'app:is-current-window-maximized'
+  | 'app:set-auto-start'
+  | 'app:is-auto-start-enabled'
   | 'app:minimize-current-window'
   | 'app:maximize-current-window'
   | 'app:unmaximize-current-window'
@@ -41,6 +44,7 @@ type IpcChannel =
 const channels = new Set<IpcChannel>([
   'app:get-window-label',
   'app:get-version',
+  'app:renderer-ready',
   'app:close-current-window',
   'app:hide-current-window',
   'app:show-current-window',
@@ -50,6 +54,8 @@ const channels = new Set<IpcChannel>([
   'app:set-current-window-bounds',
   'app:get-current-window-bounds',
   'app:is-current-window-maximized',
+  'app:set-auto-start',
+  'app:is-auto-start-enabled',
   'app:minimize-current-window',
   'app:maximize-current-window',
   'app:unmaximize-current-window',
@@ -81,6 +87,7 @@ const api: NeoPotElectronApi = {
   app: {
     getWindowLabel: () => invokeChecked<WindowLabel>('app:get-window-label'),
     getVersion: () => invokeChecked<string>('app:get-version'),
+    rendererReady: () => invokeChecked<void>('app:renderer-ready'),
     closeCurrentWindow: () => invokeChecked<void>('app:close-current-window'),
     hideCurrentWindow: () => invokeChecked<void>('app:hide-current-window'),
     showCurrentWindow: () => invokeChecked<void>('app:show-current-window'),
@@ -93,6 +100,8 @@ const api: NeoPotElectronApi = {
       invokeChecked<void>('app:set-current-window-bounds', bounds),
     getCurrentWindowBounds: () => invokeChecked('app:get-current-window-bounds'),
     isCurrentWindowMaximized: () => invokeChecked<boolean>('app:is-current-window-maximized'),
+    setAutoStart: (enabled) => invokeChecked<void>('app:set-auto-start', { enabled }),
+    isAutoStartEnabled: () => invokeChecked<boolean>('app:is-auto-start-enabled'),
     minimizeCurrentWindow: () => invokeChecked<void>('app:minimize-current-window'),
     maximizeCurrentWindow: () => invokeChecked<void>('app:maximize-current-window'),
     unmaximizeCurrentWindow: () => invokeChecked<void>('app:unmaximize-current-window'),

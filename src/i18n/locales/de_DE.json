@@ -72,7 +72,6 @@
           "dark": "Dunkel",
           "system": "System"
         },
-        "transparent": "Transparenzeffekt",
         "proxy": {
           "title": "Netzwerkproxy",
           "host": "Proxy-Adresse",
@@ -103,7 +102,6 @@
         "target": "Übersetzung",
         "source_target": "Quelltext + Übersetzung",
         "disable": "Deaktivieren",
-        "history_disable": "Verlauf deaktivieren",
         "incremental_translate": "Inkrementelle Übersetzung",
         "dynamic_translate": "Dynamische Übersetzung",
         "delete_newline": "Automatisches Löschen von Zeilenumbrüchen",
@@ -162,7 +160,6 @@
         "translate": "Übersetzung",
         "tts": "TTS",
         "recognize": "Texterkennung",
-        "collection": "Vokabelheft",
         "least": "Bitte mindestens einen behalten",
         "add_builtin_service": "Internen Dienst hinzufügen",
         "add_external_service": "Externes Plugin hinzufügen",
@@ -173,30 +170,6 @@
         "uninstall_success": "Plugin erfolgreich deinstalliert",
         "homepage": "Plugin-Homepage",
         "test_success": "Test erfolgreich"
-      },
-      "history": {
-        "label": "Verlauf",
-        "title": "Verlauf"
-      },
-      "backup": {
-        "label": "Backup",
-        "title": "Backup-Einstellungen",
-        "type": "Diensttyp",
-        "webdav": "WebDav",
-        "local": "Lokal",
-        "aliyun": "Aliyun Drive",
-        "webdav_url": "WebDav-URL",
-        "username": "Benutzername",
-        "password": "Passwort",
-        "logout": "Abmelden",
-        "aliyun_login_first": "Bitte zuerst per QR-Code anmelden",
-        "login_success": "Anmeldung erfolgreich",
-        "backup": "Sichern",
-        "restore": "Backup wiederherstellen",
-        "list": "Backup-Liste",
-        "load_success": "Backup erfolgreich geladen",
-        "backup_success": "Backup erfolgreich durchgeführt",
-        "empty": "Sie haben noch keine Backups"
       },
       "about": {
         "label": "Über die App",
@@ -243,9 +216,6 @@
         "google": {
           "title": "Google Übersetzung",
           "custom_url": "Benutzerdefinierte URL"
-        },
-        "lingva": {
-          "title": "Lingva"
         },
         "bing": {
           "title": "Bing Übersetzung"
@@ -414,33 +384,17 @@
           "description": "Uses the bundled PaddleOCR.js PP-OCRv5 local model assets in the app. Recognition does not use a cloud OCR API."
         }
       },
-      "tts": {
-        "lingva_tts": {
-          "title": "Lingva",
-          "request_path": "Request-Pfad"
-        }
-      },
-      "collection": {
-        "anki": {
-          "title": "Anki",
-          "port": "Port"
-        },
-        "eudic": {
-          "title": "Eudic",
-          "name": "Name des Vokabelheftes",
-          "token": "Token"
-        }
-      }
+      "tts": {}
     },
     "translate": {
       "translate": "Übersetzen",
-      "add_collection_success": "Erfolgreich hinzugefügt",
       "recognizing": "Erkennen...",
       "speak": "Sprechen",
       "copy": "Kopieren",
       "retry": "Erneut versuchen",
       "delete_newline": "Zeilenumbruch löschen",
-      "translate_back": "In Ursprungssprache übersetzen"
+      "translate_back": "In Ursprungssprache übersetzen",
+      "tts_not_configured": "No TTS service configured"
     },
     "recognize": {
       "recognize": "Erneut erkennen",
