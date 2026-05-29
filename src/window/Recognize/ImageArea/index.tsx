@@ -42,6 +42,7 @@ export default function ImageArea() {
       unlisten = listen('new_image', (_) => {
         load_img()
       })
+      void window.neoPot?.app.rendererReady()
     }
   }, [hideWindow])
 

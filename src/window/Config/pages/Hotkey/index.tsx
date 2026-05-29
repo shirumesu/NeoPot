@@ -64,10 +64,10 @@ export default function Hotkey() {
   const { t } = useTranslation()
   const toastStyle = useToastStyle()
 
-  function keyDown(e, setKey) {
+  function keyDown(e, name, setKey) {
     e.preventDefault()
     if (e.keyCode === 8) {
-      setKey('')
+      void clearHandler(name, setKey)
     } else {
       let newValue = ''
       if (e.ctrlKey) {
@@ -108,6 +108,20 @@ export default function Hotkey() {
     const savedValue = await getStoreValue(name)
     if (!isSameConfigValue(savedValue, key)) {
       throw new Error(`Config "${name}" was not saved`)
+    }
+  }
+
+  async function clearHandler(name, setKey) {
+    try {
+      const savedValue = await getStoreValue(name)
+      if (typeof savedValue === 'string' && savedValue !== '') {
+        unregister(savedValue)
+      }
+      await setKey('', true)
+      await verifySavedConfig(name, '')
+      toast.success(t('config.common.save_success'), { style: toastStyle })
+    } catch {
+      toast.error(t('config.common.save_failed'), { style: toastStyle })
     }
   }
 
@@ -156,11 +170,7 @@ export default function Hotkey() {
               label={t('config.hotkey.set_hotkey')}
               className="max-w-[60%]"
               onKeyDown={(e) => {
-                keyDown(e, setSelectionTranslate)
-              }}
-              onFocus={() => {
-                unregister(selectionTranslate)
-                setSelectionTranslate('')
+                keyDown(e, 'hotkey_selection_translate', setSelectionTranslate)
               }}
               endContent={
                 <Button
@@ -191,11 +201,7 @@ export default function Hotkey() {
               label={t('config.hotkey.set_hotkey')}
               className="max-w-[60%]"
               onKeyDown={(e) => {
-                keyDown(e, setInputTranslate)
-              }}
-              onFocus={() => {
-                unregister(inputTranslate)
-                setInputTranslate('')
+                keyDown(e, 'hotkey_input_translate', setInputTranslate)
               }}
               endContent={
                 <Button
@@ -222,11 +228,7 @@ export default function Hotkey() {
               label={t('config.hotkey.set_hotkey')}
               className="max-w-[60%]"
               onKeyDown={(e) => {
-                keyDown(e, setOcrRecognize)
-              }}
-              onFocus={() => {
-                unregister(ocrRecognize)
-                setOcrRecognize('')
+                keyDown(e, 'hotkey_ocr_recognize', setOcrRecognize)
               }}
               endContent={
                 <Button
@@ -253,11 +255,7 @@ export default function Hotkey() {
               label={t('config.hotkey.set_hotkey')}
               className="max-w-[60%]"
               onKeyDown={(e) => {
-                keyDown(e, setOcrTranslate)
-              }}
-              onFocus={() => {
-                unregister(ocrTranslate)
-                setOcrTranslate('')
+                keyDown(e, 'hotkey_ocr_translate', setOcrTranslate)
               }}
               endContent={
                 <Button

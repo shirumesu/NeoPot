@@ -52,6 +52,7 @@ export default function Screenshot() {
       }
       void captureScreenshot()
     })
+    void window.neoPot?.app.rendererReady()
 
     return () => {
       void unlisten.then((f) => f())
