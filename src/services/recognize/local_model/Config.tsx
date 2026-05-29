@@ -35,7 +35,7 @@ export function Config(props) {
             variant="bordered"
             classNames={{
               base: 'justify-between',
-              label: 'text-[length:--heroui-font-size-medium]',
+              label: 'text-(length:--heroui-font-size-medium)',
               mainWrapper: 'max-w-[50%]',
             }}
             onValueChange={(value) => {

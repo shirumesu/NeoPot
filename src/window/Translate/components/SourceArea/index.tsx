@@ -137,7 +137,10 @@ export default function SourceArea(props) {
           ) {
             const pluginConfig = serviceInstanceConfigMap[serviceInstanceKey]
 
-            const [func, utils] = await invoke_plugin('recognize', getServiceName(serviceInstanceKey))
+            const [func, utils] = await invoke_plugin(
+              'recognize',
+              getServiceName(serviceInstanceKey),
+            )
             func(
               base64,
               pluginList['recognize'][getServiceName(serviceInstanceKey)].language[

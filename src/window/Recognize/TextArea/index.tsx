@@ -177,10 +177,10 @@ export default function TextArea(props) {
   ])
 
   return (
-    <Card shadow="none" className="bg-content1 h-full ml-[6px] mr-[12px]" radius="10">
+    <Card shadow="none" className="bg-content1 h-full ml-1.5 mr-3" radius="10">
       <CardBody className="bg-content1 p-0 h-full">
         {loading ? (
-          <div className="space-y-3 m-[12px]">
+          <div className="space-y-3 m-3">
             <Skeleton className="w-3/5 rounded-lg">
               <div className="h-3 w-3/5 rounded-lg bg-default-200"></div>
             </Skeleton>
@@ -196,7 +196,7 @@ export default function TextArea(props) {
             {text && (
               <textarea
                 value={text}
-                className="bg-content1 h-full m-[12px] mb-0 resize-none focus:outline-none"
+                className="bg-content1 h-full m-3 mb-0 resize-none focus:outline-none"
                 onChange={(e) => {
                   setText(e.target.value)
                 }}
@@ -206,7 +206,7 @@ export default function TextArea(props) {
               <textarea
                 value={error}
                 readOnly
-                className="bg-content1 h-full m-[12px] mb-0 resize-none focus:outline-none text-red-500"
+                className="bg-content1 h-full m-3 mb-0 resize-none focus:outline-none text-red-500"
                 onChange={(e) => {
                   setText(e.target.value)
                 }}
@@ -215,7 +215,7 @@ export default function TextArea(props) {
           </>
         )}
       </CardBody>
-      <CardFooter className="bg-content1 flex justify-start px-[12px]">
+      <CardFooter className="bg-content1 flex justify-start px-3">
         <ButtonGroup>
           <Tooltip content={t('recognize.copy_text')}>
             <Button

@@ -127,17 +127,14 @@ export default function Recognize() {
         osType === 'Linux' && 'rounded-[10px] border-1 border-default-100'
       }`}
     >
-      <div
-        data-tauri-drag-region="true"
-        className="fixed top-[5px] left-[5px] right-[5px] h-[30px]"
-      />
-      <div className={`h-[35px] flex ${osType === 'Darwin' ? 'justify-end' : 'justify-between'}`}>
+      <div data-tauri-drag-region="true" className="fixed top-1.25 left-1.25 right-1.25 h-7.5" />
+      <div className={`h-8.75 flex ${osType === 'Darwin' ? 'justify-end' : 'justify-between'}`}>
         <Button
           isIconOnly
           size="sm"
           variant="flat"
           disableAnimation
-          className="my-auto mx-[5px] bg-transparent"
+          className="my-auto mx-1.25 bg-transparent"
           onPress={() => {
             if (pined) {
               if (closeOnBlur) {
@@ -158,7 +155,7 @@ export default function Recognize() {
       {hasInitError ? (
         <div className="m-4 rounded-medium border border-danger/30 bg-danger/10 p-4 text-sm text-danger">
           <div className="mb-2 font-semibold">Recognize window initialization failed</div>
-          <pre className="whitespace-pre-wrap break-words">{`${pluginLoadError ?? ''}${
+          <pre className="whitespace-pre-wrap wrap-break-word">{`${pluginLoadError ?? ''}${
             pluginLoadError && serviceConfigError ? '\n' : ''
           }${serviceConfigError ?? ''}`}</pre>
         </div>
@@ -172,7 +169,7 @@ export default function Recognize() {
             <ImageArea />
             <TextArea serviceInstanceConfigMap={serviceInstanceConfigMap} />
           </div>
-          <div className="h-[50px]">
+          <div className="h-12.5">
             <ControlArea
               serviceInstanceList={serviceInstanceList}
               serviceInstanceConfigMap={serviceInstanceConfigMap}

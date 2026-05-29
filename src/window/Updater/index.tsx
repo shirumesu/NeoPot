@@ -146,7 +146,7 @@ export default function Updater() {
           classNames={{
             base: 'w-full px-[80px]',
             track: 'drop-shadow-md border border-default',
-            indicator: 'bg-gradient-to-r from-pink-500 to-yellow-500',
+            indicator: 'bg-linear-to-r from-pink-500 to-yellow-500',
             label: 'tracking-wider font-medium text-default-600',
             value: 'text-foreground/60',
           }}

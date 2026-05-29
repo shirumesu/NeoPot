@@ -20,12 +20,12 @@ export default function SideBar() {
   }
 
   return (
-    <div className="mx-[12px] overflow-y-auto">
+    <div className="mx-3 overflow-y-auto">
       <Button
         fullWidth
         size="lg"
         variant={setStyle('/general')}
-        className="mb-[5px]"
+        className="mb-1.25"
         onPress={() => {
           navigate('/general')
         }}
@@ -37,7 +37,7 @@ export default function SideBar() {
         fullWidth
         size="lg"
         variant={setStyle('/translate')}
-        className="mb-[5px]"
+        className="mb-1.25"
         onPress={() => {
           navigate('/translate')
         }}
@@ -49,7 +49,7 @@ export default function SideBar() {
         fullWidth
         size="lg"
         variant={setStyle('/recognize')}
-        className="mb-[5px]"
+        className="mb-1.25"
         onPress={() => {
           navigate('/recognize')
         }}
@@ -61,7 +61,7 @@ export default function SideBar() {
         fullWidth
         size="lg"
         variant={setStyle('/hotkey')}
-        className="mb-[5px]"
+        className="mb-1.25"
         onPress={() => {
           navigate('/hotkey')
         }}
@@ -73,7 +73,7 @@ export default function SideBar() {
         fullWidth
         size="lg"
         variant={setStyle('/service')}
-        className="mb-[5px]"
+        className="mb-1.25"
         onPress={() => {
           navigate('/service')
         }}
@@ -85,7 +85,7 @@ export default function SideBar() {
         fullWidth
         size="lg"
         variant={setStyle('/about')}
-        className="mb-[5px]"
+        className="mb-1.25"
         onPress={() => {
           navigate('/about')
         }}

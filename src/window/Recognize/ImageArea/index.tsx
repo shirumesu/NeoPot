@@ -46,7 +46,7 @@ export default function ImageArea() {
   }, [hideWindow])
 
   return (
-    <Card shadow="none" className="bg-content1 h-full ml-[12px] mr-[6px]" radius="10">
+    <Card shadow="none" className="bg-content1 h-full ml-3 mr-1.5" radius="10">
       <CardBody className="bg-content1 h-full p-0">
         {base64 !== '' && (
           <img
@@ -57,7 +57,7 @@ export default function ImageArea() {
           />
         )}
       </CardBody>
-      <CardFooter className="bg-content1 flex justify-start px-[12px]">
+      <CardFooter className="bg-content1 flex justify-start px-3">
         <Tooltip content={t('recognize.copy_img')}>
           <Button
             isIconOnly

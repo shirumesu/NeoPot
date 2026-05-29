@@ -37,7 +37,7 @@ export function PluginConfig(props) {
             variant="bordered"
             classNames={{
               base: 'justify-between',
-              label: 'text-[length:--heroui-font-size-medium]',
+              label: 'text-(length:--heroui-font-size-medium)',
               mainWrapper: 'max-w-[60%]',
             }}
             onValueChange={(value) => {

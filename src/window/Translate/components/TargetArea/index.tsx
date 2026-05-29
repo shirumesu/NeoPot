@@ -85,7 +85,7 @@ function isMarkdownLike(value) {
 function MarkdownResult({ value, appFontSize }) {
   return (
     <div
-      className="select-text whitespace-pre-wrap break-words text-default-700"
+      className="select-text whitespace-pre-wrap wrap-break-word text-default-700"
       style={{ fontSize: `${appFontSize}px` }}
     >
       <ReactMarkdown

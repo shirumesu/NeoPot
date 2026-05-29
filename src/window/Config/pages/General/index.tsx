@@ -133,7 +133,7 @@ export default function General() {
   return (
     <>
       <Toaster position="top-center" />
-      <Card className="mb-[10px]">
+      <Card className="mb-2.5">
         <CardBody>
           <div className="config-item">
             <h3>{t('config.general.auto_start')}</h3>
@@ -222,13 +222,13 @@ export default function General() {
                     saveAndNotify('server_port', serverPort, setServerPort, parseInt(v))
                   }
                 }}
-                className="max-w-[100px]"
+                className="max-w-25"
               />
             )}
           </div>
         </CardBody>
       </Card>
-      <Card className="mb-[10px]">
+      <Card className="mb-2.5">
         <CardBody>
           <div className="config-item">
             <h3 className="my-auto">{t('config.general.app_language')}</h3>

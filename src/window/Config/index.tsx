@@ -29,19 +29,19 @@ export default function Config() {
     <div className="flex h-screen w-screen overflow-hidden">
       <Card
         shadow="none"
-        className={`bg-content1 h-screen w-[230px] shrink-0 rounded-none ${
+        className={`bg-content1 h-screen w-57.5 shrink-0 rounded-none ${
           osType === 'Linux' && 'rounded-l-[10px] border-1'
         } border-r-1 border-default-100 select-none cursor-default`}
       >
-        <div className="h-[35px] p-[5px]">
+        <div className="h-8.75 p-1.25">
           <div className="w-full h-full" data-tauri-drag-region="true" />
         </div>
-        <div className="p-[5px]">
+        <div className="p-1.25">
           <div data-tauri-drag-region="true">
             <img
               alt="pot logo"
               src="icon.svg"
-              className="h-[60px] w-[60px] m-auto mb-[30px]"
+              className="h-15 w-15 m-auto mb-7.5"
               draggable={false}
             />
           </div>
@@ -53,20 +53,17 @@ export default function Config() {
           osType === 'Linux' && 'rounded-r-[10px] border-1 border-l-0 border-default-100'
         }`}
       >
-        <div
-          data-tauri-drag-region="true"
-          className="top-[5px] left-[235px] right-[5px] h-[30px] fixed"
-        />
-        <div className="h-[35px] flex justify-between">
+        <div data-tauri-drag-region="true" className="top-1.25 left-58.75 right-1.25 h-7.5 fixed" />
+        <div className="h-8.75 flex justify-between">
           <div className="flex">
-            <h2 className="m-auto ml-[10px]">{t(`config.${pageTitleKey}.title`)}</h2>
+            <h2 className="m-auto ml-2.5">{t(`config.${pageTitleKey}.title`)}</h2>
           </div>
 
           <div className="flex">{osType !== 'Darwin' && <WindowControl />}</div>
         </div>
         <Divider />
         <div
-          className={`p-[10px] overflow-y-auto ${
+          className={`p-2.5 overflow-y-auto ${
             osType === 'Linux' ? 'h-[calc(100vh-38px)]' : 'h-[calc(100vh-36px)]'
           }`}
         >
