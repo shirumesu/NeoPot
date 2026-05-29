@@ -2,12 +2,12 @@
 import jsQR from 'jsqr'
 
 export async function recognize(base64, language, options = {}) {
-  let canvas = document.createElement('CANVAS')
-  let ctx = canvas.getContext('2d')
+  const canvas = document.createElement('CANVAS')
+  const ctx = canvas.getContext('2d')
   base64 = 'data:image/png;base64,' + base64
-  let img = new Image()
+  const img = new Image()
   img.src = base64
-  let imgdata = await new Promise((resolve, reject) => {
+  const imgdata = await new Promise((resolve, reject) => {
     img.onload = () => {
       img.crossOrigin = 'anonymous'
       canvas.height = img.height

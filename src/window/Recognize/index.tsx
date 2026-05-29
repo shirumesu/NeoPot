@@ -63,14 +63,14 @@ export default function Recognize() {
 
   const loadPluginList = async () => {
     try {
-      let temp = {}
+      const temp = {}
       if (await exists(`plugins/recognize`, { baseDir: BaseDirectory.AppConfig })) {
         const plugins = await readDir(`plugins/recognize`, { baseDir: BaseDirectory.AppConfig })
         for (const plugin of plugins) {
           const infoStr = await readTextFile(`plugins/recognize/${plugin.name}/info.json`, {
             baseDir: BaseDirectory.AppConfig,
           })
-          let pluginInfo = JSON.parse(infoStr)
+          const pluginInfo = JSON.parse(infoStr)
           if ('icon' in pluginInfo) {
             const appConfigDirPath = await appConfigDir()
             const iconPath = await join(

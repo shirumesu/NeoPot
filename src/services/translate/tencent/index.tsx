@@ -94,7 +94,7 @@ export async function translate(text, from, to, options = {}) {
     'Signature=' +
     signature
 
-  let res = await fetch('https://' + endpoint, {
+  const res = await fetch('https://' + endpoint, {
     method: 'POST',
     headers: {
       Authorization: authorization,
@@ -111,8 +111,8 @@ export async function translate(text, from, to, options = {}) {
     },
   })
   if (res.ok) {
-    let result = res.data
-    let { Response } = result
+    const result = res.data
+    const { Response } = result
     if (Response && Response['TargetText'] && Response['Source']) {
       return Response['TargetText'].trim()
     } else {

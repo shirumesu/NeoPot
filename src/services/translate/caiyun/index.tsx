@@ -24,14 +24,14 @@ export async function translate(text, from, to, options = {}) {
     'x-authorization': 'token ' + token,
   }
 
-  let res = await fetch(url, {
+  const res = await fetch(url, {
     method: 'POST',
     headers: headers,
     body: Body.json(body),
   })
 
   if (res.ok) {
-    let result = res.data
+    const result = res.data
     const { target } = result
     if (target[0]) {
       return target[0]

@@ -8,7 +8,7 @@ export async function translate(text, from, to, options = {}) {
 
   const url = `${https ? 'https' : 'http'}://api.niutrans.com/NiuTransServer/translation`
 
-  let res = await fetch(url, {
+  const res = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -23,7 +23,7 @@ export async function translate(text, from, to, options = {}) {
 
   // 返回翻译结果
   if (res.ok) {
-    let result = res.data
+    const result = res.data
     if (result && result['tgt_text']) {
       return result['tgt_text'].trim()
     } else {

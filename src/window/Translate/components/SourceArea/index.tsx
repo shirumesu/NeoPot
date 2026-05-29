@@ -137,7 +137,7 @@ export default function SourceArea(props) {
           ) {
             const pluginConfig = serviceInstanceConfigMap[serviceInstanceKey]
 
-            let [func, utils] = await invoke_plugin('recognize', getServiceName(serviceInstanceKey))
+            const [func, utils] = await invoke_plugin('recognize', getServiceName(serviceInstanceKey))
             func(
               base64,
               pluginList['recognize'][getServiceName(serviceInstanceKey)].language[
@@ -237,8 +237,8 @@ export default function SourceArea(props) {
         throw new Error('Language not supported')
       }
       const pluginConfig = serviceInstanceConfigMap[instanceKey]
-      let [func, utils] = await invoke_plugin('tts', getServiceName(instanceKey))
-      let data = await func(sourceText, ttsPluginInfo.language[detected], {
+      const [func, utils] = await invoke_plugin('tts', getServiceName(instanceKey))
+      const data = await func(sourceText, ttsPluginInfo.language[detected], {
         config: pluginConfig,
         utils,
       })
@@ -248,7 +248,7 @@ export default function SourceArea(props) {
         throw new Error('Language not supported')
       }
       const instanceConfig = serviceInstanceConfigMap[instanceKey]
-      let data = await builtinTtsServices[getServiceName(instanceKey)].tts(
+      const data = await builtinTtsServices[getServiceName(instanceKey)].tts(
         sourceText,
         builtinTtsServices[getServiceName(instanceKey)].Language[detected],
         {

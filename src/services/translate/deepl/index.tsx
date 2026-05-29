@@ -42,14 +42,14 @@ async function translate_by_free(text, from, to) {
     body_str = body_str.replace('"method":"', '"method": "')
   }
 
-  let res = await fetch(url, {
+  const res = await fetch(url, {
     method: 'POST',
     body: Body.text(body_str),
     headers: { 'Content-Type': 'application/json' },
   })
 
   if (res.ok) {
-    let result = res.data
+    const result = res.data
     if (result && result.result && result.result.texts) {
       return result.result.texts[0].text.trim()
     } else {
@@ -64,7 +64,7 @@ async function translate_by_free(text, from, to) {
   }
 }
 async function translate_by_deeplx(text, from, to, url) {
-  let res = await fetch(url, {
+  const res = await fetch(url, {
     method: 'POST',
     body: Body.json({
       source_lang: from,
@@ -90,7 +90,7 @@ async function translate_by_key(text, from, to, key) {
     'Content-Type': 'application/json',
     Authorization: `DeepL-Auth-Key ${key}`,
   }
-  let body = {
+  const body = {
     text: [text],
     target_lang: to,
   }
@@ -105,7 +105,7 @@ async function translate_by_key(text, from, to, key) {
   } else {
     url = 'https://api.deepl.com/v2/translate'
   }
-  let res = await fetch(url, {
+  const res = await fetch(url, {
     method: 'POST',
     body: Body.json(body),
     headers: headers,

@@ -13,16 +13,16 @@ export default function About() {
   }
 
   return (
-    <div className="h-full w-full py-[80px] px-[100px]">
-      <img src="icon.png" className="mx-auto h-[100px] mb-[5px]" draggable={false} />
+    <div className="h-full w-full py-20 px-25">
+      <img src="icon.png" className="mx-auto h-25 mb-1.25" draggable={false} />
       <div className="content-center">
         <h1 className="font-bold text-2xl text-center">NeoPot</h1>
-        <p className="text-center text-sm text-gray-500 mb-[5px]">{appVersion}</p>
+        <p className="text-center text-sm text-gray-500 mb-1.25">{appVersion}</p>
         <Divider />
         <div className="flex justify-between">
           <Button
             variant="light"
-            className="my-[5px]"
+            className="my-1.25"
             size="sm"
             onPress={() => {
               showComingSoon()
@@ -32,7 +32,7 @@ export default function About() {
           </Button>
           <Button
             variant="light"
-            className="my-[5px]"
+            className="my-1.25"
             size="sm"
             onPress={() => {
               invoke('open_url', { url: 'https://github.com/shirumesu/NeoPot' })
@@ -42,7 +42,7 @@ export default function About() {
           </Button>
           <Popover placement="top" offset={10}>
             <PopoverTrigger>
-              <Button variant="light" className="my-[5px]" size="sm">
+              <Button variant="light" className="my-1.25" size="sm">
                 {t('config.about.feedback')}
               </Button>
             </PopoverTrigger>
@@ -50,7 +50,7 @@ export default function About() {
               <div className="flex justify-between">
                 <Button
                   variant="light"
-                  className="my-[5px]"
+                  className="my-1.25"
                   size="sm"
                   onPress={() => {
                     invoke('open_url', { url: 'https://github.com/shirumesu/NeoPot/issues' })
@@ -60,7 +60,7 @@ export default function About() {
                 </Button>
                 <Button
                   variant="light"
-                  className="my-[5px]"
+                  className="my-1.25"
                   size="sm"
                   onPress={() => {
                     showComingSoon()
@@ -74,7 +74,7 @@ export default function About() {
 
           <Button
             variant="light"
-            className="my-[5px]"
+            className="my-1.25"
             size="sm"
             onPress={() => {
               showComingSoon()
@@ -85,11 +85,11 @@ export default function About() {
         </div>
         <Divider />
       </div>
-      <div className="content-center px-[40px]">
+      <div className="content-center px-10">
         <div className="flex justify-between">
           <Button
             variant="light"
-            className="my-[5px]"
+            className="my-1.25"
             size="sm"
             onPress={() => {
               invoke('updater_window')
@@ -99,7 +99,7 @@ export default function About() {
           </Button>
           <Button
             variant="light"
-            className="my-[5px]"
+            className="my-1.25"
             size="sm"
             onPress={async () => {
               await invoke('open_log_dir')
@@ -109,7 +109,7 @@ export default function About() {
           </Button>
           <Button
             variant="light"
-            className="my-[5px]"
+            className="my-1.25"
             size="sm"
             onPress={async () => {
               await invoke('open_config_dir')

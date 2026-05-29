@@ -45,14 +45,12 @@ export default function SelectPluginModal(props) {
                   <div className="flex justify-between" key={x}>
                     <Button
                       fullWidth
-                      className="mr-[8px]"
+                      className="mr-2"
                       onPress={() => {
                         setCurrentConfigKey(createServiceInstanceKey(x))
                         onConfigOpen()
                       }}
-                      startContent={
-                        <img src={pluginList[x].icon} className="h-[24px] w-[24px] my-auto" />
-                      }
+                      startContent={<img src={pluginList[x].icon} className="h-6 w-6 my-auto" />}
                     >
                       <div className="w-full">{pluginList[x].display}</div>
                     </Button>

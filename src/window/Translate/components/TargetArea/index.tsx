@@ -51,7 +51,7 @@ import {
   whetherPluginService,
 } from '../../../../utils/service_instance'
 
-let translateID = []
+const translateID = []
 
 const MARKDOWN_PATTERNS = [
   /^#{1,6}\s+\S/m,
@@ -251,7 +251,7 @@ export default function TargetArea(props) {
   }
 
   const translate = async () => {
-    let id = nanoid()
+    const id = nanoid()
     translateID[index] = id
 
     const translateServiceName = getServiceName(currentTranslateServiceInstanceKey)
@@ -272,7 +272,7 @@ export default function TargetArea(props) {
         }
         instanceConfig['enable'] = 'true'
         const setHideOnce = invokeOnce(setHide)
-        let [func, utils] = await invoke_plugin('translate', translateServiceName)
+        const [func, utils] = await invoke_plugin('translate', translateServiceName)
         func(
           sourceText.trim(),
           pluginInfo.language[sourceLanguage],
@@ -455,8 +455,8 @@ export default function TargetArea(props) {
       if (!(targetLanguage in ttsPluginInfo.language)) {
         throw new Error('Language not supported')
       }
-      let [func, utils] = await invoke_plugin('tts', getServiceName(instanceKey))
-      let data = await func(result, ttsPluginInfo.language[targetLanguage], {
+      const [func, utils] = await invoke_plugin('tts', getServiceName(instanceKey))
+      const data = await func(result, ttsPluginInfo.language[targetLanguage], {
         config: pluginConfig,
         utils,
       })
@@ -466,7 +466,7 @@ export default function TargetArea(props) {
         throw new Error('Language not supported')
       }
       const instanceConfig = serviceInstanceConfigMap[instanceKey]
-      let data = await builtinTtsServices[getServiceName(instanceKey)].tts(
+      const data = await builtinTtsServices[getServiceName(instanceKey)].tts(
         result,
         builtinTtsServices[getServiceName(instanceKey)].Language[targetLanguage],
         {
@@ -824,7 +824,7 @@ export default function TargetArea(props) {
                           serviceInstanceConfigMap[currentTranslateServiceInstanceKey]
                         instanceConfig['enable'] = 'true'
                         const setHideOnce = invokeOnce(setHide)
-                        let [func, utils] = await invoke_plugin(
+                        const [func, utils] = await invoke_plugin(
                           'translate',
                           getServiceName(currentTranslateServiceInstanceKey),
                         )

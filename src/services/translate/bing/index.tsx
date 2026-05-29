@@ -4,7 +4,7 @@ import { fetch, Body } from '@/utils/electron_http'
 export async function translate(text, from, to) {
   const token_url = 'https://edge.microsoft.com/translate/auth'
 
-  let token = await fetch(token_url, {
+  const token = await fetch(token_url, {
     method: 'GET',
     headers: {
       'User-Agent':
@@ -16,7 +16,7 @@ export async function translate(text, from, to) {
   if (token.ok) {
     const url = 'https://api-edge.cognitive.microsofttranslator.com/translate'
 
-    let res = await fetch(url, {
+    const res = await fetch(url, {
       method: 'POST',
       headers: {
         accept: '*/*',
@@ -46,7 +46,7 @@ export async function translate(text, from, to) {
     })
 
     if (res.ok) {
-      let result = res.data
+      const result = res.data
       if (result[0].translations) {
         return result[0].translations[0].text.trim()
       } else {

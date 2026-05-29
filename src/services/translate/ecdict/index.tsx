@@ -8,7 +8,7 @@ export async function translate(text, _from, _to) {
   })
 
   if (res.ok) {
-    let result = res.data
+    const result = res.data
     return result
   } else {
     throw `Http Request Error\nHttp Status: ${res.status}\n${JSON.stringify(res.data)}`

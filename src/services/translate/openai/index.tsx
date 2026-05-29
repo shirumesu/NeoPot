@@ -79,13 +79,13 @@ export async function translate(text, from, to, options) {
             return target.trim()
           }
           const str = new TextDecoder().decode(value)
-          let datas = str.split('data:')
+          const datas = str.split('data:')
           for (let data of datas) {
             if (data.trim() !== '' && data.trim() !== '[DONE]') {
               try {
                 if (temp !== '') {
                   data = temp + data.trim()
-                  let result = JSON.parse(data.trim())
+                  const result = JSON.parse(data.trim())
                   if (result.choices[0].delta.content) {
                     target += result.choices[0].delta.content
                     if (setResult) {
@@ -96,7 +96,7 @@ export async function translate(text, from, to, options) {
                   }
                   temp = ''
                 } else {
-                  let result = JSON.parse(data.trim())
+                  const result = JSON.parse(data.trim())
                   if (result.choices[0].delta.content) {
                     target += result.choices[0].delta.content
                     if (setResult) {
@@ -119,13 +119,13 @@ export async function translate(text, from, to, options) {
       throw `Http Request Error\nHttp Status: ${res.status}\n${JSON.stringify(res.data)}`
     }
   } else {
-    let res = await fetch(apiUrl.href, {
+    const res = await fetch(apiUrl.href, {
       method: 'POST',
       headers: headers,
       body: Body.json(body),
     })
     if (res.ok) {
-      let result = res.data
+      const result = res.data
       const { choices } = result
       if (choices) {
         let target = choices[0].message.content.trim()

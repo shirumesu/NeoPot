@@ -16,11 +16,11 @@ export async function recognize(base64, language, options = {}) {
     throw 'Please configure appid and secret'
   }
 
-  let file = await readFile('pot_screenshot_cut.png', { baseDir: BaseDirectory.AppCache })
+  const file = await readFile('pot_screenshot_cut.png', { baseDir: BaseDirectory.AppCache })
   const str = appid + md5(file) + salt + 'APICUIDmac' + secret
   const sign = md5(str)
 
-  let res = await fetch(url, {
+  const res = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'multipart/form-data',
@@ -43,7 +43,7 @@ export async function recognize(base64, language, options = {}) {
   })
 
   if (res.ok) {
-    let result = res.data
+    const result = res.data
     if (result['data'] && result['data']['sumSrc'] && result['data']['sumDst']) {
       if (language === 'auto') {
         return result['data']['sumSrc'].trim()

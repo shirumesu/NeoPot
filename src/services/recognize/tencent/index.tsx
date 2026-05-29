@@ -92,7 +92,7 @@ export async function recognize(base64, language, options = {}) {
     'Signature=' +
     signature
 
-  let res = await fetch('https://' + endpoint, {
+  const res = await fetch('https://' + endpoint, {
     method: 'POST',
     headers: {
       Authorization: authorization,
@@ -112,7 +112,7 @@ export async function recognize(base64, language, options = {}) {
     const result = res.data
     if (result['Response']['TextDetections']) {
       let target = ''
-      for (let i of result['Response']['TextDetections']) {
+      for (const i of result['Response']['TextDetections']) {
         target += i['DetectedText'] + '\n'
       }
 

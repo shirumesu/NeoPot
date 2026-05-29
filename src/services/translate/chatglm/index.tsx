@@ -24,15 +24,15 @@ export async function translate(text, from, to, options = {}) {
   })
 
   //
-  let timestamp = new Date().getTime()
-  let payload = {
+  const timestamp = new Date().getTime()
+  const payload = {
     api_key: id,
     exp: timestamp + 1000 * 60,
     timestamp: timestamp,
   }
   secret = new TextEncoder().encode(secret)
-  let jwt = new jose.SignJWT(payload).setProtectedHeader({ alg: 'HS256', sign_type: 'SIGN' })
-  let token = await jwt.sign(secret)
+  const jwt = new jose.SignJWT(payload).setProtectedHeader({ alg: 'HS256', sign_type: 'SIGN' })
+  const token = await jwt.sign(secret)
 
   const headers = {
     'Content-Type': 'application/json',

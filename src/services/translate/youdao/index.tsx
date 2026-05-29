@@ -15,7 +15,7 @@ export async function translate(text, from, to, options = {}) {
   const str1 = appkey + truncate(text) + salt + curtime + key
   const sign = CryptoJS.SHA256(str1).toString(CryptoJS.enc.Hex)
 
-  let res = await fetch(url, {
+  const res = await fetch(url, {
     method: 'GET',
     query: {
       q: text,
@@ -29,13 +29,13 @@ export async function translate(text, from, to, options = {}) {
     },
   })
   if (res.ok) {
-    let result = res.data
+    const result = res.data
     if (result['isWord']) {
-      let target = { pronunciations: [], explanations: [], associations: [], sentence: [] }
-      let basic = result['basic']
+      const target = { pronunciations: [], explanations: [], associations: [], sentence: [] }
+      const basic = result['basic']
 
       if (basic['uk-phonetic']) {
-        let speech = await fetch(basic['uk-speech'], { method: 'GET', responseType: 3 })
+        const speech = await fetch(basic['uk-speech'], { method: 'GET', responseType: 3 })
         target['pronunciations'].push({
           region: 'UK',
           symbol: basic['uk-phonetic'],
@@ -43,7 +43,7 @@ export async function translate(text, from, to, options = {}) {
         })
       }
       if (basic['us-phonetic']) {
-        let speech = await fetch(basic['us-speech'], { method: 'GET', responseType: 3 })
+        const speech = await fetch(basic['us-speech'], { method: 'GET', responseType: 3 })
         target['pronunciations'].push({
           region: 'US',
           symbol: basic['us-phonetic'],
@@ -57,16 +57,16 @@ export async function translate(text, from, to, options = {}) {
           voice: '',
         })
       }
-      for (let i of basic['explains']) {
+      for (const i of basic['explains']) {
         let trait = ''
         if (i.split(' ')[0].endsWith('.')) {
           trait = i.split(' ')[0]
         }
-        let explains = i.replace(trait, '').trim()
+        const explains = i.replace(trait, '').trim()
         target['explanations'].push({ trait, explains: explains.split('；') })
       }
       if (basic['wfs']) {
-        for (let wf of basic['wfs']) {
+        for (const wf of basic['wfs']) {
           target['associations'].push(wf.wf.name + ' ' + wf.wf.value)
         }
       }
@@ -81,7 +81,7 @@ export async function translate(text, from, to, options = {}) {
     } else {
       if (result['translation']) {
         let target = ''
-        for (let i of result['translation']) {
+        for (const i of result['translation']) {
           target += i + '\n'
         }
         return target.trim()

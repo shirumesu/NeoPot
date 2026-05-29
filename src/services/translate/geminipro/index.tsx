@@ -37,7 +37,7 @@ export async function translate(text, from, to, options = {}) {
   const headers = {
     'Content-Type': 'application/json',
   }
-  let body = {
+  const body = {
     contents: promptList,
     safetySettings: [
       {
@@ -79,8 +79,8 @@ export async function translate(text, from, to, options = {}) {
           const str = temp + new TextDecoder().decode(value).replaceAll(/\s+/g, ' ')
           const matchs = str.match(/{ "text": ".*" } ],/)
           if (matchs) {
-            for (let match of matchs) {
-              let result = JSON.parse(match.slice(0, -2))
+            for (const match of matchs) {
+              const result = JSON.parse(match.slice(0, -2))
               if (result.text) {
                 target += result.text
                 if (setResult) {
@@ -102,14 +102,14 @@ export async function translate(text, from, to, options = {}) {
       throw `Http Request Error\nHttp Status: ${res.status}\n${JSON.stringify(res.data)}`
     }
   } else {
-    let res = await fetch(requestPath, {
+    const res = await fetch(requestPath, {
       method: 'POST',
       headers: headers,
       body: Body.json(body),
     })
 
     if (res.ok) {
-      let result = res.data
+      const result = res.data
       const { candidates } = result
       if (candidates) {
         let target = candidates[0].content.parts[0].text.trim()

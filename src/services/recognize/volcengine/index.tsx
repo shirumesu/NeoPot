@@ -7,19 +7,19 @@ export async function recognize(base64, language, options = {}) {
 
   const { appid, secret } = config
 
-  let text = await normal_ocr(base64, appid, secret)
+  const text = await normal_ocr(base64, appid, secret)
 
   return text.trim()
 }
 
 async function normal_ocr(img_base64, appid, secret) {
-  let res = await query(img_base64, 'OCRNormal', '2020-08-26', appid, secret)
+  const res = await query(img_base64, 'OCRNormal', '2020-08-26', appid, secret)
   if (res.ok) {
-    let result = res.data
+    const result = res.data
     if (result['data']) {
-      let data = result['data']
+      const data = result['data']
       let texts = ''
-      for (let text of data['line_texts']) {
+      for (const text of data['line_texts']) {
         texts += text + '\n'
       }
       return texts
@@ -40,21 +40,21 @@ async function query(img_base64, action, serviceVersion, appid, secret) {
   const approximate_pixel = 0 // 文本行高度差距为approximate_pixel时近似为同一行,未选时默认为"0"
   const mode = 'default' // 文字识别模式:"default"-默认模式、"text_block"-文本块模式
   const filter_thresh = 80 // 置信分数低于filter_thresh的文本行将被过滤掉, 默认为"80", 最大为"100"
-  let body = `image_base64=${encodeURIComponent(
+  const body = `image_base64=${encodeURIComponent(
     img_base64,
   )}&approximate_pixel=${approximate_pixel}&mode=${mode}&filter_thresh=${filter_thresh}`
-  let body_hash = CryptoJS.SHA256(body).toString(CryptoJS.enc.Hex)
+  const body_hash = CryptoJS.SHA256(body).toString(CryptoJS.enc.Hex)
 
   // Header X-Date
-  let today = new Date()
-  let xDate = today
+  const today = new Date()
+  const xDate = today
     .toISOString()
     .replaceAll('-', '')
     .replaceAll(':', '')
     .replaceAll(/\.[0-9]*/g, '')
 
   // Header Authorization
-  let credentials = {
+  const credentials = {
     ak: appid,
     sk: secret,
     service: 'cv',
@@ -96,9 +96,9 @@ async function query(img_base64, action, serviceVersion, appid, secret) {
   }
   md['signed_headers'] = md_signed_headers.slice(0, -1)
 
-  let norm_uri = path
-  let norm_query = 'Action=' + action + '&Version=' + serviceVersion
-  let canoncial_request =
+  const norm_uri = path
+  const norm_query = 'Action=' + action + '&Version=' + serviceVersion
+  const canoncial_request =
     method +
     '\n' +
     norm_uri +
@@ -110,16 +110,16 @@ async function query(img_base64, action, serviceVersion, appid, secret) {
     md['signed_headers'] +
     '\n' +
     body_hash
-  let hashed_canon_req = CryptoJS.SHA256(canoncial_request).toString(CryptoJS.enc.Hex)
+  const hashed_canon_req = CryptoJS.SHA256(canoncial_request).toString(CryptoJS.enc.Hex)
 
-  let kdate = CryptoJS.HmacSHA256(md['date'], secret)
-  let kregion = CryptoJS.HmacSHA256(md['region'], kdate)
-  let kservice = CryptoJS.HmacSHA256(md['service'], kregion)
-  let signing_key = CryptoJS.HmacSHA256('request', kservice)
+  const kdate = CryptoJS.HmacSHA256(md['date'], secret)
+  const kregion = CryptoJS.HmacSHA256(md['region'], kdate)
+  const kservice = CryptoJS.HmacSHA256(md['service'], kregion)
+  const signing_key = CryptoJS.HmacSHA256('request', kservice)
 
-  let signing_str =
+  const signing_str =
     md['algorithm'] + '\n' + xDate + '\n' + md['credential_scope'] + '\n' + hashed_canon_req
-  let sign = CryptoJS.HmacSHA256(signing_str, signing_key).toString(CryptoJS.enc.Hex)
+  const sign = CryptoJS.HmacSHA256(signing_str, signing_key).toString(CryptoJS.enc.Hex)
   headers['Authorization'] =
     md['algorithm'] +
     ' Credential=' +
@@ -132,8 +132,8 @@ async function query(img_base64, action, serviceVersion, appid, secret) {
     sign
 
   // 发送请求
-  let url = schema + '://' + host + path + '?' + norm_query
-  let res = await fetch(url, {
+  const url = schema + '://' + host + path + '?' + norm_query
+  const res = await fetch(url, {
     method: method,
     headers: headers,
     body: Body.text(body),

@@ -42,7 +42,7 @@ export async function translate(text, from, to) {
   }
 
   const url = `https://dictionary.cambridge.org/search/direct/?datasetsearch=${from}-${to}&q=${text}`
-  let res = await fetch(url, {
+  const res = await fetch(url, {
     method: 'GET',
     headers: {
       'Content-Type': 'text/html;charset=UTF-8',
@@ -91,7 +91,7 @@ export async function translate(text, from, to) {
     dict['result'] = wordTranslateResult
     return dict
   }, {})
-  for (let i of resultMap.result.pronunciations) {
+  for (const i of resultMap.result.pronunciations) {
     const res = await fetch(i.voice, { responseType: 3 })
     if (res.ok) {
       i.voice = res.data

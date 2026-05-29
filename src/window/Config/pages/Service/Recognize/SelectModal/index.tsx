@@ -27,10 +27,7 @@ export default function SelectModal(props) {
                         onConfigOpen()
                       }}
                       startContent={
-                        <img
-                          src={builtinServices[x].info.icon}
-                          className="h-[24px] w-[24px] my-auto"
-                        />
+                        <img src={builtinServices[x].info.icon} className="h-6 w-6 my-auto" />
                       }
                     >
                       <div className="w-full">

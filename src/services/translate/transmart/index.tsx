@@ -6,7 +6,7 @@ export async function translate(text, from, to, options = {}) {
 
   const { username: user, token } = config
 
-  let header = {}
+  const header = {}
   if (user !== '' && token !== '') {
     header['user'] = user
     header['token'] = token
@@ -35,7 +35,7 @@ export async function translate(text, from, to, options = {}) {
     const result = res.data
     if (result['auto_translation']) {
       let target = ''
-      for (let line of result['auto_translation']) {
+      for (const line of result['auto_translation']) {
         target += line
         target += '\n'
       }

@@ -48,10 +48,10 @@ export async function recognize(base64, language, options = {}) {
     },
   })
   if (res.ok) {
-    let result = res.data
+    const result = res.data
     if (result.data['region']) {
       let target = ''
-      for (let i of result.data['region']) {
+      for (const i of result.data['region']) {
         target += i['recog']['content'] + '\n'
       }
       target = target.replaceAll(' ifly-latex-begin ', '')

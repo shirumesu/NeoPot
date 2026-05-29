@@ -3,7 +3,7 @@ import { useCallback } from 'react'
 const AudioContextConstructor =
   window.AudioContext ||
   (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
-let audioContext = new AudioContextConstructor()
+const audioContext = new AudioContextConstructor()
 let source: AudioBufferSourceNode | null = null
 
 export const useVoice = () => {

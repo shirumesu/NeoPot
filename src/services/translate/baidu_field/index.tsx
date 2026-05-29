@@ -18,7 +18,7 @@ export async function translate(text, from, to, options = {}) {
   const str = appid + text + salt + field + secret
   const sign = md5(str)
 
-  let res = await fetch(url, {
+  const res = await fetch(url, {
     query: {
       q: text,
       from: from,
@@ -31,12 +31,12 @@ export async function translate(text, from, to, options = {}) {
   })
 
   if (res.ok) {
-    let result = res.data
+    const result = res.data
     let target = ''
 
     const { trans_result } = result
     if (trans_result) {
-      for (let i in trans_result) {
+      for (const i in trans_result) {
         target = target + trans_result[i]['dst'] + '\n'
       }
       return target.trim()

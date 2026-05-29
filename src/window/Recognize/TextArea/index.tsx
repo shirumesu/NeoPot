@@ -67,7 +67,7 @@ export default function TextArea(props) {
       setLoading(true)
       if (getServiceSouceType(currentServiceInstanceKey) === ServiceSourceType.PLUGIN) {
         if (language in pluginList[getServiceName(currentServiceInstanceKey)].language) {
-          let id = nanoid()
+          const id = nanoid()
           recognizeId = id
           const pluginConfig = serviceInstanceConfigMap[currentServiceInstanceKey] ?? {}
 
@@ -123,7 +123,7 @@ export default function TextArea(props) {
       } else {
         const instanceConfig = serviceInstanceConfigMap[currentServiceInstanceKey] ?? {}
         if (language in builtinServices[getServiceName(currentServiceInstanceKey)].Language) {
-          let id = nanoid()
+          const id = nanoid()
           recognizeId = id
           withTimeout(
             builtinServices[getServiceName(currentServiceInstanceKey)].recognize(

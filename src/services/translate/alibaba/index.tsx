@@ -16,12 +16,12 @@ export async function translate(text, from, to, options = {}) {
     throw 'Please configure AccessKey ID and AccessKey Secret'
   }
 
-  let today = new Date()
-  let timestamp = today.toISOString().replaceAll(/\.[0-9]*/g, '')
-  let endpoint = 'http://mt.cn-hangzhou.aliyuncs.com/'
-  let url_path = 'api/translate/web/general'
+  const today = new Date()
+  const timestamp = today.toISOString().replaceAll(/\.[0-9]*/g, '')
+  const endpoint = 'http://mt.cn-hangzhou.aliyuncs.com/'
+  const url_path = 'api/translate/web/general'
 
-  let query = `AccessKeyId=${accesskey_id}&Action=TranslateGeneral&Format=JSON&FormatType=text&Scene=general&SignatureMethod=HMAC-SHA1&SignatureNonce=${getRandomNumber()}&SignatureVersion=1.0&SourceLanguage=${from}&SourceText=${encodeURIComponent(
+  const query = `AccessKeyId=${accesskey_id}&Action=TranslateGeneral&Format=JSON&FormatType=text&Scene=general&SignatureMethod=HMAC-SHA1&SignatureNonce=${getRandomNumber()}&SignatureVersion=1.0&SourceLanguage=${from}&SourceText=${encodeURIComponent(
     text,
   )}&TargetLanguage=${to}&Timestamp=${encodeURIComponent(timestamp)}&Version=2018-10-12`
 
@@ -37,17 +37,17 @@ export async function translate(text, from, to, options = {}) {
   stringToSign = stringToSign.replaceAll('+', '%252B')
   stringToSign = stringToSign.replaceAll(',', '%252C')
 
-  let signature = base64.stringify(HmacSHA1(stringToSign, accesskey_secret + '&'))
+  const signature = base64.stringify(HmacSHA1(stringToSign, accesskey_secret + '&'))
 
   CanonicalizedQueryString =
     CanonicalizedQueryString + '&Signature=' + encodeURIComponent(signature)
 
-  let res = await fetch(CanonicalizedQueryString, {
+  const res = await fetch(CanonicalizedQueryString, {
     method: 'GET',
   })
 
   if (res.ok) {
-    let result = res.data
+    const result = res.data
     if (result['Code'] === '200') {
       return result['Data']['Translated'].trim()
     } else {

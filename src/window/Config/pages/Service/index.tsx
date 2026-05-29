@@ -19,7 +19,7 @@ export default function Service() {
 
   const loadPluginList = async () => {
     const serviceTypeList = ['translate', 'tts', 'recognize']
-    let temp = {}
+    const temp = {}
     for (const serviceType of serviceTypeList) {
       temp[serviceType] = {}
       if (await exists(`plugins/${serviceType}`, { baseDir: BaseDirectory.AppConfig })) {
@@ -30,7 +30,7 @@ export default function Service() {
           const infoStr = await readTextFile(`plugins/${serviceType}/${plugin.name}/info.json`, {
             baseDir: BaseDirectory.AppConfig,
           })
-          let pluginInfo = JSON.parse(infoStr)
+          const pluginInfo = JSON.parse(infoStr)
           if ('icon' in pluginInfo) {
             const appConfigDirPath = await appConfigDir()
             const iconPath = await join(

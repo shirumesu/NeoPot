@@ -13,22 +13,22 @@ export async function translate(text, from, to, options = {}) {
   const path = '/'
   const method = 'POST'
 
-  let credentials = {
+  const credentials = {
     ak: appid,
     sk: secret,
     service: 'translate',
     region: 'cn-north-1',
     session_token: '',
   }
-  let body = {
+  const body = {
     TargetLanguage: to,
     TextList: [text],
   }
-  let bodyStr = JSON.stringify(body) // 传入的body是字符串化的json
-  let body_hash = CryptoJS.SHA256(bodyStr).toString(CryptoJS.enc.Hex)
+  const bodyStr = JSON.stringify(body) // 传入的body是字符串化的json
+  const body_hash = CryptoJS.SHA256(bodyStr).toString(CryptoJS.enc.Hex)
 
-  let today = new Date()
-  let format_date = today
+  const today = new Date()
+  const format_date = today
     .toISOString()
     .replaceAll('-', '')
     .replaceAll(':', '')
@@ -70,9 +70,9 @@ export async function translate(text, from, to, options = {}) {
   }
   md['signed_headers'] = md_signed_headers.slice(0, -1)
 
-  let norm_uri = path
-  let norm_query = 'Action=TranslateText&Version=' + serviceVersion
-  let canoncial_request =
+  const norm_uri = path
+  const norm_query = 'Action=TranslateText&Version=' + serviceVersion
+  const canoncial_request =
     method +
     '\n' +
     norm_uri +
@@ -84,16 +84,16 @@ export async function translate(text, from, to, options = {}) {
     md['signed_headers'] +
     '\n' +
     body_hash
-  let hashed_canon_req = CryptoJS.SHA256(canoncial_request).toString(CryptoJS.enc.Hex)
+  const hashed_canon_req = CryptoJS.SHA256(canoncial_request).toString(CryptoJS.enc.Hex)
 
-  let kdate = CryptoJS.HmacSHA256(md['date'], secret)
-  let kregion = CryptoJS.HmacSHA256(md['region'], kdate)
-  let kservice = CryptoJS.HmacSHA256(md['service'], kregion)
-  let signing_key = CryptoJS.HmacSHA256('request', kservice)
+  const kdate = CryptoJS.HmacSHA256(md['date'], secret)
+  const kregion = CryptoJS.HmacSHA256(md['region'], kdate)
+  const kservice = CryptoJS.HmacSHA256(md['service'], kregion)
+  const signing_key = CryptoJS.HmacSHA256('request', kservice)
 
-  let signing_str =
+  const signing_str =
     md['algorithm'] + '\n' + format_date + '\n' + md['credential_scope'] + '\n' + hashed_canon_req
-  let sign = CryptoJS.HmacSHA256(signing_str, signing_key).toString(CryptoJS.enc.Hex)
+  const sign = CryptoJS.HmacSHA256(signing_str, signing_key).toString(CryptoJS.enc.Hex)
   headers['Authorization'] =
     md['algorithm'] +
     ' Credential=' +
@@ -106,19 +106,19 @@ export async function translate(text, from, to, options = {}) {
     sign
 
   // 发送请求
-  let url = schema + '://' + host + path + '?' + 'Action=TranslateText&Version=' + serviceVersion
+  const url = schema + '://' + host + path + '?' + 'Action=TranslateText&Version=' + serviceVersion
 
-  let res = await fetch(url, {
+  const res = await fetch(url, {
     method: method,
     headers: headers,
     body: { type: 'Text', payload: bodyStr },
   })
 
   if (res.ok) {
-    let result = res.data
+    const result = res.data
     // 整理翻译结果并返回
     let translations = ''
-    let { TranslationList } = result
+    const { TranslationList } = result
     if (TranslationList) {
       let cur = 0,
         last = 0
@@ -126,7 +126,7 @@ export async function translate(text, from, to, options = {}) {
         if (cur > last) {
           translations += '\n'
         }
-        let curTranslation = TranslationList[cur]
+        const curTranslation = TranslationList[cur]
         if (curTranslation['Translation']) {
           translations += curTranslation['Translation']
         }

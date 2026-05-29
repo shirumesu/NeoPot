@@ -13,7 +13,7 @@ export async function translate(text, from, to, options = {}) {
     custom_url = 'https://' + custom_url
   }
 
-  let res = await fetch(
+  const res = await fetch(
     `${custom_url}/translate_a/single?dt=at&dt=bd&dt=ex&dt=ld&dt=md&dt=qca&dt=rw&dt=rm&dt=ss&dt=t`,
     {
       method: 'GET',
@@ -34,16 +34,16 @@ export async function translate(text, from, to, options = {}) {
     },
   )
   if (res.ok) {
-    let result = res.data
+    const result = res.data
     // 词典模式
     if (result[1]) {
-      let target = { pronunciations: [], explanations: [], associations: [], sentence: [] }
+      const target = { pronunciations: [], explanations: [], associations: [], sentence: [] }
       // 发音
       if (result[0][1][3]) {
         target.pronunciations.push({ symbol: result[0][1][3], voice: '' })
       }
       // 释义
-      for (let i of result[1]) {
+      for (const i of result[1]) {
         target.explanations.push({
           trait: i[0],
           explains: i[2].map((x) => {
@@ -53,7 +53,7 @@ export async function translate(text, from, to, options = {}) {
       }
       // 例句
       if (result[13]) {
-        for (let i of result[13][0]) {
+        for (const i of result[13][0]) {
           target.sentence.push({ source: i[0] })
         }
       }
@@ -61,7 +61,7 @@ export async function translate(text, from, to, options = {}) {
     } else {
       // 翻译模式
       let target = ''
-      for (let r of result[0]) {
+      for (const r of result[0]) {
         if (r[0]) {
           target = target + r[0]
         }

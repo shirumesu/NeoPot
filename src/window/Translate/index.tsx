@@ -131,7 +131,7 @@ export default function Translate() {
         }
         moveTimeout = setTimeout(async () => {
           if (appWindow.label === 'translate') {
-            let position = await appWindow.outerPosition()
+            const position = await appWindow.outerPosition()
             await setStoreValue('translate_window_position_x', parseInt(position.x), {
               save: false,
             })
@@ -158,7 +158,7 @@ export default function Translate() {
         }
         resizeTimeout = setTimeout(async () => {
           if (appWindow.label === 'translate') {
-            let size = await appWindow.outerSize()
+            const size = await appWindow.outerSize()
             await setStoreValue('translate_window_height', parseInt(size.height), { save: false })
             await setStoreValue('translate_window_width', parseInt(size.width), { save: false })
             await saveStore()
@@ -191,7 +191,7 @@ export default function Translate() {
             const infoStr = await readTextFile(`plugins/${serviceType}/${plugin.name}/info.json`, {
               baseDir: BaseDirectory.AppConfig,
             })
-            let pluginInfo = JSON.parse(infoStr)
+            const pluginInfo = JSON.parse(infoStr)
             if ('icon' in pluginInfo) {
               const appConfigDirPath = await appConfigDir()
               const iconPath = await join(

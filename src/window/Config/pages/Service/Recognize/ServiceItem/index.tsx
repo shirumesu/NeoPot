@@ -60,13 +60,13 @@ export default function ServiceItem(props: ServiceItemProps) {
     <></>
   ) : (
     serviceInstanceConfig !== null && (
-      <div className="bg-content2 rounded-md px-[10px] py-[20px] flex justify-between">
+      <div className="bg-content2 rounded-md px-2.5 py-5 flex justify-between">
         <div className="flex">
           {serviceSourceType === ServiceSourceType.BUILDIN && (
             <>
               <img
                 src={builtinServiceMap[serviceName].info.icon}
-                className="h-[24px] w-[24px] my-auto"
+                className="h-6 w-6 my-auto"
                 draggable={false}
               />
               <Spacer x={2} />
@@ -80,7 +80,7 @@ export default function ServiceItem(props: ServiceItemProps) {
             <>
               <img
                 src={pluginList[serviceName].icon}
-                className="h-[24px] w-[24px] my-auto"
+                className="h-6 w-6 my-auto"
                 draggable={false}
               />
               <Spacer x={2} />

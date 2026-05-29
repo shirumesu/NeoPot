@@ -41,7 +41,7 @@ export async function translate(text, from, to) {
         return acc
       }, {}),
     )
-    let target = { pronunciations: [], explanations: [], associations: [], sentence: [] }
+    const target = { pronunciations: [], explanations: [], associations: [], sentence: [] }
     for (const pronunciation of formatGroups['发音']) {
       target.pronunciations.push({
         region: pronunciation.partsOfSpeech[0].name,

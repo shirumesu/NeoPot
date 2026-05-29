@@ -29,7 +29,7 @@ async function baidu_detect(text) {
     per: 'fa',
     ukr: 'uk',
   }
-  let res = await fetch('https://fanyi.baidu.com/langdetect', {
+  const res = await fetch('https://fanyi.baidu.com/langdetect', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
@@ -39,7 +39,7 @@ async function baidu_detect(text) {
     }),
   })
   if (res.ok) {
-    let result = res.data
+    const result = res.data
     if (result.lan && result.lan in lang_map) {
       return lang_map[result.lan]
     }
@@ -68,7 +68,7 @@ async function tencent_detect(text) {
     ar: 'ar',
     hi: 'hi',
   }
-  let res = await fetch('https://fanyi.qq.com/api/translate', {
+  const res = await fetch('https://fanyi.qq.com/api/translate', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
@@ -78,7 +78,7 @@ async function tencent_detect(text) {
     }),
   })
   if (res.ok) {
-    let result = res.data
+    const result = res.data
     if (result.translate && result.translate.source && result.translate.source in lang_map) {
       return lang_map[result.translate.source]
     }
@@ -112,7 +112,7 @@ async function google_detect(text) {
     no: 'nb_no',
     uk: 'uk',
   }
-  let res = await fetch(
+  const res = await fetch(
     `https://translate.google.com/translate_a/single?dt=at&dt=bd&dt=ex&dt=ld&dt=md&dt=qca&dt=rw&dt=rm&dt=ss&dt=t`,
     {
       method: 'GET',
@@ -169,7 +169,7 @@ async function niutrans_detect(text) {
     fa: 'fa',
     uk: 'uk',
   }
-  let res = await fetch('https://test.niutrans.com/NiuTransServer/language', {
+  const res = await fetch('https://test.niutrans.com/NiuTransServer/language', {
     method: 'GET',
     headers: { 'content-type': 'application/json' },
     query: {
@@ -211,7 +211,7 @@ async function yandex_detect(text) {
     uk: 'uk',
   }
 
-  let res = await fetch('https://translate.yandex.net/api/v1/tr.json/detect', {
+  const res = await fetch('https://translate.yandex.net/api/v1/tr.json/detect', {
     method: 'GET',
     query: {
       id: uuidv4().replaceAll('-', '') + '-0-0',
@@ -258,7 +258,7 @@ async function bing_detect(text) {
   }
   const token_url = 'https://edge.microsoft.com/translate/auth'
 
-  let token = await fetch(token_url, {
+  const token = await fetch(token_url, {
     method: 'GET',
     headers: {
       'User-Agent':
@@ -269,7 +269,7 @@ async function bing_detect(text) {
   if (token.ok) {
     const url = 'https://api-edge.cognitive.microsofttranslator.com/detect'
 
-    let res = await fetch(url, {
+    const res = await fetch(url, {
       method: 'POST',
       headers: {
         accept: '*/*',
@@ -296,7 +296,7 @@ async function bing_detect(text) {
     })
 
     if (res.ok) {
-      let result = res.data
+      const result = res.data
       if (result[0].language && result[0].language in lang_map) {
         return lang_map[result[0].language]
       }
@@ -310,7 +310,7 @@ async function local_detect(text) {
 }
 
 export default async function detect(text) {
-  let langDetectEngine = (await getStoreValue('translate_detect_engine')) ?? 'baidu'
+  const langDetectEngine = (await getStoreValue('translate_detect_engine')) ?? 'baidu'
 
   switch (langDetectEngine) {
     case 'baidu':

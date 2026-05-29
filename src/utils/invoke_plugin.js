@@ -18,11 +18,11 @@ async function loadPluginEntrypoint(script, pluginType) {
 }
 
 export async function invoke_plugin(pluginType, pluginName) {
-  let configDir = await appConfigDir()
-  let cacheDir = await appCacheDir()
-  let pluginDir = await join(configDir, 'plugins', pluginType, pluginName)
-  let entryFile = await join(pluginDir, 'main.js')
-  let script = await readTextFile(entryFile)
+  const configDir = await appConfigDir()
+  const cacheDir = await appCacheDir()
+  const pluginDir = await join(configDir, 'plugins', pluginType, pluginName)
+  const entryFile = await join(pluginDir, 'main.js')
+  const script = await readTextFile(entryFile)
   async function run(cmdName, args) {
     return await invoke('run_binary', {
       pluginType,

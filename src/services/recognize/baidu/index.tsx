@@ -23,7 +23,7 @@ export async function recognize(base64, language, options = {}) {
   })
   if (token_res.ok) {
     if (token_res.data.access_token) {
-      let token = token_res.data.access_token
+      const token = token_res.data.access_token
 
       const res = await fetch(url, {
         method: 'POST',
@@ -40,10 +40,10 @@ export async function recognize(base64, language, options = {}) {
         }),
       })
       if (res.ok) {
-        let result = res.data
+        const result = res.data
         if (result['words_result']) {
           let target = ''
-          for (let i of result['words_result']) {
+          for (const i of result['words_result']) {
             target += i['words'] + '\n'
           }
           return target.trim()
