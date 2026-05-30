@@ -1,0 +1,69 @@
+// @ts-nocheck
+import { Button, Input, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from '@heroui/react'
+import { useTranslation } from 'react-i18next'
+import React, { useEffect, useState } from 'react'
+
+import { loadMarketplacePlugins } from '../marketplace'
+
+export default function MarketplaceModal(props) {
+  const { isOpen, onOpenChange } = props
+  const { t } = useTranslation()
+  const [plugins, setPlugins] = useState([])
+  const [query, setQuery] = useState('')
+
+  useEffect(() => {
+    if (isOpen) {
+      loadMarketplacePlugins().then(setPlugins)
+    }
+  }, [isOpen])
+
+  const normalizedQuery = query.trim().toLowerCase()
+  const filteredPlugins = normalizedQuery
+    ? plugins.filter((plugin) =>
+        `${plugin.display} ${plugin.author} ${plugin.description}`.toLowerCase().includes(normalizedQuery),
+      )
+    : plugins
+
+  return (
+    <Modal isOpen={isOpen} onOpenChange={onOpenChange} scrollBehavior="inside">
+      <ModalContent className="max-h-[80vh]">
+        {(onClose) => (
+          <>
+            <ModalHeader>{t('config.plugin.market.title')}</ModalHeader>
+            <ModalBody>
+              <Input
+                value={query}
+                label={t('config.plugin.market.search')}
+                variant="bordered"
+                onValueChange={setQuery}
+              />
+              <div className="flex flex-col gap-2">
+                {filteredPlugins.map((plugin) => (
+                  <div key={plugin.id} className="bg-content2 rounded-md px-3 py-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h3 className="font-semibold">{plugin.display}</h3>
+                        <p className="text-xs text-default-500">
+                          {plugin.version} · {plugin.author}
+                        </p>
+                        <p className="text-sm text-default-500 mt-1">{plugin.description}</p>
+                      </div>
+                      <Button size="sm" variant="flat" isDisabled>
+                        {t('config.plugin.market.install')}
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </ModalBody>
+            <ModalFooter>
+              <Button variant="light" onPress={onClose}>
+                {t('common.cancel')}
+              </Button>
+            </ModalFooter>
+          </>
+        )}
+      </ModalContent>
+    </Modal>
+  )
+}

@@ -7,6 +7,7 @@ import General from '../pages/General'
 import Service from '../pages/Service'
 import Hotkey from '../pages/Hotkey'
 import About from '../pages/About'
+import Plugin from '../pages/Plugin'
 
 const routes = [
   {
@@ -28,6 +29,10 @@ const routes = [
   {
     path: '/service',
     element: <Service />,
+  },
+  {
+    path: '/plugin',
+    element: <Plugin />,
   },
   {
     path: '/about',

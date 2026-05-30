@@ -2,6 +2,7 @@ import {
   BrowserWindow,
   app,
   clipboard,
+  dialog,
   ipcMain,
   nativeImage,
   shell,
@@ -9,9 +10,17 @@ import {
   type Rectangle,
 } from 'electron'
 import { execFile } from 'node:child_process'
+import { existsSync } from 'node:fs'
+import { mkdir, readdir, readFile, rm } from 'node:fs/promises'
+import path from 'node:path'
 import { promisify } from 'node:util'
 import { translate as translateService } from '../services'
-import { installPlugin, listPlugins } from '../plugins/installer'
+import {
+  installPlugin,
+  listInstalledPlugins,
+  setPluginEnabled,
+  uninstallPlugin,
+} from '../plugins/installer'
 import { getRedactedConfig, setConfig } from './config'
 import {
   isGlobalShortcutRegistered,
@@ -116,6 +125,55 @@ const assertPluginListPayload = (payload: unknown): { type: string } => {
   return { type: payload.type }
 }
 
+const assertOptionalPluginListPayload = (payload: unknown): { type?: string } => {
+  if (payload === undefined) {
+    return {}
+  }
+
+  if (!isRecord(payload)) {
+    throw new NeoPotError({
+      code: 'IPC_INVALID_PAYLOAD',
+      message: 'Expected plugin list payload.',
+    })
+  }
+
+  return {
+    type: typeof payload.type === 'string' ? payload.type : undefined,
+  }
+}
+
+const assertPluginIdentityPayload = (payload: unknown): { type: string; name: string } => {
+  if (
+    !isRecord(payload) ||
+    typeof payload.type !== 'string' ||
+    payload.type.length === 0 ||
+    typeof payload.name !== 'string' ||
+    payload.name.length === 0
+  ) {
+    throw new NeoPotError({
+      code: 'IPC_INVALID_PAYLOAD',
+      message: 'Expected plugin type and name.',
+    })
+  }
+
+  return { type: payload.type, name: payload.name }
+}
+
+const assertPluginEnabledPayload = (
+  payload: unknown,
+): { type: string; name: string; enabled: boolean } => {
+  const { type, name } = assertPluginIdentityPayload(payload)
+  if (!isRecord(payload) || typeof payload.enabled !== 'boolean') {
+    throw new NeoPotError({
+      code: 'IPC_INVALID_PAYLOAD',
+      message: 'Expected plugin enabled state.',
+      field: 'enabled',
+    })
+  }
+
+  return { type, name, enabled: payload.enabled }
+}
+
 const assertBooleanPayload = (payload: unknown, field: string): boolean => {
   if (!isRecord(payload) || typeof payload[field] !== 'boolean') {
     throw new NeoPotError({
@@ -196,6 +254,68 @@ const assertCommandPayload = (
     command: payload.command,
     payload: isRecord(payload.payload) ? payload.payload : undefined,
   }
+}
+
+const assertDialogOpenPayload = (payload: unknown) => {
+  if (!isRecord(payload)) {
+    return {}
+  }
+
+  const filters = Array.isArray(payload.filters)
+    ? payload.filters
+        .filter(
+          (filter) =>
+            isRecord(filter) &&
+            typeof filter.name === 'string' &&
+            Array.isArray(filter.extensions),
+        )
+        .map((filter) => ({
+          name: filter.name as string,
+          extensions: (filter.extensions as unknown[]).filter(
+            (extension): extension is string => typeof extension === 'string',
+          ),
+        }))
+    : undefined
+
+  return {
+    multiple: payload.multiple === true,
+    directory: payload.directory === true,
+    filters,
+  }
+}
+
+const resolveBaseDirectory = (baseDir: unknown): string | null => {
+  switch (baseDir) {
+    case 'AppConfig':
+      return app.getPath('userData')
+    case 'AppCache':
+      return path.join(app.getPath('userData'), 'Cache')
+    case 'AppLog':
+      return app.getPath('logs')
+    default:
+      return null
+  }
+}
+
+const assertPathPayload = (payload: unknown): { filePath: string; baseDir?: string } => {
+  if (!isRecord(payload) || typeof payload.path !== 'string') {
+    throw new NeoPotError({
+      code: 'IPC_INVALID_PAYLOAD',
+      message: 'Expected file path.',
+      field: 'path',
+    })
+  }
+
+  return {
+    filePath: payload.path,
+    baseDir: typeof payload.baseDir === 'string' ? payload.baseDir : undefined,
+  }
+}
+
+const resolveFilePath = (payload: unknown): string => {
+  const { filePath, baseDir } = assertPathPayload(payload)
+  const basePath = resolveBaseDirectory(baseDir)
+  return basePath && !path.isAbsolute(filePath) ? path.join(basePath, filePath) : filePath
 }
 
 const assertTextPayload = (payload: unknown): string => {
@@ -356,6 +476,63 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
         window.webContents.send('app:event', emitted)
       }
     },
+    'dialog:open': async (_event, payload) => {
+      const options = assertDialogOpenPayload(payload)
+      const properties: Array<'openFile' | 'openDirectory' | 'multiSelections'> = []
+      properties.push(options.directory ? 'openDirectory' : 'openFile')
+      if (options.multiple) {
+        properties.push('multiSelections')
+      }
+
+      const result = await dialog.showOpenDialog({
+        properties,
+        filters: options.filters,
+      })
+
+      if (result.canceled) {
+        return null
+      }
+
+      return options.multiple ? result.filePaths : result.filePaths[0]
+    },
+    'fs:read-dir': async (_event, payload) => {
+      const entries = await readdir(resolveFilePath(payload), { withFileTypes: true }).catch(
+        () => [],
+      )
+      return entries.map((entry) => ({
+        name: entry.name,
+        isDirectory: entry.isDirectory(),
+        isFile: entry.isFile(),
+      }))
+    },
+    'fs:read-text-file': (_event, payload) => {
+      return readFile(resolveFilePath(payload), 'utf8')
+    },
+    'fs:read-file': async (_event, payload) => {
+      return [...(await readFile(resolveFilePath(payload)))]
+    },
+    'fs:exists': (_event, payload) => {
+      return existsSync(resolveFilePath(payload))
+    },
+    'fs:remove': async (_event, payload) => {
+      const targetPath = resolveFilePath(payload)
+      if (isRecord(payload) && payload.recursive === true) {
+        await rm(targetPath, { recursive: true, force: true })
+        return
+      }
+
+      await rm(targetPath, { force: true })
+    },
+    'path:app-config-dir': (_event, payload) => {
+      assertNoPayload(payload)
+      return app.getPath('userData')
+    },
+    'path:app-cache-dir': async (_event, payload) => {
+      assertNoPayload(payload)
+      const cachePath = path.join(app.getPath('userData'), 'Cache')
+      await mkdir(cachePath, { recursive: true })
+      return cachePath
+    },
     'hotkey:register': (_event, payload) => {
       const { name, shortcut } = assertShortcutPayload(payload)
       return name ? registerGlobalShortcutByName(name, shortcut) : false
@@ -487,7 +664,19 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
     },
     'plugins:list': (_event, payload) => {
       const { type } = assertPluginListPayload(payload)
-      return listPlugins(type)
+      return listInstalledPlugins(type)
+    },
+    'plugins:list-installed': (_event, payload) => {
+      const { type } = assertOptionalPluginListPayload(payload)
+      return listInstalledPlugins(type)
+    },
+    'plugins:uninstall': (_event, payload) => {
+      const { type, name } = assertPluginIdentityPayload(payload)
+      return uninstallPlugin(type, name)
+    },
+    'plugins:set-enabled': (_event, payload) => {
+      const { type, name, enabled } = assertPluginEnabledPayload(payload)
+      setPluginEnabled(type, name, enabled)
     },
   }
 

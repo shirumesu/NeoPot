@@ -27,6 +27,14 @@ type IpcChannel =
   | 'app:maximize-current-window'
   | 'app:unmaximize-current-window'
   | 'app:emit'
+  | 'dialog:open'
+  | 'fs:read-dir'
+  | 'fs:read-text-file'
+  | 'fs:read-file'
+  | 'fs:exists'
+  | 'fs:remove'
+  | 'path:app-config-dir'
+  | 'path:app-cache-dir'
   | 'hotkey:register'
   | 'hotkey:unregister'
   | 'hotkey:is-registered'
@@ -40,6 +48,9 @@ type IpcChannel =
   | 'services:translate'
   | 'plugins:install'
   | 'plugins:list'
+  | 'plugins:list-installed'
+  | 'plugins:uninstall'
+  | 'plugins:set-enabled'
 
 const channels = new Set<IpcChannel>([
   'app:get-window-label',
@@ -60,6 +71,14 @@ const channels = new Set<IpcChannel>([
   'app:maximize-current-window',
   'app:unmaximize-current-window',
   'app:emit',
+  'dialog:open',
+  'fs:read-dir',
+  'fs:read-text-file',
+  'fs:read-file',
+  'fs:exists',
+  'fs:remove',
+  'path:app-config-dir',
+  'path:app-cache-dir',
   'hotkey:register',
   'hotkey:unregister',
   'hotkey:is-registered',
@@ -73,6 +92,9 @@ const channels = new Set<IpcChannel>([
   'services:translate',
   'plugins:install',
   'plugins:list',
+  'plugins:list-installed',
+  'plugins:uninstall',
+  'plugins:set-enabled',
 ])
 
 async function invokeChecked<TResult>(channel: IpcChannel, payload?: unknown): Promise<TResult> {
@@ -122,6 +144,20 @@ const api: NeoPotElectronApi = {
       return () => ipcRenderer.removeListener('app:event', listener)
     },
   },
+  dialog: {
+    open: (options) => invokeChecked('dialog:open', options),
+  },
+  fs: {
+    readDir: (path, options) => invokeChecked('fs:read-dir', { path, ...options }),
+    readTextFile: (path, options) => invokeChecked('fs:read-text-file', { path, ...options }),
+    readFile: (path, options) => invokeChecked('fs:read-file', { path, ...options }),
+    exists: (path, options) => invokeChecked('fs:exists', { path, ...options }),
+    remove: (path, options) => invokeChecked('fs:remove', { path, ...options }),
+  },
+  path: {
+    appConfigDir: () => invokeChecked('path:app-config-dir'),
+    appCacheDir: () => invokeChecked('path:app-cache-dir'),
+  },
   hotkey: {
     register: (name, shortcut) => invokeChecked<boolean>('hotkey:register', { name, shortcut }),
     unregister: (shortcut) => invokeChecked<void>('hotkey:unregister', { shortcut }),
@@ -162,6 +198,10 @@ const api: NeoPotElectronApi = {
   plugins: {
     install: (file) => invokeChecked<PluginInstallResult>('plugins:install', { file }),
     list: (type) => invokeChecked<PluginInfo[]>('plugins:list', { type }),
+    listInstalled: (type) => invokeChecked<PluginInfo[]>('plugins:list-installed', { type }),
+    uninstall: (type, name) => invokeChecked<void>('plugins:uninstall', { type, name }),
+    setEnabled: (type, name, enabled) =>
+      invokeChecked<void>('plugins:set-enabled', { type, name, enabled }),
   },
 }
 

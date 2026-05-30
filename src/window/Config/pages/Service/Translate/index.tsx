@@ -103,7 +103,7 @@ export default function Translate(props) {
           </Button>
           <Spacer x={2} />
           <Button fullWidth onPress={onSelectPluginOpen}>
-            {t('config.service.add_external_service')}
+            {t('config.service.add_installed_plugin_service')}
           </Button>
         </div>
       </Card>
@@ -112,9 +112,7 @@ export default function Translate(props) {
         onOpenChange={onSelectPluginOpenChange}
         setCurrentConfigKey={setCurrentConfigKey}
         onConfigOpen={onConfigOpen}
-        pluginType="translate"
         pluginList={pluginList}
-        deleteService={deleteServiceInstance}
       />
       <SelectModal
         isOpen={isSelectOpen}

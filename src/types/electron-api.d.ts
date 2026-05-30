@@ -26,6 +26,26 @@ export interface WindowBounds {
   height?: number
 }
 
+export interface OpenDialogOptions {
+  multiple?: boolean
+  directory?: boolean
+  filters?: Array<{
+    name: string
+    extensions: string[]
+  }>
+}
+
+export interface FsOptions {
+  baseDir?: 'AppConfig' | 'AppCache' | 'AppLog'
+  recursive?: boolean
+}
+
+export interface DirectoryEntry {
+  name: string
+  isDirectory: boolean
+  isFile: boolean
+}
+
 export interface NeoPotElectronApi {
   app: {
     getWindowLabel(): Promise<WindowLabel>
@@ -47,6 +67,20 @@ export interface NeoPotElectronApi {
     unmaximizeCurrentWindow(): Promise<void>
     emit(event: string, payload?: unknown): Promise<void>
     onEvent(event: string, callback: StreamCallback): Unsubscribe
+  }
+  dialog: {
+    open(options?: OpenDialogOptions): Promise<string | string[] | null>
+  }
+  fs: {
+    readDir(path: string, options?: FsOptions): Promise<DirectoryEntry[]>
+    readTextFile(path: string, options?: FsOptions): Promise<string>
+    readFile(path: string, options?: FsOptions): Promise<number[]>
+    exists(path: string, options?: FsOptions): Promise<boolean>
+    remove(path: string, options?: FsOptions): Promise<void>
+  }
+  path: {
+    appConfigDir(): Promise<string>
+    appCacheDir(): Promise<string>
   }
   hotkey: {
     register(name: string, shortcut: string): Promise<boolean>
@@ -76,6 +110,9 @@ export interface NeoPotElectronApi {
   plugins: {
     install(file: string): Promise<PluginInstallResult>
     list(type: string): Promise<PluginInfo[]>
+    listInstalled(type?: string): Promise<PluginInfo[]>
+    uninstall(type: string, name: string): Promise<void>
+    setEnabled(type: string, name: string, enabled: boolean): Promise<void>
   }
 }
 

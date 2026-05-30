@@ -1,11 +1,25 @@
 import { app } from 'electron'
 import AdmZip from 'adm-zip'
-import { mkdir, readdir, rm, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
+import { getConfig, setConfig } from '../modules/config'
+
+const SERVICE_PLUGIN_TYPES = ['translate', 'recognize', 'tts']
 
 export interface PluginInfo {
+  id: string
   type: string
   name: string
+  display: string
+  version: string
+  author: string
+  description: string
+  icon: string
+  enabled: boolean
+  needs: unknown[]
+  options: unknown[]
+  hotkeys: unknown[]
+  [key: string]: unknown
 }
 
 export interface PluginInstallResult {
@@ -16,7 +30,7 @@ export interface PluginInstallResult {
 
 class PluginInstallError extends Error {
   constructor(
-    readonly code: 'PLUGIN_INVALID_PACKAGE' | 'PLUGIN_ZIP_SLIP',
+    readonly code: 'PLUGIN_INVALID_EXTENSION' | 'PLUGIN_INVALID_PACKAGE' | 'PLUGIN_ZIP_SLIP',
     message: string,
   ) {
     super(message)
@@ -26,6 +40,10 @@ class PluginInstallError extends Error {
 
 function pluginRoot(): string {
   return path.join(app.getPath('userData'), 'plugins')
+}
+
+function pluginEnabledKey(type: string, name: string): string {
+  return `plugin:${type}:${name}:enabled`
 }
 
 function assertInside(parent: string, child: string): void {
@@ -39,7 +57,83 @@ function assertInside(parent: string, child: string): void {
   }
 }
 
+function assertNpotPackage(file: string): void {
+  if (path.extname(file).toLowerCase() !== '.npot') {
+    throw new PluginInstallError(
+      'PLUGIN_INVALID_EXTENSION',
+      'Plugin package must use the .npot extension.',
+    )
+  }
+}
+
+function getPluginEnabled(type: string, name: string): boolean {
+  const stored = getConfig(pluginEnabledKey(type, name))
+  return typeof stored === 'boolean' ? stored : true
+}
+
+async function readPluginManifest(type: string, name: string): Promise<PluginInfo | null> {
+  const pluginDir = path.join(pluginRoot(), type, name)
+  const manifestPath = path.join(pluginDir, 'info.json')
+  const manifestText = await readFile(manifestPath, 'utf8').catch(() => null)
+  if (!manifestText) {
+    return null
+  }
+
+  const manifest = JSON.parse(manifestText) as Record<string, unknown>
+  const display = typeof manifest.display === 'string' ? manifest.display : name
+  const icon = typeof manifest.icon === 'string' ? path.join(pluginDir, manifest.icon) : ''
+
+  return {
+    ...manifest,
+    id: `${type}:${name}`,
+    type,
+    name,
+    plugin_type: type,
+    display,
+    version: typeof manifest.version === 'string' ? manifest.version : '',
+    author: typeof manifest.author === 'string' ? manifest.author : '',
+    description: typeof manifest.description === 'string' ? manifest.description : '',
+    icon,
+    enabled: getPluginEnabled(type, name),
+    needs: Array.isArray(manifest.needs) ? manifest.needs : [],
+    options: Array.isArray(manifest.options) ? manifest.options : [],
+    hotkeys: Array.isArray(manifest.hotkeys) ? manifest.hotkeys : [],
+  }
+}
+
+async function removePluginServiceInstances(type: string, name: string): Promise<void> {
+  if (!SERVICE_PLUGIN_TYPES.includes(type)) {
+    return
+  }
+
+  const serviceListKey = `${type}_service_list`
+  const serviceList = getConfig(serviceListKey)
+  if (!Array.isArray(serviceList)) {
+    return
+  }
+
+  const retained = serviceList.filter((instanceKey) => {
+    if (typeof instanceKey !== 'string') {
+      return true
+    }
+    return instanceKey.split('@')[0] !== name
+  })
+
+  if (retained.length === serviceList.length) {
+    return
+  }
+
+  setConfig(serviceListKey, retained)
+  for (const instanceKey of serviceList) {
+    if (typeof instanceKey === 'string' && instanceKey.split('@')[0] === name) {
+      setConfig(instanceKey, undefined)
+    }
+  }
+}
+
 export async function installPlugin(file: string): Promise<PluginInstallResult> {
+  assertNpotPackage(file)
+
   const zip = new AdmZip(file)
   const entries = zip.getEntries()
   const manifestEntry = entries.find((entry) => entry.entryName === 'info.json')
@@ -84,7 +178,6 @@ export async function installPlugin(file: string): Promise<PluginInstallResult> 
 
     await rm(targetDir, { recursive: true, force: true })
     await mkdir(path.dirname(targetDir), { recursive: true })
-    await rm(targetDir, { recursive: true, force: true })
     await import('node:fs/promises').then(({ rename }) => rename(tempDir, targetDir))
 
     return {
@@ -103,15 +196,44 @@ export async function uninstallPlugin(type: string, name: string): Promise<void>
     recursive: true,
     force: true,
   })
+  setConfig(pluginEnabledKey(type, name), undefined)
+  await removePluginServiceInstances(type, name)
+}
+
+export function setPluginEnabled(type: string, name: string, enabled: boolean): void {
+  setConfig(pluginEnabledKey(type, name), enabled)
+}
+
+export async function listInstalledPlugins(type?: string): Promise<PluginInfo[]> {
+  const root = pluginRoot()
+  const typeEntries =
+    typeof type === 'string' && type.length > 0
+      ? [{ name: type, isDirectory: () => true }]
+      : await readdir(root, { withFileTypes: true }).catch(() => [])
+
+  const plugins: PluginInfo[] = []
+  for (const typeEntry of typeEntries) {
+    if (!typeEntry.isDirectory()) {
+      continue
+    }
+
+    const pluginType = typeEntry.name
+    const dir = path.join(root, pluginType)
+    const entries = await readdir(dir, { withFileTypes: true }).catch(() => [])
+    for (const entry of entries) {
+      if (!entry.isDirectory()) {
+        continue
+      }
+      const manifest = await readPluginManifest(pluginType, entry.name)
+      if (manifest) {
+        plugins.push(manifest)
+      }
+    }
+  }
+
+  return plugins
 }
 
 export async function listPlugins(type: string): Promise<PluginInfo[]> {
-  const dir = path.join(pluginRoot(), type)
-  const entries = await readdir(dir, { withFileTypes: true }).catch(() => [])
-  return entries
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => ({
-      type,
-      name: entry.name,
-    }))
+  return listInstalledPlugins(type)
 }

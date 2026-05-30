@@ -6,13 +6,15 @@ import { CardBody } from '@heroui/react'
 import { Button } from '@heroui/react'
 import { Input } from '@heroui/react'
 import { Card } from '@heroui/react'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 
 import { isSameConfigValue, useConfig } from '../../../../hooks/useConfig'
+import PluginHotkeyEditor from '../../components/PluginHotkeyEditor'
 import { useToastStyle } from '../../../../hooks'
 import { osType } from '../../../../utils/env'
 import { invoke } from '@/utils/electron_compat/core'
 import { getStoreValue } from '../../../../utils/store'
+import { loadInstalledPlugins } from '../Plugin/installedPlugins'
 
 const keyMap = {
   Backquote: '`',
@@ -60,9 +62,26 @@ export default function Hotkey() {
   const [ocrTranslate, setOcrTranslate] = useConfig('hotkey_ocr_translate', '', {
     sync: false,
   })
+  const [pluginHotkeyRows, setPluginHotkeyRows] = useState([])
 
   const { t } = useTranslation()
   const toastStyle = useToastStyle()
+
+  useEffect(() => {
+    loadInstalledPlugins().then((plugins) => {
+      setPluginHotkeyRows(
+        plugins.flatMap((plugin) =>
+          (plugin.hotkeys ?? []).map((hotkey) => ({
+            pluginId: plugin.id,
+            pluginDisplay: plugin.display,
+            key: hotkey.key,
+            display: hotkey.display,
+            hotkey: hotkey.default,
+          })),
+        ),
+      )
+    })
+  }, [])
 
   function keyDown(e, name, setKey) {
     e.preventDefault()
@@ -157,9 +176,10 @@ export default function Hotkey() {
   }
 
   return (
-    <Card>
-      <Toaster position="top-center" />
-      <CardBody>
+    <div className="flex flex-col gap-4">
+      <Card>
+        <Toaster position="top-center" />
+        <CardBody>
         <div className="config-item">
           <h3 className="my-auto">{t('config.hotkey.selection_translate')}</h3>
           {selectionTranslate !== null && (
@@ -272,7 +292,14 @@ export default function Hotkey() {
             />
           )}
         </div>
-      </CardBody>
-    </Card>
+        </CardBody>
+      </Card>
+      <Card>
+        <CardBody>
+          <h2 className="font-semibold mb-2">{t('config.hotkey.plugin_section')}</h2>
+          <PluginHotkeyEditor rows={pluginHotkeyRows} />
+        </CardBody>
+      </Card>
+    </div>
   )
 }

@@ -1,14 +1,12 @@
 // @ts-nocheck
-import { readDir, BaseDirectory, readTextFile, exists } from '@/utils/electron_compat/fs'
 import { listen } from '@/utils/electron_compat/event'
 import { useTranslation } from 'react-i18next'
 import { Tabs, Tab } from '@heroui/react'
-import { appConfigDir, join } from '@/utils/electron_compat/path'
-import { convertFileSrc } from '@/utils/electron_compat/core'
 import React, { useEffect, useState } from 'react'
 import Translate from './Translate'
 import Recognize from './Recognize'
 import Tts from './Tts'
+import { loadEnabledServicePlugins } from '../Plugin/installedPlugins'
 import { ServiceType } from '../../../../utils/service_instance'
 
 let unlisten = null
@@ -18,32 +16,7 @@ export default function Service() {
   const { t } = useTranslation()
 
   const loadPluginList = async () => {
-    const serviceTypeList = ['translate', 'tts', 'recognize']
-    const temp = {}
-    for (const serviceType of serviceTypeList) {
-      temp[serviceType] = {}
-      if (await exists(`plugins/${serviceType}`, { baseDir: BaseDirectory.AppConfig })) {
-        const plugins = await readDir(`plugins/${serviceType}`, {
-          baseDir: BaseDirectory.AppConfig,
-        })
-        for (const plugin of plugins) {
-          const infoStr = await readTextFile(`plugins/${serviceType}/${plugin.name}/info.json`, {
-            baseDir: BaseDirectory.AppConfig,
-          })
-          const pluginInfo = JSON.parse(infoStr)
-          if ('icon' in pluginInfo) {
-            const appConfigDirPath = await appConfigDir()
-            const iconPath = await join(
-              appConfigDirPath,
-              `/plugins/${serviceType}/${plugin.name}/${pluginInfo.icon}`,
-            )
-            pluginInfo.icon = convertFileSrc(iconPath)
-          }
-          temp[serviceType][plugin.name] = pluginInfo
-        }
-      }
-    }
-    setPluginList({ ...temp })
+    setPluginList(await loadEnabledServicePlugins())
   }
 
   useEffect(() => {
