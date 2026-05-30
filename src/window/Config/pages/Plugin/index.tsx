@@ -59,7 +59,9 @@ export default function Plugin() {
 
   async function togglePlugin(plugin, enabled) {
     await pluginApi.setEnabled(plugin.type, plugin.name, enabled)
-    setPlugins((current) => current.map((item) => (item.id === plugin.id ? { ...item, enabled } : item)))
+    setPlugins((current) =>
+      current.map((item) => (item.id === plugin.id ? { ...item, enabled } : item)),
+    )
     await emit('reload_plugin_list')
   }
 

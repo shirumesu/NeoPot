@@ -265,9 +265,7 @@ const assertDialogOpenPayload = (payload: unknown) => {
     ? payload.filters
         .filter(
           (filter) =>
-            isRecord(filter) &&
-            typeof filter.name === 'string' &&
-            Array.isArray(filter.extensions),
+            isRecord(filter) && typeof filter.name === 'string' && Array.isArray(filter.extensions),
         )
         .map((filter) => ({
           name: filter.name as string,

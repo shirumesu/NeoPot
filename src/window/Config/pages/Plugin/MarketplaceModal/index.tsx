@@ -1,5 +1,13 @@
 // @ts-nocheck
-import { Button, Input, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from '@heroui/react'
+import {
+  Button,
+  Input,
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+} from '@heroui/react'
 import { useTranslation } from 'react-i18next'
 import React, { useEffect, useState } from 'react'
 
@@ -20,7 +28,9 @@ export default function MarketplaceModal(props) {
   const normalizedQuery = query.trim().toLowerCase()
   const filteredPlugins = normalizedQuery
     ? plugins.filter((plugin) =>
-        `${plugin.display} ${plugin.author} ${plugin.description}`.toLowerCase().includes(normalizedQuery),
+        `${plugin.display} ${plugin.author} ${plugin.description}`
+          .toLowerCase()
+          .includes(normalizedQuery),
       )
     : plugins
 

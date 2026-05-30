@@ -6,13 +6,7 @@ import React from 'react'
 import { createServiceInstanceKey } from '../../../../../utils/service_instance'
 
 export default function SelectPluginModal(props) {
-  const {
-    isOpen,
-    onOpenChange,
-    setCurrentConfigKey,
-    onConfigOpen,
-    pluginList,
-  } = props
+  const { isOpen, onOpenChange, setCurrentConfigKey, onConfigOpen, pluginList } = props
   const { t } = useTranslation()
 
   return (
