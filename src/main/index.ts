@@ -1,7 +1,8 @@
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, protocol } from 'electron'
 import { spawn } from 'node:child_process'
 import { copyFileSync, rmSync } from 'node:fs'
 import path from 'node:path'
+import { RENDERER_SCHEME } from './modules/rendererProtocol'
 
 if (process.platform === 'win32') {
   app.setAppUserModelId('com.squirrel.neopot.neopot')
@@ -20,6 +21,20 @@ if (squirrelStartupHandled) {
     app.commandLine.appendSwitch('in-process-gpu')
     app.commandLine.appendSwitch('no-sandbox')
   }
+
+  // Register the renderer scheme before the app is ready so packaged windows
+  // can load over `neopot://` (a non-`file:` origin) instead of `file:`.
+  protocol.registerSchemesAsPrivileged([
+    {
+      scheme: RENDERER_SCHEME,
+      privileges: {
+        standard: true,
+        secure: true,
+        supportFetchAPI: true,
+        stream: true,
+      },
+    },
+  ])
 
   const gotSingleInstanceLock = app.requestSingleInstanceLock()
 
@@ -56,6 +71,7 @@ async function startApp(): Promise<void> {
   })
 
   app.whenReady().then(async () => {
+    windowModule.registerRendererProtocol()
     await config.initializeConfig()
     await windowModule.openWindow('config')
     tray.setupTray()

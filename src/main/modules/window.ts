@@ -1,14 +1,18 @@
 import { existsSync } from 'node:fs'
 import path from 'node:path'
+import { pathToFileURL } from 'node:url'
 import {
   app,
   BrowserWindow,
   Menu,
+  net,
+  protocol,
   screen,
   type BrowserWindowConstructorOptions,
   type WebContents,
 } from 'electron'
 import { getConfig, setConfig } from './config'
+import { RENDERER_HOST, RENDERER_SCHEME, resolveRendererFile } from './rendererProtocol'
 
 export type WindowLabel = 'config' | 'translate' | 'recognize' | 'screenshot' | 'updater'
 
@@ -82,28 +86,45 @@ function getAppIconPath(): string {
   return candidates.find((candidate) => existsSync(candidate)) ?? candidates[0]
 }
 
-function rendererUrl(label: WindowLabel): string | null {
-  if (!MAIN_WINDOW_VITE_DEV_SERVER_URL) {
-    return null
+function getRendererRoot(): string {
+  return path.join(__dirname, '..', 'renderer', MAIN_WINDOW_VITE_NAME)
+}
+
+function rendererUrl(label: WindowLabel): string {
+  if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
+    const url = new URL(MAIN_WINDOW_VITE_DEV_SERVER_URL)
+    url.searchParams.set('window', label)
+    return url.toString()
   }
 
-  const url = new URL(MAIN_WINDOW_VITE_DEV_SERVER_URL)
+  // Packaged builds serve the renderer over `neopot://` so the page has a
+  // non-`file:` origin. PaddleOCR.js (`ensureServedFromHttp`) refuses to fetch
+  // its model assets on a `file:` origin, which broke OCR in packaged builds.
+  const url = new URL(`${RENDERER_SCHEME}://${RENDERER_HOST}/index.html`)
   url.searchParams.set('window', label)
   return url.toString()
 }
 
-async function loadRenderer(window: BrowserWindow, label: WindowLabel) {
-  const url = rendererUrl(label)
-  if (url) {
-    await window.loadURL(url)
+// Serves the packaged renderer bundle over the custom scheme. Must run after
+// the app is ready and before any window loads. Dev keeps using Vite's http
+// server, so the handler is only needed for packaged builds.
+export function registerRendererProtocol(): void {
+  if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
     return
   }
 
-  await window.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`), {
-    query: {
-      window: label,
-    },
+  const root = getRendererRoot()
+  protocol.handle(RENDERER_SCHEME, async (request) => {
+    const filePath = resolveRendererFile(request.url, root)
+    if (!filePath) {
+      return new Response('Not found', { status: 404 })
+    }
+    return net.fetch(pathToFileURL(filePath).toString())
   })
+}
+
+async function loadRenderer(window: BrowserWindow, label: WindowLabel) {
+  await window.loadURL(rendererUrl(label))
 }
 
 function positionTranslateWindow(window: BrowserWindow) {
