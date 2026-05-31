@@ -1,0 +1,67 @@
+import {
+  VscChromeClose,
+  VscChromeMinimize,
+  VscChromeMaximize,
+  VscChromeRestore,
+} from 'react-icons/vsc'
+import React, { useEffect, useState } from 'react'
+import { getCurrentWebviewWindow } from '@/renderer/lib/electron/compat/webviewWindow'
+import { listen } from '@/renderer/lib/electron/compat/event'
+import { Button } from '@heroui/react'
+
+import { osType } from '@/renderer/lib/config/env'
+import './style.css'
+const appWindow = getCurrentWebviewWindow()
+
+export default function WindowControl() {
+  const [isMax, setIsMax] = useState(false)
+
+  useEffect(() => {
+    void listen('tauri://resize', async () => {
+      if (await appWindow.isMaximized()) {
+        setIsMax(true)
+      } else {
+        setIsMax(false)
+      }
+    })
+  }, [])
+
+  return (
+    <div>
+      <Button
+        isIconOnly
+        variant="light"
+        className="w-8.75 h-8.75 rounded-none"
+        onPress={() => appWindow.minimize()}
+      >
+        <VscChromeMinimize className="text-[16px]" />
+      </Button>
+      <Button
+        isIconOnly
+        variant="light"
+        className="w-8.75 h-8.75 rounded-none"
+        onPress={() => {
+          if (isMax) {
+            void appWindow.unmaximize()
+          } else {
+            void appWindow.maximize()
+          }
+        }}
+      >
+        {isMax ? (
+          <VscChromeRestore className="text-[16px]" />
+        ) : (
+          <VscChromeMaximize className="text-[16px]" />
+        )}
+      </Button>
+      <Button
+        isIconOnly
+        variant="light"
+        className={`w-8.75 h-8.75 rounded-none close-button ${osType === 'Linux' && 'rounded-tr-[10px]'}`}
+        onPress={() => void appWindow.close()}
+      >
+        <VscChromeClose className="text-[16px]" />
+      </Button>
+    </div>
+  )
+}

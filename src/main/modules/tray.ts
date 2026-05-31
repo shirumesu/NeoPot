@@ -1,9 +1,9 @@
 import { existsSync } from 'node:fs'
 import path from 'node:path'
 import { app, Menu, nativeImage, Tray } from 'electron'
-import enUS from '../../i18n/locales/en_US.json'
-import zhCN from '../../i18n/locales/zh_CN.json'
-import zhTW from '../../i18n/locales/zh_TW.json'
+import enUS from '../../renderer/i18n/locales/en_US.json'
+import zhCN from '../../renderer/i18n/locales/zh_CN.json'
+import zhTW from '../../renderer/i18n/locales/zh_TW.json'
 import { getConfig } from './config'
 import {
   inputTranslate,

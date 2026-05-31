@@ -1,0 +1,133 @@
+{
+  "translation": {
+    "config": {
+      "general": {
+        "default_font": "Bellenen",
+        "theme": {
+          "system": "Ulgam",
+          "dark": "Garañky",
+          "light": "Ýagty"
+        },
+        "font_size": {
+          "10": "Goşmaça kiçi (10px)",
+          "12": "Örän kiçi (12px)",
+          "14": "Kiçi (14px)",
+          "16": "Standart (16px)",
+          "18": "Uly (18px)",
+          "20": "Örän uly (20px)",
+          "24": "Goşmaça Uly (24px)",
+          "title": "Şrift ölçegi"
+        },
+        "proxy": {
+          "password": "Parol",
+          "title": "Proksy",
+          "username": "Ulanyjy ady",
+          "no_proxy": "Proksi ýok",
+          "host": "Host",
+          "port": "Port"
+        },
+        "title": "Umumy Sazlamalar",
+        "label": "Umumy",
+        "auto_start": "Awto Başlangyç",
+        "check_update": "Täzelenmäni Barlaň",
+        "close_to_tray": "Ýapanda treýde kiçelt",
+        "server_port": "Serwer porty",
+        "app_language": "Dili",
+        "app_theme": "Tema",
+        "app_font": "Şrift",
+        "app_fallback_font": "Yza gaýdýan şrift",
+        "dev_mode": "Developer mody",
+        "server_port_change": "Serwer porty üýtgedildi, üýtgeşmeleriň güýje girmegi üçin programmany täzeden açyň"
+      }
+    },
+    "languages": {
+      "ar": "Arapça",
+      "hi": "Hindi Dili",
+      "mn_mo": "Mongol",
+      "pt_br": "Portugaliýa (Braziliýa)",
+      "auto": "Awto Gözläň",
+      "zh_cn": "Ýönekeýleşdirilen Hytaý",
+      "zh_tw": "Adaty Hytaý",
+      "en": "Iñlis dili",
+      "ja": "Ýapon dili",
+      "ko": "Koreýs dili",
+      "fr": "Fransuz",
+      "es": "Ispan",
+      "ru": "Rus",
+      "de": "Nemes",
+      "it": "Italýan",
+      "tr": "Türk",
+      "pt_pt": "Portugaliýa",
+      "mn_cy": "Mongol (kiril)",
+      "km": "Khmer",
+      "nb_no": "Norwegiýaly Bokmål",
+      "nn_no": "Norwegiýaly Nynorsk",
+      "fa": "Pars",
+      "sv": "Şwesiýa",
+      "pl": "Polýak",
+      "nl": "Gollandiýa",
+      "uk": "Ukrainiýa",
+      "he": "Hebrewýçe",
+      "vi": "Wýetnam",
+      "th": "Taý Dili",
+      "id": "Indoneziýaly",
+      "ms": "Malaý"
+    },
+    "common": {
+      "ok": "Bolýa",
+      "cancel": "Ýatyr",
+      "save": "Saklaň",
+      "write_clipboard": "Ýat paneline ýazyň",
+      "plugin": "Plugin",
+      "coming": "Tiz ýakynda…",
+      "clear": "Arassala"
+    },
+    "services": {
+      "recognize": {
+        "local_model": {
+          "title": "Local Model OCR",
+          "description": "Uses the bundled PaddleOCR.js PP-OCRv5 local model assets in the app. Recognition does not use a cloud OCR API."
+        }
+      },
+      "translate": {
+        "deepl": {
+          "title": "DeepL",
+          "custom_url": "DeepLX URL",
+          "auth_key": "Auth Key",
+          "type": "Service Type",
+          "free": "Free",
+          "api": "Auth Key",
+          "deeplx": "DeepLX"
+        },
+        "google": {
+          "title": "Google",
+          "custom_url": "Custom URL"
+        },
+        "ollama": {
+          "title": "Ollama",
+          "install_ollama": "Unable to connect to local ollama, please download, install and start ollama first. If you use ollama that is not on this machine, please change the request address.",
+          "install_ollama_link": "Download Ollama",
+          "request_path": "Request Path",
+          "stream": "Stream Mode",
+          "model": "Model",
+          "advanced_options": "Advanced Options",
+          "advanced_description": "Leave blank to use the model or Ollama defaults. Thinking mode only applies to models that support it.",
+          "thinking_mode": "Thinking Mode",
+          "thinking_default": "Use Model Default",
+          "thinking_on": "Enable Thinking",
+          "thinking_off": "Disable Thinking",
+          "temperature": "Temperature",
+          "top_p": "Top P",
+          "top_k": "Top K",
+          "use_model_default": "Leave blank to use defaults",
+          "install_model": "Install",
+          "ready": "Ready",
+          "not_installed": "This model has not been installed yet, click to download and install now",
+          "supported_models": "Click to see a list of Ollama available models",
+          "prompt_description": "By customizing the Prompt, you can customize the behavior of AI. $text $from $to $detect will be replaced with the text to be translated, source language, target language and detected language.",
+          "add": "Add Prompt"
+        }
+      }
+    }
+  }
+}

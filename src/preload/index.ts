@@ -6,7 +6,7 @@ import type {
   TranslateRequest,
   TranslateResult,
   WindowLabel,
-} from '../types/electron-api'
+} from '../shared/types/electron-api'
 
 type IpcChannel =
   | 'app:get-window-label'

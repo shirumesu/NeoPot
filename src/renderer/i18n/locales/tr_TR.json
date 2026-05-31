@@ -1,0 +1,65 @@
+{
+  "translation": {
+    "common": {
+      "ok": "Ok"
+    },
+    "services": {
+      "translate": {
+        "deepl": {},
+        "google": {},
+        "ollama": {
+          "title": "Ollama",
+          "install_ollama": "Unable to connect to local ollama, please download, install and start ollama first. If you use ollama that is not on this machine, please change the request address.",
+          "install_ollama_link": "Download Ollama",
+          "request_path": "Request Path",
+          "stream": "Stream Mode",
+          "model": "Model",
+          "advanced_options": "Advanced Options",
+          "advanced_description": "Leave blank to use the model or Ollama defaults. Thinking mode only applies to models that support it.",
+          "thinking_mode": "Thinking Mode",
+          "thinking_default": "Use Model Default",
+          "thinking_on": "Enable Thinking",
+          "thinking_off": "Disable Thinking",
+          "temperature": "Temperature",
+          "top_p": "Top P",
+          "top_k": "Top K",
+          "use_model_default": "Leave blank to use defaults",
+          "install_model": "Install",
+          "ready": "Ready",
+          "not_installed": "This model has not been installed yet, click to download and install now",
+          "supported_models": "Click to see a list of Ollama available models",
+          "prompt_description": "By customizing the Prompt, you can customize the behavior of AI. $text $from $to $detect will be replaced with the text to be translated, source language, target language and detected language.",
+          "add": "Add Prompt"
+        }
+      },
+      "recognize": {
+        "local_model": {
+          "title": "Local Model OCR",
+          "description": "Uses the bundled PaddleOCR.js PP-OCRv5 local model assets in the app. Recognition does not use a cloud OCR API."
+        }
+      },
+      "tts": {}
+    },
+    "languages": {},
+    "config": {
+      "general": {
+        "proxy": {},
+        "event": {},
+        "theme": {},
+        "font_size": {}
+      },
+      "translate": {
+        "font_size": {}
+      },
+      "recognize": {},
+      "hotkey": {},
+      "service": {},
+      "about": {}
+    },
+    "translate": {
+      "tts_not_configured": "No TTS service configured"
+    },
+    "updater": {},
+    "recognize": {}
+  }
+}

@@ -1,0 +1,254 @@
+{
+  "translation": {
+    "common": {
+      "write_clipboard": "כתוב ללוח",
+      "coming": "בקרוב…",
+      "ok": "אישור",
+      "cancel": "ביטול",
+      "plugin": "תוסף",
+      "save": "שמור",
+      "clear": "נקה",
+      "test": "Test"
+    },
+    "languages": {
+      "auto": "זיהוי אוטומטי",
+      "th": "תאילנדית",
+      "zh_tw": "סינית מסורתית",
+      "zh_cn": "סינית פשוטה",
+      "ms": "מלאית",
+      "ar": "ערבית",
+      "uk": "אוקראינית",
+      "ja": "יפנית",
+      "en": "אנגלית",
+      "ko": "קוראנית",
+      "fr": "צרפתית",
+      "es": "ספרדית",
+      "ru": "רוסית",
+      "de": "גרמנית",
+      "it": "איטלקית",
+      "pt_pt": "פורטוגזית",
+      "pt_br": "פורטוגזית (ברזיל)",
+      "vi": "וייטנאמית",
+      "id": "אינדונזית",
+      "hi": "הודית",
+      "mn_mo": "מונגולית",
+      "mn_cy": "מונגולית (קירילית)",
+      "nb_no": "בוקמול נורבגית",
+      "fa": "פרסית",
+      "sv": "שוודית",
+      "pl": "פולנית",
+      "nl": "הולנדית",
+      "tr": "טורקית",
+      "he": "עברית",
+      "km": "קאמרית"
+    },
+    "config": {
+      "general": {
+        "auto_start": "הפעלה אוטומטית",
+        "check_update": "עדכון אוטומטי",
+        "close_to_tray": "מזער למגש המערכת בעת סגירה",
+        "theme": {
+          "dark": "כהה",
+          "system": "מערכת",
+          "light": "מואר"
+        },
+        "proxy_change": "ה-proxy שונה, הפעל מחדש את האפליקציה כדי שהשינויים ייכנסו לתוקף",
+        "label": "כללי",
+        "title": "הגדרות כלליות",
+        "font_size": {
+          "10": "קטן במיוחד (10px)",
+          "12": "קטן מאוד (12px)",
+          "14": "קטן (14px)",
+          "16": "רגיל (16px)",
+          "18": "גדול (18px)",
+          "20": "גדול מאוד (20px)",
+          "24": "גדול במיוחד (24px)",
+          "title": "גודל גופן"
+        },
+        "default_font": "ברירת מחדל",
+        "proxy": {
+          "title": "פרוקסי",
+          "username": "שם-משתמש",
+          "password": "סיסמא",
+          "no_proxy": "ללא פרוקסי",
+          "port": "יציאה",
+          "host": "מארח"
+        },
+        "proxy_error": "אנא מלא את כתובת המארח והיציאה",
+        "event": {
+          "config": "העדפה",
+          "translate": "תרגם",
+          "disable": "מבוטל",
+          "ocr_translate": "תרגם צילום מסך",
+          "ocr_recognize": "זיהוי טקסט"
+        },
+        "app_language": "שפת תצוגה",
+        "app_theme": "ערכת נושא",
+        "app_font": "גופן",
+        "dev_mode": "מצב מפתח",
+        "server_port": "יציאת האזנה",
+        "server_port_change": "יציאת ההאזנה שונתה, אנא הפעל מחדש את האפליקציה כדי שהשינויים ייכנסו לתוקף",
+        "tray_click_event": "בלחיצה על סמל המגש",
+        "app_fallback_font": "גופן חילופי"
+      },
+      "hotkey": {
+        "ocr_translate": "תרגם צילום מסך",
+        "label": "קיצור מקשים",
+        "title": "הגדרות קיצור מקשים",
+        "selection_translate": "תרגם את הבחירה",
+        "input_translate": "תרגם טקסט",
+        "ocr_recognize": "זהה טקסט",
+        "is_register": "מקש הקיצור כבר מוגדר",
+        "success": "הגדרת מקשי קיצור הצליח",
+        "set_hotkey": "לחץ כדי להגדיר מקיש קיצור"
+      },
+      "service": {
+        "view_plugin_list": "הצג רשימת תוספים",
+        "label": "שירות",
+        "title": "הגדרות שירות",
+        "translate": "תרגם",
+        "recognize": "זהה",
+        "least": "שמור משהו אחד לפחות",
+        "add_builtin_service": "הוסף שירות מובנה",
+        "add_external_service": "הוסף הרחבה",
+        "add_service": "הוסף שירות",
+        "test_failed": "הבדיקה נכשלה",
+        "install_plugin": "התקן תוסף",
+        "uninstall_success": "התוסף הוסר בהצלחה",
+        "homepage": "דף הבית",
+        "tts": "TTS",
+        "test_success": "הבדיקה הצליחה"
+      },
+      "translate": {
+        "target": "יעד",
+        "window_position": "‪מיקום החלון",
+        "local": "מקומי",
+        "label": "תרגם",
+        "title": "הגדרות תרגום",
+        "source_language": "שפת המקור",
+        "target_language": "שפת היעד",
+        "second_language": "שפת יעד משנית",
+        "auto_copy": "העתקה אוטומטית",
+        "source": "מקור",
+        "source_target": "מקור+יעד",
+        "disable": "מבוטל",
+        "remember_language": "זכור את שפת היעד",
+        "font_size": {
+          "10": "קטן מאוד מאוד (10px)",
+          "12": "קטן מאוד (12px)",
+          "14": "קטן (14px)",
+          "16": "רגיל (16px)",
+          "18": "גדול (18px)",
+          "20": "גדול מאוד (20px)",
+          "24": "גדול מאוד מאוד (24px)",
+          "title": "גודל גופן"
+        },
+        "dynamic_translate": "תרגום דינמי",
+        "mouse": "עקוב אחר העכבר",
+        "always_on_top": "תמיד עליון",
+        "hide_source": "הסתר אזור מקור",
+        "close_on_blur": "סגור את החלון כאשר המיקוד אינו פעיל",
+        "hide_language": "הסתר אזור שפה",
+        "hide_window": "הסתר חלון תרגום",
+        "detect_engine": "מנוע זיהוי שפה",
+        "tencent": "Tencent",
+        "baidu": "Baidu",
+        "google": "Google",
+        "yandex": "Yandex",
+        "remember_window_size": "זכור את גודל החלון",
+        "niutrans": "NiuTrans",
+        "bing": "Bing",
+        "incremental_translate": "תרגום מצטבר"
+      },
+      "about": {
+        "email": "דוא\"ל",
+        "title": "אודות התוכנה",
+        "community": "קהילה",
+        "check_update": "חפש עדכונים",
+        "view_log": "הצג יומן רישום",
+        "view_config": "הצג תצורה",
+        "telegram": "Telegram",
+        "discussion": "דיון Github",
+        "github": "GitHub",
+        "label": "אודות",
+        "website": "אתר האינטרנט",
+        "feedback": "משוב",
+        "qq_channel": "ערוץ QQ",
+        "qq_group": "קבוצת QQ",
+        "issue": "גיליון"
+      },
+      "recognize": {
+        "label": "זהה",
+        "title": "הגדרות זיהוי",
+        "language": "שפת זיהוי",
+        "auto_copy": "העתקה אוטומטית",
+        "hide_window": "הסתר חלון זיהוי",
+        "close_on_blur": "סגור את החלון כאשר המיקוד אינו פעיל"
+      }
+    },
+    "updater": {
+      "installed": "ההתקנה הושלמה, הפעל מחדש את האפליקציה כדי שהשינויים ייכנסו לתוקף",
+      "title": "חפש עדכונים",
+      "latest": "## הגרסה האחרונה מותקנת",
+      "progress": "התקדמות הורדה",
+      "downloading": "מוריד…",
+      "update": "עדכן",
+      "installing": "מתקין…",
+      "cancel": "ביטול"
+    },
+    "services": {
+      "help": "מדריך תצורה",
+      "instance_name": "שם תצורה",
+      "translate": {
+        "deepl": {
+          "title": "DeepL",
+          "type": "סוג שירות",
+          "free": "חינם",
+          "auth_key": "מפתח אוטומטי",
+          "api": "מפתח אוטומטי",
+          "custom_url": "קישור DeepLX",
+          "deeplx": "DeepLX"
+        },
+        "google": {
+          "title": "Google",
+          "custom_url": "קישור מותאם אישית"
+        },
+        "ollama": {
+          "install_ollama_link": "הורד את Ollama",
+          "title": "Ollama",
+          "request_path": "בקש נתיב",
+          "model": "מודל",
+          "install_model": "התקן",
+          "ready": "מוכן",
+          "not_installed": "מודל זה לא הותקן עדיין, לחץ כדי להוריד ולהתקין עכשיו",
+          "supported_models": "לחץ כדי לראות רשימה של דגמים זמינים ב- Ollama",
+          "prompt_description": "על ידי התאמה אישית של ההנחיה, אתה יכול להתאים אישית את ההתנהגות של הבינה המלאכותית. $text $from $to $detect יוחלף בטקסט לתרגום, שפת המקור, שפת היעד ושפת הזיהוי.",
+          "add": "הוסף הנחיה",
+          "install_ollama": "אין אפשרות להתחבר לתוכנת ollama המקומית, אנא הורד, התקן והתחל תחילה את ollama. אם אתה משתמש ב-ollama במכונה אחרת, אנא שנה את כתובת הבקשה.",
+          "stream": "מצב הזרמה"
+        }
+      },
+      "no_need": "אין צורך בתצורה",
+      "recognize": {
+        "local_model": {
+          "title": "Local Model OCR",
+          "description": "Uses the bundled PaddleOCR.js PP-OCRv5 local model assets in the app. Recognition does not use a cloud OCR API."
+        }
+      }
+    },
+    "translate": {
+      "translate": "תרגם",
+      "recognizing": "מזהה…",
+      "translate_back": "תרגום חזרה למקור",
+      "copy": "העתק",
+      "retry": "נסה שוב",
+      "tts_not_configured": "No TTS service configured"
+    },
+    "recognize": {
+      "translate": "תרגם",
+      "copy_img": "העתק תמונה",
+      "recognize": "זהה",
+      "copy_text": "העתק"
+    }
+  }
+}
