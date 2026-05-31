@@ -90,7 +90,8 @@
         "default_font": "Padrão",
         "app_font": "Fonte",
         "app_fallback_font": "Fonte Reserva",
-        "dev_mode": "Modo de Desenvolvedor"
+        "dev_mode": "Modo de Desenvolvedor",
+        "log_level": "Log Level"
       },
       "translate": {
         "label": "Traduzir",

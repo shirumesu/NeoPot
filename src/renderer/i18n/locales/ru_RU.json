@@ -90,7 +90,8 @@
         "default_font": "По умолчанию",
         "app_font": "Шрифт",
         "app_fallback_font": "Резервный шрифт",
-        "dev_mode": "Режим разработчика"
+        "dev_mode": "Режим разработчика",
+        "log_level": "Log Level"
       },
       "translate": {
         "label": "Перевести",

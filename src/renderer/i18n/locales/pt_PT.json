@@ -131,7 +131,8 @@
         "app_language": "Idioma de Exibição",
         "title": "Configurações Gerais",
         "app_fallback_font": "Fonte Reserva",
-        "dev_mode": "Modo de Programador"
+        "dev_mode": "Modo de Programador",
+        "log_level": "Log Level"
       },
       "translate": {
         "bing": "Bing",

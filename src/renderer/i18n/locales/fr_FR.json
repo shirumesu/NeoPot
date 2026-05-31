@@ -131,7 +131,8 @@
         },
         "app_font": "Police de caractères",
         "app_fallback_font": "Police de caractères secondaire",
-        "dev_mode": "Mode développeur"
+        "dev_mode": "Mode développeur",
+        "log_level": "Log Level"
       },
       "translate": {
         "bing": "Bing",

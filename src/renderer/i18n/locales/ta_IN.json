@@ -115,6 +115,7 @@
         },
         "default_font": "இயல்புநிலை",
         "dev_mode": "உருவாக்குபவர் பயன்முறை",
+        "log_level": "Log Level",
         "proxy": {
           "title": "பதிலாள்",
           "host": "விருந்தோம்பி",

@@ -56,6 +56,7 @@
         "app_theme": "App Thema",
         "app_font": "Schriftart",
         "app_fallback_font": "Fallback-Schriftart",
+        "log_level": "Log Level",
         "font_size": {
           "10": "Sehr klein (10px)",
           "12": "Extra klein (12px)",

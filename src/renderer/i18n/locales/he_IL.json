@@ -86,6 +86,7 @@
         "app_theme": "ערכת נושא",
         "app_font": "גופן",
         "dev_mode": "מצב מפתח",
+        "log_level": "Log Level",
         "server_port": "יציאת האזנה",
         "server_port_change": "יציאת ההאזנה שונתה, אנא הפעל מחדש את האפליקציה כדי שהשינויים ייכנסו לתוקף",
         "tray_click_event": "בלחיצה על סמל המגש",

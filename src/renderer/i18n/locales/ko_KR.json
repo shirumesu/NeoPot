@@ -111,6 +111,7 @@
           "system": "시스템 설정"
         },
         "dev_mode": "개발자 모드",
+        "log_level": "Log Level",
         "proxy": {
           "title": "프록시 설정",
           "host": "호스트",

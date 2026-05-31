@@ -1,6 +1,7 @@
 import { LazyStore } from '@/renderer/lib/electron/compat/store'
 import { appConfigDir, join } from '@/renderer/lib/electron/compat/path'
 import { watch } from '@/renderer/lib/electron/compat/fs'
+import log from 'electron-log/renderer'
 import { electronCommand } from '../electron/command'
 
 type StoreKey = string
@@ -184,7 +185,7 @@ export async function initStore(): Promise<void> {
         }
         await reloadStoreFromDisk()
       } catch (error) {
-        console.error('Failed to reload store after file watch event:', error)
+        log.error('Failed to reload store after file watch event:', error)
       }
     }, 150)
   })

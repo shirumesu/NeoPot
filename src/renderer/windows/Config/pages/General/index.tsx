@@ -7,7 +7,7 @@ import { DropdownItem } from '@heroui/react'
 import { useTranslation } from 'react-i18next'
 import { CardBody } from '@heroui/react'
 import { Dropdown } from '@heroui/react'
-import { info } from '@/renderer/lib/electron/compat/log'
+import log from 'electron-log/renderer'
 import { Button } from '@heroui/react'
 import { Switch } from '@heroui/react'
 import 'flag-icons/css/flag-icons.min.css'
@@ -15,6 +15,8 @@ import { Input } from '@heroui/react'
 import { Card } from '@heroui/react'
 import { invoke } from '@/renderer/lib/electron/compat/core'
 import { useTheme } from 'next-themes'
+import { applyRendererLogLevel } from '@/renderer/lib/electron/logLevel'
+import { isLogLevel, type AppLogLevel } from '@/shared/logLevel'
 
 import { isSameConfigValue, useConfig } from '../../../../hooks/useConfig'
 import { LanguageFlag } from '@/renderer/lib/language/language'
@@ -62,6 +64,7 @@ export default function General() {
   const [appFallbackFont, setAppFallbackFont] = useConfig('app_fallback_font', 'default')
   const [appFontSize, setAppFontSize] = useConfig('app_font_size', 16)
   const [devMode, setDevMode] = useConfig('dev_mode', false)
+  const [logLevel, setLogLevel] = useConfig<AppLogLevel>('log_level', 'info')
   const [trayClickEvent, setTrayClickEvent] = useConfig('tray_click_event', 'config')
   const [proxyEnable, setProxyEnable] = useConfig('proxy_enable', false)
   const [proxyHost, setProxyHost] = useConfig('proxy_host', '')
@@ -80,7 +83,7 @@ export default function General() {
   }
   const saveAndNotify = async (key, currentValue, setter, value) => {
     if (isSameConfigValue(currentValue, value)) {
-      return
+      return true
     }
 
     try {
@@ -90,11 +93,13 @@ export default function General() {
         duration: 1500,
         style: toastStyle,
       })
+      return true
     } catch {
       toast.error(t('config.common.save_failed'), {
         duration: 3000,
         style: toastStyle,
       })
+      return false
     }
   }
 
@@ -146,10 +151,10 @@ export default function General() {
                 try {
                   if (v) {
                     await enable()
-                    info('Auto start enabled')
+                    log.info('Auto start enabled')
                   } else {
                     await disable()
-                    info('Auto start disabled')
+                    log.info('Auto start disabled')
                   }
                   const verified = await isEnabled()
                   if (verified !== v) {
@@ -547,6 +552,54 @@ export default function General() {
                   saveAndNotify('dev_mode', devMode, setDevMode, v)
                 }}
               />
+            )}
+          </div>
+          <div className="config-item">
+            <h3>{t('config.general.log_level')}</h3>
+            {logLevel !== null && (
+              <Dropdown>
+                <DropdownTrigger>
+                  <Button variant="bordered">
+                    {logLevel.charAt(0).toUpperCase() + logLevel.slice(1)}
+                  </Button>
+                </DropdownTrigger>
+                <DropdownMenu
+                  aria-label="log level"
+                  onAction={async (key) => {
+                    const nextLevel = String(key)
+                    if (!isLogLevel(nextLevel)) {
+                      return
+                    }
+
+                    const saved = await saveAndNotify(
+                      'log_level',
+                      logLevel,
+                      setLogLevel,
+                      nextLevel,
+                    )
+                    if (!saved) {
+                      return
+                    }
+
+                    applyRendererLogLevel(nextLevel)
+                    const applied = await invoke<boolean>('log:set-level', { level: nextLevel })
+                    if (applied !== true) {
+                      await setLogLevel(logLevel, true)
+                      applyRendererLogLevel(logLevel)
+                      toast.error(t('config.common.save_failed'), {
+                        duration: 3000,
+                        style: toastStyle,
+                      })
+                    }
+                  }}
+                >
+                  <DropdownItem key="debug">Debug</DropdownItem>
+                  <DropdownItem key="info">Info</DropdownItem>
+                  <DropdownItem key="warn">Warn</DropdownItem>
+                  <DropdownItem key="error">Error</DropdownItem>
+                  <DropdownItem key="silent">Silent</DropdownItem>
+                </DropdownMenu>
+              </Dropdown>
             )}
           </div>
         </CardBody>

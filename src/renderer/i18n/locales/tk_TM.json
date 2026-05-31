@@ -37,6 +37,7 @@
         "app_font": "Şrift",
         "app_fallback_font": "Yza gaýdýan şrift",
         "dev_mode": "Developer mody",
+        "log_level": "Log Level",
         "server_port_change": "Serwer porty üýtgedildi, üýtgeşmeleriň güýje girmegi üçin programmany täzeden açyň"
       }
     },

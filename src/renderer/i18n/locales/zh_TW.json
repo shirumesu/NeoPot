@@ -90,7 +90,8 @@
           "title": "字型大小"
         },
         "default_font": "預設",
-        "dev_mode": "開發者模式"
+        "dev_mode": "開發者模式",
+        "log_level": "Log Level"
       },
       "translate": {
         "label": "翻譯設定",

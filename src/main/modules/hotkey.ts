@@ -1,4 +1,5 @@
 import { globalShortcut } from 'electron'
+import log from 'electron-log/main'
 import { inputTranslate, ocrRecognize, ocrTranslate, selectionTranslate } from './workflow'
 import { getConfig, setConfig } from './config'
 
@@ -34,7 +35,7 @@ export function registerGlobalShortcuts(scope: 'all' | string = 'all'): void {
     })
 
     if (!registered) {
-      console.warn(`Failed to register global shortcut: ${name}`)
+      log.warn(`Failed to register global shortcut: ${name}`)
     }
   }
 }

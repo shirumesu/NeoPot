@@ -83,6 +83,7 @@
         "title": "Ajustes generales",
         "app_fallback_font": "Fuente alternativa",
         "dev_mode": "Modo desarrollador",
+        "log_level": "Log Level",
         "event": {
           "ocr_recognize": "Reconocimiento de texto",
           "disable": "Desactivar",

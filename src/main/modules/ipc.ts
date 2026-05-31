@@ -9,11 +9,13 @@ import {
   type IpcMainInvokeEvent,
   type Rectangle,
 } from 'electron'
+import log from 'electron-log/main'
 import { execFile } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { mkdir, readdir, readFile, rm } from 'node:fs/promises'
 import path from 'node:path'
 import { promisify } from 'node:util'
+import { isLogLevel, toLogTransportLevel } from '../../shared/logLevel'
 import { translate as translateService } from '../services'
 import {
   installPlugin,
@@ -615,6 +617,22 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
           return undefined
         case 'reload_store':
           return undefined
+        case 'log:set-level': {
+          const level =
+            args && typeof args === 'object' && 'level' in args ? String(args.level) : ''
+          if (!isLogLevel(level)) {
+            throw new NeoPotError({
+              code: 'IPC_INVALID_PAYLOAD',
+              message: `Invalid log level: ${level}`,
+            })
+          }
+          const transportLevel = toLogTransportLevel(level)
+          log.transports.file.level = transportLevel
+          log.transports.console.level = transportLevel
+          return true
+        }
+        case 'log:get-level':
+          return log.transports.file.level
         default:
           throw new NeoPotError({
             code: 'IPC_UNKNOWN_CHANNEL',

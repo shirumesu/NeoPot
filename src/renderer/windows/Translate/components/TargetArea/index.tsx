@@ -39,7 +39,7 @@ import { invoke_plugin } from '@/renderer/lib/plugin/invoke_plugin'
 import * as builtinServices from '@/renderer/providers/translate'
 import * as builtinTtsServices from '@/renderer/providers/tts'
 
-import { info, error as logError } from '@/renderer/lib/electron/compat/log'
+import log from 'electron-log/renderer'
 import {
   INSTANCE_NAME_CONFIG_KEY,
   ServiceSourceType,
@@ -198,7 +198,7 @@ export default function TargetArea(props) {
 
   useEffect(() => {
     if (error) {
-      logError(`[${currentTranslateServiceInstanceKey}]happened error: ` + error)
+      log.error(`[${currentTranslateServiceInstanceKey}]happened error: ` + error)
     }
   }, [error])
 
@@ -290,7 +290,7 @@ export default function TargetArea(props) {
           },
         ).then(
           (v) => {
-            info(`[${currentTranslateServiceInstanceKey}]resolve:` + v)
+            log.info(`[${currentTranslateServiceInstanceKey}]resolve:` + v)
             if (translateID[index] !== id) return
             setResult(typeof v === 'string' ? v.trim() : v)
             setIsLoading(false)
@@ -325,7 +325,7 @@ export default function TargetArea(props) {
             }
           },
           (e) => {
-            info(`[${currentTranslateServiceInstanceKey}]reject:` + e)
+            log.info(`[${currentTranslateServiceInstanceKey}]reject:` + e)
             if (translateID[index] !== id) return
             setError(e.toString())
             setIsLoading(false)
@@ -366,7 +366,7 @@ export default function TargetArea(props) {
           )
           .then(
             (v) => {
-              info(`[${currentTranslateServiceInstanceKey}]resolve:` + v)
+              log.info(`[${currentTranslateServiceInstanceKey}]resolve:` + v)
               if (translateID[index] !== id) return
               setResult(typeof v === 'string' ? v.trim() : v)
               setIsLoading(false)
@@ -401,7 +401,7 @@ export default function TargetArea(props) {
               }
             },
             (e) => {
-              info(`[${currentTranslateServiceInstanceKey}]reject:` + e)
+              log.info(`[${currentTranslateServiceInstanceKey}]reject:` + e)
               if (translateID[index] !== id) return
               setError(e.toString())
               setIsLoading(false)

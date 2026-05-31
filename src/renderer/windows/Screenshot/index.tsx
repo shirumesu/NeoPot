@@ -3,7 +3,7 @@ import { appCacheDir, join } from '@/renderer/lib/electron/compat/path'
 import { currentMonitor } from '@/renderer/lib/electron/compat/window'
 import { convertFileSrc } from '@/renderer/lib/electron/compat/core'
 import { getCurrentWebviewWindow } from '@/renderer/lib/electron/compat/webviewWindow'
-import { warn, info } from '@/renderer/lib/electron/compat/log'
+import log from 'electron-log/renderer'
 import { invoke } from '@/renderer/lib/electron/compat/core'
 import { listen } from '@/renderer/lib/electron/compat/event'
 const appWindow = getCurrentWebviewWindow()
@@ -92,7 +92,7 @@ export default function Screenshot() {
             setIsDown(true)
             setMouseDownX(e.clientX)
             setMouseDownY(e.clientY)
-            info(`[Screenshot] mouseDown: clientX=${e.clientX}, clientY=${e.clientY}`)
+            log.info(`[Screenshot] mouseDown: clientX=${e.clientX}, clientY=${e.clientY}`)
           } else {
             void appWindow.close()
           }
@@ -107,7 +107,7 @@ export default function Screenshot() {
         onMouseUp={async (e) => {
           const monitor = await currentMonitor()
           const dpi = monitor.size.width / window.innerWidth
-          info(
+          log.info(
             `[Screenshot] mouseUp: clientX=${e.clientX}, clientY=${e.clientY}, mouseDownX=${mouseDownX}, mouseDownY=${mouseDownY}, monitorWidth=${monitor.size.width}, winWidth=${window.innerWidth}, dpi=${dpi}, isMoved=${isMoved}`,
           )
           appWindow.hide()
@@ -119,9 +119,9 @@ export default function Screenshot() {
           const bottom = Math.floor(Math.max(mouseDownY, e.clientY) * dpi)
           const width = right - left
           const height = bottom - top
-          info(`[Screenshot] crop: left=${left}, top=${top}, width=${width}, height=${height}`)
+          log.info(`[Screenshot] crop: left=${left}, top=${top}, width=${width}, height=${height}`)
           if (width <= 0 || height <= 0) {
-            warn('Screenshot area is too small')
+            log.warn('Screenshot area is too small')
             await appWindow.close()
           } else {
             try {

@@ -42,6 +42,7 @@
     "config": {
       "general": {
         "tray_click_event": "رویداد کلیک tray",
+        "log_level": "Log Level",
         "auto_start": "راه اندازی خودکار",
         "proxy": {
           "title": "پروکسی",

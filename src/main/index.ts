@@ -1,8 +1,16 @@
 import { app, BrowserWindow, protocol } from 'electron'
+import log from 'electron-log/main'
 import { spawn } from 'node:child_process'
 import { copyFileSync, rmSync } from 'node:fs'
 import path from 'node:path'
 import { RENDERER_SCHEME } from './modules/rendererProtocol'
+import { isLogLevel, toLogTransportLevel, type AppLogLevel } from '../shared/logLevel'
+
+log.initialize()
+
+const defaultLogLevel: AppLogLevel = app.isPackaged ? 'info' : 'debug'
+log.transports.file.level = defaultLogLevel
+log.transports.console.level = defaultLogLevel
 
 if (process.platform === 'win32') {
   app.setAppUserModelId('com.squirrel.neopot.neopot')
@@ -73,6 +81,16 @@ async function startApp(): Promise<void> {
   app.whenReady().then(async () => {
     windowModule.registerRendererProtocol()
     await config.initializeConfig()
+
+    const persistedLevel = config.getConfig('log_level')
+    if (isLogLevel(persistedLevel)) {
+      const transportLevel = toLogTransportLevel(persistedLevel)
+      log.transports.file.level = transportLevel
+      log.transports.console.level = transportLevel
+    } else {
+      config.setConfig('log_level', defaultLogLevel)
+    }
+
     await windowModule.openWindow('config')
     tray.setupTray()
     hotkey.registerGlobalShortcuts('all')
@@ -126,7 +144,7 @@ function handleSquirrelStartupEvent(): boolean {
         windowsHide: true,
       }).unref()
     } catch (error) {
-      console.error('Failed to run Squirrel Update.exe.', error)
+      log.error('Failed to run Squirrel Update.exe.', error)
     }
   }
 
@@ -153,7 +171,7 @@ function installSquirrelAppIcon(installedIconPath: string): void {
   try {
     copyFileSync(path.join(app.getAppPath(), 'public', 'icon.ico'), installedIconPath)
   } catch (error) {
-    console.error('Failed to install Squirrel app.ico.', error)
+    log.error('Failed to install Squirrel app.ico.', error)
   }
 }
 
@@ -161,6 +179,6 @@ function removeSquirrelAppIcon(installedIconPath: string): void {
   try {
     rmSync(installedIconPath, { force: true })
   } catch (error) {
-    console.error('Failed to remove Squirrel app.ico.', error)
+    log.error('Failed to remove Squirrel app.ico.', error)
   }
 }

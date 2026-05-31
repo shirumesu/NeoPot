@@ -1,4 +1,5 @@
 import { clipboard } from 'electron'
+import log from 'electron-log/main'
 import { selectionTranslate } from './workflow'
 
 let timer: ReturnType<typeof setInterval> | null = null
@@ -25,7 +26,7 @@ export function startClipboardMonitor(): void {
       }
     } catch (error) {
       enabled = false
-      console.warn('Clipboard monitor paused after failure:', error)
+      log.warn('Clipboard monitor paused after failure:', error)
     }
   }, 500)
 }

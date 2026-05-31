@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react'
+import log from 'electron-log/renderer'
 
 import { useGetState } from './useGetState'
 import { debounce } from '@/renderer/lib'
@@ -58,7 +59,7 @@ export const useConfig = <T = unknown>(
     () =>
       debounce((v: T) => {
         void persistStoreValue(v).catch((error: unknown) => {
-          console.error(`Failed to save config key "${key}":`, error)
+          log.error(`Failed to save config key "${key}":`, error)
         })
       }),
     [key, persistStoreValue],
@@ -103,7 +104,7 @@ export const useConfig = <T = unknown>(
             }
           })
           .catch((error: unknown) => {
-            console.error(`Failed to read config key "${key}":`, error)
+            log.error(`Failed to read config key "${key}":`, error)
             setPropertyState(defaultValueRef.current)
           })
       }

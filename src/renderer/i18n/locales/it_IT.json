@@ -179,7 +179,8 @@
         "close_to_tray": "Riduci nell’area di notifica alla chiusura",
         "app_language": "Lingua dell'applicazione",
         "title": "Impostazioni Generali",
-        "app_fallback_font": "Font di riserva"
+        "app_fallback_font": "Font di riserva",
+        "log_level": "Log Level"
       },
       "recognize": {
         "delete_newline": "Elimina automaticamente la nuova riga",
