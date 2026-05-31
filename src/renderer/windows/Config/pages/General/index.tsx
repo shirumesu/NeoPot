@@ -571,12 +571,7 @@ export default function General() {
                       return
                     }
 
-                    const saved = await saveAndNotify(
-                      'log_level',
-                      logLevel,
-                      setLogLevel,
-                      nextLevel,
-                    )
+                    const saved = await saveAndNotify('log_level', logLevel, setLogLevel, nextLevel)
                     if (!saved) {
                       return
                     }
