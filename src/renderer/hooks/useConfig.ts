@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 
 import { useGetState } from './useGetState'
 import { debounce } from '@/renderer/lib'
@@ -29,7 +29,7 @@ export const isSameConfigValue = (left: unknown, right: unknown): boolean => {
   return false
 }
 
-export const useConfig = <T = any>(
+export const useConfig = <T = unknown>(
   key: string,
   defaultValue: T,
   options: UseConfigOptions = {},
@@ -54,12 +54,13 @@ export const useConfig = <T = any>(
     [key],
   )
 
-  const syncToStore = useCallback(
-    debounce((v: T) => {
-      void persistStoreValue(v).catch((error: unknown) => {
-        console.error(`Failed to save config key "${key}":`, error)
-      })
-    }),
+  const syncToStore = useMemo(
+    () =>
+      debounce((v: T) => {
+        void persistStoreValue(v).catch((error: unknown) => {
+          console.error(`Failed to save config key "${key}":`, error)
+        })
+      }),
     [key, persistStoreValue],
   )
 

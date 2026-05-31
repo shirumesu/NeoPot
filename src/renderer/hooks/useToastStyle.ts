@@ -1,5 +1,6 @@
 import { semanticColors } from '@heroui/theme'
 import { useTheme } from 'next-themes'
+import { useMemo } from 'react'
 
 type ToastStyle = {
   background: string
@@ -8,14 +9,22 @@ type ToastStyle = {
   select: 'text'
 }
 
+type ToastPalette = {
+  content1: { DEFAULT: string }
+  foreground: { DEFAULT: string }
+}
+
 export const useToastStyle = (): ToastStyle => {
   const { theme } = useTheme()
-  const palette: any = theme === 'dark' ? semanticColors.dark : semanticColors.light
+  const palette = (theme === 'dark' ? semanticColors.dark : semanticColors.light) as ToastPalette
 
-  return {
-    background: palette.content1.DEFAULT,
-    color: palette.foreground.DEFAULT,
-    wordBreak: 'break-all',
-    select: 'text',
-  }
+  return useMemo(
+    () => ({
+      background: palette.content1.DEFAULT,
+      color: palette.foreground.DEFAULT,
+      wordBreak: 'break-all',
+      select: 'text',
+    }),
+    [palette],
+  )
 }

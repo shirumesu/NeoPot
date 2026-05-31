@@ -3,7 +3,6 @@ import { Language } from './info'
 
 const OLLAMA_HEADERS = { Origin: 'http://localhost' }
 
-const THINKING_MODE_DEFAULT = 'default'
 const THINKING_MODE_ON = 'on'
 const THINKING_MODE_OFF = 'off'
 const DEFAULT_MODEL = 'gemma4:e2b'
@@ -235,7 +234,8 @@ async function readStreamResponse(res, setResult) {
 export async function translate(text, from, to, options: any = {}) {
   const { config, setResult, detect } = options
 
-  let { stream, promptList, requestPath, model, thinkingMode } = config
+  const { stream, requestPath, thinkingMode } = config
+  let { promptList, model } = config
   model = resolveModel(model)
 
   promptList = promptList.map((item) => {

@@ -1,4 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 const BODY_KIND = Symbol('electron-http-body-kind')
+
+type FormFileValue = {
+  file: BlobPart
+  mime?: string
+  fileName?: string
+}
 
 export const Body = {
   json(data: unknown) {
@@ -12,8 +19,12 @@ export const Body = {
   },
 }
 
+function isFormFileValue(value: unknown): value is FormFileValue {
+  return typeof value === 'object' && value !== null && 'file' in value
+}
+
 function appendFormValue(form: FormData, key: string, value: any) {
-  if (value && typeof value === 'object' && 'file' in value) {
+  if (isFormFileValue(value)) {
     const blob = new Blob([value.file], {
       type: value.mime || 'application/octet-stream',
     })
@@ -21,7 +32,7 @@ function appendFormValue(form: FormData, key: string, value: any) {
     return
   }
 
-  form.append(key, value)
+  form.append(key, String(value))
 }
 
 function normalizeBody(init: any) {

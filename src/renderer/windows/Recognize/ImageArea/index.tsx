@@ -1,6 +1,6 @@
 import { Card, CardBody, CardFooter, Button, Tooltip } from '@heroui/react'
 import { getCurrentWebviewWindow } from '@/renderer/lib/electron/compat/webviewWindow'
-import React, { useEffect, useRef } from 'react'
+import React, { useCallback, useEffect, useRef } from 'react'
 import { listen } from '@/renderer/lib/electron/compat/event'
 import { MdContentCopy } from 'react-icons/md'
 import { useTranslation } from 'react-i18next'
@@ -18,7 +18,7 @@ export default function ImageArea() {
   const [base64, setBase64] = useAtom(base64Atom)
   const imgRef = useRef<HTMLImageElement>(null)
   const { t } = useTranslation()
-  const load_img = () => {
+  const load_img = useCallback(() => {
     invoke('get_base64').then((v) => {
       setBase64(String(v))
       if (hideWindow) {
@@ -28,7 +28,7 @@ export default function ImageArea() {
         appWindow.setFocus(true)
       }
     })
-  }
+  }, [hideWindow, setBase64])
 
   useEffect(() => {
     if (hideWindow !== null) {
@@ -43,7 +43,7 @@ export default function ImageArea() {
       })
       void window.neoPot?.app.rendererReady()
     }
-  }, [hideWindow])
+  }, [hideWindow, load_img])
 
   return (
     <Card shadow="none" className="bg-content1 h-full ml-3 mr-1.5" radius="lg">

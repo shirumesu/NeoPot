@@ -33,9 +33,6 @@ import { electronCommand } from '@/renderer/lib/electron/command'
 import * as recognizeServices from '@/renderer/providers/recognize'
 import * as builtinTtsServices from '@/renderer/providers/tts'
 import detect from '@/renderer/lib/language/lang_detect'
-import { store } from '@/renderer/lib/config/store'
-import { info } from '@/renderer/lib/electron/compat/log'
-import { debug } from '@/renderer/lib/electron/compat/log'
 const appWindow = getCurrentWebviewWindow()
 
 export const sourceTextAtom = atom('')

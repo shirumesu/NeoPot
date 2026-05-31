@@ -1,6 +1,8 @@
 import { Dispatch, SetStateAction, useCallback, useRef, useState } from 'react'
 
-export const useGetState = <T = any>(initState?: T): [T, Dispatch<SetStateAction<T>>, () => T] => {
+export const useGetState = <T = unknown>(
+  initState?: T,
+): [T, Dispatch<SetStateAction<T>>, () => T] => {
   const [state, setState] = useState(initState)
   const stateRef = useRef(state)
   stateRef.current = state

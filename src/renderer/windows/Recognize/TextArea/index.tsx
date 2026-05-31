@@ -173,6 +173,10 @@ export default function TextArea(props) {
     autoCopy,
     deleteNewline,
     hideWindow,
+    pluginList,
+    serviceInstanceConfigMap,
+    setText,
+    t,
   ])
 
   return (

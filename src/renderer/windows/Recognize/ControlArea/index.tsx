@@ -50,7 +50,7 @@ export default function ControlArea(props) {
     if (recognizeLanguage) {
       setLanguage(recognizeLanguage)
     }
-  }, [serviceInstanceList, recognizeLanguage])
+  }, [serviceInstanceList, recognizeLanguage, setCurrentServiceInstanceKey, setLanguage])
 
   return (
     <div className="flex justify-between px-[12px] h-full">

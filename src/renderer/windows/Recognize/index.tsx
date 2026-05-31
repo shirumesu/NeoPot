@@ -2,7 +2,7 @@ import { readDir, BaseDirectory, readTextFile, exists } from '@/renderer/lib/ele
 import { appConfigDir, join } from '@/renderer/lib/electron/compat/path'
 import { convertFileSrc } from '@/renderer/lib/electron/compat/core'
 import { getCurrentWebviewWindow } from '@/renderer/lib/electron/compat/webviewWindow'
-import React, { useState, useEffect } from 'react'
+import React, { useCallback, useState, useEffect } from 'react'
 import { listen } from '@/renderer/lib/electron/compat/event'
 import { Button } from '@heroui/react'
 import { BsPinFill } from 'react-icons/bs'
@@ -52,7 +52,7 @@ void listen('tauri://focus', () => {
 })
 
 export default function Recognize() {
-  const [pluginList, setPluginList] = useAtom(pluginListAtom)
+  const [, setPluginList] = useAtom(pluginListAtom)
   const [closeOnBlur] = useConfig('recognize_close_on_blur', false)
   const [pined, setPined] = useState(false)
   const [serviceInstanceList] = useConfig('recognize_service_list', ['local_model'])
@@ -60,7 +60,7 @@ export default function Recognize() {
   const [serviceConfigError, setServiceConfigError] = useState(null)
   const [serviceInstanceConfigMap, setServiceInstanceConfigMap] = useState({})
 
-  const loadPluginList = async () => {
+  const loadPluginList = useCallback(async () => {
     try {
       const temp = {}
       if (await exists(`plugins/recognize`, { baseDir: BaseDirectory.AppConfig })) {
@@ -87,8 +87,8 @@ export default function Recognize() {
       console.error('Failed to load recognize plugin list:', error)
       setPluginLoadError(error instanceof Error ? error.message : String(error))
     }
-  }
-  const loadServiceInstanceConfigMap = async () => {
+  }, [setPluginList])
+  const loadServiceInstanceConfigMap = useCallback(async () => {
     try {
       const config = {}
       for (const serviceInstanceKey of serviceInstanceList) {
@@ -100,16 +100,16 @@ export default function Recognize() {
       console.error('Failed to load recognize service config map:', error)
       setServiceConfigError(error instanceof Error ? error.message : String(error))
     }
-  }
+  }, [serviceInstanceList])
   useEffect(() => {
     if (serviceInstanceList !== null) {
       loadServiceInstanceConfigMap()
     }
-  }, [serviceInstanceList])
+  }, [serviceInstanceList, loadServiceInstanceConfigMap])
 
   useEffect(() => {
     loadPluginList()
-  }, [])
+  }, [loadPluginList])
   // 是否自动关闭窗口
   useEffect(() => {
     if (closeOnBlur !== null && !closeOnBlur) {

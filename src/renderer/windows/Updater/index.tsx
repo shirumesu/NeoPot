@@ -38,7 +38,7 @@ export default function Updater() {
         toast.error(e.toString(), { style: toastStyle })
       },
     )
-  }, [])
+  }, [t, toastStyle])
 
   const install = () => {
     if (!update) {
@@ -106,25 +106,25 @@ export default function Updater() {
             <div className="markdown-body select-text">
               <ReactMarkdown
                 components={{
-                  code: ({ node, ...props }) => {
+                  code: ({ node: _node, ...props }) => {
                     const { children } = props
                     return <Code size="sm">{children}</Code>
                   },
-                  h2: ({ node, ...props }) => (
+                  h2: ({ node: _node, ...props }) => (
                     <b>
                       <h2 className="text-[24px]" {...props} />
                       <hr />
                       <br />
                     </b>
                   ),
-                  h3: ({ node, ...props }) => (
+                  h3: ({ node: _node, ...props }) => (
                     <b>
                       <br />
                       <h3 className="text-[18px]" {...props} />
                       <br />
                     </b>
                   ),
-                  li: ({ node, ...props }) => {
+                  li: ({ node: _node, ...props }) => {
                     const { children } = props
                     return <li className="list-disc list-inside" children={children} />
                   },
