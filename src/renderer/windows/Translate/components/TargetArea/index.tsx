@@ -39,7 +39,7 @@ import { invoke_plugin } from '@/renderer/lib/plugin/invoke_plugin'
 import * as builtinServices from '@/renderer/providers/translate'
 import * as builtinTtsServices from '@/renderer/providers/tts'
 
-import log from 'electron-log/renderer'
+import { logger } from '@/renderer/lib/logger'
 import {
   INSTANCE_NAME_CONFIG_KEY,
   ServiceSourceType,
@@ -199,9 +199,12 @@ export default function TargetArea(props) {
 
   useEffect(() => {
     if (error) {
-      log.error(`[${currentTranslateServiceInstanceKey}]happened error: ` + error)
+      logger.warn('Translation displayed an error.', {
+        service: currentTranslateServiceInstanceKey,
+        message: error,
+      })
     }
-  }, [error])
+  }, [currentTranslateServiceInstanceKey, error])
 
   // listen to translation
   useEffect(() => {
@@ -255,6 +258,7 @@ export default function TargetArea(props) {
 
   const translate = async () => {
     const id = nanoid()
+    const startedAt = Date.now()
     translateID[index] = id
 
     const translateServiceName = getServiceName(currentTranslateServiceInstanceKey)
@@ -269,6 +273,12 @@ export default function TargetArea(props) {
     const resolvedTargetLanguage = resolveTargetLanguage()
     const providerDetectLanguage =
       resolvedSourceLanguage === 'auto' ? detectLanguage || 'auto' : resolvedSourceLanguage
+    logger.debug('Translation requested.', {
+      service: currentTranslateServiceInstanceKey,
+      from: resolvedSourceLanguage,
+      to: resolvedTargetLanguage,
+      inputLength: sourceText.trim().length,
+    })
 
     if (whetherPluginService(currentTranslateServiceInstanceKey)) {
       const pluginInfo = pluginList['translate'][translateServiceName]
@@ -302,8 +312,15 @@ export default function TargetArea(props) {
           },
         ).then(
           (v) => {
-            log.info(`[${currentTranslateServiceInstanceKey}]resolve:` + v)
             if (translateID[index] !== id) return
+            logger.debug('Translation completed.', {
+              service: currentTranslateServiceInstanceKey,
+              from: resolvedSourceLanguage,
+              to: resolvedTargetLanguage,
+              inputLength: sourceText.trim().length,
+              outputLength: typeof v === 'string' ? v.length : 0,
+              durationMs: Date.now() - startedAt,
+            })
             setResult(typeof v === 'string' ? v.trim() : v)
             setIsLoading(false)
             if (v !== '') {
@@ -337,8 +354,15 @@ export default function TargetArea(props) {
             }
           },
           (e) => {
-            log.info(`[${currentTranslateServiceInstanceKey}]reject:` + e)
             if (translateID[index] !== id) return
+            logger.warn('Translation rejected.', {
+              service: currentTranslateServiceInstanceKey,
+              from: resolvedSourceLanguage,
+              to: resolvedTargetLanguage,
+              inputLength: sourceText.trim().length,
+              durationMs: Date.now() - startedAt,
+              message: e instanceof Error ? e.message : String(e),
+            })
             setError(e.toString())
             setIsLoading(false)
           },
@@ -374,8 +398,15 @@ export default function TargetArea(props) {
           )
           .then(
             (v) => {
-              log.info(`[${currentTranslateServiceInstanceKey}]resolve:` + v)
               if (translateID[index] !== id) return
+              logger.debug('Translation completed.', {
+                service: currentTranslateServiceInstanceKey,
+                from: resolvedSourceLanguage,
+                to: resolvedTargetLanguage,
+                inputLength: sourceText.trim().length,
+                outputLength: typeof v === 'string' ? v.length : 0,
+                durationMs: Date.now() - startedAt,
+              })
               setResult(typeof v === 'string' ? v.trim() : v)
               setIsLoading(false)
               if (v !== '') {
@@ -409,8 +440,15 @@ export default function TargetArea(props) {
               }
             },
             (e) => {
-              log.info(`[${currentTranslateServiceInstanceKey}]reject:` + e)
               if (translateID[index] !== id) return
+              logger.warn('Translation rejected.', {
+                service: currentTranslateServiceInstanceKey,
+                from: resolvedSourceLanguage,
+                to: resolvedTargetLanguage,
+                inputLength: sourceText.trim().length,
+                durationMs: Date.now() - startedAt,
+                message: e instanceof Error ? e.message : String(e),
+              })
               setError(e.toString())
               setIsLoading(false)
             },

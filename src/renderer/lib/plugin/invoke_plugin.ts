@@ -3,6 +3,7 @@ import { readFile, readTextFile } from '@/renderer/lib/electron/compat/fs'
 import { invoke } from '@/renderer/lib/electron/compat/core'
 import { osType } from '../config/env'
 import * as http from '@/renderer/lib/electron/http'
+import { createPluginLogger } from '@/renderer/lib/logger'
 
 async function loadPluginEntrypoint(script: string, pluginType: string) {
   const moduleSource = `${script}\nexport default typeof ${pluginType} !== 'undefined' ? ${pluginType} : undefined;\n`
@@ -39,6 +40,10 @@ export async function invoke_plugin(pluginType: string, pluginName: string) {
     cacheDir, // String
     pluginDir, // String
     osType, // "Windows_NT", "Darwin", "Linux"
+    log: createPluginLogger({
+      pluginType,
+      pluginName,
+    }),
   }
   const entrypoint = await loadPluginEntrypoint(script, pluginType)
   if (typeof entrypoint !== 'function') {

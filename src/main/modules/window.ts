@@ -13,6 +13,7 @@ import {
 } from 'electron'
 import { getConfig, setConfig } from './config'
 import { RENDERER_HOST, RENDERER_SCHEME, resolveRendererFile } from './rendererProtocol'
+import { logger } from '../logger'
 
 export type WindowLabel = 'config' | 'translate' | 'recognize' | 'screenshot' | 'updater'
 
@@ -179,6 +180,12 @@ function flushPendingWindowEvents(label: WindowLabel): void {
 
   const events = pendingWindowEvents.get(label) ?? []
   pendingWindowEvents.delete(label)
+  if (events.length > 0) {
+    logger.debug('Flushing queued window events.', {
+      window: label,
+      count: events.length,
+    })
+  }
   for (const queuedEvent of events) {
     window.webContents.send('app:event', queuedEvent)
   }
@@ -205,6 +212,9 @@ function showWindowInForeground(window: BrowserWindow, label: WindowLabel): void
 
 function createBrowserWindow(label: WindowLabel): BrowserWindow {
   Menu.setApplicationMenu(null)
+  logger.debug('Creating window.', {
+    window: label,
+  })
 
   const definition = windowDefinitions[label]
   const size = label === 'translate' ? getTranslateWindowSize(definition) : definition
@@ -243,6 +253,9 @@ function createBrowserWindow(label: WindowLabel): BrowserWindow {
       window.center()
     }
     showWindowInForeground(window, label)
+    logger.debug('Window ready to show.', {
+      window: label,
+    })
   })
 
   window.on('focus', () => emitWindowEvent(window, 'tauri://focus'))
@@ -289,10 +302,16 @@ function createBrowserWindow(label: WindowLabel): BrowserWindow {
 export async function openWindow(label: WindowLabel): Promise<BrowserWindow> {
   const existing = windows.get(label)
   if (existing && !existing.isDestroyed()) {
+    logger.debug('Focusing existing window.', {
+      window: label,
+    })
     focusWindow(label)
     return existing
   }
 
+  logger.debug('Opening new window.', {
+    window: label,
+  })
   const window = createBrowserWindow(label)
   await loadRenderer(window, label)
   return window
@@ -319,6 +338,11 @@ export function sendToWindow(label: WindowLabel, event: string, payload: unknown
     const events = pendingWindowEvents.get(label) ?? []
     events.push({ event, payload })
     pendingWindowEvents.set(label, events)
+    logger.debug('Queued event for missing window.', {
+      window: label,
+      event,
+      queueLength: events.length,
+    })
     return
   }
 
@@ -326,6 +350,11 @@ export function sendToWindow(label: WindowLabel, event: string, payload: unknown
     const events = pendingWindowEvents.get(label) ?? []
     events.push({ event, payload })
     pendingWindowEvents.set(label, events)
+    logger.debug('Queued event for pending window.', {
+      window: label,
+      event,
+      queueLength: events.length,
+    })
     return
   }
 
@@ -342,6 +371,9 @@ export function getWindow(label: WindowLabel): BrowserWindow | undefined {
 
 export function markWindowReady(label: WindowLabel): void {
   readyWindows.add(label)
+  logger.debug('Window renderer ready.', {
+    window: label,
+  })
   flushPendingWindowEvents(label)
 }
 

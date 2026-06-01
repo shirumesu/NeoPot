@@ -1,5 +1,5 @@
 import { globalShortcut } from 'electron'
-import log from 'electron-log/main'
+import { logger } from '../logger'
 import { inputTranslate, ocrRecognize, ocrTranslate, selectionTranslate } from './workflow'
 import { getConfig, setConfig } from './config'
 
@@ -31,11 +31,23 @@ export function registerGlobalShortcuts(scope: 'all' | string = 'all'): void {
     }
 
     const registered = globalShortcut.register(accelerator, () => {
-      void shortcut.handler()
+      logger.debug('Global shortcut triggered.', {
+        name,
+        shortcut: accelerator,
+      })
+      void Promise.resolve(shortcut.handler()).catch((error) => {
+        logger.error('Global shortcut handler failed.', error, {
+          name,
+          shortcut: accelerator,
+        })
+      })
     })
 
     if (!registered) {
-      log.warn(`Failed to register global shortcut: ${name}`)
+      logger.warn('Global shortcut registration failed.', {
+        name,
+        shortcut: accelerator,
+      })
     }
   }
 }
@@ -67,11 +79,25 @@ export function registerGlobalShortcutByName(name: string, accelerator: string):
   }
 
   const registered = globalShortcut.register(normalizedAccelerator, () => {
-    void shortcut.handler()
+    logger.debug('Global shortcut triggered.', {
+      name,
+      shortcut: normalizedAccelerator,
+    })
+    void Promise.resolve(shortcut.handler()).catch((error) => {
+      logger.error('Global shortcut handler failed.', error, {
+        name,
+        shortcut: normalizedAccelerator,
+      })
+    })
   })
 
   if (registered) {
     setConfig(name, normalizedAccelerator)
+  } else {
+    logger.warn('Global shortcut registration failed.', {
+      name,
+      shortcut: normalizedAccelerator,
+    })
   }
 
   return registered

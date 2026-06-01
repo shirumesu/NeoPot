@@ -1,5 +1,5 @@
 import { Notification } from 'electron'
-import log from 'electron-log/main'
+import { logger } from '../logger'
 
 export interface NotificationOptions {
   silent?: boolean
@@ -21,6 +21,8 @@ export function showNotification(
       silent: options.silent,
     }).show()
   } catch (error) {
-    log.warn('Notification failed:', error)
+    logger.warn('Notification failed.', {
+      error: error instanceof Error ? error.message : String(error),
+    })
   }
 }

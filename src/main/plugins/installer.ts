@@ -3,6 +3,7 @@ import AdmZip from 'adm-zip'
 import { mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { getConfig, setConfig } from '../modules/config'
+import { logger } from '../logger'
 
 const SERVICE_PLUGIN_TYPES = ['translate', 'recognize', 'tts']
 
@@ -180,6 +181,11 @@ export async function installPlugin(file: string): Promise<PluginInstallResult> 
     await mkdir(path.dirname(targetDir), { recursive: true })
     await import('node:fs/promises').then(({ rename }) => rename(tempDir, targetDir))
 
+    logger.info('Plugin installed.', {
+      type: pluginType,
+      name: pluginName,
+    })
+
     return {
       status: 'installed',
       type: pluginType,
@@ -187,6 +193,11 @@ export async function installPlugin(file: string): Promise<PluginInstallResult> 
     }
   } catch (error) {
     await rm(tempDir, { recursive: true, force: true })
+    logger.error('Plugin installation failed.', error, {
+      file,
+      type: pluginType,
+      name: pluginName,
+    })
     throw error
   }
 }
@@ -198,10 +209,19 @@ export async function uninstallPlugin(type: string, name: string): Promise<void>
   })
   setConfig(pluginEnabledKey(type, name), undefined)
   await removePluginServiceInstances(type, name)
+  logger.info('Plugin uninstalled.', {
+    type,
+    name,
+  })
 }
 
 export function setPluginEnabled(type: string, name: string, enabled: boolean): void {
   setConfig(pluginEnabledKey(type, name), enabled)
+  logger.info('Plugin enabled state changed.', {
+    type,
+    name,
+    enabled,
+  })
 }
 
 export async function listInstalledPlugins(type?: string): Promise<PluginInfo[]> {

@@ -1,5 +1,5 @@
 import React from 'react'
-import log from 'electron-log/renderer'
+import { logger } from '@/renderer/lib/logger'
 
 interface ErrorBoundaryProps {
   children: React.ReactNode
@@ -22,7 +22,9 @@ export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, E
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    log.error('Render error boundary caught an error:', error, errorInfo)
+    logger.error('Render error boundary caught an error.', error, {
+      componentStack: errorInfo.componentStack,
+    })
   }
 
   render() {

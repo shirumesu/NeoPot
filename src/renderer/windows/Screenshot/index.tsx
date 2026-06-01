@@ -3,9 +3,9 @@ import { appCacheDir, join } from '@/renderer/lib/electron/compat/path'
 import { currentMonitor } from '@/renderer/lib/electron/compat/window'
 import { convertFileSrc } from '@/renderer/lib/electron/compat/core'
 import { getCurrentWebviewWindow } from '@/renderer/lib/electron/compat/webviewWindow'
-import log from 'electron-log/renderer'
 import { invoke } from '@/renderer/lib/electron/compat/core'
 import { listen } from '@/renderer/lib/electron/compat/event'
+import { logger } from '@/renderer/lib/logger'
 const appWindow = getCurrentWebviewWindow()
 
 export default function Screenshot() {
@@ -37,6 +37,7 @@ export default function Screenshot() {
       await appWindow.show()
       await appWindow.setFocus()
     } catch (e) {
+      logger.error('Screenshot capture failed.', e)
       setError(String(e))
       await appWindow.show()
       await appWindow.setFocus()
@@ -92,7 +93,10 @@ export default function Screenshot() {
             setIsDown(true)
             setMouseDownX(e.clientX)
             setMouseDownY(e.clientY)
-            log.info(`[Screenshot] mouseDown: clientX=${e.clientX}, clientY=${e.clientY}`)
+            logger.debug('Screenshot selection started.', {
+              clientX: e.clientX,
+              clientY: e.clientY,
+            })
           } else {
             void appWindow.close()
           }
@@ -107,9 +111,16 @@ export default function Screenshot() {
         onMouseUp={async (e) => {
           const monitor = await currentMonitor()
           const dpi = monitor.size.width / window.innerWidth
-          log.info(
-            `[Screenshot] mouseUp: clientX=${e.clientX}, clientY=${e.clientY}, mouseDownX=${mouseDownX}, mouseDownY=${mouseDownY}, monitorWidth=${monitor.size.width}, winWidth=${window.innerWidth}, dpi=${dpi}, isMoved=${isMoved}`,
-          )
+          logger.debug('Screenshot selection ended.', {
+            clientX: e.clientX,
+            clientY: e.clientY,
+            mouseDownX,
+            mouseDownY,
+            monitorWidth: monitor.size.width,
+            windowWidth: window.innerWidth,
+            dpi,
+            isMoved,
+          })
           appWindow.hide()
           setIsDown(false)
           setIsMoved(false)
@@ -119,9 +130,18 @@ export default function Screenshot() {
           const bottom = Math.floor(Math.max(mouseDownY, e.clientY) * dpi)
           const width = right - left
           const height = bottom - top
-          log.info(`[Screenshot] crop: left=${left}, top=${top}, width=${width}, height=${height}`)
+          logger.debug('Screenshot crop selected.', {
+            left,
+            top,
+            width,
+            height,
+            action,
+          })
           if (width <= 0 || height <= 0) {
-            log.warn('Screenshot area is too small')
+            logger.warn('Screenshot area is too small.', {
+              width,
+              height,
+            })
             await appWindow.close()
           } else {
             try {
@@ -129,6 +149,9 @@ export default function Screenshot() {
               await invoke('screenshot_complete', { action })
               await appWindow.close()
             } catch (error) {
+              logger.error('Screenshot completion failed.', error, {
+                action,
+              })
               setError(String(error))
               await appWindow.show()
               await appWindow.setFocus()

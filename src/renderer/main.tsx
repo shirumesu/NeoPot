@@ -1,12 +1,12 @@
 import { ThemeProvider as NextThemesProvider } from 'next-themes'
 import { HeroUIProvider } from '@heroui/react'
 import { getCurrentWebviewWindow } from '@/renderer/lib/electron/compat/webviewWindow'
-import log from 'electron-log/renderer'
 import ReactDOM from 'react-dom/client'
 
 import { initStore } from '@/renderer/lib/config/store'
 import { initEnv } from '@/renderer/lib/config/env'
 import { applyConfiguredRendererLogLevel } from '@/renderer/lib/electron/logLevel'
+import { logger } from '@/renderer/lib/logger'
 import App from './App'
 
 if (import.meta.env.PROD) {
@@ -39,11 +39,11 @@ function renderFatalError(error: unknown) {
 }
 
 window.addEventListener('error', (event) => {
-  log.error('Unhandled window error:', event.error ?? event.message)
+  logger.error('Unhandled window error.', event.error ?? event.message)
 })
 
 window.addEventListener('unhandledrejection', (event) => {
-  log.error('Unhandled promise rejection:', event.reason)
+  logger.error('Unhandled promise rejection.', event.reason)
 })
 
 async function bootstrap() {
@@ -65,13 +65,13 @@ async function bootstrap() {
       </HeroUIProvider>,
     )
   } catch (error) {
-    log.error('Bootstrap failed:', error)
+    logger.error('Bootstrap failed.', error)
     renderFatalError(error)
     try {
       await getCurrentWebviewWindow().show()
       await getCurrentWebviewWindow().setFocus()
     } catch (showError) {
-      log.error('Failed to reveal error window:', showError)
+      logger.error('Failed to reveal error window.', showError)
     }
   }
 }

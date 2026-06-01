@@ -7,7 +7,6 @@ import { DropdownItem } from '@heroui/react'
 import { useTranslation } from 'react-i18next'
 import { CardBody } from '@heroui/react'
 import { Dropdown } from '@heroui/react'
-import log from 'electron-log/renderer'
 import { Button } from '@heroui/react'
 import { Switch } from '@heroui/react'
 import 'flag-icons/css/flag-icons.min.css'
@@ -23,6 +22,7 @@ import { LanguageFlag } from '@/renderer/lib/language/language'
 import { useToastStyle } from '../../../../hooks'
 import { osType } from '@/renderer/lib/config/env'
 import { getStoreValue } from '@/renderer/lib/config/store'
+import { logger } from '@/renderer/lib/logger'
 
 let timer = null
 
@@ -80,6 +80,9 @@ export default function General() {
     if (!isSameConfigValue(savedValue, value)) {
       throw new Error(`Config "${key}" was not saved`)
     }
+    logger.debug('Config value verified after save.', {
+      key,
+    })
   }
   const saveAndNotify = async (key, currentValue, setter, value) => {
     if (isSameConfigValue(currentValue, value)) {
@@ -89,12 +92,18 @@ export default function General() {
     try {
       await setter(value, true)
       await verifySavedConfig(key, value)
+      logger.info('Config value saved from settings page.', {
+        key,
+      })
       toast.success(t('config.common.save_success'), {
         duration: 1500,
         style: toastStyle,
       })
       return true
-    } catch {
+    } catch (error) {
+      logger.error('Config value save failed from settings page.', error, {
+        key,
+      })
       toast.error(t('config.common.save_failed'), {
         duration: 3000,
         style: toastStyle,
@@ -151,20 +160,26 @@ export default function General() {
                 try {
                   if (v) {
                     await enable()
-                    log.info('Auto start enabled')
+                    logger.info('Auto start enabled.')
                   } else {
                     await disable()
-                    log.info('Auto start disabled')
+                    logger.info('Auto start disabled.')
                   }
                   const verified = await isEnabled()
                   if (verified !== v) {
                     throw new Error('Auto start state did not change')
                   }
+                  logger.debug('Auto start state verified.', {
+                    enabled: v,
+                  })
                   toast.success(t('config.common.save_success'), {
                     duration: 1500,
                     style: toastStyle,
                   })
-                } catch {
+                } catch (error) {
+                  logger.error('Auto start setting change failed.', error, {
+                    enabled: v,
+                  })
                   setAutoStart(!v)
                   toast.error(t('config.common.save_failed'), {
                     duration: 3000,

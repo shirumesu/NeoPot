@@ -1,6 +1,7 @@
 import { safeStorage } from 'electron'
 import Store from 'electron-store'
 import { runDataMigration } from './data-migration'
+import { logger } from '../logger'
 
 type ConfigValue = unknown
 
@@ -50,6 +51,10 @@ export function getConfig(key: string): ConfigValue {
 
 export function setConfig(key: string, value: ConfigValue): void {
   store.set(key, value)
+  logger.debug('Config value written in main process.', {
+    key,
+    valueType: value === null ? 'null' : Array.isArray(value) ? 'array' : typeof value,
+  })
 }
 
 export function getRedactedConfig(key: string): ConfigValue {

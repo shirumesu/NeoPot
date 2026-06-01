@@ -1,7 +1,6 @@
 import { getCurrentWebviewWindow } from '@/renderer/lib/electron/compat/webviewWindow'
 import { MemoryRouter } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import log from 'electron-log/renderer'
 import {
   useEffect,
   useState,
@@ -19,6 +18,7 @@ import { electronCommand } from '@/renderer/lib/electron/command'
 import Config from './windows/Config'
 import ErrorBoundary from './components/ErrorBoundary'
 import { useConfig } from './hooks'
+import { logger } from './lib/logger'
 import './style.css'
 import './i18n'
 
@@ -129,7 +129,7 @@ export default function App() {
           media.addEventListener('change', onChange)
           return () => media.removeEventListener('change', onChange)
         } catch {
-          log.warn("Can't detect system theme.")
+          logger.warn("Can't detect system theme.")
         }
       }
     }

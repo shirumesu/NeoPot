@@ -12,6 +12,7 @@ import { pluginApi } from '@/renderer/lib/electron/adapter'
 import { useConfig } from '../../../../hooks'
 import { checkPluginUpdates } from './marketplace'
 import { loadInstalledPlugins } from './installedPlugins'
+import { logger } from '@/renderer/lib/logger'
 
 export default function Plugin() {
   const [plugins, setPlugins] = useState([])
@@ -25,6 +26,9 @@ export default function Plugin() {
   const refreshPlugins = () => {
     loadInstalledPlugins().then((installed) => {
       setPlugins(installed)
+      logger.debug('Plugin list refreshed.', {
+        count: installed.length,
+      })
     })
   }
 
@@ -44,6 +48,9 @@ export default function Plugin() {
         ],
       })
       const files = Array.isArray(selected) ? selected : selected ? [selected] : []
+      logger.info('Plugin install from file requested.', {
+        count: files.length,
+      })
       for (const file of files) {
         await pluginApi.install(file)
       }
@@ -51,6 +58,9 @@ export default function Plugin() {
         await emit('reload_plugin_list')
         refreshPlugins()
       }
+    } catch (error) {
+      logger.error('Plugin install from file failed.', error)
+      throw error
     } finally {
       setInstalling(false)
     }
@@ -58,6 +68,11 @@ export default function Plugin() {
 
   async function togglePlugin(plugin, enabled) {
     await pluginApi.setEnabled(plugin.type, plugin.name, enabled)
+    logger.info('Plugin enabled state changed from settings page.', {
+      type: plugin.type,
+      name: plugin.name,
+      enabled,
+    })
     setPlugins((current) =>
       current.map((item) => (item.id === plugin.id ? { ...item, enabled } : item)),
     )
@@ -66,11 +81,18 @@ export default function Plugin() {
 
   async function deletePlugin(plugin) {
     await pluginApi.uninstall(plugin.type, plugin.name)
+    logger.info('Plugin deleted from settings page.', {
+      type: plugin.type,
+      name: plugin.name,
+    })
     setPlugins((current) => current.filter((item) => item.id !== plugin.id))
     await emit('reload_plugin_list')
   }
 
   async function checkUpdates() {
+    logger.debug('Plugin update check requested.', {
+      count: plugins.length,
+    })
     setUpdates(await checkPluginUpdates(plugins))
   }
 

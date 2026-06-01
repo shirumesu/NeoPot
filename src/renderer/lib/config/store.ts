@@ -1,7 +1,7 @@
 import { LazyStore } from '@/renderer/lib/electron/compat/store'
 import { appConfigDir, join } from '@/renderer/lib/electron/compat/path'
 import { watch } from '@/renderer/lib/electron/compat/fs'
-import log from 'electron-log/renderer'
+import { logger } from '@/renderer/lib/logger'
 import { electronCommand } from '../electron/command'
 
 type StoreKey = string
@@ -71,6 +71,7 @@ export async function saveStore(): Promise<void> {
     })
     .then(async () => {
       await currentStore.save()
+      logger.debug('Config store saved.')
     })
 
   await saveQueue
@@ -101,6 +102,9 @@ export async function setStoreValue(
   if (electronConfig) {
     await electronConfig.set(key, value)
     emitStoreValueChanged(key, value)
+    logger.debug('Config value written through Electron config API.', {
+      key,
+    })
     return
   }
 
@@ -109,6 +113,10 @@ export async function setStoreValue(
   }
 
   await store.set(key, value)
+  logger.debug('Config value written to renderer store.', {
+    key,
+    save,
+  })
 
   if (save) {
     await saveStore()
@@ -185,7 +193,7 @@ export async function initStore(): Promise<void> {
         }
         await reloadStoreFromDisk()
       } catch (error) {
-        log.error('Failed to reload store after file watch event:', error)
+        logger.error('Failed to reload store after file watch event.', error)
       }
     }, 150)
   })

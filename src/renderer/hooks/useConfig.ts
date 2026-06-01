@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react'
-import log from 'electron-log/renderer'
 
 import { useGetState } from './useGetState'
 import { debounce } from '@/renderer/lib'
+import { logger } from '@/renderer/lib/logger'
 import {
   STORE_CHANGED_EVENT,
   STORE_RELOADED_EVENT,
@@ -30,6 +30,26 @@ export const isSameConfigValue = (left: unknown, right: unknown): boolean => {
   return false
 }
 
+const describeConfigValue = (value: unknown): Record<string, unknown> => {
+  if (typeof value === 'string') {
+    return {
+      valueType: 'string',
+      valueLength: value.length,
+    }
+  }
+
+  if (Array.isArray(value)) {
+    return {
+      valueType: 'array',
+      valueLength: value.length,
+    }
+  }
+
+  return {
+    valueType: value === null ? 'null' : typeof value,
+  }
+}
+
 export const useConfig = <T = unknown>(
   key: string,
   defaultValue: T,
@@ -51,6 +71,10 @@ export const useConfig = <T = unknown>(
     async (v: T) => {
       await setStoreValue(key, v)
       emitStoreValueChanged(key, v)
+      logger.debug('Config value persisted.', {
+        key,
+        ...describeConfigValue(v),
+      })
     },
     [key],
   )
@@ -59,7 +83,9 @@ export const useConfig = <T = unknown>(
     () =>
       debounce((v: T) => {
         void persistStoreValue(v).catch((error: unknown) => {
-          log.error(`Failed to save config key "${key}":`, error)
+          logger.error('Failed to save config value.', error, {
+            key,
+          })
         })
       }),
     [key, persistStoreValue],
@@ -73,6 +99,17 @@ export const useConfig = <T = unknown>(
 
       setPropertyState(v)
       const isSync = forceSync || sync
+      const logContext = {
+        key,
+        sync: isSync,
+        forceSync,
+        ...describeConfigValue(v),
+      }
+      if (isSync) {
+        logger.info('Config value changed.', logContext)
+      } else {
+        logger.debug('Config value changed locally.', logContext)
+      }
       if (!isSync) {
         return Promise.resolve()
       }
@@ -104,7 +141,9 @@ export const useConfig = <T = unknown>(
             }
           })
           .catch((error: unknown) => {
-            log.error(`Failed to read config key "${key}":`, error)
+            logger.error('Failed to read config value.', error, {
+              key,
+            })
             setPropertyState(defaultValueRef.current)
           })
       }

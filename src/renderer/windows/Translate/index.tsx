@@ -20,7 +20,7 @@ import {
   whetherAvailableService,
 } from '@/renderer/lib/service/service_instance'
 import * as builtinTranslateServices from '@/renderer/providers/translate'
-import log from 'electron-log/renderer'
+import { logger } from '@/renderer/lib/logger'
 const appWindow = getCurrentWebviewWindow()
 
 let blurTimeout = null
@@ -33,11 +33,9 @@ const listenBlur = () => {
       if (blurTimeout) {
         clearTimeout(blurTimeout)
       }
-      log.info('Blur')
       // 100ms后关闭窗口，因为在 windows 下拖动窗口时会先切换成 blur 再立即切换成 focus
       // 如果直接关闭将导致窗口无法拖动
       blurTimeout = setTimeout(async () => {
-        log.info('Confirm Blur')
         await appWindow.close()
       }, 100)
     }
@@ -54,17 +52,13 @@ const unlistenBlur = () => {
 
 // 监听 focus 事件取消 blurTimeout 时间之内的关闭窗口
 void listen('tauri://focus', () => {
-  log.info('Focus')
   if (blurTimeout) {
-    log.info('Cancel Close')
     clearTimeout(blurTimeout)
   }
 })
 // 监听 move 事件取消 blurTimeout 时间之内的关闭窗口
 void listen('tauri://move', () => {
-  log.info('Move')
   if (blurTimeout) {
-    log.info('Cancel Close')
     clearTimeout(blurTimeout)
   }
 })
@@ -203,7 +197,7 @@ export default function Translate() {
       setPluginLoadError(null)
       setPluginList({ ...temp })
     } catch (error) {
-      log.error('Failed to load translate plugin list:', error)
+      logger.error('Failed to load translate plugin list.', error)
       setPluginLoadError(error instanceof Error ? error.message : String(error))
     }
   }
@@ -230,7 +224,7 @@ export default function Translate() {
       setServiceConfigError(null)
       setServiceInstanceConfigMap({ ...config })
     } catch (error) {
-      log.error('Failed to load translate service config map:', error)
+      logger.error('Failed to load translate service config map.', error)
       setServiceConfigError(error instanceof Error ? error.message : String(error))
     }
   }

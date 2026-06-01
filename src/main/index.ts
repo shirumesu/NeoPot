@@ -4,6 +4,7 @@ import { spawn } from 'node:child_process'
 import { copyFileSync, rmSync } from 'node:fs'
 import path from 'node:path'
 import { RENDERER_SCHEME } from './modules/rendererProtocol'
+import { logger } from './logger'
 import { isLogLevel, toLogTransportLevel, type AppLogLevel } from '../shared/logLevel'
 
 log.initialize()
@@ -144,7 +145,9 @@ function handleSquirrelStartupEvent(): boolean {
         windowsHide: true,
       }).unref()
     } catch (error) {
-      log.error('Failed to run Squirrel Update.exe.', error)
+      logger.error('Failed to run Squirrel Update.exe.', error, {
+        args,
+      })
     }
   }
 
@@ -171,7 +174,7 @@ function installSquirrelAppIcon(installedIconPath: string): void {
   try {
     copyFileSync(path.join(app.getAppPath(), 'public', 'icon.ico'), installedIconPath)
   } catch (error) {
-    log.error('Failed to install Squirrel app.ico.', error)
+    logger.error('Failed to install Squirrel app.ico.', error)
   }
 }
 
@@ -179,6 +182,6 @@ function removeSquirrelAppIcon(installedIconPath: string): void {
   try {
     rmSync(installedIconPath, { force: true })
   } catch (error) {
-    log.error('Failed to remove Squirrel app.ico.', error)
+    logger.error('Failed to remove Squirrel app.ico.', error)
   }
 }

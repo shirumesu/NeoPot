@@ -2,7 +2,6 @@ import { readDir, BaseDirectory, readTextFile, exists } from '@/renderer/lib/ele
 import { appConfigDir, join } from '@/renderer/lib/electron/compat/path'
 import { convertFileSrc } from '@/renderer/lib/electron/compat/core'
 import { getCurrentWebviewWindow } from '@/renderer/lib/electron/compat/webviewWindow'
-import log from 'electron-log/renderer'
 import React, { useCallback, useState, useEffect } from 'react'
 import { listen } from '@/renderer/lib/electron/compat/event'
 import { Button } from '@heroui/react'
@@ -16,6 +15,7 @@ import { useConfig } from '../../hooks'
 import ControlArea from './ControlArea'
 import ImageArea from './ImageArea'
 import TextArea from './TextArea'
+import { logger } from '@/renderer/lib/logger'
 const appWindow = getCurrentWebviewWindow()
 
 export const pluginListAtom = atom({})
@@ -85,7 +85,7 @@ export default function Recognize() {
       setPluginLoadError(null)
       setPluginList({ ...temp })
     } catch (error) {
-      log.error('Failed to load recognize plugin list:', error)
+      logger.error('Failed to load recognize plugin list.', error)
       setPluginLoadError(error instanceof Error ? error.message : String(error))
     }
   }, [setPluginList])
@@ -98,7 +98,7 @@ export default function Recognize() {
       setServiceConfigError(null)
       setServiceInstanceConfigMap({ ...config })
     } catch (error) {
-      log.error('Failed to load recognize service config map:', error)
+      logger.error('Failed to load recognize service config map.', error)
       setServiceConfigError(error instanceof Error ? error.message : String(error))
     }
   }, [serviceInstanceList])

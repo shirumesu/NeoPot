@@ -9,13 +9,13 @@ import {
   type IpcMainInvokeEvent,
   type Rectangle,
 } from 'electron'
-import log from 'electron-log/main'
 import { execFile } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { mkdir, readdir, readFile, rm } from 'node:fs/promises'
 import path from 'node:path'
 import { promisify } from 'node:util'
 import { isLogLevel, toLogTransportLevel } from '../../shared/logLevel'
+import { getMainLogTransportLevel, logger, setMainLogTransportLevel } from '../logger'
 import { translate as translateService } from '../services'
 import {
   installPlugin,
@@ -359,6 +359,30 @@ const normalizeError = (error: unknown): NeoPotErrorPayload => {
   }
 }
 
+const summarizePayloadForLog = (payload: unknown): Record<string, unknown> => {
+  if (!isRecord(payload)) {
+    return {
+      payloadType: typeof payload,
+    }
+  }
+
+  const summary: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(payload)) {
+    const summaryKey = `payload_${key}`
+    if (typeof value === 'string') {
+      summary[summaryKey] = `[string length=${value.length}]`
+    } else if (Array.isArray(value)) {
+      summary[summaryKey] = `[array length=${value.length}]`
+    } else if (isRecord(value)) {
+      summary[summaryKey] = `[object keys=${Object.keys(value).length}]`
+    } else {
+      summary[summaryKey] = value
+    }
+  }
+
+  return summary
+}
+
 const execFileAsync = promisify(execFile)
 
 async function listSystemFonts(): Promise<string[]> {
@@ -630,12 +654,14 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
             })
           }
           const transportLevel = toLogTransportLevel(level)
-          log.transports.file.level = transportLevel
-          log.transports.console.level = transportLevel
+          setMainLogTransportLevel(transportLevel)
+          logger.info('Log level changed.', {
+            level,
+          })
           return true
         }
         case 'log:get-level':
-          return log.transports.file.level
+          return getMainLogTransportLevel()
         default:
           throw new NeoPotError({
             code: 'IPC_UNKNOWN_CHANNEL',
@@ -704,7 +730,17 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
       try {
         return await handler(event, payload)
       } catch (error) {
-        throw normalizeError(error)
+        const normalizedError = normalizeError(error)
+        const command =
+          isRecord(payload) && typeof payload.command === 'string' ? payload.command : undefined
+        logger.error('IPC handler failed.', {
+          channel,
+          command,
+          code: normalizedError.code,
+          message: normalizedError.message,
+          ...summarizePayloadForLog(payload),
+        })
+        throw normalizedError
       }
     })
   }

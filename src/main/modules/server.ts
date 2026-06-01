@@ -1,5 +1,5 @@
 import http, { type IncomingMessage, type Server, type ServerResponse } from 'node:http'
-import log from 'electron-log/main'
+import { logger } from '../logger'
 import {
   imageTranslate,
   inputTranslate,
@@ -73,14 +73,20 @@ export function startServer(port = 60828): void {
 
   server = http.createServer((request, response) => {
     handleRoute(request, response).catch((error) => {
-      log.warn('Local server route failed:', error)
+      logger.warn('Local server route failed.', {
+        path: request.url ?? '/',
+        error: error instanceof Error ? error.message : String(error),
+      })
       response.statusCode = 500
       response.end('error')
     })
   })
 
   server.on('error', (error) => {
-    log.warn('Local server start failed:', error)
+    logger.warn('Local server start failed.', {
+      port,
+      error: error.message,
+    })
     server = null
   })
 
