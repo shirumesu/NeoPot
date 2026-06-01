@@ -7,6 +7,12 @@ export interface ElectronCommandMap {
     args: undefined
     result: string
   }
+  translate_text: {
+    args: {
+      text: string
+    }
+    result: void
+  }
   open_devtools: {
     args: undefined
     result: void

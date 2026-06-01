@@ -20,7 +20,8 @@ import { MdSmartButton } from 'react-icons/md'
 import { useTranslation } from 'react-i18next'
 import { HiTranslate } from 'react-icons/hi'
 import { LuDelete } from 'react-icons/lu'
-import { atom, useAtom } from 'jotai'
+import { nanoid } from 'nanoid'
+import { atom, useAtom, useSetAtom } from 'jotai'
 import {
   getServiceName,
   getServiceSouceType,
@@ -37,6 +38,7 @@ const appWindow = getCurrentWebviewWindow()
 
 export const sourceTextAtom = atom('')
 export const detectLanguageAtom = atom('')
+export const manualTranslateFlagAtom = atom('')
 
 const DEFAULT_RECOGNIZE_SERVICE_LIST = ['local_model']
 const DEFAULT_TTS_SERVICE_LIST = []
@@ -46,6 +48,7 @@ export default function SourceArea(props) {
   const [appFontSize] = useConfig('app_font_size', 16)
   const [sourceText, setSourceText, syncSourceText] = useSyncAtom(sourceTextAtom)
   const [detectLanguage, setDetectLanguage] = useAtom(detectLanguageAtom)
+  const setManualTranslateFlag = useSetAtom(manualTranslateFlagAtom)
   const [incrementalTranslate] = useConfig('incremental_translate', false)
   const [dynamicTranslate] = useConfig('dynamic_translate', false)
   const [deleteNewline] = useConfig('translate_delete_newline', false)
@@ -554,6 +557,7 @@ export default function SourceArea(props) {
               onPress={() => {
                 detect_language(sourceText).then(() => {
                   syncSourceText()
+                  setManualTranslateFlag(nanoid())
                 })
               }}
             />

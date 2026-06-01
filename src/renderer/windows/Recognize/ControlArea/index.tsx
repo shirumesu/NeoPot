@@ -1,6 +1,5 @@
 import { Dropdown, DropdownItem, DropdownMenu, DropdownTrigger, Button } from '@heroui/react'
 import { atom, useAtom, useSetAtom, useAtomValue } from 'jotai'
-import { fetch, Body } from '@/renderer/lib/electron/http'
 import { useTranslation } from 'react-i18next'
 import { HiTranslate } from 'react-icons/hi'
 import { GiCycle } from 'react-icons/gi'
@@ -8,6 +7,7 @@ import React, { useEffect } from 'react'
 import { nanoid } from 'nanoid'
 import * as builtinService from '@/renderer/providers/recognize'
 import { languageList } from '@/renderer/lib/language/language'
+import { electronCommand } from '@/renderer/lib/electron/command'
 import { useConfig } from '../../../hooks'
 import { textAtom } from '../TextArea'
 import { pluginListAtom } from '..'
@@ -29,7 +29,6 @@ export default function ControlArea(props) {
   const { serviceInstanceConfigMap, serviceInstanceList } = props
   const pluginList = useAtomValue(pluginListAtom)
   const [recognizeLanguage] = useConfig('recognize_language', 'auto')
-  const [serverPort] = useConfig('server_port', 60828)
   const setRecognizeFlag = useSetAtom(recognizeFlagAtom)
   const [currentServiceInstanceKey, setCurrentServiceInstanceKey] = useAtom(
     currentServiceInstanceKeyAtom,
@@ -159,11 +158,7 @@ export default function ControlArea(props) {
         startContent={<HiTranslate className="text-[16px]" />}
         onPress={async () => {
           if (text) {
-            void fetch(`http://127.0.0.1:${serverPort}/translate`, {
-              method: 'POST',
-              body: Body.text(text),
-              responseType: 2,
-            })
+            await electronCommand('translate_text', { text })
           }
         }}
       >

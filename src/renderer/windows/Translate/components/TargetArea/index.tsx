@@ -34,7 +34,7 @@ import useMeasure from 'react-use-measure'
 
 import { sourceLanguageAtom, targetLanguageAtom } from '../LanguageArea'
 import { useConfig, useToastStyle, useVoice } from '../../../../hooks'
-import { sourceTextAtom, detectLanguageAtom } from '../SourceArea'
+import { sourceTextAtom, detectLanguageAtom, manualTranslateFlagAtom } from '../SourceArea'
 import { invoke_plugin } from '@/renderer/lib/plugin/invoke_plugin'
 import * as builtinServices from '@/renderer/providers/translate'
 import * as builtinTtsServices from '@/renderer/providers/tts'
@@ -182,6 +182,7 @@ export default function TargetArea(props) {
   const [resultViewMode, setResultViewMode] = useState<'markdown' | 'source' | null>(null)
 
   const sourceText = useAtomValue(sourceTextAtom)
+  const manualTranslateFlag = useAtomValue(manualTranslateFlagAtom)
   const sourceLanguage = useAtomValue(sourceLanguageAtom)
   const targetLanguage = useAtomValue(targetLanguageAtom)
   const [autoCopy] = useConfig('translate_auto_copy', 'disable')
@@ -235,6 +236,7 @@ export default function TargetArea(props) {
     hideWindow,
     currentTranslateServiceInstanceKey,
     clipboardMonitor,
+    manualTranslateFlag,
     serviceInstanceConfigMap,
   ])
 
@@ -256,14 +258,24 @@ export default function TargetArea(props) {
     translateID[index] = id
 
     const translateServiceName = getServiceName(currentTranslateServiceInstanceKey)
+    const resolvedSourceLanguage = sourceLanguage
+    const resolveTargetLanguage = () => {
+      if (resolvedSourceLanguage === 'auto' && targetLanguage === detectLanguage) {
+        return translateSecondLanguage
+      }
+
+      return targetLanguage
+    }
+    const resolvedTargetLanguage = resolveTargetLanguage()
+    const providerDetectLanguage =
+      resolvedSourceLanguage === 'auto' ? detectLanguage || 'auto' : resolvedSourceLanguage
 
     if (whetherPluginService(currentTranslateServiceInstanceKey)) {
       const pluginInfo = pluginList['translate'][translateServiceName]
-      if (sourceLanguage in pluginInfo.language && targetLanguage in pluginInfo.language) {
-        let newTargetLanguage = targetLanguage
-        if (sourceLanguage === 'auto' && targetLanguage === detectLanguage) {
-          newTargetLanguage = translateSecondLanguage
-        }
+      if (
+        resolvedSourceLanguage in pluginInfo.language &&
+        resolvedTargetLanguage in pluginInfo.language
+      ) {
         setIsLoading(true)
         setHide(true)
         const instanceConfig = serviceInstanceConfigMap[currentTranslateServiceInstanceKey]
@@ -276,11 +288,11 @@ export default function TargetArea(props) {
         const [func, utils] = await invoke_plugin('translate', translateServiceName)
         func(
           sourceText.trim(),
-          pluginInfo.language[sourceLanguage],
-          pluginInfo.language[newTargetLanguage],
+          pluginInfo.language[resolvedSourceLanguage],
+          pluginInfo.language[resolvedTargetLanguage],
           {
             config: instanceConfig,
-            detect: detectLanguage,
+            detect: providerDetectLanguage,
             setResult: (v) => {
               if (translateID[index] !== id) return
               setResult(v)
@@ -336,11 +348,7 @@ export default function TargetArea(props) {
       }
     } else {
       const LanguageEnum = builtinServices[translateServiceName].Language
-      if (sourceLanguage in LanguageEnum && targetLanguage in LanguageEnum) {
-        let newTargetLanguage = targetLanguage
-        if (sourceLanguage === 'auto' && targetLanguage === detectLanguage) {
-          newTargetLanguage = translateSecondLanguage
-        }
+      if (resolvedSourceLanguage in LanguageEnum && resolvedTargetLanguage in LanguageEnum) {
         setIsLoading(true)
         setHide(true)
         const instanceConfig = serviceInstanceConfigMap[currentTranslateServiceInstanceKey]
@@ -352,11 +360,11 @@ export default function TargetArea(props) {
         builtinServices[translateServiceName]
           .translate(
             sourceText.trim(),
-            LanguageEnum[sourceLanguage],
-            LanguageEnum[newTargetLanguage],
+            LanguageEnum[resolvedSourceLanguage],
+            LanguageEnum[resolvedTargetLanguage],
             {
               config: instanceConfig,
-              detect: detectLanguage,
+              detect: providerDetectLanguage,
               setResult: (v) => {
                 if (translateID[index] !== id) return
                 setResult(v)

@@ -293,12 +293,14 @@ export default function Hotkey() {
           </div>
         </CardBody>
       </Card>
-      <Card>
-        <CardBody>
-          <h2 className="font-semibold mb-2">{t('config.hotkey.plugin_section')}</h2>
-          <PluginHotkeyEditor rows={pluginHotkeyRows} />
-        </CardBody>
-      </Card>
+      {pluginHotkeyRows.length > 0 && (
+        <Card>
+          <CardBody>
+            <h2 className="font-semibold mb-2">{t('config.hotkey.plugin_section')}</h2>
+            <PluginHotkeyEditor rows={pluginHotkeyRows} />
+          </CardBody>
+        </Card>
+      )}
     </div>
   )
 }

@@ -50,6 +50,7 @@ import {
   openUpdater,
   recognizeWindow,
   selectionTranslate,
+  textTranslate,
 } from './workflow'
 
 export interface NeoPotErrorPayload {
@@ -588,6 +589,8 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
         }
         case 'get_text':
           return getCurrentWorkflowText()
+        case 'translate_text':
+          return textTranslate(assertTextPayload(args))
         case 'lang_detect':
           return detectLanguage(assertTextPayload(args))
         case 'http_request':
