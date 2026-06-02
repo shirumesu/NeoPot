@@ -52,6 +52,7 @@ import {
   selectionTranslate,
   textTranslate,
 } from './workflow'
+import { APP_USER_MODEL_ID } from './appIdentity'
 
 export interface NeoPotErrorPayload {
   code: 'IPC_UNKNOWN_CHANNEL' | 'IPC_INVALID_PAYLOAD' | 'IPC_HANDLER_FAILED'
@@ -73,12 +74,46 @@ export class NeoPotError extends Error {
 
 type IpcHandler = (event: IpcMainInvokeEvent, payload: unknown) => Promise<unknown> | unknown
 
+type AutoStartLoginItemCompareOptions = {
+  path?: string
+  args?: string[]
+}
+
+type AutoStartLoginItemSetOptions = AutoStartLoginItemCompareOptions & {
+  name?: string
+}
+
 interface RegisterIpcHandlersOptions {
   getWindowLabel(event: IpcMainInvokeEvent): WindowLabel
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
+
+export function getAutoStartLoginItemCompareOptions(): AutoStartLoginItemCompareOptions {
+  if (process.platform !== 'win32' || !app.isPackaged) {
+    return {}
+  }
+
+  const appFolder = path.dirname(process.execPath)
+  const exeName = path.basename(process.execPath)
+
+  return {
+    path: path.resolve(appFolder, '..', exeName),
+    args: [],
+  }
+}
+
+function getAutoStartLoginItemSetOptions(): AutoStartLoginItemSetOptions {
+  if (process.platform !== 'win32' || !app.isPackaged) {
+    return {}
+  }
+
+  return {
+    ...getAutoStartLoginItemCompareOptions(),
+    name: APP_USER_MODEL_ID,
+  }
+}
 
 const assertNoPayload = (payload: unknown) => {
   if (payload !== undefined) {
@@ -474,11 +509,12 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
     'app:set-auto-start': (_event, payload) => {
       app.setLoginItemSettings({
         openAtLogin: assertBooleanPayload(payload, 'enabled'),
+        ...getAutoStartLoginItemSetOptions(),
       })
     },
     'app:is-auto-start-enabled': (_event, payload) => {
       assertNoPayload(payload)
-      return app.getLoginItemSettings().openAtLogin
+      return app.getLoginItemSettings(getAutoStartLoginItemCompareOptions()).openAtLogin
     },
     'app:minimize-current-window': (event, payload) => {
       assertNoPayload(payload)

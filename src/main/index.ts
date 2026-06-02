@@ -3,6 +3,7 @@ import log from 'electron-log/main'
 import { spawn } from 'node:child_process'
 import { copyFileSync, rmSync } from 'node:fs'
 import path from 'node:path'
+import { APP_USER_MODEL_ID } from './modules/appIdentity'
 import { RENDERER_SCHEME } from './modules/rendererProtocol'
 import { logger } from './logger'
 import { isLogLevel, toLogTransportLevel, type AppLogLevel } from '../shared/logLevel'
@@ -14,7 +15,7 @@ log.transports.file.level = defaultLogLevel
 log.transports.console.level = defaultLogLevel
 
 if (process.platform === 'win32') {
-  app.setAppUserModelId('com.squirrel.neopot.neopot')
+  app.setAppUserModelId(APP_USER_MODEL_ID)
 }
 
 const squirrelStartupHandled = handleSquirrelStartupEvent()
