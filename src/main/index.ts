@@ -98,7 +98,16 @@ async function startApp(): Promise<void> {
     hotkey.registerGlobalShortcuts('all')
     clipboard.startClipboardMonitor()
     clipboard.setClipboardMonitorEnabled(false)
-    server.startServer()
+
+    const configuredServerPort = config.getConfig('server_port')
+    const serverPort =
+      typeof configuredServerPort === 'number' &&
+      Number.isInteger(configuredServerPort) &&
+      configuredServerPort >= 0 &&
+      configuredServerPort <= 65535
+        ? configuredServerPort
+        : undefined
+    server.startServer(serverPort)
 
     app.on('activate', async () => {
       if (BrowserWindow.getAllWindows().length === 0) {
