@@ -133,10 +133,10 @@ export async function setStoreValue(
   const electronConfig = getElectronConfigApi()
   if (electronConfig) {
     await electronConfig.set(key, value)
-    emitStoreValueChanged(key, value)
     logger.debug('Config value written through Electron config API.', {
       key,
     })
+    emitStoreValueChanged(key, value)
     return
   }
 
@@ -153,6 +153,8 @@ export async function setStoreValue(
   if (save) {
     await saveStore()
   }
+
+  emitStoreValueChanged(key, value)
 }
 
 export async function hasStoreValue(key: StoreKey): Promise<boolean> {

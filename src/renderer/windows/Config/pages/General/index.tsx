@@ -63,12 +63,67 @@ const normalizeServerPortInput = (value) => {
   return Math.min(65535, Math.max(0, Math.trunc(port)))
 }
 
+function ServerPortInput() {
+  const [serverPort, setServerPort] = useConfig('server_port', 60828, { sync: false })
+  const [draftPort, setDraftPort] = useState('')
+  const { t } = useTranslation()
+  const { saveConfig } = useConfigSave()
+
+  useEffect(() => {
+    if (serverPort !== null) {
+      setDraftPort(String(serverPort))
+    }
+  }, [serverPort])
+
+  if (serverPort === null) {
+    return null
+  }
+
+  return (
+    <Input
+      type="number"
+      variant="bordered"
+      value={draftPort}
+      labelPlacement="outside-left"
+      onValueChange={(v) => {
+        if (v === '') {
+          setDraftPort('')
+          return
+        }
+
+        const nextPort = normalizeServerPortInput(v)
+        if (nextPort === null) {
+          return
+        }
+
+        setDraftPort(String(nextPort))
+      }}
+      onBlur={() => {
+        const nextPort = normalizeServerPortInput(draftPort)
+        if (nextPort === null) {
+          setDraftPort(String(serverPort))
+          return
+        }
+
+        setDraftPort(String(nextPort))
+        void saveConfig('server_port', serverPort, setServerPort, nextPort, {
+          successMessage: t('config.general.server_port_change'),
+        })
+      }}
+      className="max-w-25"
+      classNames={{
+        input:
+          '[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none',
+      }}
+    />
+  )
+}
+
 export default function General() {
   const [autoStart, setAutoStart] = useState(false)
   const [fontList, setFontList] = useState(null)
   const [checkUpdate, setCheckUpdate] = useConfig('check_update', true)
   const [closeToTray, setCloseToTray] = useConfig('close_to_tray', true)
-  const [serverPort, setServerPort] = useConfig('server_port', 60828)
   const [appLanguage, setAppLanguage] = useConfig('app_language', 'en')
   const [appTheme, setAppTheme] = useConfig('app_theme', 'system')
   const [appFont, setAppFont] = useConfig('app_font', 'default')
@@ -188,30 +243,7 @@ export default function General() {
           </div>
           <div className="config-item">
             <h3 className="my-auto">{t('config.general.server_port')}</h3>
-            {serverPort !== null && (
-              <Input
-                type="number"
-                variant="bordered"
-                value={String(serverPort)}
-                labelPlacement="outside-left"
-                onValueChange={(v) => {
-                  const nextPort = normalizeServerPortInput(v)
-                  if (nextPort === null) {
-                    return
-                  }
-                  setServerPort(nextPort)
-                }}
-                onBlur={() => {
-                  void saveConfig('server_port', serverPort, setServerPort, serverPort, {
-                    successMessage: t('config.general.server_port_change'),
-                  })
-                }}
-                className="max-w-25"
-                classNames={{
-                  input: '[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none',
-                }}
-              />
-            )}
+            <ServerPortInput />
           </div>
         </CardBody>
       </Card>

@@ -7,7 +7,6 @@ import {
   STORE_CHANGED_EVENT,
   STORE_RELOADED_EVENT,
   deleteStoreValue,
-  emitStoreValueChanged,
   getStoreValue,
   setStoreValue,
 } from '@/renderer/lib/config/store'
@@ -95,7 +94,6 @@ export const useConfig = <T = unknown>(
   const persistStoreValue = useCallback(
     async (v: T) => {
       await setStoreValue(key, v)
-      emitStoreValueChanged(key, v)
       logger.debug('Config value persisted.', {
         key,
         ...describeConfigValue(v),

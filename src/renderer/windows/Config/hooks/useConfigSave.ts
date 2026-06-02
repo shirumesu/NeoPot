@@ -13,6 +13,7 @@ interface SaveConfigOptions {
   compareCurrent?: boolean
   notify?: boolean
   successMessage?: string
+  verify?: boolean
 }
 
 export function useConfigSave() {
@@ -38,7 +39,7 @@ export function useConfigSave() {
       nextValue: T,
       options: SaveConfigOptions = {},
     ) => {
-      const { compareCurrent = true, notify = true, successMessage } = options
+      const { compareCurrent = true, notify = true, successMessage, verify = false } = options
       if (compareCurrent && isSameConfigValue(currentValue, nextValue)) {
         return true
       }
@@ -48,7 +49,9 @@ export function useConfigSave() {
           key,
         })
         await setter(nextValue, true)
-        await verifySavedConfig(key, nextValue)
+        if (verify) {
+          await verifySavedConfig(key, nextValue)
+        }
         logger.info('Config value saved from settings page.', {
           key,
         })
