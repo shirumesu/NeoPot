@@ -15,7 +15,7 @@ import {
 } from '@heroui/react'
 import { INSTANCE_NAME_CONFIG_KEY } from '@/renderer/lib/service/service_instance'
 import { MdDeleteOutline } from 'react-icons/md'
-import toast, { Toaster } from 'react-hot-toast'
+import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { openUrl as open } from '@/renderer/lib/electron/compat/opener'
 import React, { useEffect, useState } from 'react'
@@ -24,6 +24,7 @@ import { useConfig } from '../../../hooks/useConfig'
 import { useToastStyle } from '../../../hooks'
 import { getModels as getOllamaModels, pullModel as pullOllamaModel, translate } from './index'
 import { Language } from './index'
+import { useConfigSave } from '@/renderer/windows/Config/hooks/useConfigSave'
 
 const THINKING_MODE_DEFAULT = 'default'
 const THINKING_MODE_ON = 'on'
@@ -75,6 +76,7 @@ export function Config(props) {
   const [installedModels, setInstalledModels] = useState(null)
 
   const toastStyle = useToastStyle()
+  const { saveConfig } = useConfigSave()
 
   if (serviceConfig) {
     let changed = false
@@ -151,14 +153,17 @@ export function Config(props) {
   return (
     serviceConfig !== null && (
       <form
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault()
-          setServiceConfig(serviceConfig, true)
-          updateServiceList(instanceKey)
-          onClose()
+          const saved = await saveConfig(instanceKey, null, setServiceConfig, serviceConfig, {
+            compareCurrent: false,
+          })
+          if (saved) {
+            await updateServiceList(instanceKey)
+            onClose()
+          }
         }}
       >
-        <Toaster />
         <div className="config-item">
           <Input
             label={t('services.instance_name')}

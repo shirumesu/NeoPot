@@ -11,6 +11,7 @@ import React from 'react'
 
 import { languageList } from '@/renderer/lib/language/language'
 import { useConfig } from '../../../../hooks'
+import { useConfigSave } from '../../hooks/useConfigSave'
 
 const DropdownMenuAny = DropdownMenu as any
 
@@ -21,6 +22,7 @@ export default function Recognize() {
   const [hideWindow, setHideWindow] = useConfig('recognize_hide_window', false)
   const [closeOnBlur, setCloseOnBlur] = useConfig('recognize_close_on_blur', false)
   const { t } = useTranslation()
+  const { saveConfig } = useConfigSave()
   return (
     <Card className="mb-2.5">
       <CardBody>
@@ -35,7 +37,12 @@ export default function Recognize() {
                 aria-label="recognize language"
                 className="max-h-[50vh] overflow-y-auto"
                 onAction={(key) => {
-                  setRecognizeLanguage(String(key))
+                  saveConfig(
+                    'recognize_language',
+                    recognizeLanguage,
+                    setRecognizeLanguage,
+                    String(key),
+                  )
                 }}
               >
                 <DropdownItem key="auto">{t('languages.auto')}</DropdownItem>
@@ -52,7 +59,7 @@ export default function Recognize() {
             <Switch
               isSelected={deleteNewline}
               onValueChange={(v) => {
-                setDeleteNewline(v)
+                saveConfig('recognize_delete_newline', deleteNewline, setDeleteNewline, v)
               }}
             />
           )}
@@ -63,7 +70,7 @@ export default function Recognize() {
             <Switch
               isSelected={autoCopy}
               onValueChange={(v) => {
-                setAutoCopy(v)
+                saveConfig('recognize_auto_copy', autoCopy, setAutoCopy, v)
               }}
             />
           )}
@@ -74,7 +81,7 @@ export default function Recognize() {
             <Switch
               isSelected={closeOnBlur}
               onValueChange={(v) => {
-                setCloseOnBlur(v)
+                saveConfig('recognize_close_on_blur', closeOnBlur, setCloseOnBlur, v)
               }}
             />
           )}
@@ -85,7 +92,7 @@ export default function Recognize() {
             <Switch
               isSelected={hideWindow}
               onValueChange={(v) => {
-                setHideWindow(v)
+                saveConfig('recognize_hide_window', hideWindow, setHideWindow, v)
               }}
             />
           )}

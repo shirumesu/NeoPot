@@ -13,6 +13,7 @@ import { useConfig } from '../../../../hooks'
 import { checkPluginUpdates } from './marketplace'
 import { loadInstalledPlugins } from './installedPlugins'
 import { logger } from '@/renderer/lib/logger'
+import { useConfigSave } from '../../hooks/useConfigSave'
 
 export default function Plugin() {
   const [plugins, setPlugins] = useState([])
@@ -22,6 +23,7 @@ export default function Plugin() {
   const [updates, setUpdates] = useState(null)
   const [installing, setInstalling] = useState(false)
   const { t } = useTranslation()
+  const { saveConfig } = useConfigSave()
 
   const refreshPlugins = () => {
     loadInstalledPlugins().then((installed) => {
@@ -137,7 +139,9 @@ export default function Plugin() {
               <Switch
                 size="sm"
                 isSelected={autoUpdate}
-                onValueChange={(value) => setAutoUpdate(value, true)}
+                onValueChange={(value) => {
+                  saveConfig('plugin_auto_check_update', autoUpdate, setAutoUpdate, value)
+                }}
               />
             )}
           </div>

@@ -12,6 +12,7 @@ import React from 'react'
 import { languageList } from '@/renderer/lib/language/language'
 import { useConfig } from '../../../../hooks/useConfig'
 import { invoke } from '@/renderer/lib/electron/compat/core'
+import { useConfigSave } from '../../hooks/useConfigSave'
 
 const DropdownMenuAny = DropdownMenu as any
 
@@ -37,6 +38,7 @@ export default function Translate() {
   const [closeOnBlur, setCloseOnBlur] = useConfig('translate_close_on_blur', true)
   const [alwaysOnTop, setAlwaysOnTop] = useConfig('translate_always_on_top', false)
   const { t } = useTranslation()
+  const { saveConfig } = useConfigSave()
 
   return (
     <>
@@ -53,7 +55,12 @@ export default function Translate() {
                   aria-label="source language"
                   className="max-h-[50vh] overflow-y-auto"
                   onAction={(key) => {
-                    setSourceLanguage(String(key))
+                    saveConfig(
+                      'translate_source_language',
+                      sourceLanguage,
+                      setSourceLanguage,
+                      String(key),
+                    )
                   }}
                 >
                   <DropdownItem key="auto">{t('languages.auto')}</DropdownItem>
@@ -75,7 +82,12 @@ export default function Translate() {
                   aria-label="target language"
                   className="max-h-[50vh] overflow-y-auto"
                   onAction={(key) => {
-                    setTargetLanguage(String(key))
+                    saveConfig(
+                      'translate_target_language',
+                      targetLanguage,
+                      setTargetLanguage,
+                      String(key),
+                    )
                   }}
                 >
                   {languageList.map((item) => {
@@ -96,7 +108,12 @@ export default function Translate() {
                   aria-label="second language"
                   className="max-h-[50vh] overflow-y-auto"
                   onAction={(key) => {
-                    setSecondLanguage(String(key))
+                    saveConfig(
+                      'translate_second_language',
+                      secondLanguage,
+                      setSecondLanguage,
+                      String(key),
+                    )
                   }}
                 >
                   {languageList.map((item) => {
@@ -117,7 +134,12 @@ export default function Translate() {
                   aria-label="detect engine"
                   className="max-h-[50vh] overflow-y-auto"
                   onAction={(key) => {
-                    setDetectEngine(String(key))
+                    saveConfig(
+                      'translate_detect_engine',
+                      detectEngine,
+                      setDetectEngine,
+                      String(key),
+                    )
                   }}
                 >
                   <DropdownItem key="baidu">{t(`config.translate.baidu`)}</DropdownItem>
@@ -147,8 +169,13 @@ export default function Translate() {
                   className="max-h-[50vh] overflow-y-auto"
                   onAction={(key) => {
                     const copyMode = String(key)
-                    setAutoCopy(copyMode)
-                    invoke('update_tray', { language: '', copyMode })
+                    saveConfig('translate_auto_copy', autoCopy, setAutoCopy, copyMode).then(
+                      (saved) => {
+                        if (saved) {
+                          invoke('update_tray', { language: '', copyMode })
+                        }
+                      },
+                    )
                   }}
                 >
                   <DropdownItem key="source">{t('config.translate.source')}</DropdownItem>
@@ -167,7 +194,12 @@ export default function Translate() {
               <Switch
                 isSelected={incrementalTranslate}
                 onValueChange={(v) => {
-                  setIncrementalTranslate(v)
+                  saveConfig(
+                    'incremental_translate',
+                    incrementalTranslate,
+                    setIncrementalTranslate,
+                    v,
+                  )
                 }}
               />
             )}
@@ -178,7 +210,7 @@ export default function Translate() {
               <Switch
                 isSelected={dynamicTranslate}
                 onValueChange={(v) => {
-                  setDynamicTranslate(v)
+                  saveConfig('dynamic_translate', dynamicTranslate, setDynamicTranslate, v)
                 }}
               />
             )}
@@ -189,7 +221,7 @@ export default function Translate() {
               <Switch
                 isSelected={deleteNewline}
                 onValueChange={(v) => {
-                  setDeleteNewline(v)
+                  saveConfig('translate_delete_newline', deleteNewline, setDeleteNewline, v)
                 }}
               />
             )}
@@ -200,7 +232,12 @@ export default function Translate() {
               <Switch
                 isSelected={rememberLanguage}
                 onValueChange={(v) => {
-                  setRememberLanguage(v)
+                  saveConfig(
+                    'translate_remember_language',
+                    rememberLanguage,
+                    setRememberLanguage,
+                    v,
+                  )
                 }}
               />
             )}
@@ -247,7 +284,12 @@ export default function Translate() {
                   aria-label="window position"
                   className="max-h-[50vh] overflow-y-auto"
                   onAction={(key) => {
-                    setWindowPosition(String(key))
+                    saveConfig(
+                      'translate_window_position',
+                      windowPosition,
+                      setWindowPosition,
+                      String(key),
+                    )
                   }}
                 >
                   <DropdownItem key="mouse">{t('config.translate.mouse')}</DropdownItem>
@@ -262,7 +304,12 @@ export default function Translate() {
               <Switch
                 isSelected={rememberWindowSize}
                 onValueChange={(v) => {
-                  setRememberWindowSize(v)
+                  saveConfig(
+                    'translate_remember_window_size',
+                    rememberWindowSize,
+                    setRememberWindowSize,
+                    v,
+                  )
                 }}
               />
             )}
@@ -273,7 +320,7 @@ export default function Translate() {
               <Switch
                 isSelected={closeOnBlur}
                 onValueChange={(v) => {
-                  setCloseOnBlur(v)
+                  saveConfig('translate_close_on_blur', closeOnBlur, setCloseOnBlur, v)
                 }}
               />
             )}
@@ -284,7 +331,7 @@ export default function Translate() {
               <Switch
                 isSelected={alwaysOnTop}
                 onValueChange={(v) => {
-                  setAlwaysOnTop(v)
+                  saveConfig('translate_always_on_top', alwaysOnTop, setAlwaysOnTop, v)
                 }}
               />
             )}
@@ -295,7 +342,7 @@ export default function Translate() {
               <Switch
                 isSelected={hideSource}
                 onValueChange={(v) => {
-                  setHideSource(v)
+                  saveConfig('hide_source', hideSource, setHideSource, v)
                 }}
               />
             )}
@@ -306,7 +353,7 @@ export default function Translate() {
               <Switch
                 isSelected={hideLanguage}
                 onValueChange={(v) => {
-                  setHideLanguage(v)
+                  saveConfig('hide_language', hideLanguage, setHideLanguage, v)
                 }}
               />
             )}
@@ -317,7 +364,7 @@ export default function Translate() {
               <Switch
                 isSelected={hideWindow}
                 onValueChange={(v) => {
-                  setHideWindow(v)
+                  saveConfig('translate_hide_window', hideWindow, setHideWindow, v)
                 }}
               />
             )}

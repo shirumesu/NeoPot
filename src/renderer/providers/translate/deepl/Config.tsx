@@ -3,7 +3,7 @@ import { DropdownTrigger } from '@heroui/react'
 import { Input, Button } from '@heroui/react'
 import { DropdownMenu } from '@heroui/react'
 import { DropdownItem } from '@heroui/react'
-import toast, { Toaster } from 'react-hot-toast'
+import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { Dropdown } from '@heroui/react'
 import { openUrl as open } from '@/renderer/lib/electron/compat/opener'
@@ -13,6 +13,7 @@ import { useConfig } from '../../../hooks/useConfig'
 import { useToastStyle } from '../../../hooks'
 import { translate } from './index'
 import { Language } from './index'
+import { useConfigSave } from '@/renderer/windows/Config/hooks/useConfigSave'
 
 export function Config(props) {
   const { instanceKey, updateServiceList, onClose } = props
@@ -30,18 +31,22 @@ export function Config(props) {
   const [isLoading, setIsLoading] = useState(false)
 
   const toastStyle = useToastStyle()
+  const { saveConfig } = useConfigSave()
 
   return (
     deeplConfig !== null && (
       <form
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault()
-          setDeeplConfig(deeplConfig, true)
-          updateServiceList(instanceKey)
-          onClose()
+          const saved = await saveConfig(instanceKey, null, setDeeplConfig, deeplConfig, {
+            compareCurrent: false,
+          })
+          if (saved) {
+            await updateServiceList(instanceKey)
+            onClose()
+          }
         }}
       >
-        <Toaster />
         <div className="config-item">
           <Input
             label={t('services.instance_name')}

@@ -9,11 +9,13 @@ import { openUrl as open } from '@/renderer/lib/electron/compat/opener'
 import React from 'react'
 
 import { useConfig } from '../../../../../hooks'
+import { useConfigSave } from '../../../hooks/useConfigSave'
 
 export function PluginConfig(props) {
   const { instanceKey, updateServiceList, onClose, name, pluginList } = props
   const [pluginConfig, setPluginConfig] = useConfig(instanceKey, {}, { sync: false })
   const { t } = useTranslation()
+  const { saveConfig } = useConfigSave()
 
   return (
     <>
@@ -125,10 +127,14 @@ export function PluginConfig(props) {
         <Button
           fullWidth
           color="primary"
-          onPress={() => {
-            setPluginConfig(pluginConfig, true)
-            updateServiceList(instanceKey)
-            onClose()
+          onPress={async () => {
+            const saved = await saveConfig(instanceKey, null, setPluginConfig, pluginConfig, {
+              compareCurrent: false,
+            })
+            if (saved) {
+              await updateServiceList(instanceKey)
+              onClose()
+            }
           }}
         >
           {t('common.save')}

@@ -1,5 +1,5 @@
 import { Card, Spacer, Button, useDisclosure } from '@heroui/react'
-import toast, { Toaster } from 'react-hot-toast'
+import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import React, { useState } from 'react'
 import { Reorder } from 'framer-motion'
@@ -11,6 +11,7 @@ import { useConfig, deleteKey, isSameConfigValue } from '../../../../../hooks'
 import ServiceItem from './ServiceItem'
 import SelectModal from './SelectModal'
 import ConfigModal from './ConfigModal'
+import { useConfigSave } from '../../../hooks/useConfigSave'
 
 const ReorderGroup = Reorder.Group as any
 
@@ -40,22 +41,37 @@ export default function Recognize(props) {
 
   const { t } = useTranslation()
   const toastStyle = useToastStyle()
+  const { saveConfig } = useConfigSave()
 
-  const deleteServiceInstance = (instanceKey) => {
+  const deleteServiceInstance = async (instanceKey) => {
     if (recognizeServiceInstanceList.length === 1) {
       toast.error(t('config.service.least'), { style: toastStyle })
       return
     } else {
-      setRecognizeServiceInstanceList(recognizeServiceInstanceList.filter((x) => x !== instanceKey))
-      deleteKey(instanceKey)
+      const newList = recognizeServiceInstanceList.filter((x) => x !== instanceKey)
+      const saved = await saveConfig(
+        'recognize_service_list',
+        recognizeServiceInstanceList,
+        setRecognizeServiceInstanceList,
+        newList,
+      )
+      if (saved) {
+        await deleteKey(instanceKey)
+      }
     }
   }
-  const updateServiceInstanceList = (instanceKey) => {
+  const updateServiceInstanceList = async (instanceKey) => {
     if (recognizeServiceInstanceList.includes(instanceKey)) {
       return
     } else {
       const newList = [...recognizeServiceInstanceList, instanceKey]
-      setRecognizeServiceInstanceList(newList)
+      await saveConfig(
+        'recognize_service_list',
+        recognizeServiceInstanceList,
+        setRecognizeServiceInstanceList,
+        newList,
+        { notify: false },
+      )
     }
   }
   const handleServiceReorder = (serviceInstanceList) => {
@@ -63,12 +79,17 @@ export default function Recognize(props) {
       return
     }
 
-    setRecognizeServiceInstanceList(serviceInstanceList)
+    void saveConfig(
+      'recognize_service_list',
+      recognizeServiceInstanceList,
+      setRecognizeServiceInstanceList,
+      serviceInstanceList,
+      { notify: false },
+    )
   }
 
   return (
     <>
-      <Toaster />
       <Card
         className={`${
           osType === 'Linux' ? 'h-[calc(100vh-140px)]' : 'h-[calc(100vh-120px)]'

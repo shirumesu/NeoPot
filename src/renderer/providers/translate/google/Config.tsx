@@ -1,6 +1,6 @@
 import { INSTANCE_NAME_CONFIG_KEY } from '@/renderer/lib/service/service_instance'
 import { Input, Button } from '@heroui/react'
-import toast, { Toaster } from 'react-hot-toast'
+import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import React, { useState } from 'react'
 
@@ -8,6 +8,7 @@ import { useConfig } from '../../../hooks/useConfig'
 import { useToastStyle } from '../../../hooks'
 import { translate } from './index'
 import { Language } from './index'
+import { useConfigSave } from '@/renderer/windows/Config/hooks/useConfigSave'
 
 export function Config(props) {
   const { instanceKey, updateServiceList, onClose } = props
@@ -23,18 +24,22 @@ export function Config(props) {
   const [isLoading, setIsLoading] = useState(false)
 
   const toastStyle = useToastStyle()
+  const { saveConfig } = useConfigSave()
 
   return (
     config !== null && (
       <form
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault()
-          setConfig(config, true)
-          updateServiceList(instanceKey)
-          onClose()
+          const saved = await saveConfig(instanceKey, null, setConfig, config, {
+            compareCurrent: false,
+          })
+          if (saved) {
+            await updateServiceList(instanceKey)
+            onClose()
+          }
         }}
       >
-        <Toaster />
         <div className="config-item">
           <Input
             label={t('services.instance_name')}

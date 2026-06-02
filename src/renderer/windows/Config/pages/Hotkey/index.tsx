@@ -1,5 +1,5 @@
 import { unregister, isRegistered } from '@/renderer/lib/electron/compat/globalShortcut'
-import toast, { Toaster } from 'react-hot-toast'
+import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { CardBody } from '@heroui/react'
 import { Button } from '@heroui/react'
@@ -7,13 +7,14 @@ import { Input } from '@heroui/react'
 import { Card } from '@heroui/react'
 import React, { useEffect, useState } from 'react'
 
-import { isSameConfigValue, useConfig } from '../../../../hooks/useConfig'
+import { useConfig } from '../../../../hooks/useConfig'
 import PluginHotkeyEditor from '../../components/PluginHotkeyEditor'
 import { useToastStyle } from '../../../../hooks'
 import { osType } from '@/renderer/lib/config/env'
 import { invoke } from '@/renderer/lib/electron/compat/core'
 import { getStoreValue } from '@/renderer/lib/config/store'
 import { loadInstalledPlugins } from '../Plugin/installedPlugins'
+import { useConfigSave } from '../../hooks/useConfigSave'
 
 const keyMap = {
   Backquote: '`',
@@ -65,6 +66,7 @@ export default function Hotkey() {
 
   const { t } = useTranslation()
   const toastStyle = useToastStyle()
+  const { saveConfig } = useConfigSave()
 
   useEffect(() => {
     loadInstalledPlugins().then((plugins) => {
@@ -122,22 +124,15 @@ export default function Hotkey() {
     }
   }
 
-  async function verifySavedConfig(name, key) {
-    const savedValue = await getStoreValue(name)
-    if (!isSameConfigValue(savedValue, key)) {
-      throw new Error(`Config "${name}" was not saved`)
-    }
-  }
-
   async function clearHandler(name, setKey) {
     try {
       const savedValue = await getStoreValue(name)
       if (typeof savedValue === 'string' && savedValue !== '') {
         unregister(savedValue)
       }
-      await setKey('', true)
-      await verifySavedConfig(name, '')
-      toast.success(t('config.common.save_success'), { style: toastStyle })
+      await saveConfig(name, null, setKey, '', {
+        compareCurrent: false,
+      })
     } catch {
       toast.error(t('config.common.save_failed'), { style: toastStyle })
     }
@@ -159,9 +154,9 @@ export default function Hotkey() {
                 return
               }
 
-              await setKey(key, true)
-              await verifySavedConfig(name, key)
-              toast.success(t('config.common.save_success'), { style: toastStyle })
+              await saveConfig(name, null, setKey, key, {
+                compareCurrent: false,
+              })
             } catch {
               toast.error(t('config.common.save_failed'), { style: toastStyle })
             }
@@ -177,7 +172,6 @@ export default function Hotkey() {
   return (
     <div className="flex flex-col gap-4">
       <Card>
-        <Toaster position="top-center" />
         <CardBody>
           <div className="config-item">
             <h3 className="my-auto">{t('config.hotkey.selection_translate')}</h3>

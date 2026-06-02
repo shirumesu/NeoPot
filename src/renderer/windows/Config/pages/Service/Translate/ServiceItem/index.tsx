@@ -6,6 +6,7 @@ import React from 'react'
 
 import * as builtinServices from '@/renderer/providers/translate'
 import { useConfig } from '../../../../../../hooks'
+import { useConfigSave } from '../../../../hooks/useConfigSave'
 import {
   INSTANCE_NAME_CONFIG_KEY,
   ServiceSourceType,
@@ -53,6 +54,7 @@ export default function ServiceItem(props: ServiceItemProps) {
     serviceInstanceKey,
     {},
   )
+  const { saveConfig } = useConfigSave()
 
   const serviceSourceType = getServiceSouceType(serviceInstanceKey)
   const serviceName = getServiceName(serviceInstanceKey)
@@ -98,7 +100,10 @@ export default function ServiceItem(props: ServiceItemProps) {
             size="sm"
             isSelected={serviceInstanceConfig['enable'] ?? true}
             onValueChange={(v) => {
-              setServiceInstanceConfig({ ...serviceInstanceConfig, enable: v })
+              saveConfig(serviceInstanceKey, serviceInstanceConfig, setServiceInstanceConfig, {
+                ...serviceInstanceConfig,
+                enable: v,
+              })
             }}
           />
           <Button

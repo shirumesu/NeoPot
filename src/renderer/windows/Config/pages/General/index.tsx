@@ -1,7 +1,7 @@
 import { enable, isEnabled, disable } from '@/renderer/lib/electron/compat/autostart'
 import { DropdownTrigger } from '@heroui/react'
 import React, { useState, useEffect } from 'react'
-import toast, { Toaster } from 'react-hot-toast'
+import toast from 'react-hot-toast'
 import { DropdownMenu } from '@heroui/react'
 import { DropdownItem } from '@heroui/react'
 import { useTranslation } from 'react-i18next'
@@ -17,14 +17,12 @@ import { useTheme } from 'next-themes'
 import { applyRendererLogLevel } from '@/renderer/lib/electron/logLevel'
 import { isLogLevel, type AppLogLevel } from '@/shared/logLevel'
 
-import { isSameConfigValue, useConfig } from '../../../../hooks/useConfig'
+import { useConfig } from '../../../../hooks/useConfig'
 import { LanguageFlag } from '@/renderer/lib/language/language'
 import { useToastStyle } from '../../../../hooks'
 import { osType } from '@/renderer/lib/config/env'
-import { getStoreValue } from '@/renderer/lib/config/store'
 import { logger } from '@/renderer/lib/logger'
-
-let timer = null
+import { useConfigSave } from '../../hooks/useConfigSave'
 
 const normalizeProxyHost = (value) => {
   const trimmed = value.trim()
@@ -52,6 +50,19 @@ const isValidProxyPort = (value) => {
   return Number.isInteger(port) && port > 0 && port <= 65535
 }
 
+const normalizeServerPortInput = (value) => {
+  if (value === '') {
+    return 0
+  }
+
+  const port = Number(value)
+  if (!Number.isFinite(port)) {
+    return null
+  }
+
+  return Math.min(65535, Math.max(0, Math.trunc(port)))
+}
+
 export default function General() {
   const [autoStart, setAutoStart] = useState(false)
   const [fontList, setFontList] = useState(null)
@@ -75,42 +86,7 @@ export default function General() {
   const { t, i18n } = useTranslation()
   const { setTheme } = useTheme()
   const toastStyle = useToastStyle()
-  const verifySavedConfig = async (key, value) => {
-    const savedValue = await getStoreValue(key)
-    if (!isSameConfigValue(savedValue, value)) {
-      throw new Error(`Config "${key}" was not saved`)
-    }
-    logger.debug('Config value verified after save.', {
-      key,
-    })
-  }
-  const saveAndNotify = async (key, currentValue, setter, value) => {
-    if (isSameConfigValue(currentValue, value)) {
-      return true
-    }
-
-    try {
-      await setter(value, true)
-      await verifySavedConfig(key, value)
-      logger.info('Config value saved from settings page.', {
-        key,
-      })
-      toast.success(t('config.common.save_success'), {
-        duration: 1500,
-        style: toastStyle,
-      })
-      return true
-    } catch (error) {
-      logger.error('Config value save failed from settings page.', error, {
-        key,
-      })
-      toast.error(t('config.common.save_failed'), {
-        duration: 3000,
-        style: toastStyle,
-      })
-      return false
-    }
-  }
+  const { saveConfig } = useConfigSave()
 
   const languageName = {
     zh_cn: '简体中文',
@@ -145,7 +121,6 @@ export default function General() {
 
   return (
     <>
-      <Toaster position="top-center" />
       <Card className="mb-2.5">
         <CardBody>
           <div className="config-item">
@@ -195,7 +170,7 @@ export default function General() {
               <Switch
                 isSelected={checkUpdate}
                 onValueChange={(v) => {
-                  saveAndNotify('check_update', checkUpdate, setCheckUpdate, v)
+                  saveConfig('check_update', checkUpdate, setCheckUpdate, v)
                 }}
               />
             )}
@@ -206,7 +181,7 @@ export default function General() {
               <Switch
                 isSelected={closeToTray}
                 onValueChange={(v) => {
-                  saveAndNotify('close_to_tray', closeToTray, setCloseToTray, v)
+                  saveConfig('close_to_tray', closeToTray, setCloseToTray, v)
                 }}
               />
             )}
@@ -220,28 +195,21 @@ export default function General() {
                 value={String(serverPort)}
                 labelPlacement="outside-left"
                 onValueChange={(v) => {
-                  if (parseInt(v) !== serverPort) {
-                    if (timer) {
-                      clearTimeout(timer)
-                    }
-                    timer = setTimeout(() => {
-                      toast.success(t('config.general.server_port_change'), {
-                        duration: 3000,
-                        style: toastStyle,
-                      })
-                    }, 1000)
+                  const nextPort = normalizeServerPortInput(v)
+                  if (nextPort === null) {
+                    return
                   }
-                  if (v === '') {
-                    saveAndNotify('server_port', serverPort, setServerPort, 0)
-                  } else if (parseInt(v) > 65535) {
-                    saveAndNotify('server_port', serverPort, setServerPort, 65535)
-                  } else if (parseInt(v) < 0) {
-                    saveAndNotify('server_port', serverPort, setServerPort, 0)
-                  } else {
-                    saveAndNotify('server_port', serverPort, setServerPort, parseInt(v))
-                  }
+                  setServerPort(nextPort)
+                }}
+                onBlur={() => {
+                  void saveConfig('server_port', serverPort, setServerPort, serverPort, {
+                    successMessage: t('config.general.server_port_change'),
+                  })
                 }}
                 className="max-w-25"
+                classNames={{
+                  input: '[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none',
+                }}
               />
             )}
           </div>
@@ -266,7 +234,7 @@ export default function General() {
                   className="max-h-[40vh] overflow-y-auto"
                   onAction={(key) => {
                     const language = String(key)
-                    saveAndNotify('app_language', appLanguage, setAppLanguage, language)
+                    saveConfig('app_language', appLanguage, setAppLanguage, language)
                     i18n.changeLanguage(language)
                     invoke('update_tray', { language, copyMode: '' })
                   }}
@@ -400,7 +368,7 @@ export default function General() {
                   aria-label="app theme"
                   onAction={(key) => {
                     const theme = String(key)
-                    saveAndNotify('app_theme', appTheme, setAppTheme, theme)
+                    saveConfig('app_theme', appTheme, setAppTheme, theme)
                     if (theme !== 'system') {
                       setTheme(theme)
                     } else {
@@ -446,10 +414,11 @@ export default function General() {
                   aria-label="app font"
                   className="max-h-[50vh] overflow-y-auto"
                   onAction={(key) => {
+                    const font = String(key)
                     document.documentElement.style.fontFamily = `"${
-                      key === 'default' ? 'sans-serif' : key
+                      font === 'default' ? 'sans-serif' : font
                     }","${appFallbackFont === 'default' ? 'sans-serif' : appFallbackFont}"`
-                    saveAndNotify('app_font', appFont, setAppFont, key)
+                    saveConfig('app_font', appFont, setAppFont, font)
                   }}
                 >
                   <DropdownItem style={{ fontFamily: 'sans-serif' }} key="default">
@@ -486,10 +455,16 @@ export default function General() {
                   aria-label="app font"
                   className="max-h-[50vh] overflow-y-auto"
                   onAction={(key) => {
+                    const fallbackFont = String(key)
                     document.documentElement.style.fontFamily = `"${
                       appFont === 'default' ? 'sans-serif' : appFont
-                    }","${key === 'default' ? 'sans-serif' : key}"`
-                    saveAndNotify('app_fallback_font', appFallbackFont, setAppFallbackFont, key)
+                    }","${fallbackFont === 'default' ? 'sans-serif' : fallbackFont}"`
+                    saveConfig(
+                      'app_fallback_font',
+                      appFallbackFont,
+                      setAppFallbackFont,
+                      fallbackFont,
+                    )
                   }}
                 >
                   <DropdownItem style={{ fontFamily: 'sans-serif' }} key="default">
@@ -518,7 +493,7 @@ export default function General() {
                   className="max-h-[50vh] overflow-y-auto"
                   onAction={(key) => {
                     document.documentElement.style.fontSize = `${key}px`
-                    saveAndNotify('app_font_size', appFontSize, setAppFontSize, key)
+                    saveConfig('app_font_size', appFontSize, setAppFontSize, Number(key))
                   }}
                 >
                   <DropdownItem key={10}>{t(`config.general.font_size.10`)}</DropdownItem>
@@ -542,7 +517,7 @@ export default function General() {
                 <DropdownMenu
                   aria-label="tray click event"
                   onAction={(key) => {
-                    saveAndNotify('tray_click_event', trayClickEvent, setTrayClickEvent, key)
+                    saveConfig('tray_click_event', trayClickEvent, setTrayClickEvent, String(key))
                   }}
                 >
                   <DropdownItem key="config">{t('config.general.event.config')}</DropdownItem>
@@ -564,7 +539,7 @@ export default function General() {
               <Switch
                 isSelected={devMode}
                 onValueChange={(v) => {
-                  saveAndNotify('dev_mode', devMode, setDevMode, v)
+                  saveConfig('dev_mode', devMode, setDevMode, v)
                 }}
               />
             )}
@@ -586,7 +561,7 @@ export default function General() {
                       return
                     }
 
-                    const saved = await saveAndNotify('log_level', logLevel, setLogLevel, nextLevel)
+                    const saved = await saveConfig('log_level', logLevel, setLogLevel, nextLevel)
                     if (!saved) {
                       return
                     }

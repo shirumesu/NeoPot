@@ -1,5 +1,4 @@
 import { Card, Spacer, Button, useDisclosure } from '@heroui/react'
-import { Toaster } from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import React, { useState } from 'react'
 import { Reorder } from 'framer-motion'
@@ -9,6 +8,7 @@ import { osType } from '@/renderer/lib/config/env'
 import { useConfig, deleteKey, isSameConfigValue } from '../../../../../hooks'
 import ServiceItem from './ServiceItem'
 import ConfigModal from './ConfigModal'
+import { useConfigSave } from '../../../hooks/useConfigSave'
 
 const ReorderGroup = Reorder.Group as any
 
@@ -29,17 +29,34 @@ export default function Tts(props) {
   const [ttsServiceInstanceList, setTtsServiceInstanceList] = useConfig('tts_service_list', [])
 
   const { t } = useTranslation()
+  const { saveConfig } = useConfigSave()
 
-  const deleteServiceInstance = (instanceKey) => {
-    setTtsServiceInstanceList(ttsServiceInstanceList.filter((x) => x !== instanceKey))
-    deleteKey(instanceKey)
+  const deleteServiceInstance = async (instanceKey) => {
+    const newList = ttsServiceInstanceList.filter((x) => x !== instanceKey)
+    const saved = await saveConfig(
+      'tts_service_list',
+      ttsServiceInstanceList,
+      setTtsServiceInstanceList,
+      newList,
+    )
+    if (saved) {
+      await deleteKey(instanceKey)
+    }
   }
-  const updateServiceInstanceList = (instanceKey) => {
+  const updateServiceInstanceList = async (instanceKey) => {
     if (ttsServiceInstanceList.includes(instanceKey)) {
       return
     } else {
       const newList = [...ttsServiceInstanceList, instanceKey]
-      setTtsServiceInstanceList(newList)
+      await saveConfig(
+        'tts_service_list',
+        ttsServiceInstanceList,
+        setTtsServiceInstanceList,
+        newList,
+        {
+          notify: false,
+        },
+      )
     }
   }
   const handleServiceReorder = (serviceInstanceList) => {
@@ -47,12 +64,17 @@ export default function Tts(props) {
       return
     }
 
-    setTtsServiceInstanceList(serviceInstanceList)
+    void saveConfig(
+      'tts_service_list',
+      ttsServiceInstanceList,
+      setTtsServiceInstanceList,
+      serviceInstanceList,
+      { notify: false },
+    )
   }
 
   return (
     <>
-      <Toaster />
       <Card
         className={`${
           osType === 'Linux' ? 'h-[calc(100vh-140px)]' : 'h-[calc(100vh-120px)]'

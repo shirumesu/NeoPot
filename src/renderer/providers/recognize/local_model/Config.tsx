@@ -4,6 +4,7 @@ import React from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { useConfig } from '../../../hooks/useConfig'
+import { useConfigSave } from '@/renderer/windows/Config/hooks/useConfigSave'
 
 export function Config(props) {
   const { instanceKey, updateServiceList, onClose } = props
@@ -15,15 +16,20 @@ export function Config(props) {
     },
     { sync: false },
   )
+  const { saveConfig } = useConfigSave()
 
   return (
     config !== null && (
       <form
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault()
-          setConfig(config, true)
-          updateServiceList(instanceKey)
-          onClose()
+          const saved = await saveConfig(instanceKey, null, setConfig, config, {
+            compareCurrent: false,
+          })
+          if (saved) {
+            await updateServiceList(instanceKey)
+            onClose()
+          }
         }}
       >
         <div className="config-item">
