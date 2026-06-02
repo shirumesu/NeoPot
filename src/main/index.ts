@@ -103,7 +103,7 @@ async function startApp(): Promise<void> {
     const serverPort =
       typeof configuredServerPort === 'number' &&
       Number.isInteger(configuredServerPort) &&
-      configuredServerPort >= 0 &&
+      configuredServerPort > 0 &&
       configuredServerPort <= 65535
         ? configuredServerPort
         : undefined

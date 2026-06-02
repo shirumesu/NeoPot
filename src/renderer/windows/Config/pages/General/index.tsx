@@ -50,28 +50,34 @@ const isValidProxyPort = (value) => {
   return Number.isInteger(port) && port > 0 && port <= 65535
 }
 
-const normalizeServerPortInput = (value) => {
-  if (value === '') {
-    return 0
-  }
+const SERVER_PORT_MIN = 1
+const SERVER_PORT_MAX = 65535
 
-  const port = Number(value)
-  if (!Number.isFinite(port)) {
+const parseServerPortInput = (value) => {
+  const trimmed = value.trim()
+  if (!/^\d+$/.test(trimmed)) {
     return null
   }
 
-  return Math.min(65535, Math.max(0, Math.trunc(port)))
+  const port = Number(trimmed)
+  if (!Number.isSafeInteger(port) || port < SERVER_PORT_MIN || port > SERVER_PORT_MAX) {
+    return null
+  }
+
+  return port
 }
 
 function ServerPortInput() {
   const [serverPort, setServerPort] = useConfig('server_port', 60828, { sync: false })
   const [draftPort, setDraftPort] = useState('')
+  const [showPortError, setShowPortError] = useState(false)
   const { t } = useTranslation()
   const { saveConfig } = useConfigSave()
 
   useEffect(() => {
     if (serverPort !== null) {
       setDraftPort(String(serverPort))
+      setShowPortError(false)
     }
   }, [serverPort])
 
@@ -86,31 +92,25 @@ function ServerPortInput() {
       value={draftPort}
       labelPlacement="outside-left"
       onValueChange={(v) => {
-        if (v === '') {
-          setDraftPort('')
-          return
-        }
-
-        const nextPort = normalizeServerPortInput(v)
-        if (nextPort === null) {
-          return
-        }
-
-        setDraftPort(String(nextPort))
+        setDraftPort(v)
+        setShowPortError(v !== '' && parseServerPortInput(v) === null)
       }}
       onBlur={() => {
-        const nextPort = normalizeServerPortInput(draftPort)
+        const nextPort = parseServerPortInput(draftPort)
         if (nextPort === null) {
-          setDraftPort(String(serverPort))
+          setShowPortError(true)
           return
         }
 
         setDraftPort(String(nextPort))
+        setShowPortError(false)
         void saveConfig('server_port', serverPort, setServerPort, nextPort, {
           successMessage: t('config.general.server_port_change'),
         })
       }}
       className="max-w-25"
+      isInvalid={showPortError}
+      errorMessage={showPortError ? '请输入 1-65535' : undefined}
       classNames={{
         input:
           '[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none',
