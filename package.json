@@ -13,7 +13,7 @@
     "lint": "eslint . --quiet",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "node --experimental-transform-types --disable-warning=ExperimentalWarning --test \"spec/test/*.test.mjs\" \"spec/test/main_app/*.test.mjs\""
+    "test": "node --experimental-transform-types --disable-warning=ExperimentalWarning --test \"spec/tests/*.test.mjs\" \"spec/tests/main_app/*.test.mjs\""
   },
   "dependencies": {
     "@heroui/react": "^2.8.10",

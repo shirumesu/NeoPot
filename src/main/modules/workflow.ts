@@ -18,6 +18,11 @@ export async function openConfig(): Promise<void> {
   await openWindow('config')
 }
 
+export async function openTranslate(): Promise<void> {
+  logger.debug('Opening translate window.')
+  await openWindow('translate')
+}
+
 export async function openUpdater(): Promise<void> {
   logger.debug('Opening updater window.')
   await openWindow('updater')

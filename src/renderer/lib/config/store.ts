@@ -14,12 +14,17 @@ interface SetStoreValueOptions {
 export let store: LazyStore | null = null
 export const STORE_RELOADED_EVENT = 'pot:store-reloaded'
 export const STORE_CHANGED_EVENT = 'pot:store-changed'
+export const CONFIG_CHANGED_APP_EVENT = 'config:changed'
 
 let ignoreWatchEventsUntil = 0
 let reloadTimer: ReturnType<typeof setTimeout> | null = null
 let saveQueue = Promise.resolve()
+let unsubscribeElectronConfigChanged: (() => void) | null = null
 
 const getElectronConfigApi = () => window.neoPot?.config ?? null
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value)
 
 const emitStoreEvent = (eventName: string, detail: Record<string, unknown> = {}) => {
   window.dispatchEvent(
@@ -38,6 +43,33 @@ export const emitStoreValueChanged = (key: StoreKey, value: StoreValue) => {
     key,
     value,
   })
+}
+
+export const emitStoreValueReloaded = (key: StoreKey) => {
+  emitStoreEvent(STORE_CHANGED_EVENT, {
+    key,
+  })
+}
+
+function subscribeElectronConfigChanges(): void {
+  if (unsubscribeElectronConfigChanged || !window.neoPot?.app.onEvent) {
+    return
+  }
+
+  unsubscribeElectronConfigChanged = window.neoPot.app.onEvent(
+    CONFIG_CHANGED_APP_EVENT,
+    (payload) => {
+      if (!isRecord(payload) || typeof payload.key !== 'string') {
+        logger.warn('Ignored malformed config change event from main process.')
+        return
+      }
+
+      emitStoreValueReloaded(payload.key)
+      logger.info('Config change received from main process.', {
+        key: payload.key,
+      })
+    },
+  )
 }
 
 export async function getStoreValue(key: StoreKey): Promise<StoreValue | undefined> {
@@ -166,6 +198,8 @@ export async function deleteStoreValue(
 }
 
 export async function initStore(): Promise<void> {
+  subscribeElectronConfigChanges()
+
   if (getElectronConfigApi()) {
     store = null
     return

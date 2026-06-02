@@ -90,7 +90,7 @@ async function startApp(): Promise<void> {
       log.transports.file.level = transportLevel
       log.transports.console.level = transportLevel
     } else {
-      config.setConfig('log_level', defaultLogLevel)
+      await config.setConfig('log_level', defaultLogLevel)
     }
 
     await windowModule.openWindow('config')

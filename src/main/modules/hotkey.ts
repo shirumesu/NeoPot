@@ -65,7 +65,10 @@ export function getShortcutAccelerator(name: string): string {
   return typeof value === 'string' ? value.trim() : ''
 }
 
-export function registerGlobalShortcutByName(name: string, accelerator: string): boolean {
+export async function registerGlobalShortcutByName(
+  name: string,
+  accelerator: string,
+): Promise<boolean> {
   const shortcut = defaultShortcuts[name]
   const normalizedAccelerator = accelerator.trim()
 
@@ -92,7 +95,7 @@ export function registerGlobalShortcutByName(name: string, accelerator: string):
   })
 
   if (registered) {
-    setConfig(name, normalizedAccelerator)
+    await setConfig(name, normalizedAccelerator)
   } else {
     logger.warn('Global shortcut registration failed.', {
       name,

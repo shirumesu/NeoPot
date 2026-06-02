@@ -275,8 +275,12 @@ function createBrowserWindow(label: WindowLabel): BrowserWindow {
         return
       }
       const [width, height] = window.getSize()
-      setConfig('translate_window_width', width)
-      setConfig('translate_window_height', height)
+      void Promise.all([
+        setConfig('translate_window_width', width),
+        setConfig('translate_window_height', height),
+      ]).catch((error) => {
+        logger.error('Failed to save translate window size.', error)
+      })
     }, 100)
   })
   window.on('close', (event) => {

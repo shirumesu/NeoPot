@@ -124,10 +124,10 @@ async function removePluginServiceInstances(type: string, name: string): Promise
     return
   }
 
-  setConfig(serviceListKey, retained)
+  await setConfig(serviceListKey, retained)
   for (const instanceKey of serviceList) {
     if (typeof instanceKey === 'string' && instanceKey.split('@')[0] === name) {
-      setConfig(instanceKey, undefined)
+      await setConfig(instanceKey, undefined)
     }
   }
 }
@@ -207,7 +207,7 @@ export async function uninstallPlugin(type: string, name: string): Promise<void>
     recursive: true,
     force: true,
   })
-  setConfig(pluginEnabledKey(type, name), undefined)
+  await setConfig(pluginEnabledKey(type, name), undefined)
   await removePluginServiceInstances(type, name)
   logger.info('Plugin uninstalled.', {
     type,
@@ -215,8 +215,8 @@ export async function uninstallPlugin(type: string, name: string): Promise<void>
   })
 }
 
-export function setPluginEnabled(type: string, name: string, enabled: boolean): void {
-  setConfig(pluginEnabledKey(type, name), enabled)
+export async function setPluginEnabled(type: string, name: string, enabled: boolean): Promise<void> {
+  await setConfig(pluginEnabledKey(type, name), enabled)
   logger.info('Plugin enabled state changed.', {
     type,
     name,

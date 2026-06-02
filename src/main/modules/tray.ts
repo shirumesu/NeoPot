@@ -10,6 +10,7 @@ import {
   ocrRecognize,
   ocrTranslate,
   openConfig,
+  openTranslate,
   selectionTranslate,
 } from './workflow'
 
@@ -49,6 +50,11 @@ async function dispatchTrayConfiguredAction(): Promise<void> {
   const action = getConfig('tray_click_event')
 
   switch (action) {
+    case 'disable':
+      break
+    case 'translate':
+      await openTranslate()
+      break
     case 'selection_translate':
       await selectionTranslate()
       break

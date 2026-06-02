@@ -420,6 +420,18 @@ const summarizePayloadForLog = (payload: unknown): Record<string, unknown> => {
 
 const execFileAsync = promisify(execFile)
 
+function broadcastAppEvent(event: string, payload?: unknown): void {
+  for (const window of BrowserWindow.getAllWindows()) {
+    if (window.isDestroyed() || window.webContents.isDestroyed()) {
+      continue
+    }
+    window.webContents.send('app:event', {
+      event,
+      payload,
+    })
+  }
+}
+
 async function listSystemFonts(): Promise<string[]> {
   if (process.platform !== 'win32') {
     return []
@@ -530,12 +542,7 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
     },
     'app:emit': (_event, payload) => {
       const emitted = assertEventPayload(payload)
-      for (const window of BrowserWindow.getAllWindows()) {
-        if (window.isDestroyed() || window.webContents.isDestroyed()) {
-          continue
-        }
-        window.webContents.send('app:event', emitted)
-      }
+      broadcastAppEvent(emitted.event, emitted.payload)
     },
     'dialog:open': async (_event, payload) => {
       const options = assertDialogOpenPayload(payload)
@@ -709,9 +716,13 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
       const { key } = assertKeyPayload(payload)
       return getRedactedConfig(key)
     },
-    'config:set': (_event, payload) => {
+    'config:set': async (_event, payload) => {
       const { key, value } = assertKeyPayload(payload)
-      setConfig(key, value)
+      await setConfig(key, value)
+      broadcastAppEvent('config:changed', { key })
+      logger.info('Config value change broadcasted.', {
+        key,
+      })
     },
     'workflow:selection-translate': (_event, payload) => {
       assertNoPayload(payload)
@@ -757,7 +768,7 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
     },
     'plugins:set-enabled': (_event, payload) => {
       const { type, name, enabled } = assertPluginEnabledPayload(payload)
-      setPluginEnabled(type, name, enabled)
+      return setPluginEnabled(type, name, enabled)
     },
   }
 

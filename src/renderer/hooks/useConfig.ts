@@ -23,7 +23,32 @@ export const isSameConfigValue = (left: unknown, right: unknown): boolean => {
 
   if (Array.isArray(left) && Array.isArray(right)) {
     return (
-      left.length === right.length && left.every((value, index) => Object.is(value, right[index]))
+      left.length === right.length &&
+      left.every((value, index) => isSameConfigValue(value, right[index]))
+    )
+  }
+
+  if (
+    left &&
+    right &&
+    typeof left === 'object' &&
+    typeof right === 'object' &&
+    !Array.isArray(left) &&
+    !Array.isArray(right)
+  ) {
+    const leftEntries = Object.entries(left).filter(([, value]) => value !== undefined)
+    const rightRecord = right as Record<string, unknown>
+    const rightKeys = Object.entries(rightRecord)
+      .filter(([, value]) => value !== undefined)
+      .map(([key]) => key)
+
+    return (
+      leftEntries.length === rightKeys.length &&
+      leftEntries.every(
+        ([key, value]) =>
+          Object.prototype.hasOwnProperty.call(rightRecord, key) &&
+          isSameConfigValue(value, rightRecord[key]),
+      )
     )
   }
 
@@ -93,11 +118,14 @@ export const useConfig = <T = unknown>(
 
   const setProperty = useCallback(
     (v: T, forceSync = false) => {
-      if (isSameConfigValue(getProperty(), v)) {
+      const sameLocalValue = isSameConfigValue(getProperty(), v)
+      if (sameLocalValue && !forceSync) {
         return Promise.resolve()
       }
 
-      setPropertyState(v)
+      if (!sameLocalValue) {
+        setPropertyState(v)
+      }
       const isSync = forceSync || sync
       const logContext = {
         key,
@@ -106,7 +134,10 @@ export const useConfig = <T = unknown>(
         ...describeConfigValue(v),
       }
       if (isSync) {
-        logger.info('Config value changed.', logContext)
+        logger.info(
+          sameLocalValue ? 'Config value force-synced.' : 'Config value changed.',
+          logContext,
+        )
       } else {
         logger.debug('Config value changed locally.', logContext)
       }
@@ -155,9 +186,13 @@ export const useConfig = <T = unknown>(
     syncToState(null)
 
     const onStoreValueChanged = (event: Event) => {
-      const detail = (event as CustomEvent<{ key: string; value: T }>).detail
+      const detail = (event as CustomEvent<{ key: string; value?: T }>).detail
       if (detail.key === key) {
-        syncToState(detail.value)
+        if (Object.prototype.hasOwnProperty.call(detail, 'value')) {
+          syncToState(detail.value as T)
+        } else {
+          syncToState(null)
+        }
       }
     }
 

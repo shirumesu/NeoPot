@@ -1,5 +1,6 @@
 import { safeStorage } from 'electron'
 import Store from 'electron-store'
+import { writeFileSync } from 'node:fs'
 import { runDataMigration } from './data-migration'
 import { logger } from '../logger'
 
@@ -30,6 +31,9 @@ const store = new Store<Record<string, ConfigValue>>({
 })
 
 let migrationStarted = false
+let configWriteQueue: Promise<void> = Promise.resolve()
+
+const atomicWriteFallbackErrorCodes = new Set(['EPERM', 'EBUSY'])
 
 export async function initializeConfig(): Promise<void> {
   if (migrationStarted) {
@@ -49,12 +53,75 @@ export function getConfig(key: string): ConfigValue {
   return store.get(key)
 }
 
-export function setConfig(key: string, value: ConfigValue): void {
-  store.set(key, value)
-  logger.debug('Config value written in main process.', {
-    key,
+function getErrorCode(error: unknown): string | undefined {
+  return error && typeof error === 'object' && 'code' in error
+    ? String((error as { code?: unknown }).code)
+    : undefined
+}
+
+function describeConfigValue(value: ConfigValue): Record<string, unknown> {
+  return {
     valueType: value === null ? 'null' : Array.isArray(value) ? 'array' : typeof value,
+  }
+}
+
+function applyConfigValue(targetStore: Record<string, ConfigValue>, key: string, value: ConfigValue): void {
+  if (value === undefined) {
+    delete targetStore[key]
+    return
+  }
+
+  targetStore[key] = value
+}
+
+function writeConfigValueDirectly(key: string, value: ConfigValue): void {
+  const nextStore = store.store
+  applyConfigValue(nextStore, key, value)
+  writeFileSync(store.path, JSON.stringify(nextStore, undefined, '\t'), { mode: 0o666 })
+  store.events.dispatchEvent(new Event('change'))
+}
+
+function writeConfigValue(key: string, value: ConfigValue): void {
+  try {
+    if (value === undefined) {
+      store.delete(key)
+    } else {
+      store.set(key, value)
+    }
+    logger.debug('Config value written in main process.', {
+      key,
+      ...describeConfigValue(value),
+    })
+  } catch (error) {
+    const code = getErrorCode(error)
+    if (!code || !atomicWriteFallbackErrorCodes.has(code)) {
+      throw error
+    }
+
+    logger.warn('Config atomic write failed; falling back to direct config write.', {
+      key,
+      code,
+    })
+    writeConfigValueDirectly(key, value)
+    logger.debug('Config value written in main process through direct fallback.', {
+      key,
+      ...describeConfigValue(value),
+    })
+  }
+}
+
+export function setConfig(key: string, value: ConfigValue): Promise<void> {
+  const writeTask = configWriteQueue
+    .catch(() => {
+      // Keep later writes from being blocked by a previous failed write.
+    })
+    .then(() => writeConfigValue(key, value))
+
+  configWriteQueue = writeTask.catch(() => {
+    // The caller receives the failure from writeTask; the queue remains usable.
   })
+
+  return writeTask
 }
 
 export function getRedactedConfig(key: string): ConfigValue {
