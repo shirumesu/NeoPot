@@ -175,7 +175,8 @@
           "20": "Très grand (20px)",
           "24": "Très très grand (24px)",
           "title": "Taille de la police"
-        }
+        },
+        "plugin_missing": "Missing plugin"
       },
       "recognize": {
         "delete_newline": "Suppression automatique des retours à la ligne",
@@ -230,6 +231,20 @@
         "discussion": "Discussion GitHub",
         "qq_channel": "Canal QQ",
         "view_log": "Voir les journaux"
+      },
+      "plugin": {
+        "market": {
+          "install_success": "Plugin installed",
+          "install_failed": "Failed to install plugin"
+        },
+        "update": {
+          "checked": "Plugin update check completed",
+          "install": "Update",
+          "install_success": "Plugin updated",
+          "install_failed": "Failed to update plugin"
+        },
+        "install_success": "Plugin installed",
+        "install_failed": "Failed to install plugin"
       }
     },
     "translate": {

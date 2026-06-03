@@ -1,6 +1,3 @@
-import { readDir, BaseDirectory, readTextFile, exists } from '@/renderer/lib/electron/compat/fs'
-import { appConfigDir, join } from '@/renderer/lib/electron/compat/path'
-import { convertFileSrc } from '@/renderer/lib/electron/compat/core'
 import { getCurrentWebviewWindow } from '@/renderer/lib/electron/compat/webviewWindow'
 import React, { useCallback, useState, useEffect } from 'react'
 import { listen } from '@/renderer/lib/electron/compat/event'
@@ -16,6 +13,7 @@ import ControlArea from './ControlArea'
 import ImageArea from './ImageArea'
 import TextArea from './TextArea'
 import { logger } from '@/renderer/lib/logger'
+import { loadInstalledPlugins } from '../Config/pages/Plugin/installedPlugins'
 const appWindow = getCurrentWebviewWindow()
 
 export const pluginListAtom = atom<Record<string, any>>({})
@@ -64,23 +62,9 @@ export default function Recognize() {
   const loadPluginList = useCallback(async () => {
     try {
       const temp: Record<string, any> = {}
-      if (await exists(`plugins/recognize`, { baseDir: BaseDirectory.AppConfig })) {
-        const plugins = await readDir(`plugins/recognize`, { baseDir: BaseDirectory.AppConfig })
-        for (const plugin of plugins) {
-          const infoStr = await readTextFile(`plugins/recognize/${plugin.name}/info.json`, {
-            baseDir: BaseDirectory.AppConfig,
-          })
-          const pluginInfo = JSON.parse(infoStr)
-          if ('icon' in pluginInfo) {
-            const appConfigDirPath = await appConfigDir()
-            const iconPath = await join(
-              appConfigDirPath,
-              `/plugins/recognize/${plugin.name}/${pluginInfo.icon}`,
-            )
-            pluginInfo.icon = convertFileSrc(iconPath)
-          }
-          temp[plugin.name] = pluginInfo
-        }
+      const plugins = (await loadInstalledPlugins('recognize')).filter((plugin) => plugin.enabled)
+      for (const plugin of plugins) {
+        temp[plugin.name] = plugin
       }
       setPluginLoadError(null)
       setPluginList({ ...temp })
@@ -114,6 +98,12 @@ export default function Recognize() {
 
   useEffect(() => {
     loadPluginList()
+    const unlistenPromise = listen('reload_plugin_list', loadPluginList)
+    return () => {
+      unlistenPromise.then((unlisten) => {
+        unlisten()
+      })
+    }
   }, [loadPluginList])
   // 是否自动关闭窗口
   useEffect(() => {

@@ -51,6 +51,8 @@ const keyMap = {
 
 type PluginHotkeyRow = {
   pluginId: string
+  pluginType: string
+  pluginName: string
   pluginDisplay: string
   key: string
   display: string
@@ -82,6 +84,8 @@ export default function Hotkey() {
         plugins.flatMap((plugin) =>
           (plugin.hotkeys ?? []).map((hotkey: any) => ({
             pluginId: plugin.id,
+            pluginType: plugin.type,
+            pluginName: plugin.name,
             pluginDisplay: plugin.display,
             key: hotkey.key,
             display: hotkey.display,

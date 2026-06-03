@@ -133,7 +133,8 @@
         "google": "Google",
         "bing": "Bing",
         "yandex": "Yandex",
-        "local": "Lokal"
+        "local": "Lokal",
+        "plugin_missing": "Missing plugin"
       },
       "recognize": {
         "label": "Texterkennung",
@@ -188,6 +189,20 @@
         "qq_group": "QQ Gruppe",
         "telegram": "Telegram",
         "discussion": "Diskussion auf GitHub"
+      },
+      "plugin": {
+        "market": {
+          "install_success": "Plugin installed",
+          "install_failed": "Failed to install plugin"
+        },
+        "update": {
+          "checked": "Plugin update check completed",
+          "install": "Update",
+          "install_success": "Plugin updated",
+          "install_failed": "Failed to update plugin"
+        },
+        "install_success": "Plugin installed",
+        "install_failed": "Failed to install plugin"
       }
     },
     "updater": {

@@ -49,12 +49,27 @@
         "font_size": {}
       },
       "translate": {
-        "font_size": {}
+        "font_size": {},
+        "plugin_missing": "Missing plugin"
       },
       "recognize": {},
       "hotkey": {},
       "service": {},
-      "about": {}
+      "about": {},
+      "plugin": {
+        "market": {
+          "install_success": "Plugin installed",
+          "install_failed": "Failed to install plugin"
+        },
+        "update": {
+          "checked": "Plugin update check completed",
+          "install": "Update",
+          "install_success": "Plugin updated",
+          "install_failed": "Failed to update plugin"
+        },
+        "install_success": "Plugin installed",
+        "install_failed": "Failed to install plugin"
+      }
     },
     "translate": {
       "tts_not_configured": "No TTS service configured"

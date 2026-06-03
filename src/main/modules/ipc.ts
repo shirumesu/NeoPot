@@ -18,8 +18,10 @@ import { isLogLevel, toLogTransportLevel } from '../../shared/logLevel'
 import { getMainLogTransportLevel, logger, setMainLogTransportLevel } from '../logger'
 import { translate as translateService } from '../services'
 import {
+  installPluginFromUrl,
   installPlugin,
   listInstalledPlugins,
+  pluginRoot,
   setPluginEnabled,
   uninstallPlugin,
 } from '../plugins/installer'
@@ -149,6 +151,18 @@ const assertPluginInstallPayload = (payload: unknown): { file: string } => {
   }
 
   return { file: payload.file }
+}
+
+const assertPluginInstallUrlPayload = (payload: unknown): { url: string } => {
+  if (!isRecord(payload) || typeof payload.url !== 'string' || payload.url.length === 0) {
+    throw new NeoPotError({
+      code: 'IPC_INVALID_PAYLOAD',
+      message: 'Expected a plugin URL or local source path.',
+      field: 'url',
+    })
+  }
+
+  return { url: payload.url }
 }
 
 const assertPluginListPayload = (payload: unknown): { type: string } => {
@@ -299,6 +313,14 @@ const assertDialogOpenPayload = (payload: unknown) => {
     return {}
   }
 
+  const allowedProperties = new Set(['openFile', 'openDirectory', 'multiSelections'])
+  const properties = Array.isArray(payload.properties)
+    ? payload.properties.filter(
+        (property): property is 'openFile' | 'openDirectory' | 'multiSelections' =>
+          typeof property === 'string' && allowedProperties.has(property),
+      )
+    : undefined
+
   const filters = Array.isArray(payload.filters)
     ? payload.filters
         .filter(
@@ -316,6 +338,7 @@ const assertDialogOpenPayload = (payload: unknown) => {
   return {
     multiple: payload.multiple === true,
     directory: payload.directory === true,
+    properties,
     filters,
   }
 }
@@ -546,9 +569,11 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
     },
     'dialog:open': async (_event, payload) => {
       const options = assertDialogOpenPayload(payload)
-      const properties: Array<'openFile' | 'openDirectory' | 'multiSelections'> = []
-      properties.push(options.directory ? 'openDirectory' : 'openFile')
-      if (options.multiple) {
+      const properties: Array<'openFile' | 'openDirectory' | 'multiSelections'> =
+        options.properties && options.properties.length > 0
+          ? options.properties
+          : [options.directory ? 'openDirectory' : 'openFile']
+      if (options.multiple && !properties.includes('multiSelections')) {
         properties.push('multiSelections')
       }
 
@@ -754,6 +779,10 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
       const { file } = assertPluginInstallPayload(payload)
       return installPlugin(file)
     },
+    'plugins:install-url': (_event, payload) => {
+      const { url } = assertPluginInstallUrlPayload(payload)
+      return installPluginFromUrl(url)
+    },
     'plugins:list': (_event, payload) => {
       const { type } = assertPluginListPayload(payload)
       return listInstalledPlugins(type)
@@ -769,6 +798,11 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
     'plugins:set-enabled': (_event, payload) => {
       const { type, name, enabled } = assertPluginEnabledPayload(payload)
       return setPluginEnabled(type, name, enabled)
+    },
+    'plugins:open-folder': async (_event, payload) => {
+      assertNoPayload(payload)
+      await mkdir(pluginRoot(), { recursive: true })
+      return shell.openPath(pluginRoot())
     },
   }
 

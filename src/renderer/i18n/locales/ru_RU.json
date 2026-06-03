@@ -134,7 +134,8 @@
           "20": "Очень крупный (20 пикс.)",
           "24": "Самый крупный (24 пикс.)",
           "title": "Размер шрифта"
-        }
+        },
+        "plugin_missing": "Missing plugin"
       },
       "recognize": {
         "label": "Распознавание",
@@ -189,6 +190,20 @@
         "qq_group": "QQ группа",
         "telegram": "Telegram",
         "discussion": "Обсуждение на GitHub"
+      },
+      "plugin": {
+        "market": {
+          "install_success": "Plugin installed",
+          "install_failed": "Failed to install plugin"
+        },
+        "update": {
+          "checked": "Plugin update check completed",
+          "install": "Update",
+          "install_success": "Plugin updated",
+          "install_failed": "Failed to update plugin"
+        },
+        "install_success": "Plugin installed",
+        "install_failed": "Failed to install plugin"
       }
     },
     "updater": {

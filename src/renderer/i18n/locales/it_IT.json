@@ -133,7 +133,8 @@
         "hide_source": "Nascondi area di origine",
         "baidu": "Baidu",
         "incremental_translate": "Traduzione incrementale",
-        "target_language": "Lingua di destinazione"
+        "target_language": "Lingua di destinazione",
+        "plugin_missing": "Missing plugin"
       },
       "general": {
         "auto_start": "Avvio automatico",
@@ -235,6 +236,20 @@
         "discussion": "Discussione su Github",
         "qq_channel": "Canale QQ",
         "view_log": "Vedi log"
+      },
+      "plugin": {
+        "market": {
+          "install_success": "Plugin installed",
+          "install_failed": "Failed to install plugin"
+        },
+        "update": {
+          "checked": "Plugin update check completed",
+          "install": "Update",
+          "install_success": "Plugin updated",
+          "install_failed": "Failed to update plugin"
+        },
+        "install_success": "Plugin installed",
+        "install_failed": "Failed to install plugin"
       }
     },
     "translate": {

@@ -4,6 +4,7 @@ import { invoke } from '@/renderer/lib/electron/compat/core'
 import { osType } from '../config/env'
 import * as http from '@/renderer/lib/electron/http'
 import { createPluginLogger } from '@/renderer/lib/logger'
+import { getStoreValue } from '../config/store'
 
 async function loadPluginEntrypoint(script: string, pluginType: string) {
   const moduleSource = `${script}\nexport default typeof ${pluginType} !== 'undefined' ? ${pluginType} : undefined;\n`
@@ -23,6 +24,7 @@ export async function invoke_plugin(pluginType: string, pluginName: string) {
   const pluginDir = await join(configDir, 'plugins', pluginType, pluginName)
   const entryFile = await join(pluginDir, 'main.js')
   const script = await readTextFile(entryFile)
+  const pluginOptions = (await getStoreValue(`plugin_options:${pluginType}:${pluginName}`)) ?? {}
   async function run(cmdName: string, args: unknown) {
     return await invoke('run_binary', {
       pluginType,
@@ -39,6 +41,7 @@ export async function invoke_plugin(pluginType: string, pluginName: string) {
     run,
     cacheDir, // String
     pluginDir, // String
+    pluginOptions,
     osType, // "Windows_NT", "Darwin", "Linux"
     log: createPluginLogger({
       pluginType,

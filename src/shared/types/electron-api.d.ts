@@ -29,6 +29,7 @@ export interface WindowBounds {
 export interface OpenDialogOptions {
   multiple?: boolean
   directory?: boolean
+  properties?: Array<'openFile' | 'openDirectory' | 'multiSelections'>
   filters?: Array<{
     name: string
     extensions: string[]
@@ -109,10 +110,12 @@ export interface NeoPotElectronApi {
   }
   plugins: {
     install(file: string): Promise<PluginInstallResult>
+    installFromUrl(url: string): Promise<PluginInstallResult>
     list(type: string): Promise<PluginInfo[]>
     listInstalled(type?: string): Promise<PluginInfo[]>
     uninstall(type: string, name: string): Promise<void>
     setEnabled(type: string, name: string, enabled: boolean): Promise<void>
+    openFolder(): Promise<string>
   }
 }
 

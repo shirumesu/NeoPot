@@ -134,7 +134,8 @@
           "20": "Muito Grande (20px)",
           "24": "Muito, Muito Grande (24px)",
           "title": "Tamanho da Fonte"
-        }
+        },
+        "plugin_missing": "Missing plugin"
       },
       "recognize": {
         "label": "Reconhecimento",
@@ -189,6 +190,20 @@
         "qq_group": "Grupo QQ",
         "telegram": "Telegram",
         "discussion": "Discussão no GitHub"
+      },
+      "plugin": {
+        "market": {
+          "install_success": "Plugin installed",
+          "install_failed": "Failed to install plugin"
+        },
+        "update": {
+          "checked": "Plugin update check completed",
+          "install": "Update",
+          "install_success": "Plugin updated",
+          "install_failed": "Failed to update plugin"
+        },
+        "install_success": "Plugin installed",
+        "install_failed": "Failed to install plugin"
       }
     },
     "updater": {

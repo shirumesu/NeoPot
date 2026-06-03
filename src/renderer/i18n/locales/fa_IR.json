@@ -107,7 +107,22 @@
         "pre_state": "موقعیت را به خاطر بسپار",
         "close_on_blur": "روی Blur ببندید",
         "incremental_translate": "ترجمه افزایشی",
-        "target_language": "زبان مقصد"
+        "target_language": "زبان مقصد",
+        "plugin_missing": "Missing plugin"
+      },
+      "plugin": {
+        "market": {
+          "install_success": "Plugin installed",
+          "install_failed": "Failed to install plugin"
+        },
+        "update": {
+          "checked": "Plugin update check completed",
+          "install": "Update",
+          "install_success": "Plugin updated",
+          "install_failed": "Failed to update plugin"
+        },
+        "install_success": "Plugin installed",
+        "install_failed": "Failed to install plugin"
       }
     },
     "translate": {

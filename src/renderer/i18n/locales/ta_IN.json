@@ -75,7 +75,8 @@
         "hide_source": "மூல பகுதியை மறைக்கவும்",
         "hide_language": "மொழி பகுதியை மறைக்கவும்",
         "hide_window": "மொழிபெயர்ப்பு சாளரத்தை மறைக்கவும்",
-        "detect_engine": "மொழி கண்டறிதல் இயந்திரம்"
+        "detect_engine": "மொழி கண்டறிதல் இயந்திரம்",
+        "plugin_missing": "Missing plugin"
       },
       "recognize": {
         "label": "அங்கீகரிக்கவும்",
@@ -179,6 +180,20 @@
         "qq_group": "QQ குழு",
         "telegram": "தந்தி",
         "discussion": "அறிவிலிமையம் கலந்துரையாடல்"
+      },
+      "plugin": {
+        "market": {
+          "install_success": "Plugin installed",
+          "install_failed": "Failed to install plugin"
+        },
+        "update": {
+          "checked": "Plugin update check completed",
+          "install": "Update",
+          "install_success": "Plugin updated",
+          "install_failed": "Failed to update plugin"
+        },
+        "install_success": "Plugin installed",
+        "install_failed": "Failed to install plugin"
       }
     },
     "services": {

@@ -134,7 +134,8 @@
           "20": "很大（20px）",
           "24": "非常大（24px）",
           "title": "字型大小"
-        }
+        },
+        "plugin_missing": "Missing plugin"
       },
       "recognize": {
         "label": "文字辨識",
@@ -189,6 +190,20 @@
         "qq_group": "QQ 群組",
         "telegram": "Telegram",
         "discussion": "Github 討論區"
+      },
+      "plugin": {
+        "market": {
+          "install_success": "Plugin installed",
+          "install_failed": "Failed to install plugin"
+        },
+        "update": {
+          "checked": "Plugin update check completed",
+          "install": "Update",
+          "install_success": "Plugin updated",
+          "install_failed": "Failed to update plugin"
+        },
+        "install_success": "Plugin installed",
+        "install_failed": "Failed to install plugin"
       }
     },
     "updater": {

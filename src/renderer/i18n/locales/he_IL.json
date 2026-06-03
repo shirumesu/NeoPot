@@ -159,7 +159,8 @@
         "remember_window_size": "זכור את גודל החלון",
         "niutrans": "NiuTrans",
         "bing": "Bing",
-        "incremental_translate": "תרגום מצטבר"
+        "incremental_translate": "תרגום מצטבר",
+        "plugin_missing": "Missing plugin"
       },
       "about": {
         "email": "דוא\"ל",
@@ -185,6 +186,20 @@
         "auto_copy": "העתקה אוטומטית",
         "hide_window": "הסתר חלון זיהוי",
         "close_on_blur": "סגור את החלון כאשר המיקוד אינו פעיל"
+      },
+      "plugin": {
+        "market": {
+          "install_success": "Plugin installed",
+          "install_failed": "Failed to install plugin"
+        },
+        "update": {
+          "checked": "Plugin update check completed",
+          "install": "Update",
+          "install_success": "Plugin updated",
+          "install_failed": "Failed to update plugin"
+        },
+        "install_success": "Plugin installed",
+        "install_failed": "Failed to install plugin"
       }
     },
     "updater": {

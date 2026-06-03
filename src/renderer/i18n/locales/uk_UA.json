@@ -134,7 +134,8 @@
         "google": "Google",
         "bing": "Bing",
         "yandex": "Yandex",
-        "local": "Локально"
+        "local": "Локально",
+        "plugin_missing": "Missing plugin"
       },
       "recognize": {
         "label": "Розпізнати",
@@ -189,6 +190,20 @@
         "qq_group": "QQ-група",
         "telegram": "Telegram",
         "discussion": "Обговорення на GitHub"
+      },
+      "plugin": {
+        "market": {
+          "install_success": "Plugin installed",
+          "install_failed": "Failed to install plugin"
+        },
+        "update": {
+          "checked": "Plugin update check completed",
+          "install": "Update",
+          "install_success": "Plugin updated",
+          "install_failed": "Failed to update plugin"
+        },
+        "install_success": "Plugin installed",
+        "install_failed": "Failed to install plugin"
       }
     },
     "services": {

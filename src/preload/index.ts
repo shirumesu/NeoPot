@@ -47,10 +47,12 @@ type IpcChannel =
   | 'workflow:ocr-translate'
   | 'services:translate'
   | 'plugins:install'
+  | 'plugins:install-url'
   | 'plugins:list'
   | 'plugins:list-installed'
   | 'plugins:uninstall'
   | 'plugins:set-enabled'
+  | 'plugins:open-folder'
 
 const channels = new Set<IpcChannel>([
   'app:get-window-label',
@@ -91,10 +93,12 @@ const channels = new Set<IpcChannel>([
   'workflow:ocr-translate',
   'services:translate',
   'plugins:install',
+  'plugins:install-url',
   'plugins:list',
   'plugins:list-installed',
   'plugins:uninstall',
   'plugins:set-enabled',
+  'plugins:open-folder',
 ])
 
 async function invokeChecked<TResult>(channel: IpcChannel, payload?: unknown): Promise<TResult> {
@@ -197,11 +201,13 @@ const api: NeoPotElectronApi = {
   },
   plugins: {
     install: (file) => invokeChecked<PluginInstallResult>('plugins:install', { file }),
+    installFromUrl: (url) => invokeChecked<PluginInstallResult>('plugins:install-url', { url }),
     list: (type) => invokeChecked<PluginInfo[]>('plugins:list', { type }),
     listInstalled: (type) => invokeChecked<PluginInfo[]>('plugins:list-installed', { type }),
     uninstall: (type, name) => invokeChecked<void>('plugins:uninstall', { type, name }),
     setEnabled: (type, name, enabled) =>
       invokeChecked<void>('plugins:set-enabled', { type, name, enabled }),
+    openFolder: () => invokeChecked<string>('plugins:open-folder'),
   },
 }
 

@@ -7,16 +7,21 @@ import {
   ModalFooter,
   ModalHeader,
 } from '@heroui/react'
+import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import React, { useEffect, useState } from 'react'
 
 import { loadMarketplacePlugins, MarketplacePlugin } from '../marketplace'
+import { pluginApi } from '@/renderer/lib/electron/adapter'
+import { emit } from '@/renderer/lib/electron/compat/event'
+import { logger } from '@/renderer/lib/logger'
 
 export default function MarketplaceModal(props: any) {
-  const { isOpen, onOpenChange } = props
+  const { isOpen, onOpenChange, onInstalled } = props
   const { t } = useTranslation()
   const [plugins, setPlugins] = useState<MarketplacePlugin[]>([])
   const [query, setQuery] = useState('')
+  const [installingId, setInstallingId] = useState<string | null>(null)
 
   useEffect(() => {
     if (isOpen) {
@@ -32,6 +37,28 @@ export default function MarketplaceModal(props: any) {
           .includes(normalizedQuery),
       )
     : plugins
+
+  async function installPlugin(plugin: MarketplacePlugin) {
+    setInstallingId(plugin.id)
+    try {
+      await pluginApi.installFromUrl(plugin.download)
+      await emit('reload_plugin_list')
+      await onInstalled?.()
+      toast.success(t('config.plugin.market.install_success'))
+      logger.info('Marketplace plugin installed.', {
+        id: plugin.id,
+        download: plugin.download,
+      })
+    } catch (error) {
+      logger.error('Marketplace plugin install failed.', error, {
+        id: plugin.id,
+        download: plugin.download,
+      })
+      toast.error(t('config.plugin.market.install_failed'))
+    } finally {
+      setInstallingId(null)
+    }
+  }
 
   return (
     <Modal isOpen={isOpen} onOpenChange={onOpenChange} scrollBehavior="inside">
@@ -57,7 +84,14 @@ export default function MarketplaceModal(props: any) {
                         </p>
                         <p className="text-sm text-default-500 mt-1">{plugin.description}</p>
                       </div>
-                      <Button size="sm" variant="flat" isDisabled>
+                      <Button
+                        size="sm"
+                        variant="flat"
+                        isLoading={installingId === plugin.id}
+                        onPress={() => {
+                          void installPlugin(plugin)
+                        }}
+                      >
                         {t('config.plugin.market.install')}
                       </Button>
                     </div>

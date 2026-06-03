@@ -1,6 +1,7 @@
 import { fetch, Body } from '@/renderer/lib/electron/http'
 import { invoke } from '@/renderer/lib/electron/compat/core'
 import { getStoreValue } from '../config/store'
+import { invoke_plugin } from '../plugin/invoke_plugin'
 
 function requestId() {
   return crypto.randomUUID().replaceAll('-', '')
@@ -314,8 +315,24 @@ async function local_detect(text: string) {
   return await invoke('lang_detect', { text: text })
 }
 
+async function plugin_detect(text: string, pluginName: string) {
+  try {
+    const [func, utils] = await invoke_plugin('lang_detect', pluginName)
+    const result = await func(text, {
+      utils,
+    })
+    return typeof result === 'string' && result ? result : await local_detect(text)
+  } catch {
+    return await local_detect(text)
+  }
+}
+
 export default async function detect(text: string) {
   const langDetectEngine = (await getStoreValue('translate_detect_engine')) ?? 'baidu'
+
+  if (typeof langDetectEngine === 'string' && langDetectEngine.startsWith('plugin:')) {
+    return await plugin_detect(text, langDetectEngine.slice('plugin:'.length))
+  }
 
   switch (langDetectEngine) {
     case 'baidu':

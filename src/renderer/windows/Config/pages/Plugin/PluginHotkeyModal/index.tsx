@@ -11,6 +11,8 @@ export default function PluginHotkeyModal(props: any) {
   const rows = hotkeysForPlugin(
     (plugin?.hotkeys ?? []).map((hotkey: any) => ({
       pluginId: plugin.id,
+      pluginType: plugin.type,
+      pluginName: plugin.name,
       pluginDisplay: plugin.display,
       key: hotkey.key,
       display: hotkey.display,

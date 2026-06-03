@@ -39,6 +39,23 @@
         "dev_mode": "Developer mody",
         "log_level": "Log Level",
         "server_port_change": "Serwer porty üýtgedildi, üýtgeşmeleriň güýje girmegi üçin programmany täzeden açyň"
+      },
+      "translate": {
+        "plugin_missing": "Missing plugin"
+      },
+      "plugin": {
+        "market": {
+          "install_success": "Plugin installed",
+          "install_failed": "Failed to install plugin"
+        },
+        "update": {
+          "checked": "Plugin update check completed",
+          "install": "Update",
+          "install_success": "Plugin updated",
+          "install_failed": "Failed to update plugin"
+        },
+        "install_success": "Plugin installed",
+        "install_failed": "Failed to install plugin"
       }
     },
     "languages": {

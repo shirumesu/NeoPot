@@ -134,7 +134,8 @@
         "pre_state": "تذكر الموضع",
         "incremental_translate": "ترجمة تزايدية",
         "dynamic_translate": "ترجمة تلقائية",
-        "close_on_blur": "إغلاق النافذة عند فقدان التركيز"
+        "close_on_blur": "إغلاق النافذة عند فقدان التركيز",
+        "plugin_missing": "Missing plugin"
       },
       "hotkey": {
         "title": "إعدادات مفاتيح الاختصار",
@@ -189,6 +190,20 @@
         "qq_group": "مجموعة QQ",
         "discussion": "مناقشة جيتهب",
         "issue": "ابلاغ المشكلة"
+      },
+      "plugin": {
+        "market": {
+          "install_success": "Plugin installed",
+          "install_failed": "Failed to install plugin"
+        },
+        "update": {
+          "checked": "Plugin update check completed",
+          "install": "Update",
+          "install_success": "Plugin updated",
+          "install_failed": "Failed to update plugin"
+        },
+        "install_success": "Plugin installed",
+        "install_failed": "Failed to install plugin"
       }
     },
     "updater": {

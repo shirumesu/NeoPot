@@ -172,7 +172,8 @@
         "google": "구글(Google)",
         "bing": "빙(Bing)",
         "yandex": "얀덱스(Yandex)",
-        "local": "로컬(Local)"
+        "local": "로컬(Local)",
+        "plugin_missing": "Missing plugin"
       },
       "recognize": {
         "label": "인식(OCR)",
@@ -227,6 +228,20 @@
         "qq_group": "QQ 그룹",
         "telegram": "텔레그램",
         "discussion": "GitHub 토론"
+      },
+      "plugin": {
+        "market": {
+          "install_success": "Plugin installed",
+          "install_failed": "Failed to install plugin"
+        },
+        "update": {
+          "checked": "Plugin update check completed",
+          "install": "Update",
+          "install_success": "Plugin updated",
+          "install_failed": "Failed to update plugin"
+        },
+        "install_success": "Plugin installed",
+        "install_failed": "Failed to install plugin"
       }
     },
     "updater": {

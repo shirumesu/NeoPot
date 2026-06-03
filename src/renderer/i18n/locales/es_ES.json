@@ -129,7 +129,8 @@
         "baidu": "Baidu",
         "source_language": "Idioma de origen",
         "dynamic_translate": "Traduccion dinámica",
-        "incremental_translate": "Traducción incremental"
+        "incremental_translate": "Traducción incremental",
+        "plugin_missing": "Missing plugin"
       },
       "recognize": {
         "language": "Idioma de reconocimiento",
@@ -178,6 +179,20 @@
         "qq_channel": "Canal de QQ",
         "telegram": "Telegram",
         "qq_group": "Grupo de QQ"
+      },
+      "plugin": {
+        "market": {
+          "install_success": "Plugin installed",
+          "install_failed": "Failed to install plugin"
+        },
+        "update": {
+          "checked": "Plugin update check completed",
+          "install": "Update",
+          "install_success": "Plugin updated",
+          "install_failed": "Failed to update plugin"
+        },
+        "install_success": "Plugin installed",
+        "install_failed": "Failed to install plugin"
       }
     },
     "updater": {

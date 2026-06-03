@@ -138,7 +138,8 @@
         "google": "Google",
         "bing": "Bing",
         "yandex": "Yandex",
-        "local": "Local"
+        "local": "Local",
+        "plugin_missing": "Missing plugin"
       },
       "recognize": {
         "label": "Recognize",
@@ -193,14 +194,20 @@
           "description": "Browse and install third-party plugins made by the community.",
           "browse": "Browse",
           "search": "Search plugins",
-          "install": "Install"
+          "install": "Install",
+          "install_success": "Plugin installed",
+          "install_failed": "Failed to install plugin"
         },
         "update": {
           "title": "Plugin Installation Status",
           "installed_count": "You currently have {{count}} plugins installed.",
           "check": "Check updates",
           "available_count": "{{count}} plugin updates are available.",
-          "none": "All installed plugins are up to date."
+          "none": "All installed plugins are up to date.",
+          "checked": "Plugin update check completed",
+          "install": "Update",
+          "install_success": "Plugin updated",
+          "install_failed": "Failed to update plugin"
         },
         "auto_update": {
           "title": "Automatically Check Plugin Updates",
@@ -209,7 +216,9 @@
         "installed": "Installed Plugins",
         "refresh": "Refresh",
         "open_folder": "Open plugin folder",
-        "install_from_file": "Install from .npot file"
+        "install_from_file": "Install from file or folder",
+        "install_success": "Plugin installed",
+        "install_failed": "Failed to install plugin"
       },
       "about": {
         "label": "About",

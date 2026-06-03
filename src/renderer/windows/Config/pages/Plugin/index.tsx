@@ -3,22 +3,27 @@ import { open } from '@/renderer/lib/electron/compat/dialog'
 import { emit } from '@/renderer/lib/electron/compat/event'
 import React, { useEffect, useState } from 'react'
 import { MdDownload, MdFolderOpen, MdRefresh } from 'react-icons/md'
+import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 
 import PluginCard from './PluginCard'
 import PluginHotkeyModal from './PluginHotkeyModal'
+import PluginSettingsModal from './PluginSettingsModal'
 import MarketplaceModal from './MarketplaceModal'
-import { pluginApi } from '@/renderer/lib/electron/adapter'
+import { configApi, pluginApi } from '@/renderer/lib/electron/adapter'
 import { useConfig } from '../../../../hooks'
 import { checkPluginUpdates, MarketplacePlugin } from './marketplace'
 import { InstalledPlugin, loadInstalledPlugins } from './installedPlugins'
 import { logger } from '@/renderer/lib/logger'
 import { useConfigSave } from '../../hooks/useConfigSave'
 
+const AUTO_UPDATE_INTERVAL_MS = 3 * 24 * 60 * 60 * 1000
+
 export default function Plugin() {
   const [plugins, setPlugins] = useState<InstalledPlugin[]>([])
-  const [autoUpdate, setAutoUpdate] = useConfig('plugin_auto_check_update', false)
+  const [autoUpdate, setAutoUpdate] = useConfig('plugin_auto_check_update', true)
   const [hotkeyPlugin, setHotkeyPlugin] = useState<InstalledPlugin | null>(null)
+  const [settingsPlugin, setSettingsPlugin] = useState<InstalledPlugin | null>(null)
   const [marketplaceOpen, setMarketplaceOpen] = useState(false)
   const [updates, setUpdates] = useState<
     (MarketplacePlugin & { installedVersion: string })[] | null
@@ -27,47 +32,75 @@ export default function Plugin() {
   const { t } = useTranslation()
   const { saveConfig } = useConfigSave()
 
-  const refreshPlugins = () => {
-    loadInstalledPlugins().then((installed) => {
-      setPlugins(installed)
-      logger.debug('Plugin list refreshed.', {
-        count: installed.length,
-      })
+  const refreshPlugins = async () => {
+    const installed = await loadInstalledPlugins()
+    setPlugins(installed)
+    logger.debug('Plugin list refreshed.', {
+      count: installed.length,
     })
+    return installed
   }
 
-  useEffect(refreshPlugins, [])
+  useEffect(() => {
+    void refreshPlugins()
+  }, [])
 
-  async function installFromFile() {
+  useEffect(() => {
+    if (autoUpdate !== true || plugins.length === 0) {
+      return
+    }
+
+    configApi.get('plugin_last_check_update_at').then((value) => {
+      const lastCheckedAt = typeof value === 'number' ? value : 0
+      if (Date.now() - lastCheckedAt < AUTO_UPDATE_INTERVAL_MS) {
+        return
+      }
+
+      void checkUpdates({ silent: true })
+    })
+  }, [autoUpdate, plugins])
+
+  async function installSources(sources: string[]) {
+    if (sources.length === 0) {
+      return
+    }
+
     setInstalling(true)
     try {
-      const selected = await open({
-        multiple: true,
-        directory: false,
-        filters: [
-          {
-            name: '*.npot',
-            extensions: ['npot'],
-          },
-        ],
+      logger.info('Plugin install requested.', {
+        count: sources.length,
       })
-      const files = Array.isArray(selected) ? selected : selected ? [selected] : []
-      logger.info('Plugin install from file requested.', {
-        count: files.length,
-      })
-      for (const file of files) {
-        await pluginApi.install(file)
+      for (const source of sources) {
+        await pluginApi.install(source)
       }
-      if (files.length > 0) {
-        await emit('reload_plugin_list')
-        refreshPlugins()
-      }
+      await emit('reload_plugin_list')
+      await refreshPlugins()
+      toast.success(t('config.plugin.install_success'))
     } catch (error) {
-      logger.error('Plugin install from file failed.', error)
-      throw error
+      logger.error('Plugin install failed.', error)
+      toast.error(t('config.plugin.install_failed'))
     } finally {
       setInstalling(false)
     }
+  }
+
+  async function installFromFile() {
+    const selected = await open({
+      multiple: true,
+      properties: ['openFile', 'openDirectory', 'multiSelections'],
+      filters: [
+        {
+          name: 'Plugin Package',
+          extensions: ['zip', 'npot'],
+        },
+        {
+          name: 'All Files',
+          extensions: ['*'],
+        },
+      ],
+    })
+    const files = Array.isArray(selected) ? selected : selected ? [selected] : []
+    await installSources(files)
   }
 
   async function togglePlugin(plugin: InstalledPlugin, enabled: boolean) {
@@ -93,15 +126,60 @@ export default function Plugin() {
     await emit('reload_plugin_list')
   }
 
-  async function checkUpdates() {
+  async function checkUpdates(
+    options: { silent?: boolean } = {},
+    installedPlugins: InstalledPlugin[] = plugins,
+  ) {
     logger.debug('Plugin update check requested.', {
-      count: plugins.length,
+      count: installedPlugins.length,
     })
-    setUpdates(await checkPluginUpdates(plugins))
+    const nextUpdates = await checkPluginUpdates(installedPlugins)
+    setUpdates(nextUpdates)
+    await configApi.set('plugin_last_check_update_at', Date.now())
+    if (!options.silent) {
+      toast.success(t('config.plugin.update.checked'))
+    }
+  }
+
+  async function installMarketplacePlugin(plugin: MarketplacePlugin) {
+    setInstalling(true)
+    try {
+      await pluginApi.installFromUrl(plugin.download)
+      await emit('reload_plugin_list')
+      const installed = await refreshPlugins()
+      await checkUpdates({ silent: true }, installed)
+      toast.success(t('config.plugin.update.install_success'))
+    } catch (error) {
+      logger.error('Plugin update install failed.', error, {
+        id: plugin.id,
+      })
+      toast.error(t('config.plugin.update.install_failed'))
+    } finally {
+      setInstalling(false)
+    }
+  }
+
+  async function openPluginFolder() {
+    const errorMessage = await pluginApi.openFolder()
+    if (errorMessage) {
+      toast.error(errorMessage)
+    }
   }
 
   return (
-    <div className="w-full flex flex-col gap-4">
+    <div
+      className="w-full flex flex-col gap-4"
+      onDragOver={(event) => {
+        event.preventDefault()
+      }}
+      onDrop={(event) => {
+        event.preventDefault()
+        const droppedFiles = [...event.dataTransfer.files]
+          .map((file) => (file as File & { path?: string }).path)
+          .filter((filePath): filePath is string => typeof filePath === 'string')
+        void installSources(droppedFiles)
+      }}
+    >
       <Card>
         <CardBody className="gap-4">
           <div className="flex items-center justify-between gap-4">
@@ -125,10 +203,43 @@ export default function Plugin() {
                     : t('config.plugin.update.none')}
               </p>
             </div>
-            <Button size="sm" variant="flat" onPress={checkUpdates}>
+            <Button
+              size="sm"
+              variant="flat"
+              onPress={() => {
+                void checkUpdates()
+              }}
+            >
               {t('config.plugin.update.check')}
             </Button>
           </div>
+          {updates && updates.length > 0 && (
+            <div className="flex flex-col gap-2">
+              {updates.map((plugin) => (
+                <div
+                  key={plugin.id}
+                  className="flex items-center justify-between gap-3 rounded-md bg-content2 px-3 py-2"
+                >
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-medium">{plugin.display}</div>
+                    <div className="text-xs text-default-500">
+                      {plugin.installedVersion} -&gt; {plugin.version}
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="flat"
+                    isLoading={installing}
+                    onPress={() => {
+                      void installMarketplacePlugin(plugin)
+                    }}
+                  >
+                    {t('config.plugin.update.install')}
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
           <Divider />
           <div className="flex items-center justify-between gap-4">
             <div>
@@ -158,7 +269,9 @@ export default function Plugin() {
             size="sm"
             variant="light"
             aria-label={t('config.plugin.refresh')}
-            onPress={refreshPlugins}
+            onPress={() => {
+              void refreshPlugins()
+            }}
           >
             <MdRefresh className="text-xl" />
           </Button>
@@ -167,7 +280,9 @@ export default function Plugin() {
             size="sm"
             variant="light"
             aria-label={t('config.plugin.open_folder')}
-            onPress={() => {}}
+            onPress={() => {
+              void openPluginFolder()
+            }}
           >
             <MdFolderOpen className="text-xl" />
           </Button>
@@ -177,7 +292,9 @@ export default function Plugin() {
             variant="light"
             aria-label={t('config.plugin.install_from_file')}
             isLoading={installing}
-            onPress={installFromFile}
+            onPress={() => {
+              void installFromFile()
+            }}
           >
             <MdDownload className="text-xl" />
           </Button>
@@ -192,10 +309,19 @@ export default function Plugin() {
             onOpenHotkeys={setHotkeyPlugin}
             onToggleEnabled={togglePlugin}
             onDelete={deletePlugin}
-            onOpenSettings={() => {}}
+            onOpenSettings={setSettingsPlugin}
           />
         ))}
       </div>
+      <PluginSettingsModal
+        isOpen={settingsPlugin !== null}
+        onOpenChange={(open: boolean) => {
+          if (!open) {
+            setSettingsPlugin(null)
+          }
+        }}
+        plugin={settingsPlugin}
+      />
       <PluginHotkeyModal
         isOpen={hotkeyPlugin !== null}
         onOpenChange={(open: boolean) => {
@@ -205,7 +331,11 @@ export default function Plugin() {
         }}
         plugin={hotkeyPlugin}
       />
-      <MarketplaceModal isOpen={marketplaceOpen} onOpenChange={setMarketplaceOpen} />
+      <MarketplaceModal
+        isOpen={marketplaceOpen}
+        onOpenChange={setMarketplaceOpen}
+        onInstalled={refreshPlugins}
+      />
     </div>
   )
 }

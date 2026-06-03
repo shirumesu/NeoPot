@@ -175,7 +175,8 @@
         "hide_source": "Ocultar Área de Origem",
         "baidu": "Baidu",
         "incremental_translate": "Tradução Incremental",
-        "target_language": "Idioma de Destino"
+        "target_language": "Idioma de Destino",
+        "plugin_missing": "Missing plugin"
       },
       "recognize": {
         "delete_newline": "Apagar Nova Linha Automaticamente",
@@ -230,6 +231,20 @@
         "discussion": "Discussão no GitHub",
         "qq_channel": "Canal no QQ",
         "view_log": "Exibir Registro"
+      },
+      "plugin": {
+        "market": {
+          "install_success": "Plugin installed",
+          "install_failed": "Failed to install plugin"
+        },
+        "update": {
+          "checked": "Plugin update check completed",
+          "install": "Update",
+          "install_success": "Plugin updated",
+          "install_failed": "Failed to update plugin"
+        },
+        "install_success": "Plugin installed",
+        "install_failed": "Failed to install plugin"
       }
     },
     "translate": {

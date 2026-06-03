@@ -5,7 +5,8 @@
         "title": "翻訳設定",
         "label": "翻訳",
         "delete_newline": "改行を削除",
-        "source_language": "ソース言語"
+        "source_language": "ソース言語",
+        "plugin_missing": "Missing plugin"
       },
       "about": {
         "title": "アプリケーションに関する",
@@ -59,6 +60,20 @@
       "service": {
         "title": "サービス設定",
         "label": "サービス"
+      },
+      "plugin": {
+        "market": {
+          "install_success": "Plugin installed",
+          "install_failed": "Failed to install plugin"
+        },
+        "update": {
+          "checked": "Plugin update check completed",
+          "install": "Update",
+          "install_success": "Plugin updated",
+          "install_failed": "Failed to update plugin"
+        },
+        "install_success": "Plugin installed",
+        "install_failed": "Failed to install plugin"
       }
     },
     "languages": {

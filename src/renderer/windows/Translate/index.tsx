@@ -1,7 +1,4 @@
-import { readDir, BaseDirectory, readTextFile, exists } from '@/renderer/lib/electron/compat/fs'
 import { getCurrentWebviewWindow } from '@/renderer/lib/electron/compat/webviewWindow'
-import { appConfigDir, join } from '@/renderer/lib/electron/compat/path'
-import { convertFileSrc } from '@/renderer/lib/electron/compat/core'
 import { Spacer, Button } from '@heroui/react'
 import { AiFillCloseCircle } from 'react-icons/ai'
 import React, { useState, useEffect } from 'react'
@@ -14,6 +11,10 @@ import TargetArea from './components/TargetArea'
 import { osType } from '@/renderer/lib/config/env'
 import { useConfig } from '../../hooks'
 import { getStoreValue, saveStore, setStoreValue } from '@/renderer/lib/config/store'
+import {
+  EnabledServicePluginList,
+  loadEnabledServicePlugins,
+} from '@/renderer/windows/Config/pages/Plugin/installedPlugins'
 import {
   ServiceSourceType,
   isValidServiceInstanceKey,
@@ -78,7 +79,7 @@ export default function Translate() {
   const [ttsServiceInstanceList] = useConfig<string[]>('tts_service_list', [])
   const [hideLanguage] = useConfig('hide_language', false)
   const [pined, setPined] = useState(false)
-  const [pluginList, setPluginList] = useState({
+  const [pluginList, setPluginList] = useState<EnabledServicePluginList>({
     translate: {},
     tts: {},
     recognize: {},
@@ -171,35 +172,7 @@ export default function Translate() {
 
   const loadPluginList = async () => {
     try {
-      const serviceTypeList = ['translate', 'tts', 'recognize']
-      const temp: any = {}
-      for (const serviceType of serviceTypeList) {
-        temp[serviceType] = {}
-        if (
-          await exists(`plugins/${serviceType}`, {
-            baseDir: BaseDirectory.AppConfig,
-          })
-        ) {
-          const plugins = await readDir(`plugins/${serviceType}`, {
-            baseDir: BaseDirectory.AppConfig,
-          })
-          for (const plugin of plugins) {
-            const infoStr = await readTextFile(`plugins/${serviceType}/${plugin.name}/info.json`, {
-              baseDir: BaseDirectory.AppConfig,
-            })
-            const pluginInfo = JSON.parse(infoStr)
-            if ('icon' in pluginInfo) {
-              const appConfigDirPath = await appConfigDir()
-              const iconPath = await join(
-                appConfigDirPath,
-                `/plugins/${serviceType}/${plugin.name}/${pluginInfo.icon}`,
-              )
-              pluginInfo.icon = convertFileSrc(iconPath)
-            }
-            temp[serviceType][plugin.name] = pluginInfo
-          }
-        }
-      }
+      const temp = await loadEnabledServicePlugins()
       setPluginLoadError(null)
       setPluginList({ ...temp })
     } catch (error) {

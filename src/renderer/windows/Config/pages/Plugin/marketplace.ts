@@ -1,3 +1,5 @@
+import marketplaceIndex from '../../../../../../marketplace-plugins.json'
+
 export interface MarketplacePlugin {
   id: string
   type: string
@@ -10,32 +12,7 @@ export interface MarketplacePlugin {
   download: string
 }
 
-export const mockMarketplaceIndex: MarketplacePlugin[] = [
-  {
-    id: 'translate:plugin-openai-translator',
-    type: 'translate',
-    name: 'plugin-openai-translator',
-    display: 'OpenAI Translator',
-    version: '1.1.0',
-    author: 'NeoPot Community',
-    description: 'Mock marketplace entry for a translation plugin.',
-    repo: 'mock://plugins/openai-translator',
-    download: 'mock://plugins/openai-translator/releases/latest/plugin.npot',
-  },
-  {
-    id: 'recognize:plugin-screen-ocr',
-    type: 'recognize',
-    name: 'plugin-screen-ocr',
-    display: 'Screen OCR',
-    version: '0.5.0',
-    author: 'NeoPot Community',
-    description: 'Mock marketplace entry for an OCR plugin.',
-    repo: 'mock://plugins/screen-ocr',
-    download: 'mock://plugins/screen-ocr/releases/latest/plugin.npot',
-  },
-]
-
-function compareVersion(left: string, right: string) {
+export function compareVersion(left: string, right: string) {
   const leftParts = String(left ?? '')
     .split('.')
     .map((part) => Number.parseInt(part, 10) || 0)
@@ -69,7 +46,7 @@ export function findPluginUpdates(installedPlugins: any[], marketplaceIndex: Mar
 }
 
 export async function loadMarketplacePlugins(): Promise<MarketplacePlugin[]> {
-  return mockMarketplaceIndex.map((plugin) => ({ ...plugin }))
+  return (marketplaceIndex as MarketplacePlugin[]).map((plugin) => ({ ...plugin }))
 }
 
 export async function checkPluginUpdates(installedPlugins: any[]) {

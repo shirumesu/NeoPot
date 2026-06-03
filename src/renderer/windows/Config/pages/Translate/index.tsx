@@ -7,12 +7,14 @@ import { Dropdown } from '@heroui/react'
 import { Switch } from '@heroui/react'
 import { Button } from '@heroui/react'
 import { Card } from '@heroui/react'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 
 import { languageList } from '@/renderer/lib/language/language'
 import { useConfig } from '../../../../hooks/useConfig'
 import { invoke } from '@/renderer/lib/electron/compat/core'
 import { useConfigSave } from '../../hooks/useConfigSave'
+import { loadInstalledPlugins, type InstalledPlugin } from '../Plugin/installedPlugins'
+import { listen } from '@/renderer/lib/electron/compat/event'
 
 const DropdownMenuAny = DropdownMenu as any
 
@@ -37,8 +39,41 @@ export default function Translate() {
   const [hideWindow, setHideWindow] = useConfig('translate_hide_window', false)
   const [closeOnBlur, setCloseOnBlur] = useConfig('translate_close_on_blur', true)
   const [alwaysOnTop, setAlwaysOnTop] = useConfig('translate_always_on_top', false)
+  const [langDetectPlugins, setLangDetectPlugins] = useState<InstalledPlugin[]>([])
   const { t } = useTranslation()
   const { saveConfig } = useConfigSave()
+
+  useEffect(() => {
+    let disposed = false
+    const loadLangDetectPlugins = async () => {
+      const plugins = (await loadInstalledPlugins('lang_detect')).filter((plugin) => plugin.enabled)
+      if (!disposed) {
+        setLangDetectPlugins(plugins)
+      }
+    }
+
+    void loadLangDetectPlugins()
+    const unlistenPromise = listen('reload_plugin_list', loadLangDetectPlugins)
+
+    return () => {
+      disposed = true
+      unlistenPromise.then((unlisten) => {
+        unlisten()
+      })
+    }
+  }, [])
+
+  const detectEngineLabel = (engine: string) => {
+    if (engine.startsWith('plugin:')) {
+      const pluginName = engine.slice('plugin:'.length)
+      return (
+        langDetectPlugins.find((plugin) => plugin.name === pluginName)?.display ??
+        t('config.translate.plugin_missing')
+      )
+    }
+
+    return t(`config.translate.${engine}`)
+  }
 
   return (
     <>
@@ -128,7 +163,7 @@ export default function Translate() {
             {detectEngine !== null && (
               <Dropdown>
                 <DropdownTrigger>
-                  <Button variant="bordered">{t(`config.translate.${detectEngine}`)}</Button>
+                  <Button variant="bordered">{detectEngineLabel(detectEngine)}</Button>
                 </DropdownTrigger>
                 <DropdownMenuAny
                   aria-label="detect engine"
@@ -149,6 +184,11 @@ export default function Translate() {
                   <DropdownItem key="bing">{t(`config.translate.bing`)}</DropdownItem>
                   <DropdownItem key="yandex">{t(`config.translate.yandex`)}</DropdownItem>
                   <DropdownItem key="local">{t(`config.translate.local`)}</DropdownItem>
+                  {langDetectPlugins.map((plugin) => (
+                    <DropdownItem key={`plugin:${plugin.name}`}>
+                      {plugin.display} [{t('common.plugin')}]
+                    </DropdownItem>
+                  ))}
                 </DropdownMenuAny>
               </Dropdown>
             )}
