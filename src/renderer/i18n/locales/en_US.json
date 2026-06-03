@@ -220,7 +220,8 @@
         "installed": "Installed Plugins",
         "refresh": "Refresh",
         "open_folder": "Open plugin folder",
-        "install_from_file": "Install from file or folder",
+        "install_from_file": "Install from file",
+        "install_from_folder": "Install from folder",
         "install_success": "Plugin installed",
         "install_failed": "Failed to install plugin"
       },

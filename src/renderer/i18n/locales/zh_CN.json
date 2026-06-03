@@ -220,7 +220,8 @@
         "installed": "已安装插件",
         "refresh": "刷新",
         "open_folder": "打开插件文件夹",
-        "install_from_file": "从文件或文件夹安装",
+        "install_from_file": "从文件安装",
+        "install_from_folder": "从文件夹安装",
         "install_success": "插件已安装",
         "install_failed": "插件安装失败"
       },

@@ -2,7 +2,7 @@ import { Button, Card, CardBody, Divider, Switch, Tooltip } from '@heroui/react'
 import { open } from '@/renderer/lib/electron/compat/dialog'
 import { emit } from '@/renderer/lib/electron/compat/event'
 import React, { useEffect, useState } from 'react'
-import { MdClose, MdDownload, MdFolderOpen, MdRefresh, MdSystemUpdateAlt } from 'react-icons/md'
+import { MdClose, MdCreateNewFolder, MdFolderOpen, MdInsertDriveFile, MdRefresh, MdSystemUpdateAlt } from 'react-icons/md'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 
@@ -90,7 +90,26 @@ export default function Plugin() {
   async function installFromFile() {
     const selected = await open({
       multiple: false,
-      properties: ['openFile', 'openDirectory'],
+      properties: ['openFile'],
+      filters: [
+        { name: 'Plugin Files', extensions: ['zip'] },
+        { name: 'All Files', extensions: ['*'] },
+      ],
+    })
+    if (!selected) {
+      return
+    }
+    const source = typeof selected === 'string' ? selected : selected[0]
+    if (!source) {
+      return
+    }
+    await installSources([source])
+  }
+
+  async function installFromFolder() {
+    const selected = await open({
+      multiple: false,
+      properties: ['openDirectory'],
     })
     if (!selected) {
       return
@@ -385,7 +404,21 @@ export default function Plugin() {
                 void installFromFile()
               }}
             >
-              <MdDownload className="text-xl" />
+              <MdInsertDriveFile className="text-xl" />
+            </Button>
+          </Tooltip>
+          <Tooltip content={t('config.plugin.install_from_folder')}>
+            <Button
+              isIconOnly
+              size="sm"
+              variant="light"
+              aria-label={t('config.plugin.install_from_folder')}
+              isLoading={installing}
+              onPress={() => {
+                void installFromFolder()
+              }}
+            >
+              <MdCreateNewFolder className="text-xl" />
             </Button>
           </Tooltip>
         </div>
