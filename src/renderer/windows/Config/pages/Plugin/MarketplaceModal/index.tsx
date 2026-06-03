@@ -1,6 +1,5 @@
 import {
   Button,
-  Input,
   Modal,
   ModalBody,
   ModalContent,
@@ -23,7 +22,6 @@ export default function MarketplaceModal(props: any) {
   const { isOpen, onOpenChange, onInstalled } = props
   const { t } = useTranslation()
   const [plugins, setPlugins] = useState<MarketplacePlugin[]>([])
-  const [query, setQuery] = useState('')
   const [installingId, setInstallingId] = useState<string | null>(null)
 
   useEffect(() => {
@@ -31,15 +29,6 @@ export default function MarketplaceModal(props: any) {
       loadMarketplacePlugins().then(setPlugins)
     }
   }, [isOpen])
-
-  const normalizedQuery = query.trim().toLowerCase()
-  const filteredPlugins = normalizedQuery
-    ? plugins.filter((plugin) =>
-        `${plugin.display} ${plugin.author} ${plugin.description}`
-          .toLowerCase()
-          .includes(normalizedQuery),
-      )
-    : plugins
 
   async function installPlugin(plugin: MarketplacePlugin) {
     setInstallingId(plugin.id)
@@ -70,14 +59,8 @@ export default function MarketplaceModal(props: any) {
           <>
             <ModalHeader>{t('config.plugin.market.title')}</ModalHeader>
             <ModalBody>
-              <Input
-                value={query}
-                label={t('config.plugin.market.search')}
-                variant="bordered"
-                onValueChange={setQuery}
-              />
               <div className="flex flex-col gap-2">
-                {filteredPlugins.map((plugin) => (
+                {plugins.map((plugin) => (
                   <div key={plugin.id} className="bg-content2 rounded-md px-3 py-3">
                     <div className="flex items-start justify-between gap-3">
                       <div>
