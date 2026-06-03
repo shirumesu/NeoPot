@@ -10,12 +10,12 @@ import {
 import { useTranslation } from 'react-i18next'
 import React, { useEffect, useState } from 'react'
 
-import { loadMarketplacePlugins } from '../marketplace'
+import { loadMarketplacePlugins, MarketplacePlugin } from '../marketplace'
 
-export default function MarketplaceModal(props) {
+export default function MarketplaceModal(props: any) {
   const { isOpen, onOpenChange } = props
   const { t } = useTranslation()
-  const [plugins, setPlugins] = useState([])
+  const [plugins, setPlugins] = useState<MarketplacePlugin[]>([])
   const [query, setQuery] = useState('')
 
   useEffect(() => {

@@ -65,7 +65,11 @@ function describeConfigValue(value: ConfigValue): Record<string, unknown> {
   }
 }
 
-function applyConfigValue(targetStore: Record<string, ConfigValue>, key: string, value: ConfigValue): void {
+function applyConfigValue(
+  targetStore: Record<string, ConfigValue>,
+  key: string,
+  value: ConfigValue,
+): void {
   if (value === undefined) {
     delete targetStore[key]
     return

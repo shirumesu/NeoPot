@@ -1,6 +1,6 @@
 import { fetch } from '@/renderer/lib/electron/http'
 
-export async function translate(text, from, to, options: any = {}) {
+export async function translate(text: string, from: string, to: string, options: any = {}) {
   const { config } = options
 
   let { custom_url } = config
@@ -45,7 +45,7 @@ export async function translate(text, from, to, options: any = {}) {
       for (const i of result[1]) {
         target.explanations.push({
           trait: i[0],
-          explains: i[2].map((x) => {
+          explains: i[2].map((x: any) => {
             return x[0]
           }),
         })

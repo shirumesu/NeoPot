@@ -1,6 +1,6 @@
 import { fetch, Body } from '@/renderer/lib/electron/http'
 
-export async function translate(text, from, to, options: any = {}) {
+export async function translate(text: string, from: string, to: string, options: any = {}) {
   const { config } = options
 
   const serviceType = config['type']
@@ -15,7 +15,7 @@ export async function translate(text, from, to, options: any = {}) {
   }
 }
 
-async function translate_by_free(text, from, to) {
+async function translate_by_free(text: string, from: string, to: string) {
   const url = 'https://www2.deepl.com/jsonrpc'
   const rand = getRandomNumber()
   const body = {
@@ -62,7 +62,7 @@ async function translate_by_free(text, from, to) {
     }
   }
 }
-async function translate_by_deeplx(text, from, to, url) {
+async function translate_by_deeplx(text: string, from: string, to: string, url: string) {
   const res = await fetch(url, {
     method: 'POST',
     body: Body.json({
@@ -84,12 +84,12 @@ async function translate_by_deeplx(text, from, to, url) {
   }
 }
 
-async function translate_by_key(text, from, to, key) {
+async function translate_by_key(text: string, from: string, to: string, key: string) {
   const headers = {
     'Content-Type': 'application/json',
     Authorization: `DeepL-Auth-Key ${key}`,
   }
-  const body = {
+  const body: Record<string, any> = {
     text: [text],
     target_lang: to,
   }
@@ -126,7 +126,7 @@ async function translate_by_key(text, from, to, key) {
   }
 }
 
-function getTimeStamp(iCount) {
+function getTimeStamp(iCount: number) {
   const ts = Date.now()
   if (iCount !== 0) {
     iCount = iCount + 1
@@ -136,7 +136,7 @@ function getTimeStamp(iCount) {
   }
 }
 
-function getICount(translate_text) {
+function getICount(translate_text: string) {
   return translate_text.split('i').length - 1
 }
 

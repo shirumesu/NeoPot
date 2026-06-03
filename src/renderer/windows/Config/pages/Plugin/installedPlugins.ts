@@ -21,6 +21,9 @@ function normalizePlugin(plugin: any) {
   }
 }
 
+export type InstalledPlugin = ReturnType<typeof normalizePlugin>
+export type EnabledServicePluginList = Record<string, Record<string, InstalledPlugin>>
+
 export async function loadInstalledPlugins(type?: string) {
   if (!pluginApi?.listInstalled) {
     return []
@@ -35,7 +38,7 @@ export async function loadEnabledServicePlugins() {
     (plugin) => plugin.enabled && servicePluginTypes.includes(plugin.type),
   )
 
-  return servicePluginTypes.reduce((grouped, type) => {
+  return servicePluginTypes.reduce<EnabledServicePluginList>((grouped, type) => {
     grouped[type] = {}
     for (const plugin of plugins) {
       if (plugin.type === type) {

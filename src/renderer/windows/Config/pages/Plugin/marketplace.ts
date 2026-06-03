@@ -1,4 +1,4 @@
-interface MarketplacePlugin {
+export interface MarketplacePlugin {
   id: string
   type: string
   name: string
@@ -35,7 +35,7 @@ export const mockMarketplaceIndex: MarketplacePlugin[] = [
   },
 ]
 
-function compareVersion(left, right) {
+function compareVersion(left: string, right: string) {
   const leftParts = String(left ?? '')
     .split('.')
     .map((part) => Number.parseInt(part, 10) || 0)
@@ -68,10 +68,10 @@ export function findPluginUpdates(installedPlugins: any[], marketplaceIndex: Mar
     }))
 }
 
-export async function loadMarketplacePlugins() {
+export async function loadMarketplacePlugins(): Promise<MarketplacePlugin[]> {
   return mockMarketplaceIndex.map((plugin) => ({ ...plugin }))
 }
 
-export async function checkPluginUpdates(installedPlugins) {
+export async function checkPluginUpdates(installedPlugins: any[]) {
   return findPluginUpdates(installedPlugins, await loadMarketplacePlugins())
 }

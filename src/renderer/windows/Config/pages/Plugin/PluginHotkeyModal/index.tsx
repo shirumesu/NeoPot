@@ -5,11 +5,11 @@ import React from 'react'
 import PluginHotkeyEditor from '../../../components/PluginHotkeyEditor'
 import { hotkeysForPlugin } from '../logic'
 
-export default function PluginHotkeyModal(props) {
+export default function PluginHotkeyModal(props: any) {
   const { isOpen, onOpenChange, plugin } = props
   const { t } = useTranslation()
   const rows = hotkeysForPlugin(
-    (plugin?.hotkeys ?? []).map((hotkey) => ({
+    (plugin?.hotkeys ?? []).map((hotkey: any) => ({
       pluginId: plugin.id,
       pluginDisplay: plugin.display,
       key: hotkey.key,

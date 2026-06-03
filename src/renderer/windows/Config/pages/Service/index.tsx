@@ -5,13 +5,13 @@ import React, { useEffect, useState } from 'react'
 import Translate from './Translate'
 import Recognize from './Recognize'
 import Tts from './Tts'
-import { loadEnabledServicePlugins } from '../Plugin/installedPlugins'
+import { EnabledServicePluginList, loadEnabledServicePlugins } from '../Plugin/installedPlugins'
 import { ServiceType } from '@/renderer/lib/service/service_instance'
 
-let unlisten = null
+let unlisten: Promise<() => void> | null = null
 
 export default function Service() {
-  const [pluginList, setPluginList] = useState(null)
+  const [pluginList, setPluginList] = useState<EnabledServicePluginList | null>(null)
   const { t } = useTranslation()
 
   const loadPluginList = async () => {

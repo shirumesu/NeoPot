@@ -10,7 +10,7 @@ import { translate } from './index'
 import { Language } from './index'
 import { useConfigSave } from '@/renderer/windows/Config/hooks/useConfigSave'
 
-export function Config(props) {
+export function Config(props: any) {
   const { instanceKey, updateServiceList, onClose } = props
   const { t } = useTranslation()
   const [config, setConfig] = useConfig(

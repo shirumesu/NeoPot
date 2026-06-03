@@ -11,9 +11,13 @@ import React from 'react'
 import { useConfig } from '../../../../../hooks'
 import { useConfigSave } from '../../../hooks/useConfigSave'
 
-export function PluginConfig(props) {
+export function PluginConfig(props: any) {
   const { instanceKey, updateServiceList, onClose, name, pluginList } = props
-  const [pluginConfig, setPluginConfig] = useConfig(instanceKey, {}, { sync: false })
+  const [pluginConfig, setPluginConfig] = useConfig<Record<string, any>>(
+    instanceKey,
+    {},
+    { sync: false },
+  )
   const { t } = useTranslation()
   const { saveConfig } = useConfigSave()
 
@@ -54,7 +58,7 @@ export function PluginConfig(props) {
       {pluginList[name].needs.length === 0 ? (
         <div>{t('services.no_need')}</div>
       ) : (
-        pluginList[name].needs.map((x) => {
+        pluginList[name].needs.map((x: any) => {
           return (
             pluginConfig &&
             (x.type ? (
@@ -128,6 +132,10 @@ export function PluginConfig(props) {
           fullWidth
           color="primary"
           onPress={async () => {
+            if (pluginConfig === null) {
+              return
+            }
+
             const saved = await saveConfig(instanceKey, null, setPluginConfig, pluginConfig, {
               compareCurrent: false,
             })

@@ -24,7 +24,7 @@ import { osType } from '@/renderer/lib/config/env'
 import { logger } from '@/renderer/lib/logger'
 import { useConfigSave } from '../../hooks/useConfigSave'
 
-const normalizeProxyHost = (value) => {
+const normalizeProxyHost = (value: string) => {
   const trimmed = value.trim()
   if (trimmed === '') return { host: '', port: '' }
 
@@ -40,12 +40,12 @@ const normalizeProxyHost = (value) => {
   }
 }
 
-const shouldSplitProxyHostInput = (value) => {
+const shouldSplitProxyHostInput = (value: string) => {
   const trimmed = value.trim()
   return /^https?:\/\//i.test(trimmed) || /^[^:]+:\d+$/.test(trimmed)
 }
 
-const isValidProxyPort = (value) => {
+const isValidProxyPort = (value: string) => {
   const port = Number(value)
   return Number.isInteger(port) && port > 0 && port <= 65535
 }
@@ -53,7 +53,7 @@ const isValidProxyPort = (value) => {
 const SERVER_PORT_MIN = 1
 const SERVER_PORT_MAX = 65535
 
-const parseServerPortInput = (value) => {
+const parseServerPortInput = (value: string) => {
   const trimmed = value.trim()
   if (!/^\d+$/.test(trimmed)) {
     return null
@@ -121,7 +121,7 @@ function ServerPortInput() {
 
 export default function General() {
   const [autoStart, setAutoStart] = useState(false)
-  const [fontList, setFontList] = useState(null)
+  const [fontList, setFontList] = useState<string[] | null>(null)
   const [checkUpdate, setCheckUpdate] = useConfig('check_update', true)
   const [closeToTray, setCloseToTray] = useConfig('close_to_tray', true)
   const [appLanguage, setAppLanguage] = useConfig('app_language', 'en')
@@ -143,7 +143,7 @@ export default function General() {
   const toastStyle = useToastStyle()
   const { saveConfig } = useConfigSave()
 
-  const languageName = {
+  const languageName: Record<string, string> = {
     zh_cn: '简体中文',
     zh_tw: '繁體中文',
     en: 'English',
@@ -169,7 +169,7 @@ export default function General() {
     isEnabled().then((v) => {
       setAutoStart(v)
     })
-    invoke('font_list').then((v) => {
+    invoke<string[]>('font_list').then((v) => {
       setFontList(v)
     })
   }, [])
@@ -256,7 +256,11 @@ export default function General() {
                 <DropdownTrigger>
                   <Button
                     variant="bordered"
-                    startContent={<span className={`fi fi-${LanguageFlag[appLanguage]}`} />}
+                    startContent={
+                      <span
+                        className={`fi fi-${(LanguageFlag as Record<string, string>)[appLanguage]}`}
+                      />
+                    }
                   >
                     {languageName[appLanguage]}
                   </Button>
@@ -456,13 +460,15 @@ export default function General() {
                   <DropdownItem style={{ fontFamily: 'sans-serif' }} key="default">
                     {t('config.general.default_font')}
                   </DropdownItem>
-                  {fontList.map((x) => {
-                    return (
-                      <DropdownItem style={{ fontFamily: x }} key={x}>
-                        {x}
-                      </DropdownItem>
-                    )
-                  })}
+                  {
+                    fontList.map((x: string) => {
+                      return (
+                        <DropdownItem style={{ fontFamily: x }} key={x}>
+                          {x}
+                        </DropdownItem>
+                      )
+                    }) as any
+                  }
                 </DropdownMenu>
               </Dropdown>
             )}
@@ -502,13 +508,15 @@ export default function General() {
                   <DropdownItem style={{ fontFamily: 'sans-serif' }} key="default">
                     {t('config.general.default_font')}
                   </DropdownItem>
-                  {fontList.map((x) => {
-                    return (
-                      <DropdownItem style={{ fontFamily: x }} key={x}>
-                        {x}
-                      </DropdownItem>
-                    )
-                  })}
+                  {
+                    fontList.map((x: string) => {
+                      return (
+                        <DropdownItem style={{ fontFamily: x }} key={x}>
+                          {x}
+                        </DropdownItem>
+                      )
+                    }) as any
+                  }
                 </DropdownMenu>
               </Dropdown>
             )}
@@ -630,7 +638,12 @@ export default function General() {
                 isSelected={proxyEnable}
                 onValueChange={async (v) => {
                   if (v) {
-                    if (proxyHost.trim() === '' || !isValidProxyPort(proxyPort)) {
+                    if (
+                      proxyHost === null ||
+                      proxyPort === null ||
+                      proxyHost.trim() === '' ||
+                      !isValidProxyPort(proxyPort)
+                    ) {
                       setProxyEnable(false)
                       toast.error(t('config.general.proxy_error'), {
                         duration: 3000,
@@ -643,7 +656,7 @@ export default function General() {
                         await invoke('set_proxy')
                       } catch (e) {
                         setProxyEnable(false)
-                        toast.error(e.toString(), {
+                        toast.error(String(e), {
                           duration: 3000,
                           style: toastStyle,
                         })
@@ -655,7 +668,7 @@ export default function General() {
                     try {
                       await invoke('unset_proxy')
                     } catch (e) {
-                      toast.error(e.toString(), {
+                      toast.error(String(e), {
                         duration: 3000,
                         style: toastStyle,
                       })

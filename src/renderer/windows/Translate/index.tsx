@@ -23,9 +23,9 @@ import * as builtinTranslateServices from '@/renderer/providers/translate'
 import { logger } from '@/renderer/lib/logger'
 const appWindow = getCurrentWebviewWindow()
 
-let blurTimeout = null
-let resizeTimeout = null
-let moveTimeout = null
+let blurTimeout: ReturnType<typeof setTimeout> | null = null
+let resizeTimeout: ReturnType<typeof setTimeout> | null = null
+let moveTimeout: ReturnType<typeof setTimeout> | null = null
 
 const listenBlur = () => {
   return listen('tauri://blur', () => {
@@ -68,9 +68,14 @@ export default function Translate() {
   const [alwaysOnTop] = useConfig('translate_always_on_top', false)
   const [windowPosition] = useConfig('translate_window_position', 'mouse')
   const [rememberWindowSize] = useConfig('translate_remember_window_size', false)
-  const [translateServiceInstanceList] = useConfig('translate_service_list', ['deepl', 'google'])
-  const [recognizeServiceInstanceList] = useConfig('recognize_service_list', ['local_model'])
-  const [ttsServiceInstanceList] = useConfig('tts_service_list', [])
+  const [translateServiceInstanceList] = useConfig<string[]>('translate_service_list', [
+    'deepl',
+    'google',
+  ])
+  const [recognizeServiceInstanceList] = useConfig<string[]>('recognize_service_list', [
+    'local_model',
+  ])
+  const [ttsServiceInstanceList] = useConfig<string[]>('tts_service_list', [])
   const [hideLanguage] = useConfig('hide_language', false)
   const [pined, setPined] = useState(false)
   const [pluginList, setPluginList] = useState({
@@ -78,11 +83,12 @@ export default function Translate() {
     tts: {},
     recognize: {},
   })
-  const [pluginLoadError, setPluginLoadError] = useState(null)
-  const [serviceConfigError, setServiceConfigError] = useState(null)
-  const [serviceInstanceConfigMap, setServiceInstanceConfigMap] = useState({})
+  const [pluginLoadError, setPluginLoadError] = useState<string | null>(null)
+  const [serviceConfigError, setServiceConfigError] = useState<string | null>(null)
+  const [serviceInstanceConfigMap, setServiceInstanceConfigMap] = useState<Record<string, any>>({})
+  const builtinTranslateServiceMap = builtinTranslateServices as Record<string, any>
   const availableTranslateServices = {
-    [ServiceSourceType.BUILDIN]: builtinTranslateServices,
+    [ServiceSourceType.BUILDIN]: builtinTranslateServiceMap,
     [ServiceSourceType.PLUGIN]: pluginList.translate,
   }
   const validTranslateServiceInstanceList = Array.isArray(translateServiceInstanceList)
@@ -211,7 +217,7 @@ export default function Translate() {
 
   const loadServiceInstanceConfigMap = async () => {
     try {
-      const config = {}
+      const config: Record<string, any> = {}
       for (const serviceInstanceKey of validTranslateServiceInstanceList) {
         config[serviceInstanceKey] = (await getStoreValue(serviceInstanceKey)) ?? {}
       }

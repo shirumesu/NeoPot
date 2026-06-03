@@ -8,7 +8,25 @@ const THINKING_MODE_OFF = 'off'
 const DEFAULT_MODEL = 'gemma4:e2b'
 const LEGACY_DEFAULT_MODEL = 'gemma:2b'
 
-function normalizeHost(requestPath) {
+type PromptItem = {
+  role: string
+  content: string
+}
+
+type OllamaConfig = Record<string, any> & {
+  promptList: PromptItem[]
+  model?: string
+  requestPath?: string
+  thinkingMode?: string
+}
+
+type StreamState = {
+  target: string
+}
+
+type SetResult = ((value: string) => void) | undefined
+
+function normalizeHost(requestPath?: string) {
   let normalized = requestPath?.trim() || 'http://localhost:11434'
 
   if (!/^https?:\/\/.+/i.test(normalized)) {
@@ -18,7 +36,7 @@ function normalizeHost(requestPath) {
   return normalized.replace(/\/+$/, '')
 }
 
-function parseOptionalFloat(value, fieldName) {
+function parseOptionalFloat(value: unknown, fieldName: string) {
   if (value === undefined || value === null || String(value).trim() === '') {
     return undefined
   }
@@ -31,7 +49,7 @@ function parseOptionalFloat(value, fieldName) {
   return parsed
 }
 
-function parseOptionalInteger(value, fieldName) {
+function parseOptionalInteger(value: unknown, fieldName: string) {
   const parsed = parseOptionalFloat(value, fieldName)
   if (parsed === undefined) {
     return undefined
@@ -44,7 +62,7 @@ function parseOptionalInteger(value, fieldName) {
   return parsed
 }
 
-function buildOptions(config) {
+function buildOptions(config: OllamaConfig) {
   const options: any = {}
   const temperature = parseOptionalFloat(config.temperature, 'temperature')
   const topP = parseOptionalFloat(config.topP, 'top_p')
@@ -63,8 +81,8 @@ function buildOptions(config) {
   return Object.keys(options).length > 0 ? options : undefined
 }
 
-function applyThinkingMode(promptList, model, thinkingMode) {
-  const normalizedPromptList = promptList.map((item) => ({ ...item }))
+function applyThinkingMode(promptList: PromptItem[], model: string, thinkingMode?: string) {
+  const normalizedPromptList = promptList.map((item: PromptItem) => ({ ...item }))
 
   if (!model?.toLowerCase().startsWith('gemma4')) {
     return normalizedPromptList
@@ -93,11 +111,11 @@ function applyThinkingMode(promptList, model, thinkingMode) {
   return normalizedPromptList
 }
 
-function isGemma4Model(model) {
+function isGemma4Model(model?: string) {
   return model?.toLowerCase().startsWith('gemma4')
 }
 
-function resolveThinkValue(thinkingMode) {
+function resolveThinkValue(thinkingMode?: string) {
   if (thinkingMode === THINKING_MODE_ON) {
     return true
   }
@@ -108,7 +126,7 @@ function resolveThinkValue(thinkingMode) {
   return undefined
 }
 
-function resolveModel(model) {
+function resolveModel(model?: string) {
   if (!model || model === LEGACY_DEFAULT_MODEL) {
     return DEFAULT_MODEL
   }
@@ -116,7 +134,7 @@ function resolveModel(model) {
   return model
 }
 
-export async function getModels(requestPath) {
+export async function getModels(requestPath?: string) {
   const host = normalizeHost(requestPath)
   const res = await fetch(`${host}/api/tags`, { headers: OLLAMA_HEADERS })
 
@@ -127,7 +145,7 @@ export async function getModels(requestPath) {
   throw `Failed to list models: HTTP ${res.status}`
 }
 
-export async function pullModel(requestPath, model) {
+export async function pullModel(requestPath: string | undefined, model: string) {
   const host = normalizeHost(requestPath)
   const res = await fetch(`${host}/api/pull`, {
     method: 'POST',
@@ -142,11 +160,11 @@ export async function pullModel(requestPath, model) {
   throw `Failed to pull model: HTTP ${res.status}`
 }
 
-function parseNdjson(text) {
+function parseNdjson(text: string): any[] {
   return text
     .split('\n')
-    .filter((line) => line.trim() !== '')
-    .map((line) => {
+    .filter((line: string) => line.trim() !== '')
+    .map((line: string) => {
       try {
         return JSON.parse(line)
       } catch {
@@ -156,7 +174,7 @@ function parseNdjson(text) {
     .filter(Boolean)
 }
 
-function handleStreamPart(part, state, setResult) {
+function handleStreamPart(part: any, state: StreamState, setResult: SetResult) {
   const content = part.message?.content || ''
   if (!content) {
     return null
@@ -171,7 +189,7 @@ function handleStreamPart(part, state, setResult) {
   return '[STREAM]'
 }
 
-async function readStreamResponse(res, setResult) {
+async function readStreamResponse(res: any, setResult: SetResult) {
   const state = { target: '' }
 
   if (!res.body?.getReader) {
@@ -231,21 +249,21 @@ async function readStreamResponse(res, setResult) {
   return state.target.trim()
 }
 
-export async function translate(text, from, to, options: any = {}) {
+export async function translate(text: string, from: string, to: string, options: any = {}) {
   const { config, setResult, detect } = options
 
   const { stream, requestPath, thinkingMode } = config
   let { promptList, model } = config
   model = resolveModel(model)
 
-  promptList = promptList.map((item) => {
+  promptList = promptList.map((item: PromptItem) => {
     return {
       ...item,
       content: item.content
         .replaceAll('$text', text)
         .replaceAll('$from', from)
         .replaceAll('$to', to)
-        .replaceAll('$detect', Language[detect]),
+        .replaceAll('$detect', (Language as Record<string, string>)[detect] ?? String(detect)),
     }
   })
 

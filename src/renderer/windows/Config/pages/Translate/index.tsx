@@ -54,7 +54,7 @@ export default function Translate() {
                 <DropdownMenuAny
                   aria-label="source language"
                   className="max-h-[50vh] overflow-y-auto"
-                  onAction={(key) => {
+                  onAction={(key: React.Key) => {
                     saveConfig(
                       'translate_source_language',
                       sourceLanguage,
@@ -81,7 +81,7 @@ export default function Translate() {
                 <DropdownMenuAny
                   aria-label="target language"
                   className="max-h-[50vh] overflow-y-auto"
-                  onAction={(key) => {
+                  onAction={(key: React.Key) => {
                     saveConfig(
                       'translate_target_language',
                       targetLanguage,
@@ -107,7 +107,7 @@ export default function Translate() {
                 <DropdownMenuAny
                   aria-label="second language"
                   className="max-h-[50vh] overflow-y-auto"
-                  onAction={(key) => {
+                  onAction={(key: React.Key) => {
                     saveConfig(
                       'translate_second_language',
                       secondLanguage,
@@ -133,7 +133,7 @@ export default function Translate() {
                 <DropdownMenuAny
                   aria-label="detect engine"
                   className="max-h-[50vh] overflow-y-auto"
-                  onAction={(key) => {
+                  onAction={(key: React.Key) => {
                     saveConfig(
                       'translate_detect_engine',
                       detectEngine,
@@ -167,7 +167,7 @@ export default function Translate() {
                 <DropdownMenuAny
                   aria-label="auto copy"
                   className="max-h-[50vh] overflow-y-auto"
-                  onAction={(key) => {
+                  onAction={(key: React.Key) => {
                     const copyMode = String(key)
                     saveConfig('translate_auto_copy', autoCopy, setAutoCopy, copyMode).then(
                       (saved) => {
@@ -283,7 +283,7 @@ export default function Translate() {
                 <DropdownMenuAny
                   aria-label="window position"
                   className="max-h-[50vh] overflow-y-auto"
-                  onAction={(key) => {
+                  onAction={(key: React.Key) => {
                     saveConfig(
                       'translate_window_position',
                       windowPosition,

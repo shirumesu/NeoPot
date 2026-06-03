@@ -25,8 +25,8 @@ export const textAtom = atom('')
 let recognizeId = ''
 const RECOGNIZE_TIMEOUT_MS = 30000
 
-function withTimeout(promise, timeoutMessage) {
-  let timeout = null
+function withTimeout<T>(promise: Promise<T>, timeoutMessage: string) {
+  let timeout: ReturnType<typeof setTimeout> | null = null
   const timeoutPromise = new Promise((_, reject) => {
     timeout = setTimeout(() => reject(new Error(timeoutMessage)), RECOGNIZE_TIMEOUT_MS)
   })
@@ -38,7 +38,7 @@ function withTimeout(promise, timeoutMessage) {
   })
 }
 
-export default function TextArea(props) {
+export default function TextArea(props: any) {
   const { serviceInstanceConfigMap } = props
   const [autoCopy] = useConfig('recognize_auto_copy', false)
   const [deleteNewline] = useConfig('recognize_delete_newline', false)
@@ -51,6 +51,7 @@ export default function TextArea(props) {
   const [text, setText] = useAtom(textAtom)
   const [error, setError] = useState('')
   const pluginList = useAtomValue(pluginListAtom)
+  const builtinServiceMap = builtinServices as Record<string, any>
   const { t } = useTranslation()
 
   useEffect(() => {
@@ -83,7 +84,7 @@ export default function TextArea(props) {
                 ),
                 'Recognize request timed out',
               ).then(
-                (v) => {
+                (v: any) => {
                   if (recognizeId !== id) return
                   v = v.trim()
                   if (deleteNewline) {
@@ -102,14 +103,14 @@ export default function TextArea(props) {
                     })
                   }
                 },
-                (e) => {
+                (e: any) => {
                   if (recognizeId !== id) return
                   setError(e.toString())
                   setLoading(false)
                 },
               )
             },
-            (e) => {
+            (e: any) => {
               if (recognizeId !== id) return
               setError(e.toString())
               setLoading(false)
@@ -121,20 +122,20 @@ export default function TextArea(props) {
         }
       } else {
         const instanceConfig = serviceInstanceConfigMap[currentServiceInstanceKey] ?? {}
-        if (language in builtinServices[getServiceName(currentServiceInstanceKey)].Language) {
+        if (language in builtinServiceMap[getServiceName(currentServiceInstanceKey)].Language) {
           const id = nanoid()
           recognizeId = id
           withTimeout(
-            builtinServices[getServiceName(currentServiceInstanceKey)].recognize(
+            builtinServiceMap[getServiceName(currentServiceInstanceKey)].recognize(
               base64,
-              builtinServices[getServiceName(currentServiceInstanceKey)].Language[language],
+              builtinServiceMap[getServiceName(currentServiceInstanceKey)].Language[language],
               {
                 config: instanceConfig,
               },
             ),
             'Recognize request timed out',
           ).then(
-            (v) => {
+            (v: any) => {
               if (recognizeId !== id) return
               v = v.trim()
               if (deleteNewline) {
@@ -153,7 +154,7 @@ export default function TextArea(props) {
                 })
               }
             },
-            (e) => {
+            (e: any) => {
               if (recognizeId !== id) return
               setError(e.toString())
               setLoading(false)

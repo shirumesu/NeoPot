@@ -19,14 +19,15 @@ import {
 import * as builtinServices from '@/renderer/providers/tts'
 import { PluginConfig } from '../../PluginConfig'
 
-export default function ConfigModal(props) {
+export default function ConfigModal(props: any) {
   const { serviceInstanceKey, pluginList, isOpen, onOpenChange, updateServiceInstanceList } = props
 
   const serviceSourceType = getServiceSouceType(serviceInstanceKey)
   const pluginServiceFlag = whetherPluginService(serviceInstanceKey)
   const serviceName = getServiceName(serviceInstanceKey)
   const { t } = useTranslation()
-  const builtinService = builtinServices[serviceName]
+  const builtinServiceMap = builtinServices as Record<string, any>
+  const builtinService = builtinServiceMap[serviceName]
   const ConfigComponent = pluginServiceFlag ? PluginConfig : builtinService?.Config
 
   return serviceInstanceKey === '' ||

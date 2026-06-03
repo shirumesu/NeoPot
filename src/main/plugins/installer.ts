@@ -215,7 +215,11 @@ export async function uninstallPlugin(type: string, name: string): Promise<void>
   })
 }
 
-export async function setPluginEnabled(type: string, name: string, enabled: boolean): Promise<void> {
+export async function setPluginEnabled(
+  type: string,
+  name: string,
+  enabled: boolean,
+): Promise<void> {
   await setConfig(pluginEnabledKey(type, name), enabled)
   logger.info('Plugin enabled state changed.', {
     type,

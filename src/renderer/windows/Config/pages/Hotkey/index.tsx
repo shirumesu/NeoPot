@@ -49,6 +49,14 @@ const keyMap = {
   Suspend: 'Suspend',
 }
 
+type PluginHotkeyRow = {
+  pluginId: string
+  pluginDisplay: string
+  key: string
+  display: string
+  hotkey: string
+}
+
 export default function Hotkey() {
   const [selectionTranslate, setSelectionTranslate] = useConfig('hotkey_selection_translate', '', {
     sync: false,
@@ -62,7 +70,7 @@ export default function Hotkey() {
   const [ocrTranslate, setOcrTranslate] = useConfig('hotkey_ocr_translate', '', {
     sync: false,
   })
-  const [pluginHotkeyRows, setPluginHotkeyRows] = useState([])
+  const [pluginHotkeyRows, setPluginHotkeyRows] = useState<PluginHotkeyRow[]>([])
 
   const { t } = useTranslation()
   const toastStyle = useToastStyle()
@@ -72,7 +80,7 @@ export default function Hotkey() {
     loadInstalledPlugins().then((plugins) => {
       setPluginHotkeyRows(
         plugins.flatMap((plugin) =>
-          (plugin.hotkeys ?? []).map((hotkey) => ({
+          (plugin.hotkeys ?? []).map((hotkey: any) => ({
             pluginId: plugin.id,
             pluginDisplay: plugin.display,
             key: hotkey.key,
@@ -84,7 +92,7 @@ export default function Hotkey() {
     })
   }, [])
 
-  function keyDown(e, name, setKey) {
+  function keyDown(e: React.KeyboardEvent, name: string, setKey: any) {
     e.preventDefault()
     if (e.keyCode === 8) {
       void clearHandler(name, setKey)
@@ -114,8 +122,8 @@ export default function Hotkey() {
       } else if (code.startsWith('Intl')) {
         code = code.substring(4)
       } else if (!/F\d+/.test(code)) {
-        if (keyMap[code] !== undefined) {
-          code = keyMap[code]
+        if ((keyMap as Record<string, string>)[code] !== undefined) {
+          code = (keyMap as Record<string, string>)[code]
         } else {
           code = ''
         }
@@ -124,7 +132,7 @@ export default function Hotkey() {
     }
   }
 
-  async function clearHandler(name, setKey) {
+  async function clearHandler(name: string, setKey: any) {
     try {
       const savedValue = await getStoreValue(name)
       if (typeof savedValue === 'string' && savedValue !== '') {
@@ -138,7 +146,7 @@ export default function Hotkey() {
     }
   }
 
-  function registerHandler(name, key, setKey) {
+  function registerHandler(name: string, key: string, setKey: any) {
     isRegistered(key).then((res) => {
       if (res) {
         toast.error(t('config.hotkey.is_register'), { style: toastStyle })

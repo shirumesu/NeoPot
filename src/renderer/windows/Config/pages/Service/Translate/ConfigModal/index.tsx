@@ -19,7 +19,7 @@ import {
   whetherPluginService,
 } from '@/renderer/lib/service/service_instance'
 
-export default function ConfigModal(props) {
+export default function ConfigModal(props: any) {
   const { serviceInstanceKey, pluginList, isOpen, onOpenChange, updateServiceInstanceList } = props
 
   const serviceSourceType = getServiceSouceType(serviceInstanceKey)
@@ -27,7 +27,8 @@ export default function ConfigModal(props) {
   const serviceName = getServiceName(serviceInstanceKey)
 
   const { t } = useTranslation()
-  const ConfigComponent = pluginServiceFlag ? PluginConfig : builtinServices[serviceName].Config
+  const builtinServiceMap = builtinServices as Record<string, any>
+  const ConfigComponent = pluginServiceFlag ? PluginConfig : builtinServiceMap[serviceName].Config
 
   return pluginServiceFlag && !(serviceName in pluginList) ? (
     <></>
@@ -40,7 +41,7 @@ export default function ConfigModal(props) {
               {serviceSourceType === ServiceSourceType.BUILDIN && (
                 <>
                   <img
-                    src={builtinServices[serviceName].info.icon}
+                    src={builtinServiceMap[serviceName].info.icon}
                     className="h-6 w-6 my-auto"
                     draggable={false}
                   />

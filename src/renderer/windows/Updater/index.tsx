@@ -15,7 +15,7 @@ export default function Updater() {
   const [downloaded, setDownloaded] = useState(0)
   const [total, setTotal] = useState(0)
   const [body, setBody] = useState('')
-  const [update, setUpdate] = useState(null)
+  const [update, setUpdate] = useState<any | null>(null)
   const [isUpdating, setIsUpdating] = useState(false)
   const { t } = useTranslation()
   const toastStyle = useToastStyle()
@@ -25,10 +25,10 @@ export default function Updater() {
       appWindow.show()
     }
     check().then(
-      (update) => {
-        if (update) {
-          setUpdate(update)
-          setBody(update.body || '')
+      (nextUpdate: any) => {
+        if (nextUpdate) {
+          setUpdate(nextUpdate)
+          setBody(nextUpdate.body || '')
         } else {
           setBody(t('updater.latest'))
         }
@@ -49,7 +49,7 @@ export default function Updater() {
     setDownloaded(0)
     setTotal(0)
     update
-      .downloadAndInstall((event) => {
+      .downloadAndInstall((event: any) => {
         if (event.event === 'Started') {
           setTotal(event.data.contentLength || 0)
         }
@@ -65,7 +65,7 @@ export default function Updater() {
           })
           relaunch()
         },
-        (e) => {
+        (e: any) => {
           toast.error(e.toString(), { style: toastStyle })
           setIsUpdating(false)
         },

@@ -6,9 +6,11 @@ function requestId() {
   return crypto.randomUUID().replaceAll('-', '')
 }
 
+type LanguageMap = Record<string, string>
+
 // https://fanyi-api.baidu.com/product/113
-async function baidu_detect(text) {
-  const lang_map = {
+async function baidu_detect(text: string) {
+  const lang_map: LanguageMap = {
     zh: 'zh_cn',
     cht: 'zh_tw',
     en: 'en',
@@ -51,8 +53,8 @@ async function baidu_detect(text) {
 }
 // 腾讯只支持这么多语言
 // https://cloud.tencent.com/document/product/551/15619
-async function tencent_detect(text) {
-  const lang_map = {
+async function tencent_detect(text: string) {
+  const lang_map: LanguageMap = {
     zh: 'zh_cn',
     en: 'en',
     ja: 'ja',
@@ -89,8 +91,8 @@ async function tencent_detect(text) {
   return 'en'
 }
 // https://cloud.google.com/translate/docs/languages?hl=zh-cn
-async function google_detect(text) {
-  const lang_map = {
+async function google_detect(text: string) {
+  const lang_map: LanguageMap = {
     'zh-CN': 'zh_cn',
     'zh-TW': 'zh_tw',
     ja: 'ja',
@@ -144,8 +146,8 @@ async function google_detect(text) {
   return 'en'
 }
 // https://niutrans.com/documents/contents/trans_text#languageList
-async function niutrans_detect(text) {
-  const lang_map = {
+async function niutrans_detect(text: string) {
+  const lang_map: LanguageMap = {
     zh: 'zh_cn',
     cht: 'zh_cn',
     en: 'en',
@@ -190,8 +192,8 @@ async function niutrans_detect(text) {
   return 'en'
 }
 // https://yandex.com/dev/translate/doc/en/concepts/api-overview
-async function yandex_detect(text) {
-  const lang_map = {
+async function yandex_detect(text: string) {
+  const lang_map: LanguageMap = {
     zh: 'zh_cn',
     en: 'en',
     ja: 'ja',
@@ -231,8 +233,8 @@ async function yandex_detect(text) {
   return 'en'
 }
 // https://learn.microsoft.com/en-us/azure/ai-services/translator/language-support
-async function bing_detect(text) {
-  const lang_map = {
+async function bing_detect(text: string) {
+  const lang_map: LanguageMap = {
     'zh-Hans': 'zh_cn',
     'zh-Hant': 'zh_tw',
     en: 'en',
@@ -308,11 +310,11 @@ async function bing_detect(text) {
   return 'en'
 }
 
-async function local_detect(text) {
+async function local_detect(text: string) {
   return await invoke('lang_detect', { text: text })
 }
 
-export default async function detect(text) {
+export default async function detect(text: string) {
   const langDetectEngine = (await getStoreValue('translate_detect_engine')) ?? 'baidu'
 
   switch (langDetectEngine) {

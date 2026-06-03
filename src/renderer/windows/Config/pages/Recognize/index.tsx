@@ -36,7 +36,7 @@ export default function Recognize() {
               <DropdownMenuAny
                 aria-label="recognize language"
                 className="max-h-[50vh] overflow-y-auto"
-                onAction={(key) => {
+                onAction={(key: React.Key) => {
                   saveConfig(
                     'recognize_language',
                     recognizeLanguage,

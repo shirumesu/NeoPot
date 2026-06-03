@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next'
 import { useConfig } from '../../../hooks/useConfig'
 import { useConfigSave } from '@/renderer/windows/Config/hooks/useConfigSave'
 
-export function Config(props) {
+export function Config(props: any) {
   const { instanceKey, updateServiceList, onClose } = props
   const { t } = useTranslation()
   const [config, setConfig] = useConfig(

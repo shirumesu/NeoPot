@@ -12,7 +12,7 @@ import { useConfigSave } from '../../../hooks/useConfigSave'
 
 const ReorderGroup = Reorder.Group as any
 
-export default function Tts(props) {
+export default function Tts(props: any) {
   const { pluginList } = props
   const {
     isOpen: isSelectPluginOpen,
@@ -26,12 +26,18 @@ export default function Tts(props) {
   } = useDisclosure()
   const [currentConfigKey, setCurrentConfigKey] = useState('')
   // now it's service instance list
-  const [ttsServiceInstanceList, setTtsServiceInstanceList] = useConfig('tts_service_list', [])
+  const [ttsServiceInstanceList, setTtsServiceInstanceList] = useConfig<string[]>(
+    'tts_service_list',
+    [],
+  )
 
   const { t } = useTranslation()
   const { saveConfig } = useConfigSave()
 
-  const deleteServiceInstance = async (instanceKey) => {
+  const deleteServiceInstance = async (instanceKey: string) => {
+    if (ttsServiceInstanceList === null) {
+      return
+    }
     const newList = ttsServiceInstanceList.filter((x) => x !== instanceKey)
     const saved = await saveConfig(
       'tts_service_list',
@@ -43,7 +49,10 @@ export default function Tts(props) {
       await deleteKey(instanceKey)
     }
   }
-  const updateServiceInstanceList = async (instanceKey) => {
+  const updateServiceInstanceList = async (instanceKey: string) => {
+    if (ttsServiceInstanceList === null) {
+      return
+    }
     if (ttsServiceInstanceList.includes(instanceKey)) {
       return
     } else {
@@ -59,7 +68,10 @@ export default function Tts(props) {
       )
     }
   }
-  const handleServiceReorder = (serviceInstanceList) => {
+  const handleServiceReorder = (serviceInstanceList: string[]) => {
+    if (ttsServiceInstanceList === null) {
+      return
+    }
     if (isSameConfigValue(ttsServiceInstanceList, serviceInstanceList)) {
       return
     }

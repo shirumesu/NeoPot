@@ -72,7 +72,7 @@ const MARKDOWN_PATTERNS = [
 
 const MARKDOWN_TABLE_SEPARATOR_PATTERN = /^\s*\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)+\|?\s*$/m
 
-function isMarkdownLike(value) {
+function isMarkdownLike(value: unknown) {
   if (typeof value !== 'string') return false
   const text = value.trim()
   if (text.length < 3) return false
@@ -83,7 +83,7 @@ function isMarkdownLike(value) {
   )
 }
 
-function MarkdownResult({ value, appFontSize }) {
+function MarkdownResult({ value, appFontSize }: { value: string; appFontSize: number }) {
   return (
     <div
       className="select-text whitespace-pre-wrap wrap-break-word text-default-700"
@@ -151,17 +151,20 @@ function MarkdownResult({ value, appFontSize }) {
   )
 }
 
-export default function TargetArea(props) {
+export default function TargetArea(props: any) {
   const { index, name, translateServiceInstanceList, pluginList, serviceInstanceConfigMap } = props
 
   const [currentTranslateServiceInstanceKey, setCurrentTranslateServiceInstanceKey] = useState(name)
-  function getInstanceName(instanceKey, serviceNameSupplier) {
+  function getInstanceName(instanceKey: string, serviceNameSupplier: () => string) {
     const instanceConfig = serviceInstanceConfigMap[instanceKey] ?? {}
     return getDisplayInstanceName(instanceConfig[INSTANCE_NAME_CONFIG_KEY], serviceNameSupplier)
   }
 
   const [appFontSize] = useConfig('app_font_size', 16)
-  const [ttsServiceList] = useConfig('tts_service_list', [])
+  const resolvedAppFontSize = appFontSize ?? 16
+  const [ttsServiceList] = useConfig<string[]>('tts_service_list', [])
+  const builtinServiceMap = builtinServices as Record<string, any>
+  const builtinTtsServiceMap = builtinTtsServices as Record<string, any>
   const ttsServiceInstanceKey = Array.isArray(ttsServiceList)
     ? ttsServiceList.find((key) => {
         if (!isValidServiceInstanceKey(key)) {
@@ -170,7 +173,7 @@ export default function TargetArea(props) {
         if (getServiceSouceType(key) === ServiceSourceType.PLUGIN) {
           return pluginList['tts']?.[getServiceName(key)] !== undefined
         }
-        return builtinTtsServices[getServiceName(key)] !== undefined
+        return builtinTtsServiceMap[getServiceName(key)] !== undefined
       })
     : null
   const [translateSecondLanguage] = useConfig('translate_second_language', 'en')
@@ -243,10 +246,10 @@ export default function TargetArea(props) {
     serviceInstanceConfigMap,
   ])
 
-  function invokeOnce(fn) {
+  function invokeOnce(fn: (...args: any[]) => void) {
     let isInvoke = false
 
-    return (...args) => {
+    return (...args: any[]) => {
       if (isInvoke) {
         return
       } else {
@@ -271,6 +274,10 @@ export default function TargetArea(props) {
       return targetLanguage
     }
     const resolvedTargetLanguage = resolveTargetLanguage()
+    if (resolvedTargetLanguage === null) {
+      setError('Language not supported')
+      return
+    }
     const providerDetectLanguage =
       resolvedSourceLanguage === 'auto' ? detectLanguage || 'auto' : resolvedSourceLanguage
     logger.debug('Translation requested.', {
@@ -303,7 +310,7 @@ export default function TargetArea(props) {
           {
             config: instanceConfig,
             detect: providerDetectLanguage,
-            setResult: (v) => {
+            setResult: (v: any) => {
               if (translateID[index] !== id) return
               setResult(v)
               setHideOnce(false)
@@ -311,7 +318,7 @@ export default function TargetArea(props) {
             utils,
           },
         ).then(
-          (v) => {
+          (v: any) => {
             if (translateID[index] !== id) return
             logger.debug('Translation completed.', {
               service: currentTranslateServiceInstanceKey,
@@ -353,7 +360,7 @@ export default function TargetArea(props) {
               }
             }
           },
-          (e) => {
+          (e: any) => {
             if (translateID[index] !== id) return
             logger.warn('Translation rejected.', {
               service: currentTranslateServiceInstanceKey,
@@ -371,7 +378,7 @@ export default function TargetArea(props) {
         setError('Language not supported')
       }
     } else {
-      const LanguageEnum = builtinServices[translateServiceName].Language
+      const LanguageEnum = builtinServiceMap[translateServiceName].Language
       if (resolvedSourceLanguage in LanguageEnum && resolvedTargetLanguage in LanguageEnum) {
         setIsLoading(true)
         setHide(true)
@@ -381,7 +388,7 @@ export default function TargetArea(props) {
           return
         }
         const setHideOnce = invokeOnce(setHide)
-        builtinServices[translateServiceName]
+        builtinServiceMap[translateServiceName]
           .translate(
             sourceText.trim(),
             LanguageEnum[resolvedSourceLanguage],
@@ -389,7 +396,7 @@ export default function TargetArea(props) {
             {
               config: instanceConfig,
               detect: providerDetectLanguage,
-              setResult: (v) => {
+              setResult: (v: any) => {
                 if (translateID[index] !== id) return
                 setResult(v)
                 setHideOnce(false)
@@ -397,7 +404,7 @@ export default function TargetArea(props) {
             },
           )
           .then(
-            (v) => {
+            (v: any) => {
               if (translateID[index] !== id) return
               logger.debug('Translation completed.', {
                 service: currentTranslateServiceInstanceKey,
@@ -439,7 +446,7 @@ export default function TargetArea(props) {
                 }
               }
             },
-            (e) => {
+            (e: any) => {
               if (translateID[index] !== id) return
               logger.warn('Translation rejected.', {
                 service: currentTranslateServiceInstanceKey,
@@ -509,13 +516,13 @@ export default function TargetArea(props) {
       })
       speak(data)
     } else {
-      if (!(targetLanguage in builtinTtsServices[getServiceName(instanceKey)].Language)) {
+      if (!(targetLanguage in builtinTtsServiceMap[getServiceName(instanceKey)].Language)) {
         throw new Error('Language not supported')
       }
       const instanceConfig = serviceInstanceConfigMap[instanceKey]
-      const data = await (builtinTtsServices[getServiceName(instanceKey)] as any).tts(
+      const data = await builtinTtsServiceMap[getServiceName(instanceKey)].tts(
         result,
-        (builtinTtsServices[getServiceName(instanceKey)] as any).Language[targetLanguage],
+        builtinTtsServiceMap[getServiceName(instanceKey)].Language[targetLanguage],
         {
           config: instanceConfig,
         },
@@ -558,7 +565,7 @@ export default function TargetArea(props) {
                   ) : (
                     <img
                       src={
-                        builtinServices[getServiceName(currentTranslateServiceInstanceKey)].info
+                        builtinServiceMap[getServiceName(currentTranslateServiceInstanceKey)].info
                           .icon
                       }
                       className="h-5 my-auto"
@@ -582,11 +589,11 @@ export default function TargetArea(props) {
             <DropdownMenu
               aria-label="app language"
               className="max-h-[40vh] overflow-y-auto"
-              onAction={(key) => {
+              onAction={(key: React.Key) => {
                 setCurrentTranslateServiceInstanceKey(String(key))
               }}
             >
-              {translateServiceInstanceList.map((instanceKey) => {
+              {translateServiceInstanceList.map((instanceKey: string) => {
                 return (
                   <DropdownItem
                     key={instanceKey}
@@ -598,7 +605,7 @@ export default function TargetArea(props) {
                         />
                       ) : (
                         <img
-                          src={builtinServices[getServiceName(instanceKey)].info.icon}
+                          src={builtinServiceMap[getServiceName(instanceKey)].info.icon}
                           className="h-5 my-auto"
                         />
                       )
@@ -656,11 +663,11 @@ export default function TargetArea(props) {
           <CardBody className={`p-3 pb-0 ${hide && 'h-0 p-0'}`}>
             {typeof result === 'string' ? (
               activeResultViewMode === 'markdown' && canPreviewMarkdown ? (
-                <MarkdownResult value={result} appFontSize={appFontSize} />
+                <MarkdownResult value={result} appFontSize={resolvedAppFontSize} />
               ) : (
                 <textarea
                   ref={textAreaRef}
-                  className={`text-[${appFontSize}px] h-0 w-full resize-none overflow-hidden bg-transparent select-text outline-none`}
+                  className={`text-[${resolvedAppFontSize}px] h-0 w-full resize-none overflow-hidden bg-transparent select-text outline-none`}
                   readOnly
                   value={result}
                 />
@@ -668,22 +675,22 @@ export default function TargetArea(props) {
             ) : (
               <div>
                 {result['pronunciations'] &&
-                  result['pronunciations'].map((pronunciation) => {
+                  result['pronunciations'].map((pronunciation: any) => {
                     return (
                       <div key={nanoid()}>
                         {pronunciation['region'] && (
-                          <span className={`text-[${appFontSize}px] mr-3 text-default-500`}>
+                          <span className={`text-[${resolvedAppFontSize}px] mr-3 text-default-500`}>
                             {pronunciation['region']}
                           </span>
                         )}
                         {pronunciation['symbol'] && (
-                          <span className={`text-[${appFontSize}px] mr-3 text-default-500`}>
+                          <span className={`text-[${resolvedAppFontSize}px] mr-3 text-default-500`}>
                             {pronunciation['symbol']}
                           </span>
                         )}
                         {pronunciation['voice'] && pronunciation['voice'] !== '' && (
                           <HiOutlineVolumeUp
-                            className={`text-[${appFontSize}px] inline-block my-auto cursor-pointer`}
+                            className={`text-[${resolvedAppFontSize}px] inline-block my-auto cursor-pointer`}
                             onClick={() => {
                               speak(pronunciation['voice'])
                             }}
@@ -693,22 +700,22 @@ export default function TargetArea(props) {
                     )
                   })}
                 {result['explanations'] &&
-                  result['explanations'].map((explanations) => {
+                  result['explanations'].map((explanations: any) => {
                     return (
                       <div key={nanoid()}>
                         {explanations['explains'] &&
-                          explanations['explains'].map((explain, index) => {
+                          explanations['explains'].map((explain: any, index: number) => {
                             return (
                               <span key={nanoid()}>
                                 {index === 0 ? (
                                   <>
                                     <span
-                                      className={`text-[${appFontSize - 2}px] text-default-500 mr-3`}
+                                      className={`text-[${resolvedAppFontSize - 2}px] text-default-500 mr-3`}
                                     >
                                       {explanations['trait']}
                                     </span>
                                     <span
-                                      className={`font-bold text-[${appFontSize}px] select-text`}
+                                      className={`font-bold text-[${resolvedAppFontSize}px] select-text`}
                                     >
                                       {explain}
                                     </span>
@@ -716,7 +723,7 @@ export default function TargetArea(props) {
                                   </>
                                 ) : (
                                   <span
-                                    className={`text-[${appFontSize - 2}px] text-default-500 select-text mr-1`}
+                                    className={`text-[${resolvedAppFontSize - 2}px] text-default-500 select-text mr-1`}
                                     key={nanoid()}
                                   >
                                     {explain}
@@ -730,24 +737,26 @@ export default function TargetArea(props) {
                   })}
                 <br />
                 {result['associations'] &&
-                  result['associations'].map((association) => {
+                  result['associations'].map((association: any) => {
                     return (
                       <div key={nanoid()}>
-                        <span className={`text-[${appFontSize}px] text-default-500`}>
+                        <span className={`text-[${resolvedAppFontSize}px] text-default-500`}>
                           {association}
                         </span>
                       </div>
                     )
                   })}
                 {result['sentence'] &&
-                  result['sentence'].map((sentence, index) => {
+                  result['sentence'].map((sentence: any, index: number) => {
                     return (
                       <div key={nanoid()}>
-                        <span className={`text-[${appFontSize - 2}px] mr-3`}>{index + 1}.</span>
+                        <span className={`text-[${resolvedAppFontSize - 2}px] mr-3`}>
+                          {index + 1}.
+                        </span>
                         <>
                           {sentence['source'] && (
                             <span
-                              className={`text-[${appFontSize}px] select-text`}
+                              className={`text-[${resolvedAppFontSize}px] select-text`}
                               dangerouslySetInnerHTML={{
                                 __html: sentence['source'],
                               }}
@@ -757,7 +766,7 @@ export default function TargetArea(props) {
                         <>
                           {sentence['target'] && (
                             <div
-                              className={`text-[${appFontSize}px] select-text text-default-500`}
+                              className={`text-[${resolvedAppFontSize}px] select-text text-default-500`}
                               dangerouslySetInnerHTML={{
                                 __html: sentence['target'],
                               }}
@@ -772,7 +781,7 @@ export default function TargetArea(props) {
             {error !== '' ? (
               error.split('\n').map((v) => {
                 return (
-                  <p key={v} className={`text-[${appFontSize}px] text-red-500`}>
+                  <p key={v} className={`text-[${resolvedAppFontSize}px] text-red-500`}>
                     {v}
                   </p>
                 )
@@ -882,14 +891,14 @@ export default function TargetArea(props) {
                           {
                             config: instanceConfig,
                             detect: detectLanguage,
-                            setResult: (v) => {
+                            setResult: (v: any) => {
                               setResult(v)
                               setHideOnce(false)
                             },
                             utils,
                           },
                         ).then(
-                          (v) => {
+                          (v: any) => {
                             if (v === result) {
                               setResult(v + ' ')
                             } else {
@@ -900,7 +909,7 @@ export default function TargetArea(props) {
                               setHideOnce(false)
                             }
                           },
-                          (e) => {
+                          (e: any) => {
                             setError(e.toString())
                             setIsLoading(false)
                           },
@@ -910,14 +919,15 @@ export default function TargetArea(props) {
                       }
                     } else {
                       const LanguageEnum =
-                        builtinServices[getServiceName(currentTranslateServiceInstanceKey)].Language
+                        builtinServiceMap[getServiceName(currentTranslateServiceInstanceKey)]
+                          .Language
                       if (newSourceLanguage in LanguageEnum && newTargetLanguage in LanguageEnum) {
                         setIsLoading(true)
                         setHide(true)
                         const instanceConfig =
                           serviceInstanceConfigMap[currentTranslateServiceInstanceKey]
                         const setHideOnce = invokeOnce(setHide)
-                        builtinServices[getServiceName(currentTranslateServiceInstanceKey)]
+                        builtinServiceMap[getServiceName(currentTranslateServiceInstanceKey)]
                           .translate(
                             result.trim(),
                             LanguageEnum[newSourceLanguage],
@@ -925,14 +935,14 @@ export default function TargetArea(props) {
                             {
                               config: instanceConfig,
                               detect: newSourceLanguage,
-                              setResult: (v) => {
+                              setResult: (v: any) => {
                                 setResult(v)
                                 setHideOnce(false)
                               },
                             },
                           )
                           .then(
-                            (v) => {
+                            (v: any) => {
                               if (v === result) {
                                 setResult(v + ' ')
                               } else {
@@ -943,7 +953,7 @@ export default function TargetArea(props) {
                                 setHideOnce(false)
                               }
                             },
-                            (e) => {
+                            (e: any) => {
                               setError(e.toString())
                               setIsLoading(false)
                             },

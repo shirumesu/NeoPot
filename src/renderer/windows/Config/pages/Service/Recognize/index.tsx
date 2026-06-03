@@ -15,7 +15,7 @@ import { useConfigSave } from '../../../hooks/useConfigSave'
 
 const ReorderGroup = Reorder.Group as any
 
-export default function Recognize(props) {
+export default function Recognize(props: any) {
   const { pluginList } = props
   const {
     isOpen: isSelectPluginOpen,
@@ -34,7 +34,7 @@ export default function Recognize(props) {
   } = useDisclosure()
   const [currentConfigKey, setCurrentConfigKey] = useState('local_model')
   // now it's service instance list
-  const [recognizeServiceInstanceList, setRecognizeServiceInstanceList] = useConfig(
+  const [recognizeServiceInstanceList, setRecognizeServiceInstanceList] = useConfig<string[]>(
     'recognize_service_list',
     ['local_model'],
   )
@@ -43,7 +43,10 @@ export default function Recognize(props) {
   const toastStyle = useToastStyle()
   const { saveConfig } = useConfigSave()
 
-  const deleteServiceInstance = async (instanceKey) => {
+  const deleteServiceInstance = async (instanceKey: string) => {
+    if (recognizeServiceInstanceList === null) {
+      return
+    }
     if (recognizeServiceInstanceList.length === 1) {
       toast.error(t('config.service.least'), { style: toastStyle })
       return
@@ -60,7 +63,10 @@ export default function Recognize(props) {
       }
     }
   }
-  const updateServiceInstanceList = async (instanceKey) => {
+  const updateServiceInstanceList = async (instanceKey: string) => {
+    if (recognizeServiceInstanceList === null) {
+      return
+    }
     if (recognizeServiceInstanceList.includes(instanceKey)) {
       return
     } else {
@@ -74,7 +80,10 @@ export default function Recognize(props) {
       )
     }
   }
-  const handleServiceReorder = (serviceInstanceList) => {
+  const handleServiceReorder = (serviceInstanceList: string[]) => {
+    if (recognizeServiceInstanceList === null) {
+      return
+    }
     if (isSameConfigValue(recognizeServiceInstanceList, serviceInstanceList)) {
       return
     }

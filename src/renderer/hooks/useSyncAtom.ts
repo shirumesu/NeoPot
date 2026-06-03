@@ -9,7 +9,11 @@ export const useSyncAtom = <T>(
   const [atomValue, setAtomValue] = useAtom(atom)
   const [localValue, setLocalValue, getLocalValue] = useGetState(atomValue)
 
-  const syncAtom = (nextValue?: T) => setAtomValue(nextValue ?? getLocalValue())
+  const syncAtom = (nextValue?: T) => setAtomValue((nextValue ?? getLocalValue()) as T)
 
-  return [localValue, setLocalValue, syncAtom]
+  return [
+    localValue,
+    setLocalValue as (value: SetStateAction<T>, forceSync?: boolean) => void,
+    syncAtom,
+  ]
 }

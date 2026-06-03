@@ -11,7 +11,7 @@ import { useConfig } from '../../../hooks'
 const appWindow = getCurrentWebviewWindow()
 
 export const base64Atom = atom('')
-let unlisten = null
+let unlisten: Promise<() => void> | null = null
 
 export default function ImageArea() {
   const [hideWindow] = useConfig('recognize_hide_window', false)
@@ -38,7 +38,7 @@ export default function ImageArea() {
           f()
         })
       }
-      unlisten = listen('new_image', (_) => {
+      unlisten = listen('new_image', (_: unknown) => {
         load_img()
       })
       void window.neoPot?.app.rendererReady()

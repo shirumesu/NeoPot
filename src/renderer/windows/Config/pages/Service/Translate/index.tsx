@@ -15,7 +15,7 @@ import { useConfigSave } from '../../../hooks/useConfigSave'
 
 const ReorderGroup = Reorder.Group as any
 
-export default function Translate(props) {
+export default function Translate(props: any) {
   const { pluginList } = props
   const {
     isOpen: isSelectPluginOpen,
@@ -34,7 +34,7 @@ export default function Translate(props) {
   } = useDisclosure()
   const [currentConfigKey, setCurrentConfigKey] = useState('deepl')
   // now it's service instance list
-  const [translateServiceInstanceList, setTranslateServiceInstanceList] = useConfig(
+  const [translateServiceInstanceList, setTranslateServiceInstanceList] = useConfig<string[]>(
     'translate_service_list',
     ['deepl', 'google'],
   )
@@ -43,7 +43,10 @@ export default function Translate(props) {
   const toastStyle = useToastStyle()
   const { saveConfig } = useConfigSave()
 
-  const deleteServiceInstance = async (instanceKey) => {
+  const deleteServiceInstance = async (instanceKey: string) => {
+    if (translateServiceInstanceList === null) {
+      return
+    }
     if (translateServiceInstanceList.length === 1) {
       toast.error(t('config.service.least'), { style: toastStyle })
       return
@@ -60,7 +63,10 @@ export default function Translate(props) {
       }
     }
   }
-  const updateServiceInstanceList = async (instanceKey) => {
+  const updateServiceInstanceList = async (instanceKey: string) => {
+    if (translateServiceInstanceList === null) {
+      return
+    }
     if (translateServiceInstanceList.includes(instanceKey)) {
       return
     } else {
@@ -74,7 +80,10 @@ export default function Translate(props) {
       )
     }
   }
-  const handleServiceReorder = (serviceInstanceList) => {
+  const handleServiceReorder = (serviceInstanceList: string[]) => {
+    if (translateServiceInstanceList === null) {
+      return
+    }
     if (isSameConfigValue(translateServiceInstanceList, serviceInstanceList)) {
       return
     }

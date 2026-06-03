@@ -7,6 +7,9 @@
   "author": "NeoPot contributors",
   "type": "module",
   "main": ".vite/build/main.cjs",
+  "engines": {
+    "node": ">=24.0.0"
+  },
   "scripts": {
     "dev": "node .scripts/dev.mjs",
     "make": "node .scripts/prepare-electron-winstaller.mjs && electron-forge make",

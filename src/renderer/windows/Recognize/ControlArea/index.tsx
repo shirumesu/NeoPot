@@ -25,9 +25,10 @@ export const currentServiceInstanceKeyAtom = atom('')
 export const languageAtom = atom('auto')
 export const recognizeFlagAtom = atom('')
 
-export default function ControlArea(props) {
+export default function ControlArea(props: any) {
   const { serviceInstanceConfigMap, serviceInstanceList } = props
   const pluginList = useAtomValue(pluginListAtom)
+  const builtinServiceMap = builtinService as Record<string, any>
   const [recognizeLanguage] = useConfig('recognize_language', 'auto')
   const setRecognizeFlag = useSetAtom(recognizeFlagAtom)
   const [currentServiceInstanceKey, setCurrentServiceInstanceKey] = useAtom(
@@ -37,7 +38,7 @@ export default function ControlArea(props) {
   const text = useAtomValue(textAtom)
   const { t } = useTranslation()
 
-  function getInstanceName(instanceKey, serviceNameSupplier) {
+  function getInstanceName(instanceKey: string, serviceNameSupplier: () => string) {
     const instanceConfig = serviceInstanceConfigMap[instanceKey] ?? {}
     return getDisplayInstanceName(instanceConfig[INSTANCE_NAME_CONFIG_KEY], serviceNameSupplier)
   }
@@ -66,7 +67,7 @@ export default function ControlArea(props) {
                   src={
                     getServiceSouceType(currentServiceInstanceKey) === ServiceSourceType.PLUGIN
                       ? pluginList[getServiceName(currentServiceInstanceKey)].icon
-                      : builtinService[getServiceName(currentServiceInstanceKey)].info.icon
+                      : builtinServiceMap[getServiceName(currentServiceInstanceKey)].info.icon
                   }
                 />
               }
@@ -84,11 +85,11 @@ export default function ControlArea(props) {
           <DropdownMenuAny
             aria-label="service name"
             className="max-h-[70vh] overflow-y-auto"
-            onAction={(key) => {
+            onAction={(key: React.Key) => {
               setCurrentServiceInstanceKey(String(key))
             }}
           >
-            {serviceInstanceList.map((instanceKey) => {
+            {serviceInstanceList.map((instanceKey: string) => {
               return (
                 <DropdownItem
                   key={instanceKey}
@@ -98,7 +99,7 @@ export default function ControlArea(props) {
                       src={
                         getServiceSouceType(instanceKey) === ServiceSourceType.PLUGIN
                           ? pluginList[getServiceName(instanceKey)].icon
-                          : builtinService[getServiceName(instanceKey)].info.icon
+                          : builtinServiceMap[getServiceName(instanceKey)].info.icon
                       }
                     />
                   }
@@ -127,7 +128,7 @@ export default function ControlArea(props) {
           <DropdownMenuAny
             aria-label="language"
             className="max-h-[70vh] overflow-y-auto"
-            onAction={(key) => {
+            onAction={(key: React.Key) => {
               setLanguage(String(key))
             }}
           >

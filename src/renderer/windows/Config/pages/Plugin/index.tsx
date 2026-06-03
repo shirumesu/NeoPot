@@ -10,17 +10,19 @@ import PluginHotkeyModal from './PluginHotkeyModal'
 import MarketplaceModal from './MarketplaceModal'
 import { pluginApi } from '@/renderer/lib/electron/adapter'
 import { useConfig } from '../../../../hooks'
-import { checkPluginUpdates } from './marketplace'
-import { loadInstalledPlugins } from './installedPlugins'
+import { checkPluginUpdates, MarketplacePlugin } from './marketplace'
+import { InstalledPlugin, loadInstalledPlugins } from './installedPlugins'
 import { logger } from '@/renderer/lib/logger'
 import { useConfigSave } from '../../hooks/useConfigSave'
 
 export default function Plugin() {
-  const [plugins, setPlugins] = useState([])
+  const [plugins, setPlugins] = useState<InstalledPlugin[]>([])
   const [autoUpdate, setAutoUpdate] = useConfig('plugin_auto_check_update', false)
-  const [hotkeyPlugin, setHotkeyPlugin] = useState(null)
+  const [hotkeyPlugin, setHotkeyPlugin] = useState<InstalledPlugin | null>(null)
   const [marketplaceOpen, setMarketplaceOpen] = useState(false)
-  const [updates, setUpdates] = useState(null)
+  const [updates, setUpdates] = useState<
+    (MarketplacePlugin & { installedVersion: string })[] | null
+  >(null)
   const [installing, setInstalling] = useState(false)
   const { t } = useTranslation()
   const { saveConfig } = useConfigSave()
@@ -68,7 +70,7 @@ export default function Plugin() {
     }
   }
 
-  async function togglePlugin(plugin, enabled) {
+  async function togglePlugin(plugin: InstalledPlugin, enabled: boolean) {
     await pluginApi.setEnabled(plugin.type, plugin.name, enabled)
     logger.info('Plugin enabled state changed from settings page.', {
       type: plugin.type,
@@ -81,7 +83,7 @@ export default function Plugin() {
     await emit('reload_plugin_list')
   }
 
-  async function deletePlugin(plugin) {
+  async function deletePlugin(plugin: InstalledPlugin) {
     await pluginApi.uninstall(plugin.type, plugin.name)
     logger.info('Plugin deleted from settings page.', {
       type: plugin.type,
@@ -196,7 +198,7 @@ export default function Plugin() {
       </div>
       <PluginHotkeyModal
         isOpen={hotkeyPlugin !== null}
-        onOpenChange={(open) => {
+        onOpenChange={(open: boolean) => {
           if (!open) {
             setHotkeyPlugin(null)
           }

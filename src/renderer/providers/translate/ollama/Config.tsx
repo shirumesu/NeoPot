@@ -41,7 +41,28 @@ const DEFAULT_PROMPT_LIST = [
   { role: 'user', content: `Translate into $to:\n"""\n$text\n"""` },
 ]
 
-function normalizeHost(requestPath) {
+type PromptItem = {
+  role: string
+  content: string
+}
+
+type OllamaServiceConfig = {
+  [INSTANCE_NAME_CONFIG_KEY]: string
+  stream: boolean
+  model: string
+  requestPath: string
+  temperature: string
+  topP: string
+  topK: string
+  thinkingMode: string
+  promptList: PromptItem[]
+}
+
+type OllamaModelList = {
+  models?: { name: string }[]
+}
+
+function normalizeHost(requestPath?: string) {
   let normalized = requestPath?.trim() || 'http://localhost:11434'
 
   if (!/^https?:\/\/.+/i.test(normalized)) {
@@ -51,10 +72,10 @@ function normalizeHost(requestPath) {
   return normalized.replace(/\/+$/, '')
 }
 
-export function Config(props) {
+export function Config(props: any) {
   const { instanceKey, updateServiceList, onClose } = props
   const { t } = useTranslation()
-  const [serviceConfig, setServiceConfig] = useConfig(
+  const [serviceConfig, setServiceConfig] = useConfig<OllamaServiceConfig>(
     instanceKey,
     {
       [INSTANCE_NAME_CONFIG_KEY]: t('services.translate.ollama.title'),
@@ -73,14 +94,14 @@ export function Config(props) {
   const [isPulling, setIsPulling] = useState(false)
   const [progress, setProgress] = useState(0)
   const [pullingStatus, setPullingStatus] = useState('')
-  const [installedModels, setInstalledModels] = useState(null)
+  const [installedModels, setInstalledModels] = useState<OllamaModelList | null>(null)
 
   const toastStyle = useToastStyle()
   const { saveConfig } = useConfigSave()
 
   if (serviceConfig) {
     let changed = false
-    const nextConfig = { ...serviceConfig }
+    const nextConfig: OllamaServiceConfig = { ...serviceConfig }
 
     if (nextConfig.promptList === undefined) {
       nextConfig.promptList = DEFAULT_PROMPT_LIST
@@ -109,17 +130,22 @@ export function Config(props) {
   }
 
   async function getModels() {
+    if (serviceConfig === null) {
+      return
+    }
+
     try {
-      const list = await getOllamaModels(normalizeHost(serviceConfig.requestPath))
+      const currentConfig = serviceConfig
+      const list = await getOllamaModels(normalizeHost(currentConfig.requestPath))
       setInstalledModels(list)
-      const models = list.models?.map((model) => model.name) ?? []
+      const models = list.models?.map((model: { name: string }) => model.name) ?? []
       if (
-        serviceConfig.model === LEGACY_DEFAULT_MODEL &&
+        currentConfig.model === LEGACY_DEFAULT_MODEL &&
         models.length > 0 &&
         !models.includes(LEGACY_DEFAULT_MODEL)
       ) {
         setServiceConfig({
-          ...serviceConfig,
+          ...currentConfig,
           model: models.includes(DEFAULT_MODEL) ? DEFAULT_MODEL : models[0],
         })
       }
@@ -129,14 +155,19 @@ export function Config(props) {
   }
 
   async function pullModel() {
+    if (serviceConfig === null) {
+      return
+    }
+
+    const currentConfig = serviceConfig
     setIsPulling(true)
     setProgress(0)
-    setPullingStatus(serviceConfig.model)
+    setPullingStatus(currentConfig.model)
     try {
-      await pullOllamaModel(normalizeHost(serviceConfig.requestPath), serviceConfig.model)
+      await pullOllamaModel(normalizeHost(currentConfig.requestPath), currentConfig.model)
       await getModels()
     } catch (e) {
-      toast.error(e.toString(), { style: toastStyle })
+      toast.error(String(e), { style: toastStyle })
     } finally {
       setProgress(0)
       setPullingStatus('')
@@ -261,7 +292,7 @@ export function Config(props) {
             endContent={
               installedModels &&
               !installedModels.models
-                .map((model) => {
+                ?.map((model: { name: string }) => {
                   return model.name
                 })
                 .includes(serviceConfig['model']) ? (

@@ -5,7 +5,7 @@ import React from 'react'
 
 import { getCardActions } from '../logic'
 
-export default function PluginCard(props) {
+export default function PluginCard(props: any) {
   const { plugin, onOpenHotkeys, onToggleEnabled, onDelete, onOpenSettings } = props
   const { t } = useTranslation()
   const actions = getCardActions(plugin)

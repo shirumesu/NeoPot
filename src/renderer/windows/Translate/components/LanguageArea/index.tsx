@@ -73,7 +73,7 @@ export default function LanguageArea() {
             <DropdownMenuAny
               aria-label="Source Language"
               className="max-h-[50vh] overflow-y-auto"
-              onAction={(key) => {
+              onAction={(key: React.Key) => {
                 setSourceLanguage(String(key))
               }}
             >
@@ -100,13 +100,13 @@ export default function LanguageArea() {
                   if (targetLanguage === translateTargetLanguage) {
                     setTargetLanguage(detectLanguage)
                   } else {
-                    setTargetLanguage(translateTargetLanguage)
+                    setTargetLanguage(translateTargetLanguage ?? targetLanguage)
                   }
                 } else {
                   if (targetLanguage === translateSecondLanguage) {
-                    setTargetLanguage(translateTargetLanguage)
+                    setTargetLanguage(translateTargetLanguage ?? targetLanguage)
                   } else {
-                    setTargetLanguage(translateSecondLanguage)
+                    setTargetLanguage(translateSecondLanguage ?? targetLanguage)
                   }
                 }
               }
@@ -125,7 +125,7 @@ export default function LanguageArea() {
             <DropdownMenuAny
               aria-label="Target Language"
               className="max-h-[50vh] overflow-y-auto"
-              onAction={(key) => {
+              onAction={(key: React.Key) => {
                 setTargetLanguage(String(key))
               }}
             >

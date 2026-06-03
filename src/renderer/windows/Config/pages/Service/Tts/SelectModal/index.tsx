@@ -5,9 +5,10 @@ import React from 'react'
 import { createServiceInstanceKey } from '@/renderer/lib/service/service_instance'
 import * as builtinServices from '@/renderer/providers/tts'
 
-export default function SelectModal(props) {
+export default function SelectModal(props: any) {
   const { isOpen, onOpenChange, setCurrentConfigKey, onConfigOpen } = props
   const { t } = useTranslation()
+  const builtinServiceMap = builtinServices as Record<string, any>
 
   return (
     <Modal isOpen={isOpen} onOpenChange={onOpenChange} scrollBehavior="inside">
@@ -26,11 +27,11 @@ export default function SelectModal(props) {
                         onConfigOpen()
                       }}
                       startContent={
-                        <img src={builtinServices[x].info.icon} className="h-6 w-6 my-auto" />
+                        <img src={builtinServiceMap[x].info.icon} className="h-6 w-6 my-auto" />
                       }
                     >
                       <div className="w-full">
-                        {t(`services.tts.${builtinServices[x].info.name}.title`)}
+                        {t(`services.tts.${builtinServiceMap[x].info.name}.title`)}
                       </div>
                     </Button>
                   </div>

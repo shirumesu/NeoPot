@@ -2,13 +2,13 @@ import { Button, Input } from '@heroui/react'
 import { useTranslation } from 'react-i18next'
 import React from 'react'
 
-export default function PluginHotkeyEditor(props) {
+export default function PluginHotkeyEditor(props: any) {
   const { rows } = props
   const { t } = useTranslation()
 
   return (
     <div className="flex flex-col gap-2">
-      {rows.map((row) => (
+      {rows.map((row: any) => (
         <div key={`${row.pluginId}:${row.key}`} className="config-item">
           <div className="min-w-0">
             <h3 className="my-auto truncate">{row.display}</h3>

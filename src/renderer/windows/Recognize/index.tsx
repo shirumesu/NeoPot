@@ -18,9 +18,9 @@ import TextArea from './TextArea'
 import { logger } from '@/renderer/lib/logger'
 const appWindow = getCurrentWebviewWindow()
 
-export const pluginListAtom = atom({})
+export const pluginListAtom = atom<Record<string, any>>({})
 
-let blurTimeout = null
+let blurTimeout: ReturnType<typeof setTimeout> | null = null
 
 const listenBlur = () => {
   return listen('tauri://blur', () => {
@@ -56,14 +56,14 @@ export default function Recognize() {
   const [, setPluginList] = useAtom(pluginListAtom)
   const [closeOnBlur] = useConfig('recognize_close_on_blur', false)
   const [pined, setPined] = useState(false)
-  const [serviceInstanceList] = useConfig('recognize_service_list', ['local_model'])
-  const [pluginLoadError, setPluginLoadError] = useState(null)
-  const [serviceConfigError, setServiceConfigError] = useState(null)
-  const [serviceInstanceConfigMap, setServiceInstanceConfigMap] = useState({})
+  const [serviceInstanceList] = useConfig<string[]>('recognize_service_list', ['local_model'])
+  const [pluginLoadError, setPluginLoadError] = useState<string | null>(null)
+  const [serviceConfigError, setServiceConfigError] = useState<string | null>(null)
+  const [serviceInstanceConfigMap, setServiceInstanceConfigMap] = useState<Record<string, any>>({})
 
   const loadPluginList = useCallback(async () => {
     try {
-      const temp = {}
+      const temp: Record<string, any> = {}
       if (await exists(`plugins/recognize`, { baseDir: BaseDirectory.AppConfig })) {
         const plugins = await readDir(`plugins/recognize`, { baseDir: BaseDirectory.AppConfig })
         for (const plugin of plugins) {
@@ -91,7 +91,11 @@ export default function Recognize() {
   }, [setPluginList])
   const loadServiceInstanceConfigMap = useCallback(async () => {
     try {
-      const config = {}
+      if (serviceInstanceList === null) {
+        return
+      }
+
+      const config: Record<string, any> = {}
       for (const serviceInstanceKey of serviceInstanceList) {
         config[serviceInstanceKey] = (await getStoreValue(serviceInstanceKey)) ?? {}
       }

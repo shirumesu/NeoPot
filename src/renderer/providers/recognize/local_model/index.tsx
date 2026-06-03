@@ -10,9 +10,9 @@ const paddleLangMap = {
   [Language.ja]: 'japan',
 }
 
-const ocrCache = new Map()
+const ocrCache = new Map<string, any>()
 
-async function getOcr(language) {
+async function getOcr(language: Language) {
   const paddleLang = paddleLangMap[language]
   if (!paddleLang) {
     throw new Error('Language not supported by PaddleOCR.js local model.')
@@ -43,7 +43,7 @@ async function getOcr(language) {
   return ocrCache.get(paddleLang)
 }
 
-function base64ToBlob(base64) {
+function base64ToBlob(base64: string) {
   const binary = atob(base64)
   const bytes = new Uint8Array(binary.length)
   for (let index = 0; index < binary.length; index += 1) {
@@ -52,12 +52,12 @@ function base64ToBlob(base64) {
   return new Blob([bytes], { type: 'image/png' })
 }
 
-export async function recognize(base64, language) {
+export async function recognize(base64: string, language: Language) {
   const ocr = await getOcr(language)
   const [result] = await ocr.predict(base64ToBlob(base64), {
     textRecScoreThresh: 0.3,
   })
-  const text = (result?.items ?? []).map((item) => item.text).join('\n')
+  const text = (result?.items ?? []).map((item: any) => item.text).join('\n')
   if (language === Language.zh_cn || language === Language.zh_tw || language === Language.ja) {
     return text.replaceAll(' ', '').trim()
   }

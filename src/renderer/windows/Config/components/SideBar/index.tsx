@@ -13,7 +13,7 @@ export default function SideBar() {
   const navigate = useNavigate()
   const location = useLocation()
 
-  function setStyle(pathname) {
+  function setStyle(pathname: string) {
     return location.pathname.includes(pathname) ? 'flat' : 'light'
   }
 

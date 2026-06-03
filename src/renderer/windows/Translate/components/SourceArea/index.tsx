@@ -41,9 +41,9 @@ export const detectLanguageAtom = atom('')
 export const manualTranslateFlagAtom = atom('')
 
 const DEFAULT_RECOGNIZE_SERVICE_LIST = ['local_model']
-const DEFAULT_TTS_SERVICE_LIST = []
+const DEFAULT_TTS_SERVICE_LIST: string[] = []
 
-export default function SourceArea(props) {
+export default function SourceArea(props: any) {
   const { pluginList, serviceInstanceConfigMap } = props
   const [appFontSize] = useConfig('app_font_size', 16)
   const [sourceText, setSourceText, syncSourceText] = useSyncAtom(sourceTextAtom)
@@ -52,9 +52,14 @@ export default function SourceArea(props) {
   const [incrementalTranslate] = useConfig('incremental_translate', false)
   const [dynamicTranslate] = useConfig('dynamic_translate', false)
   const [deleteNewline] = useConfig('translate_delete_newline', false)
-  const [recognizeLanguage] = useConfig('recognize_language', 'auto')
-  const [recognizeServiceList] = useConfig('recognize_service_list', DEFAULT_RECOGNIZE_SERVICE_LIST)
-  const [ttsServiceList] = useConfig('tts_service_list', DEFAULT_TTS_SERVICE_LIST)
+  const [recognizeLanguage] = useConfig<string>('recognize_language', 'auto')
+  const [recognizeServiceList] = useConfig<string[]>(
+    'recognize_service_list',
+    DEFAULT_RECOGNIZE_SERVICE_LIST,
+  )
+  const [ttsServiceList] = useConfig<string[]>('tts_service_list', DEFAULT_TTS_SERVICE_LIST)
+  const recognizeServiceMap = recognizeServices as Record<string, any>
+  const builtinTtsServiceMap = builtinTtsServices as Record<string, any>
   const ttsServiceInstanceKey = Array.isArray(ttsServiceList)
     ? ttsServiceList.find((key) => {
         if (!isValidServiceInstanceKey(key)) {
@@ -63,7 +68,7 @@ export default function SourceArea(props) {
         if (getServiceSouceType(key) === ServiceSourceType.PLUGIN) {
           return pluginList['tts']?.[getServiceName(key)] !== undefined
         }
-        return builtinTtsServices[getServiceName(key)] !== undefined
+        return builtinTtsServiceMap[getServiceName(key)] !== undefined
       })
     : null
   const [hideWindow] = useConfig('translate_hide_window', false)
@@ -78,14 +83,14 @@ export default function SourceArea(props) {
   const speak = useVoice()
 
   const detect_language = useCallback(
-    async (text) => {
-      setDetectLanguage(await detect(text))
+    async (text: string) => {
+      setDetectLanguage(String(await detect(text)))
     },
     [setDetectLanguage],
   )
 
   const normalizeInputText = useCallback(
-    (text) => {
+    (text: string) => {
       const trimmedText = text.trim()
       if (deleteNewline) {
         return trimmedText.replace(/-\s+/g, '').replace(/\s+/g, ' ')
@@ -97,7 +102,7 @@ export default function SourceArea(props) {
   )
 
   const commitSourceText = useCallback(
-    async (newText) => {
+    async (newText: string) => {
       const nextText = incrementalTranslate
         ? [sourceText.trim(), newText].filter(Boolean).join('\n')
         : newText
@@ -110,7 +115,7 @@ export default function SourceArea(props) {
   )
 
   const handleNewText = useCallback(
-    async (text) => {
+    async (text: string) => {
       text = text.trim()
       if (hideWindow) {
         appWindow.hide()
@@ -127,6 +132,10 @@ export default function SourceArea(props) {
         setSourceText('', true)
       } else if (text === '[IMAGE_TRANSLATE]') {
         setWindowType('[IMAGE_TRANSLATE]')
+        if (recognizeServiceList === null || recognizeLanguage === null) {
+          setSourceText('Recognize service not configured')
+          return
+        }
         const base64 = String(await electronCommand('get_base64'))
         const serviceInstanceKey = recognizeServiceList[0]
         if (getServiceSouceType(serviceInstanceKey) === ServiceSourceType.PLUGIN) {
@@ -150,10 +159,10 @@ export default function SourceArea(props) {
                 utils,
               },
             ).then(
-              (v) => {
+              (v: string) => {
                 void commitSourceText(normalizeInputText(v))
               },
-              (e) => {
+              (e: any) => {
                 setSourceText(e.toString())
               },
             )
@@ -161,21 +170,23 @@ export default function SourceArea(props) {
             setSourceText('Language not supported')
           }
         } else {
-          if (recognizeLanguage in recognizeServices[getServiceName(serviceInstanceKey)].Language) {
+          if (
+            recognizeLanguage in recognizeServiceMap[getServiceName(serviceInstanceKey)].Language
+          ) {
             const instanceConfig = serviceInstanceConfigMap[serviceInstanceKey]
-            recognizeServices[getServiceName(serviceInstanceKey)]
+            recognizeServiceMap[getServiceName(serviceInstanceKey)]
               .recognize(
                 base64,
-                recognizeServices[getServiceName(serviceInstanceKey)].Language[recognizeLanguage],
+                recognizeServiceMap[getServiceName(serviceInstanceKey)].Language[recognizeLanguage],
                 {
                   config: instanceConfig,
                 },
               )
               .then(
-                (v) => {
+                (v: string) => {
                   void commitSourceText(normalizeInputText(v))
                 },
-                (e) => {
+                (e: any) => {
                   setSourceText(e.toString())
                 },
               )
@@ -203,7 +214,7 @@ export default function SourceArea(props) {
     ],
   )
 
-  const keyDown = (event) => {
+  const keyDown = (event: React.KeyboardEvent) => {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault()
       detect_language(sourceText).then(() => {
@@ -228,7 +239,7 @@ export default function SourceArea(props) {
     }
     let detected = detectLanguage
     if (detected === '') {
-      detected = await detect(sourceText)
+      detected = String(await detect(sourceText))
       setDetectLanguage(detected)
     }
     if (getServiceSouceType(instanceKey) === ServiceSourceType.PLUGIN) {
@@ -246,13 +257,13 @@ export default function SourceArea(props) {
       })
       speak(data)
     } else {
-      if (!(detected in builtinTtsServices[getServiceName(instanceKey)].Language)) {
+      if (!(detected in builtinTtsServiceMap[getServiceName(instanceKey)].Language)) {
         throw new Error('Language not supported')
       }
       const instanceConfig = serviceInstanceConfigMap[instanceKey]
-      const data = await (builtinTtsServices[getServiceName(instanceKey)] as any).tts(
+      const data = await builtinTtsServiceMap[getServiceName(instanceKey)].tts(
         sourceText,
-        (builtinTtsServices[getServiceName(instanceKey)] as any).Language[detected],
+        builtinTtsServiceMap[getServiceName(instanceKey)].Language[detected],
         {
           config: instanceConfig,
         },
@@ -263,8 +274,8 @@ export default function SourceArea(props) {
 
   useEffect(() => {
     let disposed = false
-    let removeListener = null
-    const unlistenPromise = listen('new_text', (event) => {
+    let removeListener: (() => void) | null = null
+    const unlistenPromise = listen('new_text', (event: any) => {
       appWindow.setFocus()
       handleNewTextRef.current(event.payload)
     })
@@ -340,7 +351,7 @@ export default function SourceArea(props) {
     textAreaRef.current.style.height = textAreaRef.current.scrollHeight + 'px'
   }, [sourceText])
 
-  const changeSourceText = async (text) => {
+  const changeSourceText = async (text: string) => {
     setDetectLanguage('')
     await setSourceText(text)
     if (dynamicTranslate) {
@@ -355,14 +366,14 @@ export default function SourceArea(props) {
     }
   }
 
-  const transformVarName = function (str) {
+  const transformVarName = function (str: string) {
     let str2 = str
 
     // snake_case to SNAKE_CASE
     if (/_[a-z]/.test(str2)) {
       str2 = str2
         .split('_')
-        .map((it) => it.toLocaleUpperCase())
+        .map((it: string) => it.toLocaleUpperCase())
         .join('_')
     }
     if (str2 !== str) {
@@ -373,7 +384,7 @@ export default function SourceArea(props) {
     if (/^[A-Z]+(_[A-Z]+)*$/.test(str2)) {
       str2 = str2
         .split('_')
-        .map((it) => it.toLocaleLowerCase())
+        .map((it: string) => it.toLocaleLowerCase())
         .join('-')
     }
     if (str2 !== str) {
@@ -384,7 +395,7 @@ export default function SourceArea(props) {
     if (/-/.test(str2)) {
       str2 = str2
         .split('-')
-        .map((it) => it.toLocaleLowerCase())
+        .map((it: string) => it.toLocaleLowerCase())
         .join('.')
     }
     if (str2 !== str) {
@@ -393,7 +404,7 @@ export default function SourceArea(props) {
 
     // dot.notation to space separated
     if (/\.[a-z]/.test(str2)) {
-      str2 = str2.replaceAll(/(\.)([a-z])/g, (_, _2, it) => ' ' + it)
+      str2 = str2.replaceAll(/(\.)([a-z])/g, (_: string, _2: string, it: string) => ' ' + it)
     }
     if (str2 !== str) {
       return str2
@@ -401,7 +412,7 @@ export default function SourceArea(props) {
 
     // space separated to Title Case
     if (/\s[a-z]/.test(str2)) {
-      str2 = str2.replaceAll(/\s([a-z])/g, (_, it) => ' ' + it.toLocaleUpperCase())
+      str2 = str2.replaceAll(/\s([a-z])/g, (_: string, it: string) => ' ' + it.toLocaleUpperCase())
       str2 = str2.substring(0, 1).toLocaleUpperCase() + str2.substring(1)
     }
     if (str2 !== str) {
@@ -410,7 +421,7 @@ export default function SourceArea(props) {
 
     // Title Case to CamelCase
     if (/\s[A-Z]/.test(str2)) {
-      str2 = str2.replaceAll(/\s([A-Z])/g, (_, it) => it)
+      str2 = str2.replaceAll(/\s([A-Z])/g, (_: string, it: string) => it)
       str2 = str2.substring(0, 1).toLocaleLowerCase() + str2.substring(1)
     }
     if (str2 !== str) {
@@ -427,7 +438,7 @@ export default function SourceArea(props) {
 
     // PascalCase to snake_case
     if (/[^\s][A-Z]/.test(str2)) {
-      str2 = str2.replaceAll(/[A-Z]/g, (it, offset) => {
+      str2 = str2.replaceAll(/[A-Z]/g, (it: string, offset: number) => {
         return (offset == 0 ? '' : '_') + it.toLocaleLowerCase()
       })
     }
@@ -440,7 +451,7 @@ export default function SourceArea(props) {
       return
     }
 
-    const onKeyDown = async (event) => {
+    const onKeyDown = async (event: KeyboardEvent) => {
       if (event.altKey && event.shiftKey && event.code === 'KeyU') {
         const originText = element.value
         const selectionStart = element.selectionStart
@@ -464,7 +475,7 @@ export default function SourceArea(props) {
   }, [])
 
   return (
-    <div className={hideSource && windowType !== '[INPUT_TRANSLATE]' && 'hidden'}>
+    <div className={hideSource && windowType !== '[INPUT_TRANSLATE]' ? 'hidden' : undefined}>
       <Card shadow="none" className="bg-content1 rounded-[10px] mt-px pb-0">
         <Toaster />
         <CardBody className="bg-content1 p-3 pb-0 max-h-[40vh] overflow-y-auto">
