@@ -34,8 +34,7 @@ const listenBlur = () => {
       if (blurTimeout) {
         clearTimeout(blurTimeout)
       }
-      // 100ms后关闭窗口，因为在 windows 下拖动窗口时会先切换成 blur 再立即切换成 focus
-      // 如果直接关闭将导致窗口无法拖动
+      // Close the window after 100ms, because dragging the window under windows will switch to blur and then to focus immediately.
       blurTimeout = setTimeout(async () => {
         await appWindow.close()
       }, 100)
@@ -44,20 +43,17 @@ const listenBlur = () => {
 }
 
 let unlisten = listenBlur()
-// 取消 blur 监听
 const unlistenBlur = () => {
   unlisten.then((f) => {
     f()
   })
 }
 
-// 监听 focus 事件取消 blurTimeout 时间之内的关闭窗口
 void listen('tauri://focus', () => {
   if (blurTimeout) {
     clearTimeout(blurTimeout)
   }
 })
-// 监听 move 事件取消 blurTimeout 时间之内的关闭窗口
 void listen('tauri://move', () => {
   if (blurTimeout) {
     clearTimeout(blurTimeout)
@@ -105,13 +101,11 @@ export default function Translate() {
   const validTtsServiceInstanceList = Array.isArray(ttsServiceInstanceList)
     ? ttsServiceInstanceList.filter(isValidServiceInstanceKey)
     : []
-  // 是否自动关闭窗口
   useEffect(() => {
     if (closeOnBlur !== null && !closeOnBlur) {
       unlistenBlur()
     }
   }, [closeOnBlur])
-  // 是否默认置顶
   useEffect(() => {
     if (alwaysOnTop !== null && alwaysOnTop) {
       appWindow.setAlwaysOnTop(true)
@@ -119,7 +113,6 @@ export default function Translate() {
       setPined(true)
     }
   }, [alwaysOnTop])
-  // 保存窗口位置
   useEffect(() => {
     if (windowPosition !== null && windowPosition === 'pre_state') {
       const unlistenMove = listen('tauri://move', async () => {
@@ -146,7 +139,6 @@ export default function Translate() {
       }
     }
   }, [windowPosition])
-  // 保存窗口大小
   useEffect(() => {
     if (rememberWindowSize !== null && rememberWindowSize) {
       const unlistenResize = listen('tauri://resize', async () => {

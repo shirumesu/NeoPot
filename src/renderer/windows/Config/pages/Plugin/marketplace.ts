@@ -63,7 +63,6 @@ export async function checkPluginUpdates(installedPlugins: any[]) {
     const marketplacePlugin = marketplaceById.get(installed.id)
     const sources: string[] = []
 
-    // 收集所有可能的来源
     if (installed.installSource) {
       sources.push(installed.installSource)
     }
@@ -79,26 +78,28 @@ export async function checkPluginUpdates(installedPlugins: any[]) {
     let highestManifest: any = null
     let highestSource = ''
 
-    // 检查所有来源，找到最高版本
     for (const source of sources) {
       try {
         const sourceManifest = await pluginApi.inspectSource(source)
-        if (sourceManifest.plugin_type !== installed.type || sourceManifest.name !== installed.name) {
+        if (
+          sourceManifest.plugin_type !== installed.type ||
+          sourceManifest.name !== installed.name
+        ) {
           continue
         }
 
-        const sourceVersion = typeof sourceManifest.version === 'string' ? sourceManifest.version : ''
+        const sourceVersion =
+          typeof sourceManifest.version === 'string' ? sourceManifest.version : ''
         if (compareVersion(sourceVersion, highestVersion) > 0) {
           highestVersion = sourceVersion
           highestManifest = sourceManifest
           highestSource = source
         }
       } catch {
-        // 某个来源失败不应阻止检查其他来源
+        // Failure of one source should not prevent examination of other sources
       }
     }
 
-    // 如果找到了更高的版本，添加到更新列表
     if (highestManifest && highestSource) {
       updates.push({
         id: installed.id,
@@ -123,6 +124,5 @@ export async function checkPluginUpdates(installedPlugins: any[]) {
       })
     }
   }
-
   return updates
 }

@@ -129,7 +129,6 @@ export default function Plugin() {
     })
     const allUpdates = await checkPluginUpdates(installedPlugins)
 
-    // 过滤掉被忽略的更新
     const ignoredUpdates = ((await configApi.get('plugin_ignored_updates')) || {}) as Record<
       string,
       string

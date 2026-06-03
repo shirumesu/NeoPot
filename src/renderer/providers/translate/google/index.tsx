@@ -34,14 +34,11 @@ export async function translate(text: string, from: string, to: string, options:
   )
   if (res.ok) {
     const result = res.data
-    // 词典模式
     if (result[1]) {
       const target: any = { pronunciations: [], explanations: [], associations: [], sentence: [] }
-      // 发音
       if (result[0][1][3]) {
         target.pronunciations.push({ symbol: result[0][1][3], voice: '' })
       }
-      // 释义
       for (const i of result[1]) {
         target.explanations.push({
           trait: i[0],
@@ -50,7 +47,6 @@ export async function translate(text: string, from: string, to: string, options:
           }),
         })
       }
-      // 例句
       if (result[13]) {
         for (const i of result[13][0]) {
           target.sentence.push({ source: i[0] })
@@ -58,7 +54,6 @@ export async function translate(text: string, from: string, to: string, options:
       }
       return target
     } else {
-      // 翻译模式
       let target = ''
       for (const r of result[0]) {
         if (r[0]) {

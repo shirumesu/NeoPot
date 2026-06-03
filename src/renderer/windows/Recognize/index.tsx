@@ -26,8 +26,7 @@ const listenBlur = () => {
       if (blurTimeout) {
         clearTimeout(blurTimeout)
       }
-      // 50ms后关闭窗口，因为在 windows 下拖动窗口时会先切换成 blur 再立即切换成 focus
-      // 如果直接关闭将导致窗口无法拖动
+      // Close the window after 50ms, because dragging a window on windows switches to blur and then immediately to focus.
       blurTimeout = setTimeout(async () => {
         await appWindow.close()
       }, 50)
@@ -36,14 +35,12 @@ const listenBlur = () => {
 }
 
 let unlisten = listenBlur()
-// 取消 blur 监听
 const unlistenBlur = () => {
   unlisten.then((f) => {
     f()
   })
 }
 
-// 监听 focus 事件取消 blurTimeout 时间之内的关闭窗口
 void listen('tauri://focus', () => {
   if (blurTimeout) {
     clearTimeout(blurTimeout)
@@ -105,7 +102,6 @@ export default function Recognize() {
       })
     }
   }, [loadPluginList])
-  // 是否自动关闭窗口
   useEffect(() => {
     if (closeOnBlur !== null && !closeOnBlur) {
       unlistenBlur()

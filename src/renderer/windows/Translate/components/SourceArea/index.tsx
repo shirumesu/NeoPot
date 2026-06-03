@@ -123,7 +123,6 @@ export default function SourceArea(props: any) {
         appWindow.show()
         appWindow.setFocus()
       }
-      // 清空检测语言
       setDetectLanguage('')
       if (text === '[INPUT_TRANSLATE]') {
         setWindowType('[INPUT_TRANSLATE]')
