@@ -181,7 +181,7 @@
         "test_success": "测试成功"
       },
       "plugin": {
-        "label": "插件",
+        "label": "插件管理",
         "title": "插件管理",
         "version": "版本",
         "author": "作者",
