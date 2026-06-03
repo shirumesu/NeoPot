@@ -61,45 +61,66 @@ export async function checkPluginUpdates(installedPlugins: any[]) {
 
   for (const installed of installedPlugins) {
     const marketplacePlugin = marketplaceById.get(installed.id)
-    const source = installed.installSource || marketplacePlugin?.download
-    if (!source || !pluginApi?.inspectSource) {
+    const sources: string[] = []
+
+    // 收集所有可能的来源
+    if (installed.installSource) {
+      sources.push(installed.installSource)
+    }
+    if (marketplacePlugin?.download && marketplacePlugin.download !== installed.installSource) {
+      sources.push(marketplacePlugin.download)
+    }
+
+    if (sources.length === 0 || !pluginApi?.inspectSource) {
       continue
     }
 
-    try {
-      const sourceManifest = await pluginApi.inspectSource(source)
-      if (sourceManifest.plugin_type !== installed.type || sourceManifest.name !== installed.name) {
-        continue
-      }
+    let highestVersion = installed.version
+    let highestManifest: any = null
+    let highestSource = ''
 
-      const sourceVersion = typeof sourceManifest.version === 'string' ? sourceManifest.version : ''
-      if (compareVersion(sourceVersion, installed.version) <= 0) {
-        continue
-      }
+    // 检查所有来源，找到最高版本
+    for (const source of sources) {
+      try {
+        const sourceManifest = await pluginApi.inspectSource(source)
+        if (sourceManifest.plugin_type !== installed.type || sourceManifest.name !== installed.name) {
+          continue
+        }
 
+        const sourceVersion = typeof sourceManifest.version === 'string' ? sourceManifest.version : ''
+        if (compareVersion(sourceVersion, highestVersion) > 0) {
+          highestVersion = sourceVersion
+          highestManifest = sourceManifest
+          highestSource = source
+        }
+      } catch {
+        // 某个来源失败不应阻止检查其他来源
+      }
+    }
+
+    // 如果找到了更高的版本，添加到更新列表
+    if (highestManifest && highestSource) {
       updates.push({
         id: installed.id,
         type: installed.type,
         name: installed.name,
         display:
-          typeof sourceManifest.display === 'string'
-            ? sourceManifest.display
+          typeof highestManifest.display === 'string'
+            ? highestManifest.display
             : marketplacePlugin?.display || installed.display,
-        version: sourceVersion,
+        version: highestVersion,
         author:
-          typeof sourceManifest.author === 'string'
-            ? sourceManifest.author
+          typeof highestManifest.author === 'string'
+            ? highestManifest.author
             : marketplacePlugin?.author || installed.author,
         description:
-          typeof sourceManifest.description === 'string'
-            ? sourceManifest.description
+          typeof highestManifest.description === 'string'
+            ? highestManifest.description
             : marketplacePlugin?.description || installed.description,
         repo: marketplacePlugin?.repo || '',
-        download: source,
+        download: highestSource,
         installedVersion: installed.version,
       })
-    } catch {
-      // One broken plugin source must not block checking the rest.
     }
   }
 

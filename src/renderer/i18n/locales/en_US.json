@@ -207,8 +207,11 @@
           "none": "All installed plugins are up to date.",
           "checked": "Plugin update check completed",
           "install": "Update",
+          "install_all": "Update all",
           "install_success": "Plugin updated",
-          "install_failed": "Failed to update plugin"
+          "install_failed": "Failed to update plugin",
+          "ignore": "Ignore this update",
+          "ignored": "Update ignored"
         },
         "auto_update": {
           "title": "Automatically Check Plugin Updates",

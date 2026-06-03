@@ -1,4 +1,4 @@
-import { Button, Switch } from '@heroui/react'
+import { Button, Switch, Tooltip } from '@heroui/react'
 import { MdDeleteOutline, MdHome, MdKeyboardAlt, MdSettings } from 'react-icons/md'
 import { useTranslation } from 'react-i18next'
 import React from 'react'
@@ -33,51 +33,59 @@ export default function PluginCard(props: any) {
       </div>
       <div className="flex shrink-0 items-center gap-1">
         {actions.homepage && (
-          <Button
-            isIconOnly
-            size="sm"
-            variant="light"
-            aria-label={t('config.plugin.homepage')}
-            onPress={() => {
-              void openUrl(plugin.homepage)
-            }}
-          >
-            <MdHome className="text-xl" />
-          </Button>
+          <Tooltip content={t('config.plugin.homepage')}>
+            <Button
+              isIconOnly
+              size="sm"
+              variant="light"
+              aria-label={t('config.plugin.homepage')}
+              onPress={() => {
+                void openUrl(plugin.homepage)
+              }}
+            >
+              <MdHome className="text-xl" />
+            </Button>
+          </Tooltip>
         )}
         {actions.settings && (
-          <Button
-            isIconOnly
-            size="sm"
-            variant="light"
-            aria-label={t('config.plugin.settings')}
-            onPress={() => onOpenSettings(plugin)}
-          >
-            <MdSettings className="text-xl" />
-          </Button>
+          <Tooltip content={t('config.plugin.settings')}>
+            <Button
+              isIconOnly
+              size="sm"
+              variant="light"
+              aria-label={t('config.plugin.settings')}
+              onPress={() => onOpenSettings(plugin)}
+            >
+              <MdSettings className="text-xl" />
+            </Button>
+          </Tooltip>
         )}
         {actions.hotkey && (
-          <Button
-            isIconOnly
-            size="sm"
-            variant="light"
-            aria-label={t('config.plugin.hotkeys')}
-            onPress={() => onOpenHotkeys(plugin)}
-          >
-            <MdKeyboardAlt className="text-xl" />
-          </Button>
+          <Tooltip content={t('config.plugin.hotkeys')}>
+            <Button
+              isIconOnly
+              size="sm"
+              variant="light"
+              aria-label={t('config.plugin.hotkeys')}
+              onPress={() => onOpenHotkeys(plugin)}
+            >
+              <MdKeyboardAlt className="text-xl" />
+            </Button>
+          </Tooltip>
         )}
         {actions.delete && (
-          <Button
-            isIconOnly
-            size="sm"
-            variant="light"
-            color="danger"
-            aria-label={t('config.plugin.delete')}
-            onPress={() => onDelete(plugin)}
-          >
-            <MdDeleteOutline className="text-xl" />
-          </Button>
+          <Tooltip content={t('config.plugin.delete')}>
+            <Button
+              isIconOnly
+              size="sm"
+              variant="light"
+              color="danger"
+              aria-label={t('config.plugin.delete')}
+              onPress={() => onDelete(plugin)}
+            >
+              <MdDeleteOutline className="text-xl" />
+            </Button>
+          </Tooltip>
         )}
         {actions.enable && (
           <Switch

@@ -207,8 +207,11 @@
           "none": "已安装插件均为最新版本。",
           "checked": "插件更新检查完成",
           "install": "更新",
+          "install_all": "全部更新",
           "install_success": "插件已更新",
-          "install_failed": "插件更新失败"
+          "install_failed": "插件更新失败",
+          "ignore": "忽略此次更新",
+          "ignored": "已忽略此次更新"
         },
         "auto_update": {
           "title": "自动检查插件更新",

@@ -1,8 +1,8 @@
-import { Button, Card, CardBody, Divider, Switch } from '@heroui/react'
+import { Button, Card, CardBody, Divider, Switch, Tooltip } from '@heroui/react'
 import { open } from '@/renderer/lib/electron/compat/dialog'
 import { emit } from '@/renderer/lib/electron/compat/event'
 import React, { useEffect, useState } from 'react'
-import { MdDownload, MdFolderOpen, MdRefresh, MdSystemUpdateAlt } from 'react-icons/md'
+import { MdClose, MdDownload, MdFolderOpen, MdRefresh, MdSystemUpdateAlt } from 'react-icons/md'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 
@@ -84,11 +84,17 @@ export default function Plugin() {
 
   async function installFromFile() {
     const selected = await open({
-      multiple: true,
-      properties: ['openFile', 'openDirectory', 'multiSelections'],
+      multiple: false,
+      properties: ['openFile', 'openDirectory'],
     })
-    const files = Array.isArray(selected) ? selected : selected ? [selected] : []
-    await installSources(files)
+    if (!selected) {
+      return
+    }
+    const source = typeof selected === 'string' ? selected : selected[0]
+    if (!source) {
+      return
+    }
+    await installSources([source])
   }
 
   async function togglePlugin(plugin: InstalledPlugin, enabled: boolean) {
@@ -121,7 +127,18 @@ export default function Plugin() {
     logger.debug('Plugin update check requested.', {
       count: installedPlugins.length,
     })
-    const nextUpdates = await checkPluginUpdates(installedPlugins)
+    const allUpdates = await checkPluginUpdates(installedPlugins)
+
+    // 过滤掉被忽略的更新
+    const ignoredUpdates = ((await configApi.get('plugin_ignored_updates')) || {}) as Record<
+      string,
+      string
+    >
+    const nextUpdates = allUpdates.filter((update) => {
+      const ignoredVersion = ignoredUpdates[update.id]
+      return !ignoredVersion || ignoredVersion !== update.version
+    })
+
     setUpdates(nextUpdates)
     await configApi.set('plugin_last_check_update_at', Date.now())
     if (!options.silent) {
@@ -131,6 +148,17 @@ export default function Plugin() {
           : t('config.plugin.update.none'),
       )
     }
+  }
+
+  async function ignoreUpdate(plugin: PluginUpdate) {
+    const ignoredUpdates = ((await configApi.get('plugin_ignored_updates')) || {}) as Record<
+      string,
+      string
+    >
+    ignoredUpdates[plugin.id] = plugin.version
+    await configApi.set('plugin_ignored_updates', ignoredUpdates)
+    setUpdates((current) => (current ?? []).filter((item) => item.id !== plugin.id))
+    toast.success(t('config.plugin.update.ignored'))
   }
 
   async function installMarketplacePlugin(plugin: MarketplacePlugin) {
@@ -243,16 +271,31 @@ export default function Plugin() {
                       {plugin.installedVersion} -&gt; {plugin.version}
                     </div>
                   </div>
-                  <Button
-                    size="sm"
-                    variant="flat"
-                    isLoading={installing}
-                    onPress={() => {
-                      void installMarketplacePlugin(plugin)
-                    }}
-                  >
-                    {t('config.plugin.update.install')}
-                  </Button>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Button
+                      size="sm"
+                      variant="flat"
+                      isLoading={installing}
+                      onPress={() => {
+                        void installMarketplacePlugin(plugin)
+                      }}
+                    >
+                      {t('config.plugin.update.install')}
+                    </Button>
+                    <Tooltip content={t('config.plugin.update.ignore')}>
+                      <Button
+                        isIconOnly
+                        size="sm"
+                        variant="light"
+                        aria-label={t('config.plugin.update.ignore')}
+                        onPress={() => {
+                          void ignoreUpdate(plugin)
+                        }}
+                      >
+                        <MdClose className="text-xl" />
+                      </Button>
+                    </Tooltip>
+                  </div>
                 </div>
               ))}
             </div>
@@ -282,53 +325,61 @@ export default function Plugin() {
         <h2 className="font-semibold">{t('config.plugin.installed')}</h2>
         <div className="flex items-center gap-1">
           {updates && updates.length > 0 && (
+            <Tooltip content={t('config.plugin.update.install_all')}>
+              <Button
+                isIconOnly
+                size="sm"
+                variant="light"
+                aria-label={t('config.plugin.update.install_all')}
+                isLoading={installing}
+                onPress={() => {
+                  void installAllUpdates()
+                }}
+              >
+                <MdSystemUpdateAlt className="text-xl" />
+              </Button>
+            </Tooltip>
+          )}
+          <Tooltip content={t('config.plugin.refresh')}>
             <Button
               isIconOnly
               size="sm"
               variant="light"
-              aria-label={t('config.plugin.update.install')}
-              isLoading={installing}
+              aria-label={t('config.plugin.refresh')}
               onPress={() => {
-                void installAllUpdates()
+                void refreshPlugins()
               }}
             >
-              <MdSystemUpdateAlt className="text-xl" />
+              <MdRefresh className="text-xl" />
             </Button>
-          )}
-          <Button
-            isIconOnly
-            size="sm"
-            variant="light"
-            aria-label={t('config.plugin.refresh')}
-            onPress={() => {
-              void refreshPlugins()
-            }}
-          >
-            <MdRefresh className="text-xl" />
-          </Button>
-          <Button
-            isIconOnly
-            size="sm"
-            variant="light"
-            aria-label={t('config.plugin.open_folder')}
-            onPress={() => {
-              void openPluginFolder()
-            }}
-          >
-            <MdFolderOpen className="text-xl" />
-          </Button>
-          <Button
-            isIconOnly
-            size="sm"
-            variant="light"
-            aria-label={t('config.plugin.install_from_file')}
-            isLoading={installing}
-            onPress={() => {
-              void installFromFile()
-            }}
-          >
-            <MdDownload className="text-xl" />
-          </Button>
+          </Tooltip>
+          <Tooltip content={t('config.plugin.open_folder')}>
+            <Button
+              isIconOnly
+              size="sm"
+              variant="light"
+              aria-label={t('config.plugin.open_folder')}
+              onPress={() => {
+                void openPluginFolder()
+              }}
+            >
+              <MdFolderOpen className="text-xl" />
+            </Button>
+          </Tooltip>
+          <Tooltip content={t('config.plugin.install_from_file')}>
+            <Button
+              isIconOnly
+              size="sm"
+              variant="light"
+              aria-label={t('config.plugin.install_from_file')}
+              isLoading={installing}
+              onPress={() => {
+                void installFromFile()
+              }}
+            >
+              <MdDownload className="text-xl" />
+            </Button>
+          </Tooltip>
         </div>
       </div>
 
