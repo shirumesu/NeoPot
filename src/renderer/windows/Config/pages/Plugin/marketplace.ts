@@ -1,5 +1,10 @@
 import marketplaceIndex from '../../../../../../marketplace-plugins.json'
 import { pluginApi } from '@/renderer/lib/electron/adapter'
+import { logger } from '@/renderer/lib/logger'
+
+const MARKETPLACE_INDEX_URL =
+  'https://raw.githubusercontent.com/shirumesu/NeoPot/master/marketplace-plugins.json'
+const MARKETPLACE_FETCH_TIMEOUT_MS = 8000
 
 export interface MarketplacePlugin {
   id: string
@@ -11,10 +16,71 @@ export interface MarketplacePlugin {
   description: string
   repo: string
   download: string
+  dev?: string
 }
 
 export interface PluginUpdate extends MarketplacePlugin {
   installedVersion: string
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function isMarketplacePlugin(value: unknown): value is MarketplacePlugin {
+  if (!isRecord(value)) {
+    return false
+  }
+
+  const requiredFields = [
+    'id',
+    'type',
+    'name',
+    'display',
+    'version',
+    'author',
+    'description',
+    'repo',
+    'download',
+  ]
+
+  return (
+    requiredFields.every((key) => typeof value[key] === 'string') &&
+    (value.dev === undefined || typeof value.dev === 'string')
+  )
+}
+
+function parseMarketplacePlugins(value: unknown): MarketplacePlugin[] {
+  if (!Array.isArray(value) || !value.every(isMarketplacePlugin)) {
+    throw new Error('Marketplace index must be an array of complete plugin entries.')
+  }
+
+  return value.map((plugin) => ({ ...plugin }))
+}
+
+function localMarketplacePlugins(): MarketplacePlugin[] {
+  return parseMarketplacePlugins(marketplaceIndex)
+}
+
+async function loadRemoteMarketplacePlugins(): Promise<MarketplacePlugin[]> {
+  const controller = new AbortController()
+  const timeout = window.setTimeout(() => {
+    controller.abort()
+  }, MARKETPLACE_FETCH_TIMEOUT_MS)
+
+  try {
+    const response = await fetch(MARKETPLACE_INDEX_URL, {
+      cache: 'no-cache',
+      signal: controller.signal,
+    })
+    if (!response.ok) {
+      throw new Error(`Marketplace index request failed with HTTP ${response.status}.`)
+    }
+
+    return parseMarketplacePlugins(await response.json())
+  } finally {
+    window.clearTimeout(timeout)
+  }
 }
 
 export function compareVersion(left: string, right: string) {
@@ -50,8 +116,43 @@ export function findPluginUpdates(installedPlugins: any[], marketplaceIndex: Mar
     }))
 }
 
+export function marketplaceInstallSources(plugin: MarketplacePlugin): string[] {
+  return [plugin.download, plugin.dev]
+    .filter((source): source is string => typeof source === 'string' && source.trim().length > 0)
+    .filter((source, index, sources) => sources.indexOf(source) === index)
+}
+
+export async function installMarketplacePluginSource(plugin: MarketplacePlugin): Promise<string> {
+  const sources = marketplaceInstallSources(plugin)
+  let lastError: unknown = null
+
+  for (const source of sources) {
+    try {
+      await pluginApi.installFromUrl(source)
+      return source
+    } catch (error) {
+      lastError = error
+      logger.warn('Marketplace plugin source install failed; trying next source if available.', {
+        id: plugin.id,
+        source,
+        reason: error instanceof Error ? error.message : String(error),
+      })
+    }
+  }
+
+  throw lastError ?? new Error('Marketplace plugin has no installable source.')
+}
+
 export async function loadMarketplacePlugins(): Promise<MarketplacePlugin[]> {
-  return (marketplaceIndex as MarketplacePlugin[]).map((plugin) => ({ ...plugin }))
+  try {
+    return await loadRemoteMarketplacePlugins()
+  } catch (error) {
+    logger.warn('Remote marketplace index unavailable; falling back to bundled index.', {
+      url: MARKETPLACE_INDEX_URL,
+      reason: error instanceof Error ? error.message : String(error),
+    })
+    return localMarketplacePlugins()
+  }
 }
 
 export async function checkPluginUpdates(installedPlugins: any[]) {
@@ -62,12 +163,15 @@ export async function checkPluginUpdates(installedPlugins: any[]) {
   for (const installed of installedPlugins) {
     const marketplacePlugin = marketplaceById.get(installed.id)
     const sources: string[] = []
-
-    if (installed.installSource) {
-      sources.push(installed.installSource)
+    const addSource = (source: string | undefined) => {
+      if (source && !sources.includes(source)) {
+        sources.push(source)
+      }
     }
-    if (marketplacePlugin?.download && marketplacePlugin.download !== installed.installSource) {
-      sources.push(marketplacePlugin.download)
+
+    addSource(installed.installSource)
+    for (const source of marketplacePlugin ? marketplaceInstallSources(marketplacePlugin) : []) {
+      addSource(source)
     }
 
     if (sources.length === 0 || !pluginApi?.inspectSource) {
@@ -120,6 +224,7 @@ export async function checkPluginUpdates(installedPlugins: any[]) {
             : marketplacePlugin?.description || installed.description,
         repo: marketplacePlugin?.repo || '',
         download: highestSource,
+        dev: marketplacePlugin?.dev,
         installedVersion: installed.version,
       })
     }

@@ -8,6 +8,7 @@
     "author": "NeoPot",
     "description": "Translate text through the public Lingva API.",
     "repo": "https://github.com/thedaviddelta/lingva-translate",
-    "download": "plugins/lingva-translate"
+    "download": "https://raw.githubusercontent.com/shirumesu/NeoPot/master/plugins/lingva-translate/lingva-translate.zip",
+    "dev": "plugins/lingva-translate"
   }
 ]

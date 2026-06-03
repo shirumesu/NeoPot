@@ -12,7 +12,12 @@ import PluginSettingsModal from './PluginSettingsModal'
 import MarketplaceModal from './MarketplaceModal'
 import { configApi, pluginApi } from '@/renderer/lib/electron/adapter'
 import { useConfig } from '../../../../hooks'
-import { checkPluginUpdates, MarketplacePlugin, PluginUpdate } from './marketplace'
+import {
+  checkPluginUpdates,
+  installMarketplacePluginSource,
+  MarketplacePlugin,
+  PluginUpdate,
+} from './marketplace'
 import { InstalledPlugin, loadInstalledPlugins } from './installedPlugins'
 import { logger } from '@/renderer/lib/logger'
 import { useConfigSave } from '../../hooks/useConfigSave'
@@ -163,11 +168,15 @@ export default function Plugin() {
   async function installMarketplacePlugin(plugin: MarketplacePlugin) {
     setInstalling(true)
     try {
-      await pluginApi.installFromUrl(plugin.download)
+      const source = await installMarketplacePluginSource(plugin)
       await emit('reload_plugin_list')
       const installed = await refreshPlugins()
       await checkUpdates({ silent: true }, installed)
       toast.success(t('config.plugin.update.install_success'))
+      logger.info('Plugin update installed from marketplace source.', {
+        id: plugin.id,
+        source,
+      })
     } catch (error) {
       logger.error('Plugin update install failed.', error, {
         id: plugin.id,
@@ -187,7 +196,7 @@ export default function Plugin() {
     setInstalling(true)
     try {
       for (const plugin of pendingUpdates) {
-        await pluginApi.installFromUrl(plugin.download)
+        await installMarketplacePluginSource(plugin)
       }
       await emit('reload_plugin_list')
       const installed = await refreshPlugins()

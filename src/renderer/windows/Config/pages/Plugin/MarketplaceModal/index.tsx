@@ -11,8 +11,11 @@ import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import React, { useEffect, useState } from 'react'
 
-import { loadMarketplacePlugins, MarketplacePlugin } from '../marketplace'
-import { pluginApi } from '@/renderer/lib/electron/adapter'
+import {
+  installMarketplacePluginSource,
+  loadMarketplacePlugins,
+  MarketplacePlugin,
+} from '../marketplace'
 import { emit } from '@/renderer/lib/electron/compat/event'
 import { logger } from '@/renderer/lib/logger'
 
@@ -41,13 +44,13 @@ export default function MarketplaceModal(props: any) {
   async function installPlugin(plugin: MarketplacePlugin) {
     setInstallingId(plugin.id)
     try {
-      await pluginApi.installFromUrl(plugin.download)
+      const source = await installMarketplacePluginSource(plugin)
       await emit('reload_plugin_list')
       await onInstalled?.()
       toast.success(t('config.plugin.market.install_success'))
       logger.info('Marketplace plugin installed.', {
         id: plugin.id,
-        download: plugin.download,
+        source,
       })
     } catch (error) {
       logger.error('Marketplace plugin install failed.', error, {
