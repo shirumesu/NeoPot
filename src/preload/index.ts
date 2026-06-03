@@ -48,6 +48,7 @@ type IpcChannel =
   | 'services:translate'
   | 'plugins:install'
   | 'plugins:install-url'
+  | 'plugins:inspect-source'
   | 'plugins:list'
   | 'plugins:list-installed'
   | 'plugins:uninstall'
@@ -94,6 +95,7 @@ const channels = new Set<IpcChannel>([
   'services:translate',
   'plugins:install',
   'plugins:install-url',
+  'plugins:inspect-source',
   'plugins:list',
   'plugins:list-installed',
   'plugins:uninstall',
@@ -202,6 +204,7 @@ const api: NeoPotElectronApi = {
   plugins: {
     install: (file) => invokeChecked<PluginInstallResult>('plugins:install', { file }),
     installFromUrl: (url) => invokeChecked<PluginInstallResult>('plugins:install-url', { url }),
+    inspectSource: (url) => invokeChecked<PluginInfo>('plugins:inspect-source', { url }),
     list: (type) => invokeChecked<PluginInfo[]>('plugins:list', { type }),
     listInstalled: (type) => invokeChecked<PluginInfo[]>('plugins:list-installed', { type }),
     uninstall: (type, name) => invokeChecked<void>('plugins:uninstall', { type, name }),

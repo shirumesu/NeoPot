@@ -1,9 +1,10 @@
 import { Button, Switch } from '@heroui/react'
-import { MdDeleteOutline, MdKeyboardAlt, MdSettings } from 'react-icons/md'
+import { MdDeleteOutline, MdHome, MdKeyboardAlt, MdSettings } from 'react-icons/md'
 import { useTranslation } from 'react-i18next'
 import React from 'react'
 
 import { getCardActions } from '../logic'
+import { openUrl } from '@/renderer/lib/electron/compat/opener'
 
 export default function PluginCard(props: any) {
   const { plugin, onOpenHotkeys, onToggleEnabled, onDelete, onOpenSettings } = props
@@ -12,6 +13,11 @@ export default function PluginCard(props: any) {
 
   return (
     <div className="bg-content2 rounded-md px-3 py-4 flex justify-between gap-4">
+      <img
+        src={plugin.icon || 'logo/plugin.svg'}
+        className="h-10 w-10 shrink-0 rounded-md object-contain bg-content3"
+        draggable={false}
+      />
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <h2 className="font-semibold text-base truncate">{plugin.display}</h2>
@@ -26,6 +32,19 @@ export default function PluginCard(props: any) {
         <p className="text-sm text-default-500 mt-1 break-words">{plugin.description}</p>
       </div>
       <div className="flex shrink-0 items-center gap-1">
+        {actions.homepage && (
+          <Button
+            isIconOnly
+            size="sm"
+            variant="light"
+            aria-label={t('config.plugin.homepage')}
+            onPress={() => {
+              void openUrl(plugin.homepage)
+            }}
+          >
+            <MdHome className="text-xl" />
+          </Button>
+        )}
         {actions.settings && (
           <Button
             isIconOnly

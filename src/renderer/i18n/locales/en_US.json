@@ -185,6 +185,7 @@
         "title": "Plugin Management",
         "version": "Version",
         "author": "Author",
+        "homepage": "Plugin homepage",
         "settings": "Plugin settings",
         "hotkeys": "Plugin hotkeys",
         "delete": "Delete plugin",

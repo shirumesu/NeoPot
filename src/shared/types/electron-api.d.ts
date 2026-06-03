@@ -111,6 +111,7 @@ export interface NeoPotElectronApi {
   plugins: {
     install(file: string): Promise<PluginInstallResult>
     installFromUrl(url: string): Promise<PluginInstallResult>
+    inspectSource(url: string): Promise<PluginInfo>
     list(type: string): Promise<PluginInfo[]>
     listInstalled(type?: string): Promise<PluginInfo[]>
     uninstall(type: string, name: string): Promise<void>

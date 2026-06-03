@@ -2,7 +2,7 @@ import { Button, Card, CardBody, Divider, Switch } from '@heroui/react'
 import { open } from '@/renderer/lib/electron/compat/dialog'
 import { emit } from '@/renderer/lib/electron/compat/event'
 import React, { useEffect, useState } from 'react'
-import { MdDownload, MdFolderOpen, MdRefresh } from 'react-icons/md'
+import { MdDownload, MdFolderOpen, MdRefresh, MdSystemUpdateAlt } from 'react-icons/md'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 
@@ -12,7 +12,7 @@ import PluginSettingsModal from './PluginSettingsModal'
 import MarketplaceModal from './MarketplaceModal'
 import { configApi, pluginApi } from '@/renderer/lib/electron/adapter'
 import { useConfig } from '../../../../hooks'
-import { checkPluginUpdates, MarketplacePlugin } from './marketplace'
+import { checkPluginUpdates, MarketplacePlugin, PluginUpdate } from './marketplace'
 import { InstalledPlugin, loadInstalledPlugins } from './installedPlugins'
 import { logger } from '@/renderer/lib/logger'
 import { useConfigSave } from '../../hooks/useConfigSave'
@@ -25,9 +25,7 @@ export default function Plugin() {
   const [hotkeyPlugin, setHotkeyPlugin] = useState<InstalledPlugin | null>(null)
   const [settingsPlugin, setSettingsPlugin] = useState<InstalledPlugin | null>(null)
   const [marketplaceOpen, setMarketplaceOpen] = useState(false)
-  const [updates, setUpdates] = useState<
-    (MarketplacePlugin & { installedVersion: string })[] | null
-  >(null)
+  const [updates, setUpdates] = useState<PluginUpdate[] | null>(null)
   const [installing, setInstalling] = useState(false)
   const { t } = useTranslation()
   const { saveConfig } = useConfigSave()
@@ -88,16 +86,6 @@ export default function Plugin() {
     const selected = await open({
       multiple: true,
       properties: ['openFile', 'openDirectory', 'multiSelections'],
-      filters: [
-        {
-          name: 'Plugin Package',
-          extensions: ['zip', 'npot'],
-        },
-        {
-          name: 'All Files',
-          extensions: ['*'],
-        },
-      ],
     })
     const files = Array.isArray(selected) ? selected : selected ? [selected] : []
     await installSources(files)
@@ -137,7 +125,11 @@ export default function Plugin() {
     setUpdates(nextUpdates)
     await configApi.set('plugin_last_check_update_at', Date.now())
     if (!options.silent) {
-      toast.success(t('config.plugin.update.checked'))
+      toast.success(
+        nextUpdates.length > 0
+          ? t('config.plugin.update.available_count', { count: nextUpdates.length })
+          : t('config.plugin.update.none'),
+      )
     }
   }
 
@@ -152,6 +144,31 @@ export default function Plugin() {
     } catch (error) {
       logger.error('Plugin update install failed.', error, {
         id: plugin.id,
+      })
+      toast.error(t('config.plugin.update.install_failed'))
+    } finally {
+      setInstalling(false)
+    }
+  }
+
+  async function installAllUpdates() {
+    const pendingUpdates = updates ?? []
+    if (pendingUpdates.length === 0) {
+      return
+    }
+
+    setInstalling(true)
+    try {
+      for (const plugin of pendingUpdates) {
+        await pluginApi.installFromUrl(plugin.download)
+      }
+      await emit('reload_plugin_list')
+      const installed = await refreshPlugins()
+      await checkUpdates({ silent: true }, installed)
+      toast.success(t('config.plugin.update.install_success'))
+    } catch (error) {
+      logger.error('Plugin batch update install failed.', error, {
+        count: pendingUpdates.length,
       })
       toast.error(t('config.plugin.update.install_failed'))
     } finally {
@@ -264,6 +281,20 @@ export default function Plugin() {
       <div className="flex items-center justify-between gap-4">
         <h2 className="font-semibold">{t('config.plugin.installed')}</h2>
         <div className="flex items-center gap-1">
+          {updates && updates.length > 0 && (
+            <Button
+              isIconOnly
+              size="sm"
+              variant="light"
+              aria-label={t('config.plugin.update.install')}
+              isLoading={installing}
+              onPress={() => {
+                void installAllUpdates()
+              }}
+            >
+              <MdSystemUpdateAlt className="text-xl" />
+            </Button>
+          )}
           <Button
             isIconOnly
             size="sm"

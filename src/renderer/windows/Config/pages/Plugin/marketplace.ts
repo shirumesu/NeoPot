@@ -1,4 +1,5 @@
 import marketplaceIndex from '../../../../../../marketplace-plugins.json'
+import { pluginApi } from '@/renderer/lib/electron/adapter'
 
 export interface MarketplacePlugin {
   id: string
@@ -10,6 +11,10 @@ export interface MarketplacePlugin {
   description: string
   repo: string
   download: string
+}
+
+export interface PluginUpdate extends MarketplacePlugin {
+  installedVersion: string
 }
 
 export function compareVersion(left: string, right: string) {
@@ -50,5 +55,53 @@ export async function loadMarketplacePlugins(): Promise<MarketplacePlugin[]> {
 }
 
 export async function checkPluginUpdates(installedPlugins: any[]) {
-  return findPluginUpdates(installedPlugins, await loadMarketplacePlugins())
+  const marketplacePlugins = await loadMarketplacePlugins()
+  const marketplaceById = new Map(marketplacePlugins.map((plugin) => [plugin.id, plugin]))
+  const updates: PluginUpdate[] = []
+
+  for (const installed of installedPlugins) {
+    const marketplacePlugin = marketplaceById.get(installed.id)
+    const source = installed.installSource || marketplacePlugin?.download
+    if (!source || !pluginApi?.inspectSource) {
+      continue
+    }
+
+    try {
+      const sourceManifest = await pluginApi.inspectSource(source)
+      if (sourceManifest.plugin_type !== installed.type || sourceManifest.name !== installed.name) {
+        continue
+      }
+
+      const sourceVersion = typeof sourceManifest.version === 'string' ? sourceManifest.version : ''
+      if (compareVersion(sourceVersion, installed.version) <= 0) {
+        continue
+      }
+
+      updates.push({
+        id: installed.id,
+        type: installed.type,
+        name: installed.name,
+        display:
+          typeof sourceManifest.display === 'string'
+            ? sourceManifest.display
+            : marketplacePlugin?.display || installed.display,
+        version: sourceVersion,
+        author:
+          typeof sourceManifest.author === 'string'
+            ? sourceManifest.author
+            : marketplacePlugin?.author || installed.author,
+        description:
+          typeof sourceManifest.description === 'string'
+            ? sourceManifest.description
+            : marketplacePlugin?.description || installed.description,
+        repo: marketplacePlugin?.repo || '',
+        download: source,
+        installedVersion: installed.version,
+      })
+    } catch {
+      // One broken plugin source must not block checking the rest.
+    }
+  }
+
+  return updates
 }

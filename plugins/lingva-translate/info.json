@@ -2,9 +2,10 @@
   "plugin_type": "translate",
   "name": "plugin-lingva-translate",
   "display": "Lingva Translate",
-  "version": "0.1.1",
+  "version": "0.2.1",
   "author": "NeoPot",
   "description": "Translate text through the public Lingva API.",
+  "icon": "icon.svg",
   "homepage": "https://lingva.ml/",
   "language": {
     "auto": "auto",

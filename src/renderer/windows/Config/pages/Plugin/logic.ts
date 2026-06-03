@@ -1,7 +1,10 @@
 export function getCardActions(plugin: any = {}) {
+  const enabled = plugin.enabled !== false
+
   return {
-    settings: Array.isArray(plugin.options) && plugin.options.length > 0,
-    hotkey: Array.isArray(plugin.hotkeys) && plugin.hotkeys.length > 0,
+    homepage: enabled && typeof plugin.homepage === 'string' && plugin.homepage.length > 0,
+    settings: enabled && Array.isArray(plugin.options) && plugin.options.length > 0,
+    hotkey: enabled && Array.isArray(plugin.hotkeys) && plugin.hotkeys.length > 0,
     delete: true,
     enable: true,
   }

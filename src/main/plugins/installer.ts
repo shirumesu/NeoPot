@@ -7,6 +7,8 @@ import { getConfig, setConfig } from '../modules/config'
 import { logger } from '../logger'
 
 const SERVICE_PLUGIN_TYPES = ['translate', 'recognize', 'tts']
+const PLUGIN_METADATA_FILE = '.neopot-plugin.json'
+const DEFAULT_PLUGIN_ICON = 'logo/plugin.svg'
 
 export interface PluginInfo {
   id: string
@@ -18,6 +20,8 @@ export interface PluginInfo {
   description: string
   icon: string
   enabled: boolean
+  installSource: string
+  installSourceType: 'local' | 'url' | ''
   needs: unknown[]
   options: unknown[]
   hotkeys: unknown[]
@@ -28,6 +32,23 @@ export interface PluginInstallResult {
   status: 'installed'
   type: string
   name: string
+}
+
+export interface PluginSourceManifest {
+  plugin_type?: string
+  name?: string
+  display?: string
+  version?: string
+  author?: string
+  description?: string
+  homepage?: string
+  icon?: string
+}
+
+interface PluginInstallMetadata {
+  installSource?: string
+  installSourceType?: 'local' | 'url'
+  installedAt?: number
 }
 
 class PluginInstallError extends Error {
@@ -68,6 +89,19 @@ function getPluginEnabled(type: string, name: string): boolean {
   return typeof stored === 'boolean' ? stored : true
 }
 
+function normalizeManifestIcon(pluginDir: string, icon: unknown): string {
+  if (typeof icon !== 'string' || !icon.trim()) {
+    return DEFAULT_PLUGIN_ICON
+  }
+
+  const value = icon.trim()
+  if (/^(https?:|file:|data:)/i.test(value)) {
+    return value
+  }
+
+  return path.join(pluginDir, value)
+}
+
 async function isDirectory(filePath: string): Promise<boolean> {
   return stat(filePath)
     .then((stats) => stats.isDirectory())
@@ -89,6 +123,40 @@ function parseManifest(text: string): { plugin_type?: string; name?: string } {
       `Plugin manifest is invalid JSON: ${error instanceof Error ? error.message : String(error)}`,
     )
   }
+}
+
+async function readInstallMetadata(pluginDir: string): Promise<PluginInstallMetadata> {
+  const text = await readFile(path.join(pluginDir, PLUGIN_METADATA_FILE), 'utf8').catch(() => null)
+  if (!text) {
+    return {}
+  }
+
+  try {
+    const metadata = JSON.parse(text) as PluginInstallMetadata
+    return metadata && typeof metadata === 'object' ? metadata : {}
+  } catch {
+    return {}
+  }
+}
+
+async function writeInstallMetadata(
+  targetDir: string,
+  source: string,
+  sourceType: 'local' | 'url',
+): Promise<void> {
+  await writeFile(
+    path.join(targetDir, PLUGIN_METADATA_FILE),
+    JSON.stringify(
+      {
+        installSource: source,
+        installSourceType: sourceType,
+        installedAt: Date.now(),
+      } satisfies PluginInstallMetadata,
+      null,
+      2,
+    ),
+    'utf8',
+  )
 }
 
 function assertManifestIdentity(manifest: { plugin_type?: string; name?: string }): {
@@ -116,8 +184,9 @@ async function readPluginManifest(type: string, name: string): Promise<PluginInf
   }
 
   const manifest = JSON.parse(manifestText) as Record<string, unknown>
+  const metadata = await readInstallMetadata(pluginDir)
   const display = typeof manifest.display === 'string' ? manifest.display : name
-  const icon = typeof manifest.icon === 'string' ? path.join(pluginDir, manifest.icon) : ''
+  const icon = normalizeManifestIcon(pluginDir, manifest.icon)
 
   return {
     ...manifest,
@@ -131,10 +200,19 @@ async function readPluginManifest(type: string, name: string): Promise<PluginInf
     description: typeof manifest.description === 'string' ? manifest.description : '',
     icon,
     enabled: getPluginEnabled(type, name),
+    installSource: typeof metadata.installSource === 'string' ? metadata.installSource : '',
+    installSourceType:
+      metadata.installSourceType === 'local' || metadata.installSourceType === 'url'
+        ? metadata.installSourceType
+        : '',
     needs: Array.isArray(manifest.needs) ? manifest.needs : [],
     options: Array.isArray(manifest.options) ? manifest.options : [],
     hotkeys: Array.isArray(manifest.hotkeys) ? manifest.hotkeys : [],
   }
+}
+
+function getHotkeyDefault(hotkey: Record<string, unknown>): string {
+  return typeof hotkey.default === 'string' ? hotkey.default.trim() : ''
 }
 
 export async function getInstalledPluginHotkey(
@@ -195,10 +273,7 @@ async function installFromZip(file: string): Promise<PluginInstallResult> {
   }
 
   if (!mainJsEntry) {
-    throw new PluginInstallError(
-      'PLUGIN_INVALID_PACKAGE',
-      'Plugin package must contain main.js.',
-    )
+    throw new PluginInstallError('PLUGIN_INVALID_PACKAGE', 'Plugin package must contain main.js.')
   }
 
   const { pluginType, pluginName } = assertManifestIdentity(
@@ -257,10 +332,7 @@ async function installFromDirectory(dirPath: string): Promise<PluginInstallResul
   const hasMainJs = await exists(sourceMainJs)
 
   if (!hasMainJs) {
-    throw new PluginInstallError(
-      'PLUGIN_INVALID_PACKAGE',
-      'Directory must contain main.js.',
-    )
+    throw new PluginInstallError('PLUGIN_INVALID_PACKAGE', 'Directory must contain main.js.')
   }
 
   const targetDir = path.join(pluginRoot(), pluginType, pluginName)
@@ -298,7 +370,17 @@ async function installFromDirectory(dirPath: string): Promise<PluginInstallResul
 }
 
 export async function installPlugin(file: string): Promise<PluginInstallResult> {
-  return (await isDirectory(file)) ? installFromDirectory(file) : installFromZip(file)
+  const normalizedSource = path.resolve(file)
+  const result = (await isDirectory(normalizedSource))
+    ? await installFromDirectory(normalizedSource)
+    : await installFromZip(normalizedSource)
+  await writeInstallMetadata(
+    path.join(pluginRoot(), result.type, result.name),
+    normalizedSource,
+    'local',
+  )
+  await registerPluginDefaultHotkeys(result.type, result.name)
+  return result
 }
 
 function resolveLocalInstallSource(source: string): string | null {
@@ -333,9 +415,98 @@ export async function installPluginFromUrl(source: string): Promise<PluginInstal
   await writeFile(tempFile, Buffer.from(await response.arrayBuffer()))
 
   try {
-    return await installPlugin(tempFile)
+    const result = await installFromZip(tempFile)
+    await writeInstallMetadata(path.join(pluginRoot(), result.type, result.name), source, 'url')
+    await registerPluginDefaultHotkeys(result.type, result.name)
+    return result
   } finally {
     await rm(tempFile, { force: true })
+  }
+}
+
+async function readManifestFromLocalSource(source: string): Promise<PluginSourceManifest> {
+  const localSource = resolveLocalInstallSource(source)
+  if (!localSource) {
+    throw new PluginInstallError('PLUGIN_INVALID_PACKAGE', 'Expected a local plugin source.')
+  }
+
+  if (await isDirectory(localSource)) {
+    const text = await readFile(path.join(localSource, 'info.json'), 'utf8')
+    return parseManifest(text) as PluginSourceManifest
+  }
+
+  if (path.basename(localSource).toLowerCase() === 'info.json') {
+    return parseManifest(await readFile(localSource, 'utf8')) as PluginSourceManifest
+  }
+
+  const zip = new AdmZip(localSource)
+  const manifestEntry = zip.getEntries().find((entry) => entry.entryName === 'info.json')
+  if (!manifestEntry) {
+    throw new PluginInstallError('PLUGIN_INVALID_PACKAGE', 'Plugin package must contain info.json.')
+  }
+
+  return parseManifest(manifestEntry.getData().toString('utf8')) as PluginSourceManifest
+}
+
+async function readManifestFromHttpSource(source: string): Promise<PluginSourceManifest> {
+  const response = await fetch(source)
+  if (!response.ok) {
+    throw new PluginInstallError(
+      'PLUGIN_INVALID_PACKAGE',
+      `Plugin manifest check failed with HTTP ${response.status}.`,
+    )
+  }
+
+  const contentType = response.headers.get('content-type') ?? ''
+  if (/json/i.test(contentType) || /\.json(?:[?#]|$)/i.test(source)) {
+    return parseManifest(await response.text()) as PluginSourceManifest
+  }
+
+  const tempDir = path.join(app.getPath('temp'), 'neopot-plugin-update-checks')
+  await mkdir(tempDir, { recursive: true })
+  const tempFile = path.join(tempDir, `${Date.now()}-${path.basename(new URL(source).pathname)}`)
+  await writeFile(tempFile, Buffer.from(await response.arrayBuffer()))
+
+  try {
+    return readManifestFromLocalSource(tempFile)
+  } finally {
+    await rm(tempFile, { force: true })
+  }
+}
+
+export async function readPluginManifestFromSource(source: string): Promise<PluginSourceManifest> {
+  return /^https?:\/\//i.test(source)
+    ? readManifestFromHttpSource(source)
+    : readManifestFromLocalSource(source)
+}
+
+async function registerPluginDefaultHotkeys(type: string, name: string): Promise<void> {
+  const manifest = await readPluginManifest(type, name)
+  if (!manifest?.enabled) {
+    return
+  }
+
+  const { registerGlobalShortcutByName } = await import('../modules/hotkey')
+  for (const hotkey of manifest.hotkeys) {
+    if (typeof hotkey !== 'object' || hotkey === null) {
+      continue
+    }
+
+    const key = (hotkey as { key?: unknown }).key
+    if (typeof key !== 'string' || !key) {
+      continue
+    }
+
+    const configKey = pluginHotkeyConfigKey(type, name, key)
+    const stored = getConfig(configKey)
+    if (stored !== undefined) {
+      continue
+    }
+
+    const defaultShortcut = getHotkeyDefault(hotkey as Record<string, unknown>)
+    if (defaultShortcut) {
+      await registerGlobalShortcutByName(configKey, defaultShortcut)
+    }
   }
 }
 
@@ -395,8 +566,12 @@ export async function setPluginEnabled(
       }
 
       const configKey = pluginHotkeyConfigKey(type, name, key)
-      const shortcut = getConfig(configKey)
-      if (typeof shortcut !== 'string' || !shortcut.trim()) {
+      const storedShortcut = getConfig(configKey)
+      const shortcut =
+        typeof storedShortcut === 'string'
+          ? storedShortcut.trim()
+          : getHotkeyDefault(hotkey as Record<string, unknown>)
+      if (!shortcut) {
         continue
       }
 

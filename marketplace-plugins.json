@@ -4,7 +4,7 @@
     "type": "translate",
     "name": "plugin-lingva-translate",
     "display": "Lingva Translate",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "author": "NeoPot",
     "description": "Translate text through the public Lingva API.",
     "repo": "https://github.com/thedaviddelta/lingva-translate",

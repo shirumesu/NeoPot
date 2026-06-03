@@ -15,6 +15,7 @@ import { invoke } from '@/renderer/lib/electron/compat/core'
 import { getStoreValue } from '@/renderer/lib/config/store'
 import { loadInstalledPlugins } from '../Plugin/installedPlugins'
 import { useConfigSave } from '../../hooks/useConfigSave'
+import { listen } from '@/renderer/lib/electron/compat/event'
 
 const keyMap = {
   Backquote: '`',
@@ -79,21 +80,35 @@ export default function Hotkey() {
   const { saveConfig } = useConfigSave()
 
   useEffect(() => {
-    loadInstalledPlugins().then((plugins) => {
-      setPluginHotkeyRows(
-        plugins.flatMap((plugin) =>
-          (plugin.hotkeys ?? []).map((hotkey: any) => ({
-            pluginId: plugin.id,
-            pluginType: plugin.type,
-            pluginName: plugin.name,
-            pluginDisplay: plugin.display,
-            key: hotkey.key,
-            display: hotkey.display,
-            hotkey: hotkey.default,
-          })),
-        ),
-      )
+    const loadPluginHotkeys = () => {
+      loadInstalledPlugins().then((plugins) => {
+        setPluginHotkeyRows(
+          plugins
+            .filter((plugin) => plugin.enabled)
+            .flatMap((plugin) =>
+              (plugin.hotkeys ?? []).map((hotkey: any) => ({
+                pluginId: plugin.id,
+                pluginType: plugin.type,
+                pluginName: plugin.name,
+                pluginDisplay: plugin.display,
+                key: hotkey.key,
+                display: hotkey.display,
+                hotkey: hotkey.default,
+              })),
+            ),
+        )
+      })
+    }
+
+    let unlisten: (() => void) | undefined
+    void listen('reload_plugin_list', loadPluginHotkeys).then((cleanup) => {
+      unlisten = cleanup
     })
+    loadPluginHotkeys()
+
+    return () => {
+      unlisten?.()
+    }
   }, [])
 
   function keyDown(e: React.KeyboardEvent, name: string, setKey: any) {

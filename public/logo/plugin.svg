@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Plugin">
+  <rect width="64" height="64" rx="14" fill="#eef2ff" />
+  <path
+    d="M25 12h14a4 4 0 0 1 4 4v7h5a8 8 0 1 1 0 16h-5v9a4 4 0 0 1-4 4H16a4 4 0 0 1-4-4V25a4 4 0 0 1 4-4h9v-5a4 4 0 0 1 4-4z"
+    fill="#4f46e5"
+  />
+  <path d="M30 17v9H17v21h21V34h10a3 3 0 1 0 0-6H38V17z" fill="#ffffff" opacity=".92" />
+</svg>

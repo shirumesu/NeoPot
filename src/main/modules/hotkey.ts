@@ -213,7 +213,13 @@ async function registerInstalledPluginShortcuts(): Promise<void> {
       }
 
       const name = `${PLUGIN_HOTKEY_PREFIX}${plugin.type}:${plugin.name}:${key}`
-      const accelerator = getShortcutAccelerator(name)
+      const storedValue = getConfig(name)
+      const storedAccelerator = typeof storedValue === 'string' ? storedValue.trim() : ''
+      const defaultAccelerator =
+        typeof (hotkey as { default?: unknown }).default === 'string'
+          ? (hotkey as { default: string }).default.trim()
+          : ''
+      const accelerator = typeof storedValue === 'string' ? storedAccelerator : defaultAccelerator
       if (accelerator) {
         await registerGlobalShortcutByName(name, accelerator)
       }

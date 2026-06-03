@@ -22,6 +22,7 @@ import {
   installPlugin,
   listInstalledPlugins,
   pluginRoot,
+  readPluginManifestFromSource,
   setPluginEnabled,
   uninstallPlugin,
 } from '../plugins/installer'
@@ -782,6 +783,10 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
     'plugins:install-url': (_event, payload) => {
       const { url } = assertPluginInstallUrlPayload(payload)
       return installPluginFromUrl(url)
+    },
+    'plugins:inspect-source': (_event, payload) => {
+      const { url } = assertPluginInstallUrlPayload(payload)
+      return readPluginManifestFromSource(url)
     },
     'plugins:list': (_event, payload) => {
       const { type } = assertPluginListPayload(payload)

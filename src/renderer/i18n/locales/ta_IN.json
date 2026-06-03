@@ -193,7 +193,8 @@
           "install_failed": "Failed to update plugin"
         },
         "install_success": "Plugin installed",
-        "install_failed": "Failed to install plugin"
+        "install_failed": "Failed to install plugin",
+        "homepage": "Plugin homepage"
       }
     },
     "services": {
