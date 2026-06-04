@@ -3,6 +3,14 @@ import Store from 'electron-store'
 import { writeFileSync } from 'node:fs'
 import { runDataMigration } from './data-migration'
 import { logger } from '../logger'
+import {
+  SecretEncryptionUnavailableError,
+  decryptSensitiveConfigValue,
+  encryptSensitiveConfigValue,
+  isEncryptedSecretValue,
+  secretKeyFragments,
+  type SecretCipher,
+} from './configSecrets'
 
 type ConfigValue = unknown
 
@@ -17,14 +25,7 @@ export interface SecretReadResult {
   code?: 'SECRET_ENCRYPTION_UNAVAILABLE' | 'SECRET_DECRYPT_FAILED'
 }
 
-const secretKeys = new Set<string>([
-  'api_key',
-  'secret_key',
-  'access_token',
-  'refresh_token',
-  'password',
-  'token',
-])
+const secretKeys = new Set<string>(secretKeyFragments)
 
 const store = new Store<Record<string, ConfigValue>>({
   name: 'config',
@@ -34,6 +35,12 @@ let migrationStarted = false
 let configWriteQueue: Promise<void> = Promise.resolve()
 
 const atomicWriteFallbackErrorCodes = new Set(['EPERM', 'EBUSY'])
+
+const secretCipher: SecretCipher = {
+  isEncryptionAvailable: () => safeStorage.isEncryptionAvailable(),
+  encryptString: (value) => safeStorage.encryptString(value),
+  decryptString: (value) => safeStorage.decryptString(value),
+}
 
 export async function initializeConfig(): Promise<void> {
   if (migrationStarted) {
@@ -50,7 +57,7 @@ function isSecretKey(key: string): boolean {
 }
 
 export function getConfig(key: string): ConfigValue {
-  return store.get(key)
+  return decryptSensitiveConfigValue(store.get(key), secretCipher)
 }
 
 function getErrorCode(error: unknown): string | undefined {
@@ -80,17 +87,18 @@ function applyConfigValue(
 
 function writeConfigValueDirectly(key: string, value: ConfigValue): void {
   const nextStore = store.store
-  applyConfigValue(nextStore, key, value)
+  applyConfigValue(nextStore, key, encryptSensitiveConfigValue(value, secretCipher, [key]))
   writeFileSync(store.path, JSON.stringify(nextStore, undefined, '\t'), { mode: 0o666 })
   store.events.dispatchEvent(new Event('change'))
 }
 
 function writeConfigValue(key: string, value: ConfigValue): void {
+  const persistedValue = encryptSensitiveConfigValue(value, secretCipher, [key])
   try {
-    if (value === undefined) {
+    if (persistedValue === undefined) {
       store.delete(key)
     } else {
-      store.set(key, value)
+      store.set(key, persistedValue)
     }
     logger.debug('Config value written in main process.', {
       key,
@@ -138,7 +146,15 @@ export function getRedactedConfig(key: string): ConfigValue {
 }
 
 export function setSecret(key: string, plaintext: string): SecretWriteResult {
-  if (!safeStorage.isEncryptionAvailable()) {
+  try {
+    const encrypted = encryptSensitiveConfigValue(plaintext, secretCipher, [key])
+    store.set(key, encrypted)
+    return { status: 'ok' }
+  } catch (error) {
+    if (!(error instanceof SecretEncryptionUnavailableError)) {
+      throw error
+    }
+
     store.set(`${key}.__secret_state`, {
       code: 'SECRET_ENCRYPTION_UNAVAILABLE',
     })
@@ -147,14 +163,6 @@ export function setSecret(key: string, plaintext: string): SecretWriteResult {
       code: 'SECRET_ENCRYPTION_UNAVAILABLE',
     }
   }
-
-  const encrypted = safeStorage.encryptString(plaintext).toString('base64')
-  store.set(key, {
-    encrypted,
-    encoding: 'base64',
-  })
-
-  return { status: 'ok' }
 }
 
 export function getSecret(key: string): SecretReadResult {
@@ -166,13 +174,20 @@ export function getSecret(key: string): SecretReadResult {
     }
   }
 
-  const stored = store.get(key) as { encrypted?: string; encoding?: string } | undefined
-  if (!stored?.encrypted) {
+  const stored = store.get(key) as { encrypted?: string; encoding?: string } | unknown | undefined
+  if (!stored) {
     return { status: 'missing' }
   }
 
   try {
-    const value = safeStorage.decryptString(Buffer.from(stored.encrypted, 'base64'))
+    if (!isEncryptedSecretValue(stored) && !(stored as { encrypted?: string }).encrypted) {
+      return { status: 'missing' }
+    }
+    const value = isEncryptedSecretValue(stored)
+      ? String(decryptSensitiveConfigValue(stored, secretCipher))
+      : safeStorage.decryptString(
+          Buffer.from((stored as { encrypted?: string }).encrypted ?? '', 'base64'),
+        )
     return {
       status: 'ok',
       value,

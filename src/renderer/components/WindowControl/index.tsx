@@ -17,7 +17,7 @@ export default function WindowControl() {
   const [isMax, setIsMax] = useState(false)
 
   useEffect(() => {
-    void listen('tauri://resize', async () => {
+    void listen('neopot://resize', async () => {
       if (await appWindow.isMaximized()) {
         setIsMax(true)
       } else {

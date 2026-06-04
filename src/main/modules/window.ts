@@ -313,11 +313,11 @@ function createBrowserWindow(label: WindowLabel): BrowserWindow {
     })
   })
 
-  window.on('focus', () => emitWindowEvent(window, 'tauri://focus'))
-  window.on('blur', () => emitWindowEvent(window, 'tauri://blur'))
-  window.on('move', () => emitWindowEvent(window, 'tauri://move'))
+  window.on('focus', () => emitWindowEvent(window, 'neopot://focus'))
+  window.on('blur', () => emitWindowEvent(window, 'neopot://blur'))
+  window.on('move', () => emitWindowEvent(window, 'neopot://move'))
   window.on('resize', () => {
-    emitWindowEvent(window, 'tauri://resize')
+    emitWindowEvent(window, 'neopot://resize')
     if (label !== 'translate' || getConfig('translate_remember_window_size') !== true) {
       return
     }

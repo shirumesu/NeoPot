@@ -21,7 +21,7 @@ export const pluginListAtom = atom<Record<string, any>>({})
 let blurTimeout: ReturnType<typeof setTimeout> | null = null
 
 const listenBlur = () => {
-  return listen('tauri://blur', () => {
+  return listen('neopot://blur', () => {
     if (appWindow.label === 'recognize') {
       if (blurTimeout) {
         clearTimeout(blurTimeout)
@@ -41,7 +41,7 @@ const unlistenBlur = () => {
   })
 }
 
-void listen('tauri://focus', () => {
+void listen('neopot://focus', () => {
   if (blurTimeout) {
     clearTimeout(blurTimeout)
   }

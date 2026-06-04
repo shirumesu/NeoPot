@@ -29,7 +29,7 @@ let resizeTimeout: ReturnType<typeof setTimeout> | null = null
 let moveTimeout: ReturnType<typeof setTimeout> | null = null
 
 const listenBlur = () => {
-  return listen('tauri://blur', () => {
+  return listen('neopot://blur', () => {
     if (appWindow.label === 'translate') {
       if (blurTimeout) {
         clearTimeout(blurTimeout)
@@ -49,12 +49,12 @@ const unlistenBlur = () => {
   })
 }
 
-void listen('tauri://focus', () => {
+void listen('neopot://focus', () => {
   if (blurTimeout) {
     clearTimeout(blurTimeout)
   }
 })
-void listen('tauri://move', () => {
+void listen('neopot://move', () => {
   if (blurTimeout) {
     clearTimeout(blurTimeout)
   }
@@ -115,7 +115,7 @@ export default function Translate() {
   }, [alwaysOnTop])
   useEffect(() => {
     if (windowPosition !== null && windowPosition === 'pre_state') {
-      const unlistenMove = listen('tauri://move', async () => {
+      const unlistenMove = listen('neopot://move', async () => {
         if (moveTimeout) {
           clearTimeout(moveTimeout)
         }
@@ -141,7 +141,7 @@ export default function Translate() {
   }, [windowPosition])
   useEffect(() => {
     if (rememberWindowSize !== null && rememberWindowSize) {
-      const unlistenResize = listen('tauri://resize', async () => {
+      const unlistenResize = listen('neopot://resize', async () => {
         if (resizeTimeout) {
           clearTimeout(resizeTimeout)
         }
