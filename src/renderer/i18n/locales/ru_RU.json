@@ -205,15 +205,28 @@
         "install_success": "Plugin installed",
         "install_failed": "Failed to install plugin",
         "homepage": "Plugin homepage"
+      },
+      "common": {
+        "save_success": "Settings saved",
+        "save_failed": "Failed to save settings"
       }
     },
     "updater": {
       "title": "Проверка обновления",
       "latest": "## Установлена последняя версия",
       "progress": "Прогресс загрузки",
+      "check": "Check",
+      "checking": "Checking for updates…",
+      "available": "A new update is available.",
+      "version_available": "Version {{version}} is available",
       "update": "Обновить",
       "downloading": "Загрузка…",
       "installing": "Установка…",
+      "restart": "Restart",
+      "ready_restart": "Ready to restart",
+      "go_to_download": "Download",
+      "unsupported": "## Updates are not available for this build\n\nOpen the release page to download the latest version manually.",
+      "error": "Update check failed",
       "cancel": "Отмена",
       "installed": "Установка завершена, перезапустите приложение, чтобы изменения вступили в силу"
     },
@@ -266,7 +279,9 @@
       "retry": "Пробовать снова",
       "delete_newline": "Удалить новую строку",
       "translate_back": "Перевод обратно к оригиналу",
-      "tts_not_configured": "No TTS service configured"
+      "tts_not_configured": "No TTS service configured",
+      "show_preview": "Show preview",
+      "show_source": "Show source"
     },
     "recognize": {
       "recognize": "Распознать",

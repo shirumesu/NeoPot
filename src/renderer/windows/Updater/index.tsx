@@ -1,22 +1,41 @@
-import { Code, Card, CardBody, Button, Progress, Skeleton } from '@heroui/react'
-import { check } from '@/renderer/lib/electron/compat/updater'
-import React, { useEffect, useState } from 'react'
-import { getCurrentWebviewWindow } from '@/renderer/lib/electron/compat/webviewWindow'
-import { relaunch } from '@/renderer/lib/electron/compat/process'
+import { Button, Card, CardBody, Code, Progress, Skeleton } from '@heroui/react'
+import React, { useEffect, useMemo, useState } from 'react'
 import toast, { Toaster } from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import ReactMarkdown from 'react-markdown'
-
-import { useToastStyle } from '../../hooks'
+import type { UpdateCheckResult, UpdateEvent, UpdateProgress } from '@/shared/types/electron-api'
+import {
+  check,
+  download,
+  install,
+  onEvent,
+  openReleasePage,
+} from '@/renderer/lib/electron/compat/updater'
+import { getCurrentWebviewWindow } from '@/renderer/lib/electron/compat/webviewWindow'
 import { osType } from '@/renderer/lib/config/env'
+import { useToastStyle } from '../../hooks'
+
 const appWindow = getCurrentWebviewWindow()
 
+function isNotificationPresentation() {
+  return new URLSearchParams(window.location.search).get('presentation') === 'notification'
+}
+
+function progressValue(progress: UpdateProgress | null): number | undefined {
+  if (!progress || typeof progress.percent !== 'number') {
+    return undefined
+  }
+
+  return Math.max(0, Math.min(100, progress.percent))
+}
+
 export default function Updater() {
-  const [downloaded, setDownloaded] = useState(0)
-  const [total, setTotal] = useState(0)
-  const [body, setBody] = useState('')
-  const [update, setUpdate] = useState<any | null>(null)
-  const [isUpdating, setIsUpdating] = useState(false)
+  const [result, setResult] = useState<UpdateCheckResult | null>(null)
+  const [progress, setProgress] = useState<UpdateProgress | null>(null)
+  const [isChecking, setIsChecking] = useState(!isNotificationPresentation())
+  const [isWorking, setIsWorking] = useState(false)
+  const [statusText, setStatusText] = useState('')
+  const isNotification = useMemo(() => isNotificationPresentation(), [])
   const { t } = useTranslation()
   const toastStyle = useToastStyle()
 
@@ -24,52 +43,177 @@ export default function Updater() {
     if (appWindow.label === 'updater') {
       appWindow.show()
     }
-    check().then(
-      (nextUpdate: any) => {
-        if (nextUpdate) {
-          setUpdate(nextUpdate)
-          setBody(nextUpdate.body || '')
-        } else {
-          setBody(t('updater.latest'))
-        }
-      },
-      (e) => {
-        setBody(e.toString())
-        toast.error(e.toString(), { style: toastStyle })
-      },
-    )
-  }, [t, toastStyle])
 
-  const install = () => {
-    if (!update) {
+    const unsubscribeUpdate = onEvent((event: UpdateEvent) => {
+      if (event.type === 'checking') {
+        setIsChecking(true)
+        setStatusText(t('updater.checking'))
+        return
+      }
+
+      if (event.type === 'download-progress') {
+        setProgress(event.progress)
+        setIsWorking(true)
+        setStatusText(t('updater.downloading'))
+        return
+      }
+
+      if (event.type === 'downloaded') {
+        setResult(event.result)
+        setIsWorking(false)
+        setStatusText(t('updater.ready_restart'))
+        return
+      }
+
+      if (event.type === 'installing') {
+        setIsWorking(true)
+        setStatusText(t('updater.installing'))
+        return
+      }
+
+      if (event.type === 'error') {
+        setIsChecking(false)
+        setIsWorking(false)
+        setStatusText(event.message)
+        toast.error(event.message, { style: toastStyle })
+        return
+      }
+
+      setIsChecking(false)
+      setResult(event.result)
+      setStatusText('')
+    })
+
+    const unsubscribeStartup = window.neoPot.app.onEvent('startup_update_available', (payload) => {
+      const nextResult = payload as UpdateCheckResult
+      setResult(nextResult)
+      setIsChecking(false)
+    })
+
+    if (!isNotification) {
+      void refresh()
+    }
+
+    return () => {
+      unsubscribeUpdate()
+      unsubscribeStartup()
+    }
+  }, [isNotification, t, toastStyle])
+
+  const refresh = async () => {
+    setIsChecking(true)
+    setProgress(null)
+    setStatusText(t('updater.checking'))
+
+    const nextResult = await check()
+    setResult(nextResult)
+    setIsChecking(false)
+    setStatusText('')
+
+    if (nextResult.status === 'error') {
+      toast.error(nextResult.message ?? t('updater.error'), { style: toastStyle })
+    }
+  }
+
+  const primaryAction = async () => {
+    if (!result) {
+      await refresh()
       return
     }
 
-    setIsUpdating(true)
-    setDownloaded(0)
-    setTotal(0)
-    update
-      .downloadAndInstall((event: any) => {
-        if (event.event === 'Started') {
-          setTotal(event.data.contentLength || 0)
-        }
-        if (event.event === 'Progress') {
-          setDownloaded((a) => a + event.data.chunkLength)
-        }
-      })
-      .then(
-        () => {
-          toast.success(t('updater.installed'), {
-            style: toastStyle,
-            duration: 10000,
-          })
-          relaunch()
-        },
-        (e: any) => {
-          toast.error(e.toString(), { style: toastStyle })
-          setIsUpdating(false)
-        },
-      )
+    if (result.mode === 'manual-download') {
+      await openReleasePage()
+      return
+    }
+
+    if (statusText === t('updater.ready_restart')) {
+      setIsWorking(true)
+      await install()
+      return
+    }
+
+    setIsWorking(true)
+    await download()
+  }
+
+  const releaseNotes =
+    result?.releaseNotes ||
+    (result?.status === 'not-available'
+      ? t('updater.latest')
+      : result?.status === 'unsupported'
+        ? t('updater.unsupported')
+        : result?.status === 'error'
+          ? result.message || t('updater.error')
+          : '')
+
+  const primaryLabel = !result
+    ? t('updater.check')
+    : result.mode === 'manual-download'
+      ? t('updater.go_to_download')
+      : statusText === t('updater.ready_restart')
+        ? t('updater.restart')
+        : t('updater.update')
+  const primaryDisabled =
+    isChecking ||
+    isWorking ||
+    (result !== null &&
+      result.status !== 'available' &&
+      result.status !== 'error' &&
+      result.status !== 'unsupported')
+
+  if (isNotification) {
+    return (
+      <div
+        className={`bg-background h-screen p-4 select-none ${
+          osType === 'Linux' && 'rounded-[10px] border-1 border-default-100'
+        }`}
+      >
+        <Toaster />
+        <div className="flex items-center gap-2">
+          <img src="icon.png" className="h-7 w-7" draggable={false} />
+          <div className="min-w-0">
+            <h2 className="text-base font-semibold leading-5">{t('updater.title')}</h2>
+            <p className="text-xs text-default-500 truncate">
+              {result?.version
+                ? t('updater.version_available', { version: result.version })
+                : statusText}
+            </p>
+          </div>
+        </div>
+        <p className="mt-4 h-14 text-sm text-default-600 line-clamp-3">
+          {statusText || result?.releaseName || t('updater.available')}
+        </p>
+        {progress && (
+          <Progress
+            aria-label={t('updater.progress')}
+            value={progressValue(progress)}
+            isIndeterminate={progressValue(progress) === undefined}
+            size="sm"
+            className="mb-3"
+          />
+        )}
+        <div className="grid grid-cols-2 gap-3">
+          <Button
+            size="sm"
+            color="primary"
+            isLoading={isWorking}
+            isDisabled={!result || result.status !== 'available'}
+            onPress={primaryAction}
+          >
+            {primaryLabel}
+          </Button>
+          <Button
+            size="sm"
+            variant="flat"
+            onPress={() => {
+              appWindow.close()
+            }}
+          >
+            {t('updater.cancel')}
+          </Button>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -90,7 +234,7 @@ export default function Updater() {
       </div>
       <Card className="mx-20 mt-2.5 overscroll-auto h-[calc(100vh-150px)]">
         <CardBody>
-          {body === '' ? (
+          {isChecking && !releaseNotes ? (
             <div className="space-y-3">
               <Skeleton className="w-3/5 rounded-lg">
                 <div className="h-3 w-3/5 rounded-lg bg-default-200"></div>
@@ -130,18 +274,18 @@ export default function Updater() {
                   },
                 }}
               >
-                {body}
+                {releaseNotes || statusText}
               </ReactMarkdown>
             </div>
           )}
         </CardBody>
       </Card>
-      {isUpdating && (
+      {(isWorking || progress) && (
         <Progress
-          aria-label="Downloading..."
+          aria-label={t('updater.progress')}
           label={t('updater.progress')}
-          value={total === 0 ? undefined : (downloaded / total) * 100}
-          isIndeterminate={total === 0}
+          value={progressValue(progress)}
+          isIndeterminate={progressValue(progress) === undefined}
           classNames={{
             base: 'w-full px-[80px]',
             track: 'drop-shadow-md border border-default',
@@ -157,16 +301,12 @@ export default function Updater() {
       <div className="grid gap-4 grid-cols-2 h-12.5 my-2.5 mx-20">
         <Button
           variant="flat"
-          isLoading={isUpdating}
-          isDisabled={isUpdating || !update}
+          isLoading={isWorking || isChecking}
+          isDisabled={primaryDisabled}
           color="primary"
-          onPress={install}
+          onPress={primaryAction}
         >
-          {isUpdating
-            ? downloaded > total
-              ? t('updater.installing')
-              : t('updater.downloading')
-            : t('updater.update')}
+          {isWorking ? statusText || t('updater.downloading') : primaryLabel}
         </Button>
         <Button
           variant="flat"

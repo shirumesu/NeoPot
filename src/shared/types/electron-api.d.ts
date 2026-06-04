@@ -19,6 +19,39 @@ export interface PluginInfo {
 export type StreamCallback = (payload: unknown) => void
 export type Unsubscribe = () => void
 
+export type UpdateDistribution = 'installer' | 'portable' | 'appimage' | 'deb-rpm' | 'unknown'
+export type UpdateMode = 'self-update' | 'manual-download'
+export type UpdateStatus = 'available' | 'not-available' | 'unsupported' | 'error'
+
+export interface UpdateProgress {
+  percent?: number
+  transferred?: number
+  total?: number
+  bytesPerSecond?: number
+}
+
+export interface UpdateCheckResult {
+  status: UpdateStatus
+  distribution: UpdateDistribution
+  mode: UpdateMode
+  currentVersion: string
+  version?: string
+  releaseName?: string
+  releaseNotes?: string
+  releasePageUrl?: string
+  message?: string
+}
+
+export type UpdateEvent =
+  | { type: 'checking'; result?: never; progress?: never; message?: never }
+  | { type: 'available'; result: UpdateCheckResult; progress?: never; message?: never }
+  | { type: 'not-available'; result: UpdateCheckResult; progress?: never; message?: never }
+  | { type: 'unsupported'; result: UpdateCheckResult; progress?: never; message?: never }
+  | { type: 'error'; result?: UpdateCheckResult; progress?: never; message: string }
+  | { type: 'download-progress'; progress: UpdateProgress; result?: never; message?: never }
+  | { type: 'downloaded'; result: UpdateCheckResult; progress?: never; message?: never }
+  | { type: 'installing'; result?: never; progress?: never; message?: never }
+
 export interface WindowBounds {
   x?: number
   y?: number
@@ -103,6 +136,13 @@ export interface NeoPotElectronApi {
     inputTranslate(): Promise<void>
     ocrRecognize(): Promise<void>
     ocrTranslate(): Promise<void>
+  }
+  updater: {
+    check(): Promise<UpdateCheckResult>
+    download(): Promise<void>
+    install(): Promise<void>
+    openReleasePage(): Promise<void>
+    onEvent(callback: (event: UpdateEvent) => void): Unsubscribe
   }
   services: {
     translate(request: TranslateRequest): Promise<TranslateResult>

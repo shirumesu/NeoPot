@@ -2,7 +2,14 @@ import { Button, Card, CardBody, Divider, Switch, Tooltip } from '@heroui/react'
 import { open } from '@/renderer/lib/electron/compat/dialog'
 import { emit } from '@/renderer/lib/electron/compat/event'
 import React, { useEffect, useState } from 'react'
-import { MdClose, MdCreateNewFolder, MdFolderOpen, MdInsertDriveFile, MdRefresh, MdSystemUpdateAlt } from 'react-icons/md'
+import {
+  MdClose,
+  MdCreateNewFolder,
+  MdFolderOpen,
+  MdInsertDriveFile,
+  MdRefresh,
+  MdSystemUpdateAlt,
+} from 'react-icons/md'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 

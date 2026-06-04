@@ -246,6 +246,10 @@
         "install_success": "Plugin installed",
         "install_failed": "Failed to install plugin",
         "homepage": "Plugin homepage"
+      },
+      "common": {
+        "save_success": "Settings saved",
+        "save_failed": "Failed to save settings"
       }
     },
     "translate": {
@@ -256,17 +260,28 @@
       "translate": "Traduire",
       "copy": "Copier",
       "speak": "Écouter",
-      "tts_not_configured": "No TTS service configured"
+      "tts_not_configured": "No TTS service configured",
+      "show_preview": "Show preview",
+      "show_source": "Show source"
     },
     "updater": {
-      "installed": "Installation terminée. Relancez l'application pour que les modifications prennent effet",
-      "downloading": "Téléchargement…",
-      "update": "Mettre à jour",
-      "progress": "Progression du téléchargement",
-      "latest": "## La dernière version est installée",
-      "cancel": "Annuler",
       "title": "Vérifier les mises à jour",
-      "installing": "Installation…"
+      "latest": "## La dernière version est installée",
+      "progress": "Progression du téléchargement",
+      "check": "Check",
+      "checking": "Checking for updates…",
+      "available": "A new update is available.",
+      "version_available": "Version {{version}} is available",
+      "update": "Mettre à jour",
+      "downloading": "Téléchargement…",
+      "installing": "Installation…",
+      "restart": "Restart",
+      "ready_restart": "Ready to restart",
+      "go_to_download": "Download",
+      "unsupported": "## Updates are not available for this build\n\nOpen the release page to download the latest version manually.",
+      "error": "Update check failed",
+      "cancel": "Annuler",
+      "installed": "Installation terminée. Relancez l'application pour que les modifications prennent effet"
     },
     "recognize": {
       "translate": "Traduire",

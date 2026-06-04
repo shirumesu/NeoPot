@@ -5,6 +5,8 @@ import type {
   PluginInstallResult,
   TranslateRequest,
   TranslateResult,
+  UpdateCheckResult,
+  UpdateEvent,
   WindowLabel,
 } from '../shared/types/electron-api'
 
@@ -45,6 +47,10 @@ type IpcChannel =
   | 'workflow:input-translate'
   | 'workflow:ocr-recognize'
   | 'workflow:ocr-translate'
+  | 'update:check'
+  | 'update:download'
+  | 'update:install'
+  | 'update:open-release-page'
   | 'services:translate'
   | 'plugins:install'
   | 'plugins:install-url'
@@ -92,6 +98,10 @@ const channels = new Set<IpcChannel>([
   'workflow:input-translate',
   'workflow:ocr-recognize',
   'workflow:ocr-translate',
+  'update:check',
+  'update:download',
+  'update:install',
+  'update:open-release-page',
   'services:translate',
   'plugins:install',
   'plugins:install-url',
@@ -181,6 +191,20 @@ const api: NeoPotElectronApi = {
     inputTranslate: () => invokeChecked<void>('workflow:input-translate'),
     ocrRecognize: () => invokeChecked<void>('workflow:ocr-recognize'),
     ocrTranslate: () => invokeChecked<void>('workflow:ocr-translate'),
+  },
+  updater: {
+    check: () => invokeChecked<UpdateCheckResult>('update:check'),
+    download: () => invokeChecked<void>('update:download'),
+    install: () => invokeChecked<void>('update:install'),
+    openReleasePage: () => invokeChecked<void>('update:open-release-page'),
+    onEvent: (callback) => {
+      const listener = (_event: Electron.IpcRendererEvent, payload: UpdateEvent) => {
+        callback(payload)
+      }
+
+      ipcRenderer.on('update:event', listener)
+      return () => ipcRenderer.removeListener('update:event', listener)
+    },
   },
   services: {
     translate: (request: TranslateRequest) =>

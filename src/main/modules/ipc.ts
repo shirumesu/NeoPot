@@ -56,6 +56,7 @@ import {
   textTranslate,
 } from './workflow'
 import { APP_USER_MODEL_ID } from './appIdentity'
+import { check, download, install, openReleasePage } from './updater'
 
 export interface NeoPotErrorPayload {
   code: 'IPC_UNKNOWN_CHANNEL' | 'IPC_INVALID_PAYLOAD' | 'IPC_HANDLER_FAILED'
@@ -98,11 +99,8 @@ export function getAutoStartLoginItemCompareOptions(): AutoStartLoginItemCompare
     return {}
   }
 
-  const appFolder = path.dirname(process.execPath)
-  const exeName = path.basename(process.execPath)
-
   return {
-    path: path.resolve(appFolder, '..', exeName),
+    path: process.execPath,
     args: [],
   }
 }
@@ -765,6 +763,22 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
     'workflow:ocr-translate': (_event, payload) => {
       assertNoPayload(payload)
       return ocrTranslate()
+    },
+    'update:check': (_event, payload) => {
+      assertNoPayload(payload)
+      return check()
+    },
+    'update:download': (_event, payload) => {
+      assertNoPayload(payload)
+      return download()
+    },
+    'update:install': (_event, payload) => {
+      assertNoPayload(payload)
+      install()
+    },
+    'update:open-release-page': (_event, payload) => {
+      assertNoPayload(payload)
+      return openReleasePage()
     },
     'services:translate': (_event, payload) => {
       if (!isRecord(payload)) {

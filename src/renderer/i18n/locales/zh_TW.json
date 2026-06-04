@@ -205,15 +205,28 @@
         "install_success": "Plugin installed",
         "install_failed": "Failed to install plugin",
         "homepage": "Plugin homepage"
+      },
+      "common": {
+        "save_success": "Settings saved",
+        "save_failed": "Failed to save settings"
       }
     },
     "updater": {
       "title": "檢查更新",
       "latest": "## 已安裝最新版本",
       "progress": "下載進度",
+      "check": "Check",
+      "checking": "Checking for updates…",
+      "available": "A new update is available.",
+      "version_available": "Version {{version}} is available",
       "update": "更新",
       "downloading": "下載中…",
       "installing": "安裝中…",
+      "restart": "Restart",
+      "ready_restart": "Ready to restart",
+      "go_to_download": "Download",
+      "unsupported": "## Updates are not available for this build\n\nOpen the release page to download the latest version manually.",
+      "error": "Update check failed",
       "cancel": "取消",
       "installed": "安裝完成，請重新啟動應用程式以使變更生效"
     },
@@ -247,7 +260,9 @@
           "install_model": "安裝",
           "ready": "準備就緒",
           "not_installed": "此模型尚未安裝，點選立即下載並安裝",
-          "prompt_description": "透過自定義 Prompt，您可以自定義 AI 的行為。$text $from $to $detect 將被替換為待翻譯的文字、來源語言、目標語言和偵測到的語言。"
+          "prompt_description": "透過自定義 Prompt，您可以自定義 AI 的行為。$text $from $to $detect 將被替換為待翻譯的文字、來源語言、目標語言和偵測到的語言。",
+          "advanced_options": "進階選項",
+          "advanced_description": "留空以使用模型或 Ollama 預設值。思考模式僅適用於支援的模型。"
         }
       },
       "recognize": {

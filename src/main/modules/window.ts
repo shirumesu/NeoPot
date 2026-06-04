@@ -16,14 +16,13 @@ import { RENDERER_HOST, RENDERER_SCHEME, resolveRendererFile } from './rendererP
 import { logger } from '../logger'
 
 export type WindowLabel = 'config' | 'translate' | 'recognize' | 'screenshot' | 'updater'
-
-declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string | undefined
-declare const MAIN_WINDOW_VITE_NAME: string
+type UpdaterPresentation = 'full' | 'notification'
 
 const windows = new Map<WindowLabel, BrowserWindow>()
 const windowLabelsByWebContentsId = new Map<number, WindowLabel>()
 const readyWindows = new Set<WindowLabel>()
 const pendingWindowEvents = new Map<WindowLabel, Array<{ event: string; payload: unknown }>>()
+let updaterPresentation: UpdaterPresentation = 'full'
 let appIsQuitting = false
 let translateResizeTimer: NodeJS.Timeout | null = null
 
@@ -78,6 +77,15 @@ const windowDefinitions: Record<WindowLabel, WindowDefinition> = {
   },
 }
 
+const updaterNotificationDefinition: WindowDefinition = {
+  width: 360,
+  height: 220,
+  minWidth: 360,
+  minHeight: 220,
+  skipTaskbar: true,
+  resizable: false,
+}
+
 function getAppIconPath(): string {
   const candidates = [
     path.join(app.getAppPath(), 'public', 'icon.png'),
@@ -88,13 +96,16 @@ function getAppIconPath(): string {
 }
 
 function getRendererRoot(): string {
-  return path.join(__dirname, '..', 'renderer', MAIN_WINDOW_VITE_NAME)
+  return path.join(__dirname, '..', 'renderer')
 }
 
-function rendererUrl(label: WindowLabel): string {
-  if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
-    const url = new URL(MAIN_WINDOW_VITE_DEV_SERVER_URL)
+function rendererUrl(label: WindowLabel, presentation: UpdaterPresentation = 'full'): string {
+  if (process.env.ELECTRON_RENDERER_URL) {
+    const url = new URL(process.env.ELECTRON_RENDERER_URL)
     url.searchParams.set('window', label)
+    if (label === 'updater') {
+      url.searchParams.set('presentation', presentation)
+    }
     return url.toString()
   }
 
@@ -103,6 +114,9 @@ function rendererUrl(label: WindowLabel): string {
   // its model assets on a `file:` origin, which broke OCR in packaged builds.
   const url = new URL(`${RENDERER_SCHEME}://${RENDERER_HOST}/index.html`)
   url.searchParams.set('window', label)
+  if (label === 'updater') {
+    url.searchParams.set('presentation', presentation)
+  }
   return url.toString()
 }
 
@@ -110,7 +124,7 @@ function rendererUrl(label: WindowLabel): string {
 // the app is ready and before any window loads. Dev keeps using Vite's http
 // server, so the handler is only needed for packaged builds.
 export function registerRendererProtocol(): void {
-  if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
+  if (process.env.ELECTRON_RENDERER_URL) {
     return
   }
 
@@ -125,7 +139,7 @@ export function registerRendererProtocol(): void {
 }
 
 async function loadRenderer(window: BrowserWindow, label: WindowLabel) {
-  await window.loadURL(rendererUrl(label))
+  await window.loadURL(rendererUrl(label, label === 'updater' ? updaterPresentation : 'full'))
 }
 
 function positionTranslateWindow(window: BrowserWindow) {
@@ -137,6 +151,13 @@ function positionTranslateWindow(window: BrowserWindow) {
   const x = Math.max(bounds.x, Math.min(cursor.x, bounds.x + bounds.width - width))
   const y = Math.max(bounds.y, Math.min(cursor.y, bounds.y + bounds.height - height))
   window.setPosition(x, y)
+}
+
+function positionUpdaterNotification(window: BrowserWindow) {
+  const display = screen.getPrimaryDisplay()
+  const bounds = display.workArea
+  const [width, height] = window.getSize()
+  window.setPosition(bounds.x + bounds.width - width - 16, bounds.y + bounds.height - height - 16)
 }
 
 function getTranslateWindowSize(definition: WindowDefinition): { width: number; height: number } {
@@ -216,7 +237,10 @@ function createBrowserWindow(label: WindowLabel): BrowserWindow {
     window: label,
   })
 
-  const definition = windowDefinitions[label]
+  const definition =
+    label === 'updater' && updaterPresentation === 'notification'
+      ? updaterNotificationDefinition
+      : windowDefinitions[label]
   const size = label === 'translate' ? getTranslateWindowSize(definition) : definition
   const options: BrowserWindowConstructorOptions = {
     width: size.width,
@@ -233,7 +257,7 @@ function createBrowserWindow(label: WindowLabel): BrowserWindow {
     resizable: definition.resizable,
     icon: getAppIconPath(),
     webPreferences: {
-      preload: path.join(__dirname, 'preload.cjs'),
+      preload: path.join(__dirname, '..', 'preload', 'index.cjs'),
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
@@ -249,6 +273,8 @@ function createBrowserWindow(label: WindowLabel): BrowserWindow {
   window.once('ready-to-show', () => {
     if (label === 'translate') {
       positionTranslateWindow(window)
+    } else if (label === 'updater' && updaterPresentation === 'notification') {
+      positionUpdaterNotification(window)
     } else if (label === 'config' || label === 'recognize' || label === 'updater') {
       window.center()
     }
@@ -304,6 +330,10 @@ function createBrowserWindow(label: WindowLabel): BrowserWindow {
 }
 
 export async function openWindow(label: WindowLabel): Promise<BrowserWindow> {
+  if (label === 'updater') {
+    updaterPresentation = 'full'
+  }
+
   const existing = windows.get(label)
   if (existing && !existing.isDestroyed()) {
     logger.debug('Focusing existing window.', {
@@ -318,6 +348,26 @@ export async function openWindow(label: WindowLabel): Promise<BrowserWindow> {
   })
   const window = createBrowserWindow(label)
   await loadRenderer(window, label)
+  return window
+}
+
+export async function openUpdaterNotification(): Promise<BrowserWindow> {
+  updaterPresentation = 'notification'
+
+  const existing = windows.get('updater')
+  if (existing && !existing.isDestroyed()) {
+    existing.setResizable(false)
+    existing.setSize(updaterNotificationDefinition.width, updaterNotificationDefinition.height)
+    existing.setSkipTaskbar(true)
+    await existing.loadURL(rendererUrl('updater', 'notification'))
+    positionUpdaterNotification(existing)
+    showWindowInForeground(existing, 'updater')
+    return existing
+  }
+
+  logger.debug('Opening updater notification window.')
+  const window = createBrowserWindow('updater')
+  await loadRenderer(window, 'updater')
   return window
 }
 

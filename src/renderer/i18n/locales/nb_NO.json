@@ -70,12 +70,36 @@
         "install_success": "Plugin installed",
         "install_failed": "Failed to install plugin",
         "homepage": "Plugin homepage"
+      },
+      "common": {
+        "save_success": "Settings saved",
+        "save_failed": "Failed to save settings"
       }
     },
     "translate": {
-      "tts_not_configured": "No TTS service configured"
+      "tts_not_configured": "No TTS service configured",
+      "show_preview": "Show preview",
+      "show_source": "Show source"
     },
-    "updater": {},
+    "updater": {
+      "title": "Check Update",
+      "latest": "## The latest version is installed",
+      "progress": "Download Progress",
+      "check": "Check",
+      "checking": "Checking for updates…",
+      "available": "A new update is available.",
+      "version_available": "Version {{version}} is available",
+      "update": "Update",
+      "downloading": "Downloading…",
+      "installing": "Installing…",
+      "restart": "Restart",
+      "ready_restart": "Ready to restart",
+      "go_to_download": "Download",
+      "unsupported": "## Updates are not available for this build\n\nOpen the release page to download the latest version manually.",
+      "error": "Update check failed",
+      "cancel": "Cancel",
+      "installed": "Install completed, Restart the application for the changes to take effect"
+    },
     "recognize": {}
   }
 }
