@@ -3,7 +3,7 @@
   "productName": "NeoPot",
   "private": true,
   "version": "1.1.0",
-  "description": "Desktop translation and OCR utility.",
+  "description": "NeoPot",
   "author": "NeoPot contributors",
   "type": "module",
   "main": "out/main/index.cjs",
@@ -14,8 +14,8 @@
     "dev": "electron-vite dev",
     "build": "electron-vite build",
     "plugins": "node .scripts/pack-plugins.mjs",
-    "make": "electron-vite build && electron-builder --win --publish never",
-    "release": "electron-vite build && electron-builder --publish always",
+    "make": "node .scripts/clean-release-output.mjs && electron-vite build && electron-builder --win --publish never",
+    "release": "node .scripts/clean-release-output.mjs && electron-vite build && electron-builder --publish always",
     "lint": "eslint . --quiet",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -53,8 +53,8 @@
   "devDependencies": {
     "@electron/rebuild": "3.7.2",
     "@eslint/js": "^9.39.4",
-    "@tailwindcss/postcss": "^4.2.4",
     "@swc/core": "^1.15.3",
+    "@tailwindcss/postcss": "^4.2.4",
     "@types/node": "24.10.1",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
@@ -86,6 +86,9 @@
       "mdast-util-to-hast": "^13.2.1",
       "nanoid@3": "^3.3.8",
       "yaml": "^2.8.3"
-    }
+    },
+    "ignoredBuiltDependencies": [
+      "esbuild"
+    ]
   }
 }

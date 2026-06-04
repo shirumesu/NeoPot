@@ -11,6 +11,7 @@ import type {
 } from '../../shared/types/electron-api'
 import { logger } from '../logger'
 import { getConfig } from './config'
+import { compareVersions, isPrereleaseVersion, stripVersionPrefix } from './updateVersion'
 import { openUpdaterNotification, sendToWindow } from './window'
 
 interface GithubRelease {
@@ -94,59 +95,6 @@ function getDistributionMode(): { distribution: UpdateDistribution; mode: Update
   }
 
   return { distribution: 'unknown', mode: 'manual-download' }
-}
-
-function stripVersionPrefix(version: string): string {
-  return version.trim().replace(/^v/i, '')
-}
-
-function parseVersion(version: string): { parts: number[]; prerelease: string } | null {
-  const normalized = stripVersionPrefix(version)
-  const match = normalized.match(/^(\d+(?:\.\d+){0,2})(?:[-+.]?(.+))?$/)
-  if (!match) {
-    return null
-  }
-
-  const parts = match[1].split('.').map((part) => Number(part))
-  while (parts.length < 3) {
-    parts.push(0)
-  }
-
-  return {
-    parts,
-    prerelease: match[2] ?? '',
-  }
-}
-
-export function compareVersions(a: string, b: string): number {
-  const parsedA = parseVersion(a)
-  const parsedB = parseVersion(b)
-  if (!parsedA || !parsedB) {
-    return stripVersionPrefix(a).localeCompare(stripVersionPrefix(b))
-  }
-
-  for (let index = 0; index < 3; index += 1) {
-    const diff = parsedA.parts[index] - parsedB.parts[index]
-    if (diff !== 0) {
-      return diff
-    }
-  }
-
-  if (parsedA.prerelease === parsedB.prerelease) {
-    return 0
-  }
-  if (!parsedA.prerelease) {
-    return 1
-  }
-  if (!parsedB.prerelease) {
-    return -1
-  }
-
-  return parsedA.prerelease.localeCompare(parsedB.prerelease)
-}
-
-function isPrereleaseVersion(version: string): boolean {
-  return parseVersion(version)?.prerelease !== ''
 }
 
 function getReleaseVersion(release: GithubRelease): string | undefined {

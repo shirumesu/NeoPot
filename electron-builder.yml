@@ -3,9 +3,14 @@ productName: NeoPot
 directories:
   output: dist
 files:
-  - out/**
+  - out/main/**
+  - out/preload/**
+  - out/renderer/**
   - public/**
   - package.json
+  - '!node_modules/**'
+  - '!out/package/**'
+  - '!dist/**'
 asar: true
 asarUnpack:
   - '**/*.node'

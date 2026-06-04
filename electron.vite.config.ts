@@ -9,11 +9,20 @@ const external = [
   ...builtinModules.map((moduleName) => `node:${moduleName}`),
 ]
 
+const bundledMainDependencies = [
+  'adm-zip',
+  'axios',
+  'electron-log',
+  'electron-store',
+  'electron-updater',
+  'tinyld',
+]
+
 export default defineConfig({
   main: {
     build: {
       externalizeDeps: {
-        exclude: ['electron-store'],
+        exclude: bundledMainDependencies,
       },
       target: 'node22',
       outDir: 'out/main',

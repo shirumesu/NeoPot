@@ -160,6 +160,35 @@ function positionUpdaterNotification(window: BrowserWindow) {
   window.setPosition(bounds.x + bounds.width - width - 16, bounds.y + bounds.height - height - 16)
 }
 
+function getUpdaterDefinition(presentation: UpdaterPresentation): WindowDefinition {
+  return presentation === 'notification' ? updaterNotificationDefinition : windowDefinitions.updater
+}
+
+function applyUpdaterPresentation(window: BrowserWindow, presentation: UpdaterPresentation): void {
+  const definition = getUpdaterDefinition(presentation)
+  window.setMinimumSize(definition.minWidth ?? 0, definition.minHeight ?? 0)
+  window.setResizable(definition.resizable !== false)
+  window.setSkipTaskbar(definition.skipTaskbar === true)
+  window.setSize(definition.width, definition.height)
+}
+
+async function switchExistingUpdaterPresentation(
+  window: BrowserWindow,
+  presentation: UpdaterPresentation,
+): Promise<void> {
+  updaterPresentation = presentation
+  readyWindows.delete('updater')
+  applyUpdaterPresentation(window, presentation)
+  await window.loadURL(rendererUrl('updater', presentation))
+
+  if (presentation === 'notification') {
+    positionUpdaterNotification(window)
+  } else {
+    window.center()
+  }
+  showWindowInForeground(window, 'updater')
+}
+
 function getTranslateWindowSize(definition: WindowDefinition): { width: number; height: number } {
   if (getConfig('translate_remember_window_size') !== true) {
     return {
@@ -339,6 +368,10 @@ export async function openWindow(label: WindowLabel): Promise<BrowserWindow> {
     logger.debug('Focusing existing window.', {
       window: label,
     })
+    if (label === 'updater') {
+      await switchExistingUpdaterPresentation(existing, 'full')
+      return existing
+    }
     focusWindow(label)
     return existing
   }
@@ -356,12 +389,7 @@ export async function openUpdaterNotification(): Promise<BrowserWindow> {
 
   const existing = windows.get('updater')
   if (existing && !existing.isDestroyed()) {
-    existing.setResizable(false)
-    existing.setSize(updaterNotificationDefinition.width, updaterNotificationDefinition.height)
-    existing.setSkipTaskbar(true)
-    await existing.loadURL(rendererUrl('updater', 'notification'))
-    positionUpdaterNotification(existing)
-    showWindowInForeground(existing, 'updater')
+    await switchExistingUpdaterPresentation(existing, 'notification')
     return existing
   }
 

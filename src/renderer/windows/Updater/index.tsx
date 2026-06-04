@@ -14,6 +14,7 @@ import {
 import { getCurrentWebviewWindow } from '@/renderer/lib/electron/compat/webviewWindow'
 import { osType } from '@/renderer/lib/config/env'
 import { useToastStyle } from '../../hooks'
+import { getUpdatePrimaryAction } from './updateActions'
 
 const appWindow = getCurrentWebviewWindow()
 
@@ -72,6 +73,9 @@ export default function Updater() {
       }
 
       if (event.type === 'error') {
+        if (event.result) {
+          setResult(event.result)
+        }
         setIsChecking(false)
         setIsWorking(false)
         setStatusText(event.message)
@@ -115,25 +119,28 @@ export default function Updater() {
     }
   }
 
+  const isReadyToRestart = statusText === t('updater.ready_restart')
+  const updatePrimaryAction = getUpdatePrimaryAction(result, isReadyToRestart)
+
   const primaryAction = async () => {
-    if (!result) {
-      await refresh()
-      return
+    switch (updatePrimaryAction) {
+      case 'check':
+        await refresh()
+        return
+      case 'open-release-page':
+        await openReleasePage()
+        return
+      case 'install':
+        setIsWorking(true)
+        await install()
+        return
+      case 'download':
+        setIsWorking(true)
+        await download()
+        return
+      case 'none':
+        return
     }
-
-    if (result.mode === 'manual-download') {
-      await openReleasePage()
-      return
-    }
-
-    if (statusText === t('updater.ready_restart')) {
-      setIsWorking(true)
-      await install()
-      return
-    }
-
-    setIsWorking(true)
-    await download()
   }
 
   const releaseNotes =
@@ -146,20 +153,14 @@ export default function Updater() {
           ? result.message || t('updater.error')
           : '')
 
-  const primaryLabel = !result
+  const primaryLabel = updatePrimaryAction === 'check'
     ? t('updater.check')
-    : result.mode === 'manual-download'
+    : updatePrimaryAction === 'open-release-page'
       ? t('updater.go_to_download')
-      : statusText === t('updater.ready_restart')
+      : updatePrimaryAction === 'install'
         ? t('updater.restart')
         : t('updater.update')
-  const primaryDisabled =
-    isChecking ||
-    isWorking ||
-    (result !== null &&
-      result.status !== 'available' &&
-      result.status !== 'error' &&
-      result.status !== 'unsupported')
+  const primaryDisabled = isChecking || isWorking || updatePrimaryAction === 'none'
 
   if (isNotification) {
     return (
@@ -197,7 +198,7 @@ export default function Updater() {
             size="sm"
             color="primary"
             isLoading={isWorking}
-            isDisabled={!result || result.status !== 'available'}
+            isDisabled={primaryDisabled}
             onPress={primaryAction}
           >
             {primaryLabel}
