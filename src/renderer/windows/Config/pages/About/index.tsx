@@ -7,9 +7,6 @@ import { appVersion } from '@/renderer/lib/config/env'
 
 export default function About() {
   const { t } = useTranslation()
-  const showComingSoon = () => {
-    window.alert(t('common.coming'))
-  }
 
   return (
     <div className="h-full w-full py-20 px-25">
@@ -19,16 +16,16 @@ export default function About() {
         <p className="text-center text-sm text-gray-500 mb-1.25">{appVersion}</p>
         <Divider />
         <div className="flex justify-between">
-          <Button
-            variant="light"
-            className="my-1.25"
-            size="sm"
-            onPress={() => {
-              showComingSoon()
-            }}
-          >
-            {t('config.about.website')}
-          </Button>
+          <Popover placement="top" offset={10}>
+            <PopoverTrigger>
+              <Button variant="light" className="my-1.25" size="sm">
+                {t('config.about.website')}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="p-2">
+              <div className="text-sm text-gray-600">{t('common.coming')}</div>
+            </PopoverContent>
+          </Popover>
           <Button
             variant="light"
             className="my-1.25"
@@ -46,10 +43,9 @@ export default function About() {
               </Button>
             </PopoverTrigger>
             <PopoverContent>
-              <div className="flex justify-between">
+              <div className="flex justify-between gap-2 p-2">
                 <Button
                   variant="light"
-                  className="my-1.25"
                   size="sm"
                   onPress={() => {
                     invoke('open_url', { url: 'https://github.com/shirumesu/NeoPot/issues' })
@@ -57,30 +53,30 @@ export default function About() {
                 >
                   {t('config.about.issue')}
                 </Button>
-                <Button
-                  variant="light"
-                  className="my-1.25"
-                  size="sm"
-                  onPress={() => {
-                    showComingSoon()
-                  }}
-                >
-                  {t('config.about.email')}
-                </Button>
+                <Popover placement="top" offset={10}>
+                  <PopoverTrigger>
+                    <Button variant="light" size="sm">
+                      {t('config.about.email')}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="p-2">
+                    <div className="text-sm text-gray-600">{t('common.coming')}</div>
+                  </PopoverContent>
+                </Popover>
               </div>
             </PopoverContent>
           </Popover>
 
-          <Button
-            variant="light"
-            className="my-1.25"
-            size="sm"
-            onPress={() => {
-              showComingSoon()
-            }}
-          >
-            {t('config.about.community')}
-          </Button>
+          <Popover placement="top" offset={10}>
+            <PopoverTrigger>
+              <Button variant="light" className="my-1.25" size="sm">
+                {t('config.about.community')}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="p-2">
+              <div className="text-sm text-gray-600">{t('common.coming')}</div>
+            </PopoverContent>
+          </Popover>
         </div>
         <Divider />
       </div>

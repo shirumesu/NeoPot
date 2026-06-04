@@ -142,10 +142,7 @@ function assertAllowedHttpProtocol(url: URL): void {
   }
 }
 
-export function assertPublicHttpUrl(
-  input: string,
-  options: HttpUrlSafetyOptions = {},
-): URL {
+export function assertPublicHttpUrl(input: string, options: HttpUrlSafetyOptions = {}): URL {
   let url: URL
   try {
     url = new URL(input)
@@ -189,8 +186,7 @@ export async function assertPublicHttpRequestUrl(
 
   const blockedAddress = addresses.find(
     (address) =>
-      isBlockedNetworkAddress(address.address) &&
-      !isProxySyntheticNetworkAddress(address.address),
+      isBlockedNetworkAddress(address.address) && !isProxySyntheticNetworkAddress(address.address),
   )
   if (blockedAddress) {
     throw new Error(`HTTP request resolved to a blocked address: ${blockedAddress.address}`)

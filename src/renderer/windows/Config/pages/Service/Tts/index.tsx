@@ -7,6 +7,7 @@ import SelectPluginModal from '../SelectPluginModal'
 import { osType } from '@/renderer/lib/config/env'
 import { useConfig, deleteKey, isSameConfigValue } from '../../../../../hooks'
 import ServiceItem from './ServiceItem'
+import SelectModal from './SelectModal'
 import ConfigModal from './ConfigModal'
 import { useConfigSave } from '../../../hooks/useConfigSave'
 
@@ -18,6 +19,11 @@ export default function Tts(props: any) {
     isOpen: isSelectPluginOpen,
     onOpen: onSelectPluginOpen,
     onOpenChange: onSelectPluginOpenChange,
+  } = useDisclosure()
+  const {
+    isOpen: isSelectOpen,
+    onOpen: onSelectOpen,
+    onOpenChange: onSelectOpenChange,
   } = useDisclosure()
   const {
     isOpen: isConfigOpen,
@@ -114,7 +120,10 @@ export default function Tts(props: any) {
             })}
           </ReorderGroup>
         )}
-        <div className="flex shrink-0 pt-2">
+        <div className="flex shrink-0 gap-2 pt-2">
+          <Button fullWidth onPress={onSelectOpen}>
+            {t('config.service.add_builtin_service')}
+          </Button>
           <Button fullWidth onPress={onSelectPluginOpen}>
             {t('config.service.add_installed_plugin_service')}
           </Button>
@@ -126,6 +135,12 @@ export default function Tts(props: any) {
         setCurrentConfigKey={setCurrentConfigKey}
         onConfigOpen={onConfigOpen}
         pluginList={pluginList}
+      />
+      <SelectModal
+        isOpen={isSelectOpen}
+        onOpenChange={onSelectOpenChange}
+        setCurrentConfigKey={setCurrentConfigKey}
+        onConfigOpen={onConfigOpen}
       />
       <ConfigModal
         serviceInstanceKey={currentConfigKey}

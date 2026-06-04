@@ -110,7 +110,7 @@ function ServerPortInput() {
       }}
       className="max-w-25"
       isInvalid={showPortError}
-      errorMessage={showPortError ? '请输入 1-65535' : undefined}
+      errorMessage={showPortError ? t('config.general.invalid_port') : undefined}
       classNames={{
         input:
           '[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none',
@@ -124,7 +124,6 @@ export default function General() {
   const [fontList, setFontList] = useState<string[] | null>(null)
   const [checkUpdate, setCheckUpdate] = useConfig('check_update', true)
   const [closeToTray, setCloseToTray] = useConfig('close_to_tray', true)
-  const [clipboardMonitor, setClipboardMonitor] = useConfig('clipboard_monitor', false)
   const [appLanguage, setAppLanguage] = useConfig('app_language', 'en')
   const [appTheme, setAppTheme] = useConfig('app_theme', 'system')
   const [appFont, setAppFont] = useConfig('app_font', 'default')
@@ -243,26 +242,7 @@ export default function General() {
             )}
           </div>
           <div className="config-item">
-            <h3>{t('config.general.clipboard_monitor')}</h3>
-            {clipboardMonitor !== null && (
-              <Switch
-                isSelected={clipboardMonitor}
-                onValueChange={async (v) => {
-                  const saved = await saveConfig(
-                    'clipboard_monitor',
-                    clipboardMonitor,
-                    setClipboardMonitor,
-                    v,
-                  )
-                  if (saved) {
-                    await invoke('set_clipboard_monitor', { enabled: v })
-                  }
-                }}
-              />
-            )}
-          </div>
-          <div className="config-item">
-            <h3 className="my-auto">{t('config.general.server_port')}</h3>
+            <h3>{t('config.general.server_port')}</h3>
             <ServerPortInput />
           </div>
         </CardBody>
@@ -270,7 +250,7 @@ export default function General() {
       <Card className="mb-2.5">
         <CardBody>
           <div className="config-item">
-            <h3 className="my-auto">{t('config.general.app_language')}</h3>
+            <h3>{t('config.general.app_language')}</h3>
             {appLanguage !== null && (
               <Dropdown>
                 <DropdownTrigger>
@@ -414,7 +394,7 @@ export default function General() {
             )}
           </div>
           <div className="config-item">
-            <h3 className="my-auto">{t('config.general.app_theme')}</h3>
+            <h3>{t('config.general.app_theme')}</h3>
             {appTheme !== null && (
               <Dropdown>
                 <DropdownTrigger>
@@ -453,7 +433,7 @@ export default function General() {
             )}
           </div>
           <div className="config-item">
-            <h3 className="my-auto">{t('config.general.app_font')}</h3>
+            <h3>{t('config.general.app_font')}</h3>
             {appFont !== null && fontList !== null && (
               <Dropdown>
                 <DropdownTrigger>
@@ -494,7 +474,7 @@ export default function General() {
             )}
           </div>
           <div className="config-item">
-            <h3 className="my-auto">{t('config.general.app_fallback_font')}</h3>
+            <h3>{t('config.general.app_fallback_font')}</h3>
             {appFallbackFont !== null && fontList !== null && (
               <Dropdown>
                 <DropdownTrigger>
@@ -542,7 +522,7 @@ export default function General() {
             )}
           </div>
           <div className="config-item">
-            <h3 className="my-auto mx-0">{t('config.general.font_size.title')}</h3>
+            <h3>{t('config.general.font_size.title')}</h3>
             {appFontSize !== null && (
               <Dropdown>
                 <DropdownTrigger>
@@ -568,7 +548,7 @@ export default function General() {
             )}
           </div>
           <div className={`config-item ${osType !== 'Windows_NT' && 'hidden'}`}>
-            <h3 className="my-auto">{t('config.general.tray_click_event')}</h3>
+            <h3>{t('config.general.tray_click_event')}</h3>
             {trayClickEvent !== null && (
               <Dropdown>
                 <DropdownTrigger>

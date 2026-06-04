@@ -7,8 +7,9 @@
   min-height: 40px;
 }
 
-.config-item > :first-child {
+.config-item > h3 {
   flex: 0 0 auto;
+  margin: 0;
 }
 
 .config-item > :last-child {

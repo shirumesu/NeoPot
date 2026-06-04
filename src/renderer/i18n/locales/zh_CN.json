@@ -89,6 +89,7 @@
         },
         "proxy_change": "代理已经改变，重启应用生效",
         "proxy_error": "请填写代理地址和端口",
+        "invalid_port": "请输入 1-65535",
         "tray_click_event": "托盘点击事件",
         "event": {
           "config": "偏好设置",

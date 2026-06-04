@@ -197,11 +197,11 @@ export default function Hotkey() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <Card>
+    <>
+      <Card className="mb-2.5">
         <CardBody>
           <div className="config-item">
-            <h3 className="my-auto">{t('config.hotkey.selection_translate')}</h3>
+            <h3>{t('config.hotkey.selection_translate')}</h3>
             {selectionTranslate !== null && (
               <Input
                 type="hotkey"
@@ -232,7 +232,7 @@ export default function Hotkey() {
             )}
           </div>
           <div className="config-item">
-            <h3 className="my-auto">{t('config.hotkey.input_translate')}</h3>
+            <h3>{t('config.hotkey.input_translate')}</h3>
             {inputTranslate !== null && (
               <Input
                 type="hotkey"
@@ -259,7 +259,7 @@ export default function Hotkey() {
             )}
           </div>
           <div className="config-item">
-            <h3 className="my-auto">{t('config.hotkey.ocr_recognize')}</h3>
+            <h3>{t('config.hotkey.ocr_recognize')}</h3>
             {ocrRecognize !== null && (
               <Input
                 type="hotkey"
@@ -286,7 +286,7 @@ export default function Hotkey() {
             )}
           </div>
           <div className="config-item">
-            <h3 className="my-auto">{t('config.hotkey.ocr_translate')}</h3>
+            <h3>{t('config.hotkey.ocr_translate')}</h3>
             {ocrTranslate !== null && (
               <Input
                 type="hotkey"
@@ -322,6 +322,6 @@ export default function Hotkey() {
           </CardBody>
         </Card>
       )}
-    </div>
+    </>
   )
 }

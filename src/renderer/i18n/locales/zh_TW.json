@@ -92,7 +92,8 @@
         },
         "default_font": "預設",
         "dev_mode": "開發者模式",
-        "log_level": "Log Level"
+        "log_level": "Log Level",
+        "invalid_port": "請輸入 1-65535"
       },
       "translate": {
         "label": "翻譯設定",

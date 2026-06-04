@@ -143,29 +143,31 @@ export function Config(props: any) {
             }}
           />
         </div>
-        <Button
-          type="button"
-          onPress={() => {
-            setIsLoading(true)
-            translate('hello', Language.auto, Language.zh_cn, { config: deeplConfig }).then(
-              () => {
-                setIsLoading(false)
-                toast.success(t('config.service.test_success'), { style: toastStyle })
-              },
-              (e) => {
-                setIsLoading(false)
-                toast.error(t('config.service.test_failed') + e.toString(), { style: toastStyle })
-              },
-            )
-          }}
-          isLoading={isLoading}
-          fullWidth
-        >
-          {t('common.test')}
-        </Button>
-        <Button type="submit" isLoading={isLoading} color="primary" fullWidth>
-          {t('common.save')}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            onPress={() => {
+              setIsLoading(true)
+              translate('hello', Language.auto, Language.zh_cn, { config: deeplConfig }).then(
+                () => {
+                  setIsLoading(false)
+                  toast.success(t('config.service.test_success'), { style: toastStyle })
+                },
+                (e) => {
+                  setIsLoading(false)
+                  toast.error(t('config.service.test_failed') + e.toString(), { style: toastStyle })
+                },
+              )
+            }}
+            isLoading={isLoading}
+            fullWidth
+          >
+            {t('common.test')}
+          </Button>
+          <Button type="submit" isLoading={isLoading} color="primary" fullWidth>
+            {t('common.save')}
+          </Button>
+        </div>
       </form>
     )
   )

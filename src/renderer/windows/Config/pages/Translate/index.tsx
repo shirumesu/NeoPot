@@ -26,6 +26,7 @@ export default function Translate() {
   const [autoCopy, setAutoCopy] = useConfig('translate_auto_copy', 'disable')
   const [incrementalTranslate, setIncrementalTranslate] = useConfig('incremental_translate', false)
   const [dynamicTranslate, setDynamicTranslate] = useConfig('dynamic_translate', false)
+  const [clipboardMonitor, setClipboardMonitor] = useConfig('clipboard_monitor', false)
   const [deleteNewline, setDeleteNewline] = useConfig('translate_delete_newline', false)
   const [rememberLanguage, setRememberLanguage] = useConfig('translate_remember_language', false)
   // const [translateFontSize, setTranslateFontSize] = useConfig('translate_font_size', 16);
@@ -80,7 +81,7 @@ export default function Translate() {
       <Card className="mb-2.5">
         <CardBody>
           <div className="config-item">
-            <h3 className="my-auto mx-0">{t('config.translate.source_language')}</h3>
+            <h3>{t('config.translate.source_language')}</h3>
             {sourceLanguage !== null && (
               <Dropdown>
                 <DropdownTrigger>
@@ -107,7 +108,7 @@ export default function Translate() {
             )}
           </div>
           <div className="config-item">
-            <h3 className="my-auto mx-0">{t('config.translate.target_language')}</h3>
+            <h3>{t('config.translate.target_language')}</h3>
             {targetLanguage !== null && (
               <Dropdown>
                 <DropdownTrigger>
@@ -133,7 +134,7 @@ export default function Translate() {
             )}
           </div>
           <div className="config-item">
-            <h3 className="my-auto mx-0">{t('config.translate.second_language')}</h3>
+            <h3>{t('config.translate.second_language')}</h3>
             {secondLanguage !== null && (
               <Dropdown>
                 <DropdownTrigger>
@@ -159,7 +160,7 @@ export default function Translate() {
             )}
           </div>
           <div className="config-item">
-            <h3 className="my-auto mx-0">{t('config.translate.detect_engine')}</h3>
+            <h3>{t('config.translate.detect_engine')}</h3>
             {detectEngine !== null && (
               <Dropdown>
                 <DropdownTrigger>
@@ -192,7 +193,7 @@ export default function Translate() {
       <Card className="mb-2.5">
         <CardBody>
           <div className="config-item">
-            <h3 className="my-auto mx-0">{t('config.translate.auto_copy')}</h3>
+            <h3>{t('config.translate.auto_copy')}</h3>
             {autoCopy !== null && (
               <Dropdown>
                 <DropdownTrigger>
@@ -223,7 +224,7 @@ export default function Translate() {
             )}
           </div>
           <div className="config-item">
-            <h3 className="my-auto mx-0">{t('config.translate.incremental_translate')}</h3>
+            <h3>{t('config.translate.incremental_translate')}</h3>
             {incrementalTranslate !== null && (
               <Switch
                 isSelected={incrementalTranslate}
@@ -239,7 +240,7 @@ export default function Translate() {
             )}
           </div>
           <div className="config-item">
-            <h3 className="my-auto mx-0">{t('config.translate.dynamic_translate')}</h3>
+            <h3>{t('config.translate.dynamic_translate')}</h3>
             {dynamicTranslate !== null && (
               <Switch
                 isSelected={dynamicTranslate}
@@ -250,7 +251,26 @@ export default function Translate() {
             )}
           </div>
           <div className="config-item">
-            <h3 className="my-auto mx-0">{t('config.translate.delete_newline')}</h3>
+            <h3>{t('config.general.clipboard_monitor')}</h3>
+            {clipboardMonitor !== null && (
+              <Switch
+                isSelected={clipboardMonitor}
+                onValueChange={async (v) => {
+                  const saved = await saveConfig(
+                    'clipboard_monitor',
+                    clipboardMonitor,
+                    setClipboardMonitor,
+                    v,
+                  )
+                  if (saved) {
+                    await invoke('set_clipboard_monitor', { enabled: v })
+                  }
+                }}
+              />
+            )}
+          </div>
+          <div className="config-item">
+            <h3>{t('config.translate.delete_newline')}</h3>
             {deleteNewline !== null && (
               <Switch
                 isSelected={deleteNewline}
@@ -261,7 +281,7 @@ export default function Translate() {
             )}
           </div>
           <div className="config-item">
-            <h3 className="my-auto mx-0">{t('config.translate.remember_language')}</h3>
+            <h3>{t('config.translate.remember_language')}</h3>
             {rememberLanguage !== null && (
               <Switch
                 isSelected={rememberLanguage}
@@ -308,7 +328,7 @@ export default function Translate() {
                         )}
                     </div> */}
           <div className="config-item">
-            <h3 className="my-auto mx-0">{t('config.translate.window_position')}</h3>
+            <h3>{t('config.translate.window_position')}</h3>
             {windowPosition !== null && (
               <Dropdown>
                 <DropdownTrigger>
@@ -333,7 +353,7 @@ export default function Translate() {
             )}
           </div>
           <div className="config-item">
-            <h3 className="my-auto mx-0">{t('config.translate.remember_window_size')}</h3>
+            <h3>{t('config.translate.remember_window_size')}</h3>
             {rememberWindowSize !== null && (
               <Switch
                 isSelected={rememberWindowSize}
@@ -349,7 +369,7 @@ export default function Translate() {
             )}
           </div>
           <div className="config-item">
-            <h3 className="my-auto mx-0">{t('config.translate.close_on_blur')}</h3>
+            <h3>{t('config.translate.close_on_blur')}</h3>
             {closeOnBlur !== null && (
               <Switch
                 isSelected={closeOnBlur}
@@ -360,7 +380,7 @@ export default function Translate() {
             )}
           </div>
           <div className="config-item">
-            <h3 className="my-auto mx-0">{t('config.translate.always_on_top')}</h3>
+            <h3>{t('config.translate.always_on_top')}</h3>
             {alwaysOnTop !== null && (
               <Switch
                 isSelected={alwaysOnTop}
@@ -371,7 +391,7 @@ export default function Translate() {
             )}
           </div>
           <div className="config-item">
-            <h3 className="my-auto mx-0">{t('config.translate.hide_source')}</h3>
+            <h3>{t('config.translate.hide_source')}</h3>
             {hideSource !== null && (
               <Switch
                 isSelected={hideSource}
@@ -382,7 +402,7 @@ export default function Translate() {
             )}
           </div>
           <div className="config-item">
-            <h3 className="my-auto mx-0">{t('config.translate.hide_language')}</h3>
+            <h3>{t('config.translate.hide_language')}</h3>
             {hideLanguage !== null && (
               <Switch
                 isSelected={hideLanguage}
@@ -393,7 +413,7 @@ export default function Translate() {
             )}
           </div>
           <div className="config-item">
-            <h3 className="my-auto mx-0">{t('config.translate.hide_window')}</h3>
+            <h3>{t('config.translate.hide_window')}</h3>
             {hideWindow !== null && (
               <Switch
                 isSelected={hideWindow}

@@ -27,7 +27,7 @@ export default function Recognize() {
     <Card className="mb-2.5">
       <CardBody>
         <div className="config-item">
-          <h3 className="my-auto mx-0">{t('config.recognize.language')}</h3>
+          <h3>{t('config.recognize.language')}</h3>
           {recognizeLanguage !== null && (
             <Dropdown>
               <DropdownTrigger>
@@ -54,7 +54,7 @@ export default function Recognize() {
           )}
         </div>
         <div className="config-item">
-          <h3 className="my-auto mx-0">{t('config.recognize.delete_newline')}</h3>
+          <h3>{t('config.recognize.delete_newline')}</h3>
           {deleteNewline !== null && (
             <Switch
               isSelected={deleteNewline}
@@ -65,7 +65,7 @@ export default function Recognize() {
           )}
         </div>
         <div className="config-item">
-          <h3 className="my-auto mx-0">{t('config.recognize.auto_copy')}</h3>
+          <h3>{t('config.recognize.auto_copy')}</h3>
           {autoCopy !== null && (
             <Switch
               isSelected={autoCopy}
@@ -76,7 +76,7 @@ export default function Recognize() {
           )}
         </div>
         <div className="config-item">
-          <h3 className="my-auto mx-0">{t('config.recognize.close_on_blur')}</h3>
+          <h3>{t('config.recognize.close_on_blur')}</h3>
           {closeOnBlur !== null && (
             <Switch
               isSelected={closeOnBlur}
@@ -87,7 +87,7 @@ export default function Recognize() {
           )}
         </div>
         <div className="config-item">
-          <h3 className="my-auto mx-0">{t('config.recognize.hide_window')}</h3>
+          <h3>{t('config.recognize.hide_window')}</h3>
           {hideWindow !== null && (
             <Switch
               isSelected={hideWindow}

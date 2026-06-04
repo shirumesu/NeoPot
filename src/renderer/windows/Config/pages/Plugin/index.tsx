@@ -293,7 +293,7 @@ export default function Plugin() {
             </Button>
           </div>
           {updates && updates.length > 0 && (
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2.5">
               {updates.map((plugin) => (
                 <div
                   key={plugin.id}
@@ -431,7 +431,7 @@ export default function Plugin() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2.5">
         {plugins.map((plugin) => (
           <PluginCard
             key={plugin.id}
