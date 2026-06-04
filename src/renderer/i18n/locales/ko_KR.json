@@ -1,57 +1,19 @@
 {
   "translation": {
     "common": {
-      "ok": "Ok",
+      "ok": "확인",
       "cancel": "취소",
       "save": "저장",
-      "write_clipboard": "클립보드에 작성",
+      "write_clipboard": "클립보드에 복사",
       "plugin": "플러그인",
-      "test": "Test"
-    },
-    "services": {
-      "translate": {
-        "deepl": {
-          "title": "DeepL",
-          "custom_url": "DeepLX 주소",
-          "auth_key": "인증키",
-          "type": "서비스 유형",
-          "free": "무료",
-          "api": "인증키",
-          "deeplx": "DeepLX"
-        },
-        "google": {
-          "title": "Google",
-          "custom_url": "사용자 지정 URL"
-        },
-        "ollama": {
-          "title": "Ollama",
-          "install_ollama": "로컬 Ollama에 연결할 수 없습니다. 먼저 Ollama를 다운로드, 설치, 실행해 주세요.",
-          "install_ollama_link": "Ollama 다운로드",
-          "request_path": "경로 요청",
-          "stream": "실시간 모드",
-          "model": "모델",
-          "install_model": "설치",
-          "ready": "준비",
-          "not_installed": "해당 모델이 설치되어 있지 않습니다. 다운로드 및 설치하려면 지금 클릭하세요",
-          "supported_models": "Ollama 지원 모델 목록 보기",
-          "prompt_description": "프롬프트를 사용자 지정하면 AI의 동작을 원하는 대로 설정할 수 있습니다. $text, $from, $to, $detect는 각각 번역할 텍스트, 원본 언어, 대상 언어, 감지된 언어로 대체됩니다.",
-          "add": "프롬프트 추가"
-        }
-      },
-      "help": "설정 방법 안내",
-      "no_need": "즉시 사용 가능합니다 (설정 불필요)",
-      "instance_name": "설명 이름",
-      "recognize": {
-        "local_model": {
-          "title": "Local Model OCR",
-          "description": "Uses the bundled PaddleOCR.js PP-OCRv5 local model assets in the app. Recognition does not use a cloud OCR API."
-        }
-      }
+      "coming": "곧 출시됩니다…",
+      "clear": "지우기",
+      "test": "테스트"
     },
     "languages": {
       "auto": "자동 감지",
-      "zh_cn": "중국어 (간체)",
-      "zh_tw": "중국어 (번체)",
+      "zh_cn": "중국어 간체",
+      "zh_tw": "중국어 번체",
       "ja": "일본어",
       "en": "영어",
       "ko": "한국어",
@@ -61,8 +23,8 @@
       "de": "독일어",
       "it": "이탈리아어",
       "tr": "터키어",
-      "pt_pt": "포르투칼어",
-      "pt_br": "포르투칼어 (브라질)",
+      "pt_pt": "포르투갈어",
+      "pt_br": "포르투갈어 (브라질)",
       "vi": "베트남어",
       "id": "인도네시아어",
       "th": "태국어",
@@ -70,10 +32,10 @@
       "ar": "아랍어",
       "hi": "힌디어",
       "mn_mo": "몽골어",
-      "mn_cy": "몽골어 (키릴문자)",
+      "mn_cy": "몽골어 (키릴)",
       "km": "크메르어",
-      "nb_no": "노르웨이 보크몰어",
-      "nn_no": "노르웨이 뉘노르스크어",
+      "nb_no": "노르웨이어 보크몰",
+      "nn_no": "노르웨이어 뉘노르스크",
       "fa": "페르시아어",
       "sv": "스웨덴어",
       "pl": "폴란드어",
@@ -81,120 +43,195 @@
       "uk": "우크라이나어",
       "he": "히브리어"
     },
+    "app_languages": {
+      "zh_cn": "简体中文",
+      "zh_tw": "繁體中文",
+      "en": "English",
+      "ja": "日本語",
+      "ko": "한국어",
+      "fr": "Français",
+      "de": "Deutsch",
+      "es": "Español",
+      "ru": "Русский",
+      "tr": "Türkçe",
+      "pt_br": "Português (Brasil)",
+      "ar": "العربية"
+    },
+    "accessibility": {
+      "app_logo": "NeoPot 로고",
+      "app_language": "표시 언어",
+      "app_theme": "테마",
+      "app_font": "글꼴",
+      "app_fallback_font": "대체 글꼴",
+      "font_size": "글꼴 크기",
+      "tray_click_event": "트레이 클릭 이벤트",
+      "log_level": "로그 레벨",
+      "source_language": "원본 언어",
+      "target_language": "대상 언어",
+      "second_language": "보조 대상 언어",
+      "detect_engine": "언어 감지 엔진",
+      "auto_copy": "자동 복사",
+      "window_position": "창 위치",
+      "recognize_language": "인식 언어",
+      "translate_service": "번역 서비스",
+      "recognize_service": "인식 서비스",
+      "thinking_mode": "사고 모드",
+      "minimize_window": "창 최소화",
+      "maximize_window": "창 최대화",
+      "restore_window": "창 복원",
+      "close_window": "창 닫기",
+      "pin_window": "창 고정",
+      "unpin_window": "창 고정 해제"
+    },
+    "errors": {
+      "window_render_failed": "{{window}} 창 렌더링 실패",
+      "window_render_failed_generic": "창 렌더링 실패",
+      "config_page_render_failed": "설정 페이지 렌더링 실패",
+      "config_route_missing": "{{route}}에 대한 설정 경로가 없습니다.",
+      "translate_window_initialization_failed": "번역 창 초기화 실패",
+      "recognize_window_initialization_failed": "인식 창 초기화 실패",
+      "language_not_supported": "지원되지 않는 언어",
+      "recognize_service_not_configured": "인식 서비스가 구성되지 않았습니다",
+      "recognize_timeout": "인식 요청 시간 초과"
+    },
+    "status": {
+      "loading_translation_window": "번역 창 로딩 중...",
+      "loading_recognize_window": "인식 창 로딩 중..."
+    },
+    "windows": {
+      "config": "설정",
+      "translate": "번역",
+      "recognize": "인식",
+      "screenshot": "스크린샷",
+      "updater": "업데이트"
+    },
     "config": {
+      "common": {
+        "save_success": "설정이 저장되었습니다",
+        "save_failed": "설정 저장 실패"
+      },
       "general": {
         "label": "일반",
         "title": "일반 설정",
-        "auto_start": "자동 실행",
+        "auto_start": "자동 시작",
         "check_update": "업데이트 확인",
         "close_to_tray": "닫을 때 트레이로 최소화",
-        "clipboard_monitor": "클립보드 감시",
-        "server_port": "수신 대기 포트",
-        "server_port_change": "수신 대기 포트가 변경되었습니다. 변경 사항을 적용하려면 애플리케이션을 종료 후 다시 시작하세요",
+        "clipboard_monitor": "클립보드 모니터",
+        "server_port": "수신 포트",
+        "server_port_change": "수신 포트가 변경되었습니다. 변경 사항을 적용하려면 애플리케이션을 다시 시작하세요",
         "app_language": "표시 언어",
         "app_theme": "테마",
         "app_font": "글꼴",
         "app_fallback_font": "대체 글꼴",
         "font_size": {
-          "10": "최소 크기 (10px)",
-          "12": "아주 작게 (12px)",
+          "10": "아주 아주 작게 (10px)",
+          "12": "매우 작게 (12px)",
           "14": "작게 (14px)",
-          "16": "보통 (16px)",
+          "16": "표준 (16px)",
           "18": "크게 (18px)",
-          "20": "아주 크게 (20px)",
-          "24": "최대 크기 (24px)",
+          "20": "매우 크게 (20px)",
+          "24": "아주 크게 (24px)",
           "title": "글꼴 크기"
         },
-        "default_font": "기본 글꼴",
+        "default_font": "기본값",
         "theme": {
           "light": "라이트",
           "dark": "다크",
-          "system": "시스템 설정"
+          "system": "시스템"
         },
         "dev_mode": "개발자 모드",
-        "log_level": "Log Level",
+        "log_level": "로그 레벨",
+        "log_levels": {
+          "debug": "디버그",
+          "info": "정보",
+          "warn": "경고",
+          "error": "오류",
+          "silent": "끄기"
+        },
         "proxy": {
-          "title": "프록시 설정",
+          "title": "프록시",
           "host": "호스트",
           "port": "포트",
           "username": "사용자명",
           "password": "비밀번호",
           "no_proxy": "프록시 없음"
         },
-        "proxy_change": "프록시 설정이 변경되었습니다. 변경 사항을 적용하려면 애플리케이션을 종료 후 다시 시작하세요",
-        "proxy_error": "프록시 호스트 및 포트를 입력해주세요",
-        "tray_click_event": "시스템 트레이 클릭 시",
+        "proxy_change": "프록시가 변경되었습니다. 변경 사항을 적용하려면 애플리케이션을 다시 시작하세요",
+        "proxy_error": "호스트와 포트를 입력하세요",
+        "invalid_port": "1-65535 사이의 숫자를 입력하세요",
+        "tray_click_event": "트레이 클릭 이벤트",
         "event": {
-          "config": "설정",
+          "config": "환경 설정",
           "translate": "번역",
-          "disable": "비활성화",
-          "ocr_recognize": "문자 인식",
+          "disable": "사용 안 함",
+          "ocr_recognize": "텍스트 인식",
           "ocr_translate": "스크린샷 번역"
         }
       },
       "translate": {
         "label": "번역",
         "title": "번역 설정",
-        "source_language": "출발 언어",
-        "target_language": "도착 언어",
-        "second_language": "대체 언어",
+        "source_language": "원본 언어",
+        "target_language": "대상 언어",
+        "second_language": "보조 대상 언어",
         "auto_copy": "자동 복사",
-        "source": "출발 언어",
-        "target": "도착 언어",
-        "source_target": "출발 + 도착 언어",
-        "disable": "비활성화",
-        "incremental_translate": "연속 번역",
+        "source": "원본",
+        "target": "대상",
+        "source_target": "원본+대상",
+        "disable": "사용 안 함",
+        "incremental_translate": "증분 번역",
         "dynamic_translate": "동적 번역",
         "delete_newline": "줄바꿈 삭제",
-        "remember_language": "도착 언어 유지",
+        "remember_language": "대상 언어 기억",
         "font_size": {
-          "10": "최소 크기 (10px)",
-          "12": "아주 작게 (12px)",
+          "10": "아주 아주 작게 (10px)",
+          "12": "매우 작게 (12px)",
           "14": "작게 (14px)",
-          "16": "보통 (16px)",
+          "16": "표준 (16px)",
           "18": "크게 (18px)",
-          "20": "아주 크게 (20px)",
-          "24": "최대 크기 (24px)",
+          "20": "매우 크게 (20px)",
+          "24": "아주 아주 크게 (24px)",
           "title": "글꼴 크기"
         },
-        "window_position": "창 팝업 위치",
-        "mouse": "마우스 위치 기준",
-        "pre_state": "창 위치 유지",
-        "remember_window_size": "창 크기 유지",
-        "close_on_blur": "다른 곳을 클릭하여 창 숨기기",
-        "always_on_top": "항상 위에",
-        "hide_source": "원본 텍스트 숨기기",
-        "hide_language": "언어 표시줄 숨기기",
+        "window_position": "창 위치",
+        "mouse": "마우스 따라가기",
+        "pre_state": "위치 기억",
+        "remember_window_size": "창 크기 기억",
+        "close_on_blur": "포커스 잃을 때 창 닫기",
+        "always_on_top": "항상 위에 표시",
+        "hide_source": "원본 영역 숨기기",
+        "hide_language": "언어 영역 숨기기",
         "hide_window": "번역 창 숨기기",
-        "detect_engine": "언어 식별 엔진",
-        "baidu": "바이두(Baidu)",
-        "tencent": "텐센트(Tencent)",
-        "niutrans": "뉴트랜스(NiuTrans)",
-        "google": "구글(Google)",
-        "bing": "빙(Bing)",
-        "yandex": "얀덱스(Yandex)",
-        "local": "로컬(Local)",
-        "plugin_missing": "Missing plugin"
+        "detect_engine": "언어 감지 엔진",
+        "baidu": "Baidu",
+        "tencent": "Tencent",
+        "niutrans": "NiuTrans",
+        "google": "Google",
+        "bing": "Bing",
+        "yandex": "Yandex",
+        "local": "로컬",
+        "plugin_missing": "플러그인 누락"
       },
       "recognize": {
-        "label": "인식(OCR)",
+        "label": "인식",
         "title": "인식 설정",
         "language": "인식 언어",
         "delete_newline": "줄바꿈 자동 삭제",
         "auto_copy": "자동 복사",
-        "close_on_blur": "다른 곳을 클릭하여 창 숨기기",
+        "close_on_blur": "포커스 잃을 때 창 닫기",
         "hide_window": "인식 창 숨기기"
       },
       "hotkey": {
         "label": "단축키",
         "title": "단축키 설정",
-        "selection_translate": "선택 영역 번역",
+        "selection_translate": "선택 번역",
         "input_translate": "텍스트 번역",
         "ocr_recognize": "텍스트 인식",
         "ocr_translate": "스크린샷 번역",
-        "is_register": "해당 단축키는 이미 등록되어 있습니다",
-        "success": "단축키가 정상 등록되었습니다",
-        "set_hotkey": "설정하려는 단축키를 입력하세요"
+        "is_register": "단축키가 이미 등록되어 있습니다",
+        "success": "단축키 등록 성공",
+        "set_hotkey": "눌러서 단축키 설정",
+        "plugin_section": "플러그인 단축키"
       },
       "service": {
         "label": "서비스",
@@ -202,17 +239,67 @@
         "translate": "번역",
         "tts": "TTS",
         "recognize": "인식",
-        "least": "최소한 하나 이상은 선택해야 합니다",
-        "add_builtin_service": "기본 제공 기능 추가",
-        "add_external_service": "확장 기능 추가",
-        "no_installed_plugin_service": "No installed plugins detected",
+        "least": "최소 한 개는 유지해야 합니다",
+        "add_builtin_service": "내장 서비스 추가",
+        "add_external_service": "확장 추가",
+        "add_installed_plugin_service": "설치된 플러그인 추가",
+        "no_installed_plugin_service": "설치된 플러그인이 없습니다",
         "add_service": "서비스 추가",
         "test_failed": "테스트 실패",
         "install_plugin": "플러그인 설치",
-        "view_plugin_list": "지원되는 플러그인 목록",
-        "uninstall_success": "플러그인이 삭제되었습니다",
+        "view_plugin_list": "플러그인 목록 보기",
+        "uninstall_success": "플러그인이 성공적으로 제거되었습니다",
         "homepage": "홈페이지",
         "test_success": "테스트 성공"
+      },
+      "plugin": {
+        "label": "플러그인",
+        "title": "플러그인 관리",
+        "version": "버전",
+        "author": "제작자",
+        "homepage": "플러그인 홈페이지",
+        "settings": "플러그인 설정",
+        "hotkeys": "플러그인 단축키",
+        "delete": "플러그인 삭제",
+        "enabled": "플러그인 활성화",
+        "market": {
+          "title": "커뮤니티 플러그인 마켓",
+          "description": "커뮤니티에서 제작한 서드파티 플러그인을 찾아보고 설치하세요.",
+          "browse": "찾아보기",
+          "search": "플러그인 검색",
+          "install": "설치",
+          "install_success": "플러그인 설치됨",
+          "install_failed": "플러그인 설치 실패"
+        },
+        "update": {
+          "title": "플러그인 설치 상태",
+          "installed_count": "현재 {{count}}개의 플러그인이 설치되어 있습니다.",
+          "check": "업데이트 확인",
+          "available_count": "{{count}}개의 플러그인 업데이트가 있습니다.",
+          "none": "모든 설치된 플러그인이 최신 상태입니다.",
+          "checked": "플러그인 업데이트 확인 완료",
+          "install": "업데이트",
+          "install_all": "모두 업데이트",
+          "install_success": "플러그인 업데이트됨",
+          "install_failed": "플러그인 업데이트 실패",
+          "ignore": "이 업데이트 무시",
+          "ignored": "업데이트 무시됨"
+        },
+        "auto_update": {
+          "title": "플러그인 업데이트 자동 확인",
+          "description": "서드파티 플러그인 업데이트를 주기적으로 확인합니다."
+        },
+        "installed": "설치된 플러그인",
+        "refresh": "새로고침",
+        "open_folder": "플러그인 폴더 열기",
+        "install_from_file": "파일에서 설치",
+        "install_from_folder": "폴더에서 설치",
+        "install_success": "플러그인 설치됨",
+        "install_failed": "플러그인 설치 실패",
+        "file_filter": {
+          "plugin_files": "플러그인 파일",
+          "all_files": "모든 파일"
+        }
       },
       "about": {
         "label": "정보",
@@ -220,59 +307,118 @@
         "website": "웹사이트",
         "github": "GitHub",
         "feedback": "피드백",
-        "issue": "오류 제보",
+        "issue": "이슈",
         "email": "이메일",
         "community": "커뮤니티",
         "check_update": "업데이트 확인",
-        "view_log": "로그 확인",
-        "view_config": "설정 확인",
+        "view_log": "로그 보기",
+        "view_config": "설정 보기",
         "qq_channel": "QQ 채널",
         "qq_group": "QQ 그룹",
-        "telegram": "텔레그램",
-        "discussion": "GitHub 토론"
-      },
-      "plugin": {
-        "market": {
-          "install_success": "Plugin installed",
-          "install_failed": "Failed to install plugin"
-        },
-        "update": {
-          "checked": "Plugin update check completed",
-          "install": "Update",
-          "install_success": "Plugin updated",
-          "install_failed": "Failed to update plugin"
-        },
-        "install_success": "Plugin installed",
-        "install_failed": "Failed to install plugin",
-        "homepage": "Plugin homepage"
-      },
-      "common": {
-        "save_success": "Settings saved",
-        "save_failed": "Failed to save settings"
+        "telegram": "Telegram",
+        "discussion": "Github 토론"
       }
+    },
+    "tray": {
+      "config": "환경 설정",
+      "selection_translate": "선택 번역",
+      "input_translate": "입력 번역",
+      "ocr_recognize": "텍스트 인식",
+      "ocr_translate": "스크린샷 번역",
+      "restart": "다시 시작",
+      "quit": "종료"
     },
     "updater": {
       "title": "업데이트 확인",
-      "latest": "현재 최신 버전을 사용 중입니다",
-      "progress": "다운로드 진행",
-      "check": "Check",
-      "checking": "Checking for updates…",
-      "available": "A new update is available.",
-      "version_available": "Version {{version}} is available",
+      "latest": "## 최신 버전이 설치되어 있습니다",
+      "progress": "다운로드 진행률",
+      "check": "확인",
+      "checking": "업데이트 확인 중…",
+      "available": "새 업데이트가 있습니다.",
+      "version_available": "버전 {{version}}을(를) 사용할 수 있습니다",
       "update": "업데이트",
       "downloading": "다운로드 중…",
       "installing": "설치 중…",
-      "restart": "Restart",
-      "ready_restart": "Ready to restart",
-      "go_to_download": "Download",
-      "unsupported": "## Updates are not available for this build\n\nOpen the release page to download the latest version manually.",
-      "error": "Update check failed",
+      "restart": "다시 시작",
+      "ready_restart": "다시 시작할 준비가 되었습니다",
+      "go_to_download": "다운로드",
+      "unsupported": "## 이 빌드에서는 업데이트를 사용할 수 없습니다\n\n릴리스 페이지에서 최신 버전을 수동으로 다운로드하세요.",
+      "error": "업데이트 확인 실패",
       "cancel": "취소",
-      "installed": "설치가 완료되었습니다. 변경 사항을 적용하려면 애플리케이션을 종료 후 다시 시작하세요"
+      "installed": "설치 완료, 변경 사항을 적용하려면 애플리케이션을 다시 시작하세요"
+    },
+    "services": {
+      "help": "구성 가이드",
+      "no_need": "구성이 필요하지 않음",
+      "instance_name": "구성 이름",
+      "translate": {
+        "deepl": {
+          "title": "DeepL",
+          "custom_url": "DeepLX URL",
+          "auth_key": "인증 키",
+          "type": "서비스 유형",
+          "free": "무료",
+          "api": "인증 키",
+          "deeplx": "DeepLX"
+        },
+        "google": {
+          "title": "Google",
+          "custom_url": "사용자 지정 URL"
+        },
+        "ollama": {
+          "title": "Ollama",
+          "install_ollama": "로컬 ollama에 연결할 수 없습니다. 먼저 ollama를 다운로드, 설치 및 시작하세요. 이 머신이 아닌 ollama를 사용하는 경우 요청 주소를 변경하세요.",
+          "install_ollama_link": "Ollama 다운로드",
+          "request_path": "요청 경로",
+          "stream": "스트림 모드",
+          "model": "모델",
+          "advanced_options": "고급 옵션",
+          "advanced_description": "비워 두면 모델 또는 Ollama 기본값을 사용합니다. 사고 모드는 이를 지원하는 모델에만 적용됩니다.",
+          "thinking_mode": "사고 모드",
+          "thinking_default": "모델 기본값 사용",
+          "thinking_on": "사고 활성화",
+          "thinking_off": "사고 비활성화",
+          "temperature": "Temperature",
+          "top_p": "Top P",
+          "top_k": "Top K",
+          "use_model_default": "비워 두면 기본값 사용",
+          "install_model": "설치",
+          "ready": "준비됨",
+          "not_installed": "이 모델이 아직 설치되지 않았습니다. 클릭하여 지금 다운로드 및 설치하세요",
+          "supported_models": "클릭하여 Ollama 사용 가능 모델 목록 보기",
+          "prompt_list": "Prompt 목록",
+          "prompt_description": "Prompt를 사용자 지정하여 AI의 동작을 조정할 수 있습니다. $text $from $to $detect는 번역할 텍스트, 원본 언어, 대상 언어 및 감지된 언어로 대체됩니다.",
+          "prompt_placeholder": "{{role}} 프롬프트 입력",
+          "add": "프롬프트 추가"
+        }
+      },
+      "recognize": {
+        "local_model": {
+          "title": "로컬 모델 OCR",
+          "description": "앱에 번들로 제공되는 PaddleOCR.js PP-OCRv5 로컬 모델 자산을 사용합니다. 인식에 클라우드 OCR API를 사용하지 않습니다."
+        }
+      },
+      "tts": {}
     },
     "translate": {
-      "show_preview": "Show preview",
-      "show_source": "Show source"
+      "translate": "번역",
+      "recognizing": "인식 중…",
+      "speak": "말하기",
+      "copy": "복사",
+      "retry": "다시 시도",
+      "show_preview": "미리보기 표시",
+      "show_source": "원본 표시",
+      "delete_newline": "줄바꿈 삭제",
+      "translate_back": "원문으로 다시 번역",
+      "tts_not_configured": "TTS 서비스가 구성되지 않았습니다"
+    },
+    "recognize": {
+      "recognize": "인식",
+      "translate": "번역",
+      "copy_img": "이미지 복사",
+      "copy_text": "복사",
+      "delete_newline": "줄바꿈 삭제",
+      "delete_space": "공백 삭제"
     }
   }
 }

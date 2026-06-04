@@ -71,7 +71,7 @@ export default function LanguageArea() {
               </Button>
             </DropdownTrigger>
             <DropdownMenuAny
-              aria-label="Source Language"
+              aria-label={t('accessibility.source_language')}
               className="max-h-[50vh] overflow-y-auto"
               onAction={(key: React.Key) => {
                 setSourceLanguage(String(key))
@@ -123,7 +123,7 @@ export default function LanguageArea() {
               </Button>
             </DropdownTrigger>
             <DropdownMenuAny
-              aria-label="Target Language"
+              aria-label={t('accessibility.target_language')}
               className="max-h-[50vh] overflow-y-auto"
               onAction={(key: React.Key) => {
                 setTargetLanguage(String(key))

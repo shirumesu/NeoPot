@@ -82,7 +82,7 @@ export default function TextArea(props: any) {
                     utils,
                   },
                 ),
-                'Recognize request timed out',
+                t('errors.recognize_timeout'),
               ).then(
                 (v: any) => {
                   if (recognizeId !== id) return
@@ -117,7 +117,7 @@ export default function TextArea(props: any) {
             },
           )
         } else {
-          setError('Language not supported')
+          setError(t('errors.language_not_supported'))
           setLoading(false)
         }
       } else {
@@ -133,7 +133,7 @@ export default function TextArea(props: any) {
                 config: instanceConfig,
               },
             ),
-            'Recognize request timed out',
+            t('errors.recognize_timeout'),
           ).then(
             (v: any) => {
               if (recognizeId !== id) return
@@ -161,7 +161,7 @@ export default function TextArea(props: any) {
             },
           )
         } else {
-          setError('Language not supported')
+          setError(t('errors.language_not_supported'))
           setLoading(false)
         }
       }

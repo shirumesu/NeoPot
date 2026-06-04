@@ -275,7 +275,7 @@ export default function TargetArea(props: any) {
     }
     const resolvedTargetLanguage = resolveTargetLanguage()
     if (resolvedTargetLanguage === null) {
-      setError('Language not supported')
+      setError(t('errors.language_not_supported'))
       return
     }
     const providerDetectLanguage =
@@ -375,7 +375,7 @@ export default function TargetArea(props: any) {
           },
         )
       } else {
-        setError('Language not supported')
+        setError(t('errors.language_not_supported'))
       }
     } else {
       const LanguageEnum = builtinServiceMap[translateServiceName].Language
@@ -461,7 +461,7 @@ export default function TargetArea(props: any) {
             },
           )
       } else {
-        setError('Language not supported')
+        setError(t('errors.language_not_supported'))
       }
     }
   }
@@ -507,7 +507,7 @@ export default function TargetArea(props: any) {
         throw new Error(t('translate.tts_not_configured'))
       }
       if (!(targetLanguage in ttsPluginInfo.language)) {
-        throw new Error('Language not supported')
+        throw new Error(t('errors.language_not_supported'))
       }
       const [func, utils] = await invoke_plugin('tts', getServiceName(instanceKey))
       const data = await func(result, ttsPluginInfo.language[targetLanguage], {
@@ -517,7 +517,7 @@ export default function TargetArea(props: any) {
       speak(data)
     } else {
       if (!(targetLanguage in builtinTtsServiceMap[getServiceName(instanceKey)].Language)) {
-        throw new Error('Language not supported')
+        throw new Error(t('errors.language_not_supported'))
       }
       const instanceConfig = serviceInstanceConfigMap[instanceKey]
       const data = await builtinTtsServiceMap[getServiceName(instanceKey)].tts(
@@ -587,7 +587,7 @@ export default function TargetArea(props: any) {
               </Button>
             </DropdownTrigger>
             <DropdownMenu
-              aria-label="app language"
+              aria-label={t('accessibility.translate_service')}
               className="max-h-[40vh] overflow-y-auto"
               onAction={(key: React.Key) => {
                 setCurrentTranslateServiceInstanceKey(String(key))
@@ -915,7 +915,7 @@ export default function TargetArea(props: any) {
                           },
                         )
                       } else {
-                        setError('Language not supported')
+                        setError(t('errors.language_not_supported'))
                       }
                     } else {
                       const LanguageEnum =
@@ -959,7 +959,7 @@ export default function TargetArea(props: any) {
                             },
                           )
                       } else {
-                        setError('Language not supported')
+                        setError(t('errors.language_not_supported'))
                       }
                     }
                   }}

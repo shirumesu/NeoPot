@@ -4,6 +4,7 @@ import { AiFillCloseCircle } from 'react-icons/ai'
 import React, { useState, useEffect } from 'react'
 import { listen } from '@/renderer/lib/electron/compat/event'
 import { BsPinFill } from 'react-icons/bs'
+import { useTranslation } from 'react-i18next'
 
 import LanguageArea from './components/LanguageArea'
 import SourceArea from './components/SourceArea'
@@ -61,6 +62,7 @@ void listen('neopot://move', () => {
 })
 
 export default function Translate() {
+  const { t } = useTranslation()
   const [closeOnBlur] = useConfig('translate_close_on_blur', true)
   const [alwaysOnTop] = useConfig('translate_always_on_top', false)
   const [windowPosition] = useConfig('translate_window_position', 'mouse')
@@ -243,6 +245,7 @@ export default function Translate() {
           variant="flat"
           disableAnimation
           className="my-auto bg-transparent"
+          aria-label={t(pined ? 'accessibility.unpin_window' : 'accessibility.pin_window')}
           onPress={() => {
             if (pined) {
               if (closeOnBlur) {
@@ -264,6 +267,7 @@ export default function Translate() {
           variant="flat"
           disableAnimation
           className={`my-auto ${osType === 'Darwin' && 'hidden'} bg-transparent`}
+          aria-label={t('accessibility.close_window')}
           onPress={() => {
             void appWindow.close()
           }}
@@ -277,7 +281,9 @@ export default function Translate() {
         <div className="h-full overflow-y-auto">
           {hasInitError ? (
             <div className="rounded-medium border border-danger/30 bg-danger/10 p-4 text-sm text-danger">
-              <div className="mb-2 font-semibold">Translate window initialization failed</div>
+              <div className="mb-2 font-semibold">
+                {t('errors.translate_window_initialization_failed')}
+              </div>
               <pre className="whitespace-pre-wrap wrap-break-word">{`${pluginLoadError ?? ''}${
                 pluginLoadError && serviceConfigError ? '\n' : ''
               }${serviceConfigError ?? ''}`}</pre>
@@ -292,7 +298,7 @@ export default function Translate() {
                   />
                 ) : (
                   <div className="rounded-medium border border-default-200 bg-content1 px-4 py-3 text-sm text-default-500">
-                    Loading translation window...
+                    {t('status.loading_translation_window')}
                   </div>
                 )}
               </div>

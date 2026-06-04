@@ -90,7 +90,7 @@ export function Config(props: any) {
             </DropdownTrigger>
             <DropdownMenu
               autoFocus="first"
-              aria-label="app language"
+              aria-label={t('services.translate.deepl.type')}
               onAction={(key) => {
                 setDeeplConfig({
                   ...deeplConfig,

@@ -329,7 +329,7 @@ export function Config(props: any) {
             </DropdownTrigger>
             <DropdownMenu
               autoFocus="first"
-              aria-label="thinking-mode"
+              aria-label={t('accessibility.thinking_mode')}
               onAction={(key) => {
                 setServiceConfig({
                   ...serviceConfig,
@@ -440,7 +440,7 @@ export function Config(props: any) {
             </div>
           </CardBody>
         </Card>
-        <h3 className="my-auto">Prompt List</h3>
+        <h3 className="my-auto">{t('services.translate.ollama.prompt_list')}</h3>
         <p className="text-[10px] text-default-700">
           {t('services.translate.ollama.prompt_description')}
         </p>
@@ -455,7 +455,9 @@ export function Config(props: any) {
                     labelPlacement="outside"
                     variant="faded"
                     value={prompt.content}
-                    placeholder={`Input Some ${prompt.role} Prompt`}
+                    placeholder={t('services.translate.ollama.prompt_placeholder', {
+                      role: prompt.role,
+                    })}
                     onValueChange={(value) => {
                       setServiceConfig({
                         ...serviceConfig,

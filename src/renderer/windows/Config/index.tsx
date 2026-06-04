@@ -40,7 +40,7 @@ export default function Config() {
         <div className="p-1.25">
           <div data-tauri-drag-region="true">
             <img
-              alt="pot logo"
+              alt={t('accessibility.app_logo')}
               src="icon.svg"
               className="h-15 w-15 m-auto mb-7.5"
               draggable={false}
@@ -68,10 +68,10 @@ export default function Config() {
             osType === 'Linux' ? 'h-[calc(100vh-38px)]' : 'h-[calc(100vh-36px)]'
           }`}
         >
-          <ErrorBoundary fallbackTitle="Config page render failed">
+          <ErrorBoundary fallbackTitle={t('errors.config_page_render_failed')}>
             {page ?? (
               <div className="rounded-medium border border-warning/30 bg-warning/10 p-4 text-sm text-warning-700">
-                No config route matched for <code>{location.pathname}</code>.
+                {t('errors.config_route_missing', { route: location.pathname })}
               </div>
             )}
           </ErrorBoundary>

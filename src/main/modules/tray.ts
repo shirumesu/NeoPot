@@ -1,9 +1,7 @@
 import { existsSync } from 'node:fs'
 import path from 'node:path'
 import { app, Menu, nativeImage, Tray } from 'electron'
-import enUS from '../../renderer/i18n/locales/en_US.json'
-import zhCN from '../../renderer/i18n/locales/zh_CN.json'
-import zhTW from '../../renderer/i18n/locales/zh_TW.json'
+import { translationResources as resources } from '../../renderer/i18n/resources'
 import { getConfig } from './config'
 import {
   inputTranslate,
@@ -16,35 +14,22 @@ import {
 
 let tray: Tray | null = null
 
-const resources = {
-  en: enUS.translation,
-  en_us: enUS.translation,
-  zh_cn: zhCN.translation,
-  zh_tw: zhTW.translation,
+const fallbackLanguageChains: Record<string, string[]> = {
+  zh_cn: ['zh_tw', 'en'],
+  zh_tw: ['zh_cn', 'en'],
 }
 
-const fallbackLabels = {
-  config: 'Config',
-  selectionTranslate: 'Selection Translate',
-  inputTranslate: 'Input Translate',
-  ocrRecognize: 'OCR Recognize',
-  ocrTranslate: 'OCR Translate',
-  restart: 'Restart',
-  quit: 'Quit',
-}
+const trayLabelPaths = {
+  config: ['tray', 'config'],
+  selectionTranslate: ['tray', 'selection_translate'],
+  inputTranslate: ['tray', 'input_translate'],
+  ocrRecognize: ['tray', 'ocr_recognize'],
+  ocrTranslate: ['tray', 'ocr_translate'],
+  restart: ['tray', 'restart'],
+  quit: ['tray', 'quit'],
+} as const
 
-const extraLabels: Record<string, Partial<typeof fallbackLabels>> = {
-  zh_cn: {
-    config: '偏好设置',
-    restart: '重启',
-    quit: '退出',
-  },
-  zh_tw: {
-    config: '偏好設定',
-    restart: '重新啟動',
-    quit: '結束',
-  },
-}
+type TrayLabelKey = keyof typeof trayLabelPaths
 
 async function dispatchTrayConfiguredAction(): Promise<void> {
   const action = getConfig('tray_click_event')
@@ -83,13 +68,13 @@ function getAppIconPath(): string {
   return candidates.find((candidate) => existsSync(candidate)) ?? candidates[0]
 }
 
-function getAppLanguage(): keyof typeof resources {
+function getAppLanguage(): string {
   const language = getConfig('app_language')
   if (typeof language !== 'string') {
     return 'en'
   }
 
-  const normalized = language.toLowerCase().replace('-', '_') as keyof typeof resources
+  const normalized = language.toLowerCase().replace('-', '_')
   return normalized in resources ? normalized : 'en'
 }
 
@@ -105,30 +90,33 @@ function getNestedValue(source: unknown, pathSegments: string[]): string | undef
   return typeof cursor === 'string' ? cursor : undefined
 }
 
-function getLabels(): typeof fallbackLabels {
-  const language = getAppLanguage()
-  const resource = resources[language]
+function getFallbackLanguages(language: string): string[] {
+  return [language, ...(fallbackLanguageChains[language] ?? ['en'])].filter(
+    (candidate, index, candidates) =>
+      candidate in resources && candidates.indexOf(candidate) === index,
+  )
+}
 
-  return {
-    config:
-      extraLabels[language]?.config ??
-      getNestedValue(resource, ['config', 'general', 'event', 'config']) ??
-      fallbackLabels.config,
-    selectionTranslate:
-      getNestedValue(resource, ['config', 'hotkey', 'selection_translate']) ??
-      fallbackLabels.selectionTranslate,
-    inputTranslate:
-      getNestedValue(resource, ['config', 'hotkey', 'input_translate']) ??
-      fallbackLabels.inputTranslate,
-    ocrRecognize:
-      getNestedValue(resource, ['config', 'hotkey', 'ocr_recognize']) ??
-      fallbackLabels.ocrRecognize,
-    ocrTranslate:
-      getNestedValue(resource, ['config', 'hotkey', 'ocr_translate']) ??
-      fallbackLabels.ocrTranslate,
-    restart: extraLabels[language]?.restart ?? fallbackLabels.restart,
-    quit: extraLabels[language]?.quit ?? fallbackLabels.quit,
+function translateTrayLabel(language: string, pathSegments: readonly string[]): string {
+  for (const candidate of getFallbackLanguages(language)) {
+    const label = getNestedValue(resources[candidate], [...pathSegments])
+    if (label) {
+      return label
+    }
   }
+
+  return pathSegments.join('.')
+}
+
+function getLabels(): Record<TrayLabelKey, string> {
+  const language = getAppLanguage()
+
+  return Object.fromEntries(
+    Object.entries(trayLabelPaths).map(([key, pathSegments]) => [
+      key,
+      translateTrayLabel(language, pathSegments),
+    ]),
+  ) as Record<TrayLabelKey, string>
 }
 
 export function setupTray(): void {

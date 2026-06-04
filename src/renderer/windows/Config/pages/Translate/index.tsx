@@ -88,7 +88,7 @@ export default function Translate() {
                   <Button variant="bordered">{t(`languages.${sourceLanguage}`)}</Button>
                 </DropdownTrigger>
                 <DropdownMenuAny
-                  aria-label="source language"
+                  aria-label={t('accessibility.source_language')}
                   className="max-h-[50vh] overflow-y-auto"
                   onAction={(key: React.Key) => {
                     saveConfig(
@@ -115,7 +115,7 @@ export default function Translate() {
                   <Button variant="bordered">{t(`languages.${targetLanguage}`)}</Button>
                 </DropdownTrigger>
                 <DropdownMenuAny
-                  aria-label="target language"
+                  aria-label={t('accessibility.target_language')}
                   className="max-h-[50vh] overflow-y-auto"
                   onAction={(key: React.Key) => {
                     saveConfig(
@@ -141,7 +141,7 @@ export default function Translate() {
                   <Button variant="bordered">{t(`languages.${secondLanguage}`)}</Button>
                 </DropdownTrigger>
                 <DropdownMenuAny
-                  aria-label="second language"
+                  aria-label={t('accessibility.second_language')}
                   className="max-h-[50vh] overflow-y-auto"
                   onAction={(key: React.Key) => {
                     saveConfig(
@@ -167,7 +167,7 @@ export default function Translate() {
                   <Button variant="bordered">{detectEngineLabel(detectEngine)}</Button>
                 </DropdownTrigger>
                 <DropdownMenuAny
-                  aria-label="detect engine"
+                  aria-label={t('accessibility.detect_engine')}
                   className="max-h-[50vh] overflow-y-auto"
                   onAction={(key: React.Key) => {
                     saveConfig(
@@ -200,7 +200,7 @@ export default function Translate() {
                   <Button variant="bordered">{t(`config.translate.${autoCopy}`)}</Button>
                 </DropdownTrigger>
                 <DropdownMenuAny
-                  aria-label="auto copy"
+                  aria-label={t('accessibility.auto_copy')}
                   className="max-h-[50vh] overflow-y-auto"
                   onAction={(key: React.Key) => {
                     const copyMode = String(key)
@@ -335,7 +335,7 @@ export default function Translate() {
                   <Button variant="bordered">{t(`config.translate.${windowPosition}`)}</Button>
                 </DropdownTrigger>
                 <DropdownMenuAny
-                  aria-label="window position"
+                  aria-label={t('accessibility.window_position')}
                   className="max-h-[50vh] overflow-y-auto"
                   onAction={(key: React.Key) => {
                     saveConfig(

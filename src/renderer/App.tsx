@@ -67,7 +67,7 @@ export default function App() {
   const [appFallbackFont] = useConfig<string>('app_fallback_font', 'default')
   const [appFontSize] = useConfig<number>('app_font_size', 16)
   const { setTheme } = useTheme()
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
 
   useEffect(() => {
     if (store !== null) {
@@ -169,7 +169,9 @@ export default function App() {
           v7_startTransition: true,
         }}
       >
-        <ErrorBoundary fallbackTitle="Config window render failed">
+        <ErrorBoundary
+          fallbackTitle={t('errors.window_render_failed', { window: t('windows.config') })}
+        >
           <CurrentWindow />
         </ErrorBoundary>
       </MemoryRouter>
@@ -177,7 +179,11 @@ export default function App() {
   }
 
   return (
-    <ErrorBoundary fallbackTitle={`${label} window render failed`}>
+    <ErrorBoundary
+      fallbackTitle={t('errors.window_render_failed', {
+        window: t(`windows.${label}`, { defaultValue: label }),
+      })}
+    >
       <CurrentWindow />
     </ErrorBoundary>
   )

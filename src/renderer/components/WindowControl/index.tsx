@@ -8,6 +8,7 @@ import React, { useEffect, useState } from 'react'
 import { getCurrentWebviewWindow } from '@/renderer/lib/electron/compat/webviewWindow'
 import { listen } from '@/renderer/lib/electron/compat/event'
 import { Button } from '@heroui/react'
+import { useTranslation } from 'react-i18next'
 
 import { osType } from '@/renderer/lib/config/env'
 import './style.css'
@@ -15,6 +16,7 @@ const appWindow = getCurrentWebviewWindow()
 
 export default function WindowControl() {
   const [isMax, setIsMax] = useState(false)
+  const { t } = useTranslation()
 
   useEffect(() => {
     void listen('neopot://resize', async () => {
@@ -32,6 +34,7 @@ export default function WindowControl() {
         isIconOnly
         variant="light"
         className="w-8.75 h-8.75 rounded-none"
+        aria-label={t('accessibility.minimize_window')}
         onPress={() => appWindow.minimize()}
       >
         <VscChromeMinimize className="text-[16px]" />
@@ -40,6 +43,7 @@ export default function WindowControl() {
         isIconOnly
         variant="light"
         className="w-8.75 h-8.75 rounded-none"
+        aria-label={t(isMax ? 'accessibility.restore_window' : 'accessibility.maximize_window')}
         onPress={() => {
           if (isMax) {
             void appWindow.unmaximize()
@@ -58,6 +62,7 @@ export default function WindowControl() {
         isIconOnly
         variant="light"
         className={`w-8.75 h-8.75 rounded-none close-button ${osType === 'Linux' && 'rounded-tr-[10px]'}`}
+        aria-label={t('accessibility.close_window')}
         onPress={() => void appWindow.close()}
       >
         <VscChromeClose className="text-[16px]" />

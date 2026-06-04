@@ -1,108 +1,424 @@
 {
   "translation": {
     "common": {
-      "ok": "Ok"
+      "ok": "Tamam",
+      "cancel": "İptal",
+      "save": "Kaydet",
+      "write_clipboard": "Panoya Yaz",
+      "plugin": "Eklenti",
+      "coming": "Çok yakında…",
+      "clear": "Temizle",
+      "test": "Test"
+    },
+    "languages": {
+      "auto": "Otomatik Algıla",
+      "zh_cn": "Basitleştirilmiş Çince",
+      "zh_tw": "Geleneksel Çince",
+      "ja": "Japonca",
+      "en": "İngilizce",
+      "ko": "Korece",
+      "fr": "Fransızca",
+      "es": "İspanyolca",
+      "ru": "Rusça",
+      "de": "Almanca",
+      "it": "İtalyanca",
+      "tr": "Türkçe",
+      "pt_pt": "Portekizce",
+      "pt_br": "Portekizce (Brezilya)",
+      "vi": "Vietnamca",
+      "id": "Endonezce",
+      "th": "Tayca",
+      "ms": "Malayca",
+      "ar": "Arapça",
+      "hi": "Hintçe",
+      "mn_mo": "Moğolca",
+      "mn_cy": "Moğolca (Kiril)",
+      "km": "Kmerce",
+      "nb_no": "Norveççe Bokmål",
+      "nn_no": "Norveççe Nynorsk",
+      "fa": "Farsça",
+      "sv": "İsveççe",
+      "pl": "Lehçe",
+      "nl": "Felemenkçe",
+      "uk": "Ukraynaca",
+      "he": "İbranice"
+    },
+    "app_languages": {
+      "zh_cn": "简体中文",
+      "zh_tw": "繁體中文",
+      "en": "English",
+      "ja": "日本語",
+      "ko": "한국어",
+      "fr": "Français",
+      "de": "Deutsch",
+      "es": "Español",
+      "ru": "Русский",
+      "tr": "Türkçe",
+      "pt_br": "Português (Brasil)",
+      "ar": "العربية"
+    },
+    "accessibility": {
+      "app_logo": "NeoPot logosu",
+      "app_language": "Görüntüleme dili",
+      "app_theme": "Tema",
+      "app_font": "Yazı tipi",
+      "app_fallback_font": "Yedek yazı tipi",
+      "font_size": "Yazı boyutu",
+      "tray_click_event": "Tepsi tıklama olayı",
+      "log_level": "Günlük seviyesi",
+      "source_language": "Kaynak dil",
+      "target_language": "Hedef dil",
+      "second_language": "İkincil hedef dil",
+      "detect_engine": "Dil algılama motoru",
+      "auto_copy": "Otomatik kopyala",
+      "window_position": "Pencere konumu",
+      "recognize_language": "Tanıma dili",
+      "translate_service": "Çeviri hizmeti",
+      "recognize_service": "Tanıma hizmeti",
+      "thinking_mode": "Düşünme modu",
+      "minimize_window": "Pencereyi küçült",
+      "maximize_window": "Pencereyi büyüt",
+      "restore_window": "Pencereyi geri yükle",
+      "close_window": "Pencereyi kapat",
+      "pin_window": "Pencereyi sabitle",
+      "unpin_window": "Sabitlemeyi kaldır"
+    },
+    "errors": {
+      "window_render_failed": "{{window}} penceresi oluşturulamadı",
+      "window_render_failed_generic": "Pencere oluşturulamadı",
+      "config_page_render_failed": "Yapılandırma sayfası oluşturulamadı",
+      "config_route_missing": "{{route}} için yapılandırma rotası bulunamadı.",
+      "translate_window_initialization_failed": "Çeviri penceresi başlatılamadı",
+      "recognize_window_initialization_failed": "Tanıma penceresi başlatılamadı",
+      "language_not_supported": "Dil desteklenmiyor",
+      "recognize_service_not_configured": "Tanıma hizmeti yapılandırılmadı",
+      "recognize_timeout": "Tanıma isteği zaman aşımına uğradı"
+    },
+    "status": {
+      "loading_translation_window": "Çeviri penceresi yükleniyor...",
+      "loading_recognize_window": "Tanıma penceresi yükleniyor..."
+    },
+    "windows": {
+      "config": "Yapılandırma",
+      "translate": "Çeviri",
+      "recognize": "Tanıma",
+      "screenshot": "Ekran Görüntüsü",
+      "updater": "Güncelleme"
+    },
+    "config": {
+      "common": {
+        "save_success": "Ayarlar kaydedildi",
+        "save_failed": "Ayarlar kaydedilemedi"
+      },
+      "general": {
+        "label": "Genel",
+        "title": "Genel Ayarlar",
+        "auto_start": "Otomatik Başlatma",
+        "check_update": "Güncellemeyi Kontrol Et",
+        "close_to_tray": "Kapatırken tepsiye küçült",
+        "clipboard_monitor": "Pano İzleyici",
+        "server_port": "Dinleme Portu",
+        "server_port_change": "Dinleme portu değiştirildi. Değişikliklerin etkili olması için lütfen uygulamayı yeniden başlatın",
+        "app_language": "Görüntüleme Dili",
+        "app_theme": "Tema",
+        "app_font": "Yazı Tipi",
+        "app_fallback_font": "Yedek Yazı Tipi",
+        "font_size": {
+          "10": "Çok Küçük (10px)",
+          "12": "Küçük (12px)",
+          "14": "Orta (14px)",
+          "16": "Standart (16px)",
+          "18": "Büyük (18px)",
+          "20": "Çok Büyük (20px)",
+          "24": "Kocaman (24px)",
+          "title": "Yazı Boyutu"
+        },
+        "default_font": "Varsayılan",
+        "theme": {
+          "light": "Açık",
+          "dark": "Koyu",
+          "system": "Sistem"
+        },
+        "dev_mode": "Geliştirici Modu",
+        "log_level": "Günlük Seviyesi",
+        "log_levels": {
+          "debug": "Hata Ayıklama",
+          "info": "Bilgi",
+          "warn": "Uyarı",
+          "error": "Hata",
+          "silent": "Sessiz"
+        },
+        "proxy": {
+          "title": "Proxy",
+          "host": "Sunucu",
+          "port": "Port",
+          "username": "Kullanıcı Adı",
+          "password": "Parola",
+          "no_proxy": "Proxy Yok"
+        },
+        "proxy_change": "Proxy değiştirildi. Değişikliklerin etkili olması için uygulamayı yeniden başlatın",
+        "proxy_error": "Lütfen sunucu ve port bilgilerini doldurun",
+        "invalid_port": "Lütfen 1-65535 arasında bir sayı girin",
+        "tray_click_event": "Tepsi Tıklama Olayı",
+        "event": {
+          "config": "Tercihler",
+          "translate": "Çeviri",
+          "disable": "Devre Dışı",
+          "ocr_recognize": "Metin Tanıma",
+          "ocr_translate": "Ekran Görüntüsü Çevirisi"
+        }
+      },
+      "translate": {
+        "label": "Çeviri",
+        "title": "Çeviri Ayarları",
+        "source_language": "Kaynak Dil",
+        "target_language": "Hedef Dil",
+        "second_language": "İkincil Hedef Dil",
+        "auto_copy": "Otomatik Kopyala",
+        "source": "Kaynak",
+        "target": "Hedef",
+        "source_target": "Kaynak+Hedef",
+        "disable": "Devre Dışı",
+        "incremental_translate": "Artımlı Çeviri",
+        "dynamic_translate": "Dinamik Çeviri",
+        "delete_newline": "Satır Sonunu Sil",
+        "remember_language": "Hedef Dili Hatırla",
+        "font_size": {
+          "10": "Çok Çok Küçük (10px)",
+          "12": "Çok Küçük (12px)",
+          "14": "Küçük (14px)",
+          "16": "Standart (16px)",
+          "18": "Büyük (18px)",
+          "20": "Çok Büyük (20px)",
+          "24": "Çok Çok Büyük (24px)",
+          "title": "Yazı Boyutu"
+        },
+        "window_position": "Pencere Konumu",
+        "mouse": "Fareyi Takip Et",
+        "pre_state": "Konumu Hatırla",
+        "remember_window_size": "Pencere Boyutunu Hatırla",
+        "close_on_blur": "Odak kaybolunca pencereyi kapat",
+        "always_on_top": "Her Zaman Üstte",
+        "hide_source": "Kaynak Alanını Gizle",
+        "hide_language": "Dil Alanını Gizle",
+        "hide_window": "Çeviri Penceresini Gizle",
+        "detect_engine": "Dil Algılama Motoru",
+        "baidu": "Baidu",
+        "tencent": "Tencent",
+        "niutrans": "NiuTrans",
+        "google": "Google",
+        "bing": "Bing",
+        "yandex": "Yandex",
+        "local": "Yerel",
+        "plugin_missing": "Eklenti eksik"
+      },
+      "recognize": {
+        "label": "Tanıma",
+        "title": "Tanıma Ayarları",
+        "language": "Tanıma Dili",
+        "delete_newline": "Satır Sonunu Otomatik Sil",
+        "auto_copy": "Otomatik Kopyala",
+        "close_on_blur": "Odak kaybolunca pencereyi kapat",
+        "hide_window": "Tanıma Penceresini Gizle"
+      },
+      "hotkey": {
+        "label": "Kısayol",
+        "title": "Kısayol Ayarları",
+        "selection_translate": "Seçimi Çevir",
+        "input_translate": "Metin Çevirisi",
+        "ocr_recognize": "Metin Tanıma",
+        "ocr_translate": "Ekran Görüntüsü Çevirisi",
+        "is_register": "Bu kısayol zaten kayıtlı",
+        "success": "Kısayol kaydı başarılı",
+        "set_hotkey": "Kısayol Atamak İçin Basın",
+        "plugin_section": "Eklenti Kısayolları"
+      },
+      "service": {
+        "label": "Hizmet",
+        "title": "Hizmet Ayarları",
+        "translate": "Çeviri",
+        "tts": "TTS",
+        "recognize": "Tanıma",
+        "least": "Lütfen en az bir tane bırakın",
+        "add_builtin_service": "Yerleşik Hizmet Ekle",
+        "add_external_service": "Eklenti Ekle",
+        "add_installed_plugin_service": "Yüklü Eklenti Ekle",
+        "no_installed_plugin_service": "Yüklü eklenti algılanmadı",
+        "add_service": "Hizmet Ekle",
+        "test_failed": "Test Başarısız",
+        "install_plugin": "Eklenti Yükle",
+        "view_plugin_list": "Eklenti Listesini Görüntüle",
+        "uninstall_success": "Eklenti Başarıyla Kaldırıldı",
+        "homepage": "Ana Sayfa",
+        "test_success": "Test Başarılı"
+      },
+      "plugin": {
+        "label": "Eklenti",
+        "title": "Eklenti Yönetimi",
+        "version": "Sürüm",
+        "author": "Yazar",
+        "homepage": "Eklenti ana sayfası",
+        "settings": "Eklenti ayarları",
+        "hotkeys": "Eklenti kısayolları",
+        "delete": "Eklentiyi sil",
+        "enabled": "Eklentiyi etkinleştir",
+        "market": {
+          "title": "Topluluk Eklenti Mağazası",
+          "description": "Topluluk tarafından yapılmış üçüncü taraf eklentileri keşfedin ve yükleyin.",
+          "browse": "Gözat",
+          "search": "Eklenti ara",
+          "install": "Yükle",
+          "install_success": "Eklenti yüklendi",
+          "install_failed": "Eklenti yüklenemedi"
+        },
+        "update": {
+          "title": "Eklenti Yükleme Durumu",
+          "installed_count": "Şu anda {{count}} eklenti yüklü.",
+          "check": "Güncellemeleri kontrol et",
+          "available_count": "{{count}} eklenti güncellemesi mevcut.",
+          "none": "Tüm yüklü eklentiler güncel.",
+          "checked": "Eklenti güncelleme kontrolü tamamlandı",
+          "install": "Güncelle",
+          "install_all": "Tümünü güncelle",
+          "install_success": "Eklenti güncellendi",
+          "install_failed": "Eklenti güncellenemedi",
+          "ignore": "Bu güncellemeyi yoksay",
+          "ignored": "Güncelleme yoksayıldı"
+        },
+        "auto_update": {
+          "title": "Eklenti Güncellemelerini Otomatik Kontrol Et",
+          "description": "Üçüncü taraf eklentiler için düzenli olarak güncelleme kontrolü yap."
+        },
+        "installed": "Yüklü Eklentiler",
+        "refresh": "Yenile",
+        "open_folder": "Eklenti klasörünü aç",
+        "install_from_file": "Dosyadan yükle",
+        "install_from_folder": "Klasörden yükle",
+        "install_success": "Eklenti yüklendi",
+        "install_failed": "Eklenti yüklenemedi",
+        "file_filter": {
+          "plugin_files": "Eklenti Dosyaları",
+          "all_files": "Tüm Dosyalar"
+        }
+      },
+      "about": {
+        "label": "Hakkında",
+        "title": "Uygulama Hakkında",
+        "website": "Web Sitesi",
+        "github": "GitHub",
+        "feedback": "Geri Bildirim",
+        "issue": "Sorun",
+        "email": "E-posta",
+        "community": "Topluluk",
+        "check_update": "Güncellemeyi Kontrol Et",
+        "view_log": "Günlüğü Görüntüle",
+        "view_config": "Yapılandırmayı Görüntüle",
+        "qq_channel": "QQ Channel",
+        "qq_group": "QQ Group",
+        "telegram": "Telegram",
+        "discussion": "Github Discussion"
+      }
+    },
+    "tray": {
+      "config": "Tercihler",
+      "selection_translate": "Seçimi Çevir",
+      "input_translate": "Metin Çevirisi",
+      "ocr_recognize": "Metin Tanıma",
+      "ocr_translate": "Ekran Görüntüsü Çevirisi",
+      "restart": "Yeniden Başlat",
+      "quit": "Çıkış"
+    },
+    "updater": {
+      "title": "Güncellemeyi Kontrol Et",
+      "latest": "## En son sürüm yüklü",
+      "progress": "İndirme İlerlemesi",
+      "check": "Kontrol Et",
+      "checking": "Güncellemeler kontrol ediliyor…",
+      "available": "Yeni bir güncelleme mevcut.",
+      "version_available": "Sürüm {{version}} mevcut",
+      "update": "Güncelle",
+      "downloading": "İndiriliyor…",
+      "installing": "Yükleniyor…",
+      "restart": "Yeniden Başlat",
+      "ready_restart": "Yeniden başlatmaya hazır",
+      "go_to_download": "İndir",
+      "unsupported": "## Bu derleme için güncellemeler kullanılamıyor\n\nEn son sürümü manuel olarak indirmek için sürüm sayfasını açın.",
+      "error": "Güncelleme kontrolü başarısız",
+      "cancel": "İptal",
+      "installed": "Yükleme tamamlandı. Değişikliklerin etkili olması için uygulamayı yeniden başlatın"
     },
     "services": {
+      "help": "Yapılandırma Kılavuzu",
+      "no_need": "Yapılandırma gerekmez",
+      "instance_name": "Yapılandırma Adı",
       "translate": {
-        "deepl": {},
-        "google": {},
+        "deepl": {
+          "title": "DeepL",
+          "custom_url": "DeepLX URL",
+          "auth_key": "Yetki Anahtarı",
+          "type": "Hizmet Türü",
+          "free": "Ücretsiz",
+          "api": "Yetki Anahtarı",
+          "deeplx": "DeepLX"
+        },
+        "google": {
+          "title": "Google",
+          "custom_url": "Özel URL"
+        },
         "ollama": {
           "title": "Ollama",
-          "install_ollama": "Unable to connect to local ollama, please download, install and start ollama first. If you use ollama that is not on this machine, please change the request address.",
-          "install_ollama_link": "Download Ollama",
-          "request_path": "Request Path",
-          "stream": "Stream Mode",
+          "install_ollama": "Yerel Ollama'ya bağlanılamadı. Lütfen önce Ollama'yı indirin, kurun ve başlatın. Bu makinede olmayan bir Ollama kullanıyorsanız, lütfen istek adresini değiştirin.",
+          "install_ollama_link": "Ollama'yı İndir",
+          "request_path": "İstek Yolu",
+          "stream": "Akış Modu",
           "model": "Model",
-          "advanced_options": "Advanced Options",
-          "advanced_description": "Leave blank to use the model or Ollama defaults. Thinking mode only applies to models that support it.",
-          "thinking_mode": "Thinking Mode",
-          "thinking_default": "Use Model Default",
-          "thinking_on": "Enable Thinking",
-          "thinking_off": "Disable Thinking",
-          "temperature": "Temperature",
+          "advanced_options": "Gelişmiş Seçenekler",
+          "advanced_description": "Model veya Ollama varsayılanlarını kullanmak için boş bırakın. Düşünme modu yalnızca onu destekleyen modeller için geçerlidir.",
+          "thinking_mode": "Düşünme Modu",
+          "thinking_default": "Model Varsayılanını Kullan",
+          "thinking_on": "Düşünmeyi Etkinleştir",
+          "thinking_off": "Düşünmeyi Devre Dışı Bırak",
+          "temperature": "Sıcaklık",
           "top_p": "Top P",
           "top_k": "Top K",
-          "use_model_default": "Leave blank to use defaults",
-          "install_model": "Install",
-          "ready": "Ready",
-          "not_installed": "This model has not been installed yet, click to download and install now",
-          "supported_models": "Click to see a list of Ollama available models",
-          "prompt_description": "By customizing the Prompt, you can customize the behavior of AI. $text $from $to $detect will be replaced with the text to be translated, source language, target language and detected language.",
-          "add": "Add Prompt"
+          "use_model_default": "Varsayılanları kullanmak için boş bırakın",
+          "install_model": "Yükle",
+          "ready": "Hazır",
+          "not_installed": "Bu model henüz yüklenmedi. İndirip yüklemek için tıklayın",
+          "supported_models": "Ollama'nın kullanılabilir modellerinin listesini görmek için tıklayın",
+          "prompt_list": "Prompt Listesi",
+          "prompt_description": "Prompt'u özelleştirerek yapay zekanın davranışını değiştirebilirsiniz. $text $from $to $detect, çevrilecek metin, kaynak dil, hedef dil ve algılanan dil ile değiştirilecektir.",
+          "prompt_placeholder": "Bir {{role}} prompt'u girin",
+          "add": "Prompt Ekle"
         }
       },
       "recognize": {
         "local_model": {
-          "title": "Local Model OCR",
-          "description": "Uses the bundled PaddleOCR.js PP-OCRv5 local model assets in the app. Recognition does not use a cloud OCR API."
+          "title": "Yerel Model OCR",
+          "description": "Uygulama içindeki yerleşik PaddleOCR.js PP-OCRv5 yerel model varlıklarını kullanır. Tanıma, bulut OCR API'si kullanmaz."
         }
       },
       "tts": {}
     },
-    "languages": {},
-    "config": {
-      "general": {
-        "clipboard_monitor": "Clipboard Monitor",
-        "proxy": {},
-        "event": {},
-        "theme": {},
-        "font_size": {}
-      },
-      "translate": {
-        "font_size": {},
-        "plugin_missing": "Missing plugin"
-      },
-      "recognize": {},
-      "hotkey": {},
-      "service": {
-        "no_installed_plugin_service": "No installed plugins detected"
-      },
-      "about": {},
-      "plugin": {
-        "market": {
-          "install_success": "Plugin installed",
-          "install_failed": "Failed to install plugin"
-        },
-        "update": {
-          "checked": "Plugin update check completed",
-          "install": "Update",
-          "install_success": "Plugin updated",
-          "install_failed": "Failed to update plugin"
-        },
-        "install_success": "Plugin installed",
-        "install_failed": "Failed to install plugin",
-        "homepage": "Plugin homepage"
-      },
-      "common": {
-        "save_success": "Settings saved",
-        "save_failed": "Failed to save settings"
-      }
-    },
     "translate": {
-      "tts_not_configured": "No TTS service configured",
-      "show_preview": "Show preview",
-      "show_source": "Show source"
+      "translate": "Çevir",
+      "recognizing": "Tanıyor…",
+      "speak": "Seslendir",
+      "copy": "Kopyala",
+      "retry": "Tekrar dene",
+      "show_preview": "Önizlemeyi göster",
+      "show_source": "Kaynağı göster",
+      "delete_newline": "Satır Sonunu Sil",
+      "translate_back": "Orijinale geri çevir",
+      "tts_not_configured": "TTS hizmeti yapılandırılmadı"
     },
-    "updater": {
-      "title": "Check Update",
-      "latest": "## The latest version is installed",
-      "progress": "Download Progress",
-      "check": "Check",
-      "checking": "Checking for updates…",
-      "available": "A new update is available.",
-      "version_available": "Version {{version}} is available",
-      "update": "Update",
-      "downloading": "Downloading…",
-      "installing": "Installing…",
-      "restart": "Restart",
-      "ready_restart": "Ready to restart",
-      "go_to_download": "Download",
-      "unsupported": "## Updates are not available for this build\n\nOpen the release page to download the latest version manually.",
-      "error": "Update check failed",
-      "cancel": "Cancel",
-      "installed": "Install completed, Restart the application for the changes to take effect"
-    },
-    "recognize": {}
+    "recognize": {
+      "recognize": "Tanı",
+      "translate": "Çevir",
+      "copy_img": "Görüntüyü Kopyala",
+      "copy_text": "Kopyala",
+      "delete_newline": "Satır Sonunu Sil",
+      "delete_space": "Boşluğu Sil"
+    }
   }
 }

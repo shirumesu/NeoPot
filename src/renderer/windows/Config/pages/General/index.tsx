@@ -19,6 +19,7 @@ import { isLogLevel, type AppLogLevel } from '@/shared/logLevel'
 
 import { useConfig } from '../../../../hooks/useConfig'
 import { LanguageFlag } from '@/renderer/lib/language/language'
+import { selectableAppLanguages } from '@/renderer/i18n/resources'
 import { useToastStyle } from '../../../../hooks'
 import { osType } from '@/renderer/lib/config/env'
 import { logger } from '@/renderer/lib/logger'
@@ -52,6 +53,10 @@ const isValidProxyPort = (value: string) => {
 
 const SERVER_PORT_MIN = 1
 const SERVER_PORT_MAX = 65535
+
+function getLanguageFlag(language: string) {
+  return (LanguageFlag as Record<string, string>)[language] ?? 'un'
+}
 
 const parseServerPortInput = (value: string) => {
   const trimmed = value.trim()
@@ -143,27 +148,10 @@ export default function General() {
   const toastStyle = useToastStyle()
   const { saveConfig } = useConfigSave()
 
-  const languageName: Record<string, string> = {
-    zh_cn: '简体中文',
-    zh_tw: '繁體中文',
-    en: 'English',
-    ja: '日本語',
-    ko: '한국어',
-    fr: 'Français',
-    es: 'Español',
-    ru: 'Русский',
-    de: 'Deutsch',
-    it: 'Italiano',
-    tr: 'Türkçe',
-    pt_pt: 'Português',
-    pt_br: 'Português (Brasil)',
-    nb_no: 'Norsk Bokmål',
-    nn_no: 'Norsk Nynorsk',
-    fa: 'فارسی',
-    uk: 'Українська',
-    ar: 'العربية',
-    he: 'עִבְרִית',
-  }
+  const appLanguageName = (language: string) =>
+    t(`app_languages.${language}`, {
+      defaultValue: t(`languages.${language}`, { defaultValue: language }),
+    })
 
   useEffect(() => {
     isEnabled().then((v) => {
@@ -256,17 +244,13 @@ export default function General() {
                 <DropdownTrigger>
                   <Button
                     variant="bordered"
-                    startContent={
-                      <span
-                        className={`fi fi-${(LanguageFlag as Record<string, string>)[appLanguage]}`}
-                      />
-                    }
+                    startContent={<span className={`fi fi-${getLanguageFlag(appLanguage)}`} />}
                   >
-                    {languageName[appLanguage]}
+                    {appLanguageName(appLanguage)}
                   </Button>
                 </DropdownTrigger>
                 <DropdownMenu
-                  aria-label="app language"
+                  aria-label={t('accessibility.app_language')}
                   className="max-h-[40vh] overflow-y-auto"
                   onAction={(key) => {
                     const language = String(key)
@@ -275,120 +259,14 @@ export default function General() {
                     invoke('update_tray', { language, copyMode: '' })
                   }}
                 >
-                  <DropdownItem
-                    key="zh_cn"
-                    startContent={<span className={`fi fi-${LanguageFlag.zh_cn}`} />}
-                  >
-                    简体中文
-                  </DropdownItem>
-                  <DropdownItem
-                    key="zh_tw"
-                    startContent={<span className={`fi fi-${LanguageFlag.zh_cn}`} />}
-                  >
-                    繁體中文
-                  </DropdownItem>
-                  <DropdownItem
-                    key="en"
-                    startContent={<span className={`fi fi-${LanguageFlag.en}`} />}
-                  >
-                    English
-                  </DropdownItem>
-                  <DropdownItem
-                    key="ja"
-                    startContent={<span className={`fi fi-${LanguageFlag.ja}`} />}
-                  >
-                    日本語
-                  </DropdownItem>
-                  <DropdownItem
-                    key="ko"
-                    startContent={<span className={`fi fi-${LanguageFlag.ko}`} />}
-                  >
-                    한국어
-                  </DropdownItem>
-                  <DropdownItem
-                    key="fr"
-                    startContent={<span className={`fi fi-${LanguageFlag.fr}`} />}
-                  >
-                    Français
-                  </DropdownItem>
-                  <DropdownItem
-                    key="de"
-                    startContent={<span className={`fi fi-${LanguageFlag.de}`} />}
-                  >
-                    Deutsch
-                  </DropdownItem>
-                  <DropdownItem
-                    key="es"
-                    startContent={<span className={`fi fi-${LanguageFlag.es}`} />}
-                  >
-                    Español
-                  </DropdownItem>
-                  <DropdownItem
-                    key="ru"
-                    startContent={<span className={`fi fi-${LanguageFlag.ru}`} />}
-                  >
-                    Русский
-                  </DropdownItem>
-                  <DropdownItem
-                    key="it"
-                    startContent={<span className={`fi fi-${LanguageFlag.it}`} />}
-                  >
-                    Italiano
-                  </DropdownItem>
-                  <DropdownItem
-                    key="tr"
-                    startContent={<span className={`fi fi-${LanguageFlag.tr}`} />}
-                  >
-                    Türkçe
-                  </DropdownItem>
-                  <DropdownItem
-                    key="pt_pt"
-                    startContent={<span className={`fi fi-${LanguageFlag.pt_pt}`} />}
-                  >
-                    Português
-                  </DropdownItem>
-                  <DropdownItem
-                    key="pt_br"
-                    startContent={<span className={`fi fi-${LanguageFlag.pt_br}`} />}
-                  >
-                    Português (Brasil)
-                  </DropdownItem>
-                  <DropdownItem
-                    key="nb_no"
-                    startContent={<span className={`fi fi-${LanguageFlag.nb_no}`} />}
-                  >
-                    Norsk Bokmål
-                  </DropdownItem>
-                  <DropdownItem
-                    key="nn_no"
-                    startContent={<span className={`fi fi-${LanguageFlag.nn_no}`} />}
-                  >
-                    Norsk Nynorsk
-                  </DropdownItem>
-                  <DropdownItem
-                    key="fa"
-                    startContent={<span className={`fi fi-${LanguageFlag.fa}`} />}
-                  >
-                    فارسی
-                  </DropdownItem>
-                  <DropdownItem
-                    key="uk"
-                    startContent={<span className={`fi fi-${LanguageFlag.uk}`} />}
-                  >
-                    Українська
-                  </DropdownItem>
-                  <DropdownItem
-                    key="ar"
-                    startContent={<span className={`fi fi-${LanguageFlag.ar}`} />}
-                  >
-                    العربية
-                  </DropdownItem>
-                  <DropdownItem
-                    key="he"
-                    startContent={<span className={`fi fi-${LanguageFlag.he}`} />}
-                  >
-                    עִבְרִית
-                  </DropdownItem>
+                  {selectableAppLanguages.map((language) => (
+                    <DropdownItem
+                      key={language}
+                      startContent={<span className={`fi fi-${getLanguageFlag(language)}`} />}
+                    >
+                      {appLanguageName(language)}
+                    </DropdownItem>
+                  ))}
                 </DropdownMenu>
               </Dropdown>
             )}
@@ -401,7 +279,7 @@ export default function General() {
                   <Button variant="bordered">{t(`config.general.theme.${appTheme}`)}</Button>
                 </DropdownTrigger>
                 <DropdownMenu
-                  aria-label="app theme"
+                  aria-label={t('accessibility.app_theme')}
                   onAction={(key) => {
                     const theme = String(key)
                     saveConfig('app_theme', appTheme, setAppTheme, theme)
@@ -447,7 +325,7 @@ export default function General() {
                   </Button>
                 </DropdownTrigger>
                 <DropdownMenu
-                  aria-label="app font"
+                  aria-label={t('accessibility.app_font')}
                   className="max-h-[50vh] overflow-y-auto"
                   onAction={(key) => {
                     const font = String(key)
@@ -490,7 +368,7 @@ export default function General() {
                   </Button>
                 </DropdownTrigger>
                 <DropdownMenu
-                  aria-label="app font"
+                  aria-label={t('accessibility.app_fallback_font')}
                   className="max-h-[50vh] overflow-y-auto"
                   onAction={(key) => {
                     const fallbackFont = String(key)
@@ -529,7 +407,7 @@ export default function General() {
                   <Button variant="bordered">{t(`config.general.font_size.${appFontSize}`)}</Button>
                 </DropdownTrigger>
                 <DropdownMenu
-                  aria-label="window position"
+                  aria-label={t('accessibility.font_size')}
                   className="max-h-[50vh] overflow-y-auto"
                   onAction={(key) => {
                     document.documentElement.style.fontSize = `${key}px`
@@ -555,7 +433,7 @@ export default function General() {
                   <Button variant="bordered">{t(`config.general.event.${trayClickEvent}`)}</Button>
                 </DropdownTrigger>
                 <DropdownMenu
-                  aria-label="tray click event"
+                  aria-label={t('accessibility.tray_click_event')}
                   onAction={(key) => {
                     saveConfig('tray_click_event', trayClickEvent, setTrayClickEvent, String(key))
                   }}
@@ -589,12 +467,10 @@ export default function General() {
             {logLevel !== null && (
               <Dropdown>
                 <DropdownTrigger>
-                  <Button variant="bordered">
-                    {logLevel.charAt(0).toUpperCase() + logLevel.slice(1)}
-                  </Button>
+                  <Button variant="bordered">{t(`config.general.log_levels.${logLevel}`)}</Button>
                 </DropdownTrigger>
                 <DropdownMenu
-                  aria-label="log level"
+                  aria-label={t('accessibility.log_level')}
                   onAction={async (key) => {
                     const nextLevel = String(key)
                     if (!isLogLevel(nextLevel)) {
@@ -618,11 +494,11 @@ export default function General() {
                     }
                   }}
                 >
-                  <DropdownItem key="debug">Debug</DropdownItem>
-                  <DropdownItem key="info">Info</DropdownItem>
-                  <DropdownItem key="warn">Warn</DropdownItem>
-                  <DropdownItem key="error">Error</DropdownItem>
-                  <DropdownItem key="silent">Silent</DropdownItem>
+                  <DropdownItem key="debug">{t('config.general.log_levels.debug')}</DropdownItem>
+                  <DropdownItem key="info">{t('config.general.log_levels.info')}</DropdownItem>
+                  <DropdownItem key="warn">{t('config.general.log_levels.warn')}</DropdownItem>
+                  <DropdownItem key="error">{t('config.general.log_levels.error')}</DropdownItem>
+                  <DropdownItem key="silent">{t('config.general.log_levels.silent')}</DropdownItem>
                 </DropdownMenu>
               </Dropdown>
             )}

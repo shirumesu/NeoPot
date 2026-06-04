@@ -99,8 +99,8 @@ export default function Plugin() {
       multiple: false,
       properties: ['openFile'],
       filters: [
-        { name: 'Plugin Files', extensions: ['zip'] },
-        { name: 'All Files', extensions: ['*'] },
+        { name: t('config.plugin.file_filter.plugin_files'), extensions: ['zip'] },
+        { name: t('config.plugin.file_filter.all_files'), extensions: ['*'] },
       ],
     })
     if (!selected) {

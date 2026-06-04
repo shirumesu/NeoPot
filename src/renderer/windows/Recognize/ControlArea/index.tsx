@@ -83,7 +83,7 @@ export default function ControlArea(props: any) {
             </Button>
           </DropdownTrigger>
           <DropdownMenuAny
-            aria-label="service name"
+            aria-label={t('accessibility.recognize_service')}
             className="max-h-[70vh] overflow-y-auto"
             onAction={(key: React.Key) => {
               setCurrentServiceInstanceKey(String(key))
@@ -126,7 +126,7 @@ export default function ControlArea(props: any) {
             </Button>
           </DropdownTrigger>
           <DropdownMenuAny
-            aria-label="language"
+            aria-label={t('accessibility.recognize_language')}
             className="max-h-[70vh] overflow-y-auto"
             onAction={(key: React.Key) => {
               setLanguage(String(key))

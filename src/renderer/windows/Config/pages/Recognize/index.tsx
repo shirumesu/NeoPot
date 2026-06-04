@@ -34,7 +34,7 @@ export default function Recognize() {
                 <Button variant="bordered">{t(`languages.${recognizeLanguage}`)}</Button>
               </DropdownTrigger>
               <DropdownMenuAny
-                aria-label="recognize language"
+                aria-label={t('accessibility.recognize_language')}
                 className="max-h-[50vh] overflow-y-auto"
                 onAction={(key: React.Key) => {
                   saveConfig(

@@ -132,7 +132,7 @@ export default function SourceArea(props: any) {
       } else if (text === '[IMAGE_TRANSLATE]') {
         setWindowType('[IMAGE_TRANSLATE]')
         if (recognizeServiceList === null || recognizeLanguage === null) {
-          setSourceText('Recognize service not configured')
+          setSourceText(t('errors.recognize_service_not_configured'))
           return
         }
         const base64 = String(await electronCommand('get_base64'))
@@ -166,7 +166,7 @@ export default function SourceArea(props: any) {
               },
             )
           } else {
-            setSourceText('Language not supported')
+            setSourceText(t('errors.language_not_supported'))
           }
         } else {
           if (
@@ -190,7 +190,7 @@ export default function SourceArea(props: any) {
                 },
               )
           } else {
-            setSourceText('Language not supported')
+            setSourceText(t('errors.language_not_supported'))
           }
         }
       } else {
@@ -246,7 +246,7 @@ export default function SourceArea(props: any) {
         throw new Error(t('translate.tts_not_configured'))
       }
       if (!(detected in ttsPluginInfo.language)) {
-        throw new Error('Language not supported')
+        throw new Error(t('errors.language_not_supported'))
       }
       const pluginConfig = serviceInstanceConfigMap[instanceKey]
       const [func, utils] = await invoke_plugin('tts', getServiceName(instanceKey))
@@ -257,7 +257,7 @@ export default function SourceArea(props: any) {
       speak(data)
     } else {
       if (!(detected in builtinTtsServiceMap[getServiceName(instanceKey)].Language)) {
-        throw new Error('Language not supported')
+        throw new Error(t('errors.language_not_supported'))
       }
       const instanceConfig = serviceInstanceConfigMap[instanceKey]
       const data = await builtinTtsServiceMap[getServiceName(instanceKey)].tts(

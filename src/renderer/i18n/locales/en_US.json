@@ -43,6 +43,68 @@
       "uk": "Ukrainian",
       "he": "Hebrew"
     },
+    "app_languages": {
+      "zh_cn": "简体中文",
+      "zh_tw": "繁體中文",
+      "en": "English",
+      "ja": "日本語",
+      "ko": "한국어",
+      "fr": "Français",
+      "de": "Deutsch",
+      "es": "Español",
+      "ru": "Русский",
+      "tr": "Türkçe",
+      "pt_br": "Português (Brasil)",
+      "ar": "العربية"
+    },
+    "accessibility": {
+      "app_logo": "NeoPot logo",
+      "app_language": "Display language",
+      "app_theme": "Theme",
+      "app_font": "Font",
+      "app_fallback_font": "Fallback font",
+      "font_size": "Font size",
+      "tray_click_event": "Tray click event",
+      "log_level": "Log level",
+      "source_language": "Source language",
+      "target_language": "Target language",
+      "second_language": "Secondary target language",
+      "detect_engine": "Language detection engine",
+      "auto_copy": "Auto copy",
+      "window_position": "Window position",
+      "recognize_language": "Recognition language",
+      "translate_service": "Translation service",
+      "recognize_service": "Recognition service",
+      "thinking_mode": "Thinking mode",
+      "minimize_window": "Minimize window",
+      "maximize_window": "Maximize window",
+      "restore_window": "Restore window",
+      "close_window": "Close window",
+      "pin_window": "Pin window",
+      "unpin_window": "Unpin window"
+    },
+    "errors": {
+      "window_render_failed": "{{window}} window render failed",
+      "window_render_failed_generic": "Window render failed",
+      "config_page_render_failed": "Config page render failed",
+      "config_route_missing": "No config route matched for {{route}}.",
+      "translate_window_initialization_failed": "Translate window initialization failed",
+      "recognize_window_initialization_failed": "Recognize window initialization failed",
+      "language_not_supported": "Language not supported",
+      "recognize_service_not_configured": "Recognition service is not configured",
+      "recognize_timeout": "Recognition request timed out"
+    },
+    "status": {
+      "loading_translation_window": "Loading translation window...",
+      "loading_recognize_window": "Loading recognize window..."
+    },
+    "windows": {
+      "config": "Config",
+      "translate": "Translate",
+      "recognize": "Recognize",
+      "screenshot": "Screenshot",
+      "updater": "Updater"
+    },
     "config": {
       "common": {
         "save_success": "Settings saved",
@@ -79,6 +141,13 @@
         },
         "dev_mode": "Developer Mode",
         "log_level": "Log Level",
+        "log_levels": {
+          "debug": "Debug",
+          "info": "Info",
+          "warn": "Warn",
+          "error": "Error",
+          "silent": "Silent"
+        },
         "proxy": {
           "title": "Proxy",
           "host": "Host",
@@ -226,7 +295,11 @@
         "install_from_file": "Install from file",
         "install_from_folder": "Install from folder",
         "install_success": "Plugin installed",
-        "install_failed": "Failed to install plugin"
+        "install_failed": "Failed to install plugin",
+        "file_filter": {
+          "plugin_files": "Plugin Files",
+          "all_files": "All Files"
+        }
       },
       "about": {
         "label": "About",
@@ -245,6 +318,15 @@
         "telegram": "Telegram",
         "discussion": "Github Discussion"
       }
+    },
+    "tray": {
+      "config": "Preference",
+      "selection_translate": "Selection Translation",
+      "input_translate": "Input Translation",
+      "ocr_recognize": "Text Recognition",
+      "ocr_translate": "Screenshot Translation",
+      "restart": "Restart",
+      "quit": "Quit"
     },
     "updater": {
       "title": "Check Update",
@@ -304,7 +386,9 @@
           "ready": "Ready",
           "not_installed": "This model has not been installed yet, click to download and install now",
           "supported_models": "Click to see a list of Ollama available models",
+          "prompt_list": "Prompt List",
           "prompt_description": "By customizing the Prompt, you can customize the behavior of AI. $text $from $to $detect will be replaced with the text to be translated, source language, target language and detected language.",
+          "prompt_placeholder": "Enter a {{role}} prompt",
           "add": "Add Prompt"
         }
       },

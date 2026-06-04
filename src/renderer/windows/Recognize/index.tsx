@@ -4,6 +4,7 @@ import { listen } from '@/renderer/lib/electron/compat/event'
 import { Button } from '@heroui/react'
 import { BsPinFill } from 'react-icons/bs'
 import { atom, useAtom } from 'jotai'
+import { useTranslation } from 'react-i18next'
 
 import WindowControl from '../../components/WindowControl'
 import { getStoreValue } from '@/renderer/lib/config/store'
@@ -48,6 +49,7 @@ void listen('neopot://focus', () => {
 })
 
 export default function Recognize() {
+  const { t } = useTranslation()
   const [, setPluginList] = useAtom(pluginListAtom)
   const [closeOnBlur] = useConfig('recognize_close_on_blur', false)
   const [pined, setPined] = useState(false)
@@ -125,6 +127,7 @@ export default function Recognize() {
           variant="flat"
           disableAnimation
           className="my-auto mx-1.25 bg-transparent"
+          aria-label={t(pined ? 'accessibility.unpin_window' : 'accessibility.pin_window')}
           onPress={() => {
             if (pined) {
               if (closeOnBlur) {
@@ -144,7 +147,9 @@ export default function Recognize() {
       </div>
       {hasInitError ? (
         <div className="m-4 rounded-medium border border-danger/30 bg-danger/10 p-4 text-sm text-danger">
-          <div className="mb-2 font-semibold">Recognize window initialization failed</div>
+          <div className="mb-2 font-semibold">
+            {t('errors.recognize_window_initialization_failed')}
+          </div>
           <pre className="whitespace-pre-wrap wrap-break-word">{`${pluginLoadError ?? ''}${
             pluginLoadError && serviceConfigError ? '\n' : ''
           }${serviceConfigError ?? ''}`}</pre>
@@ -168,7 +173,7 @@ export default function Recognize() {
         </>
       ) : (
         <div className="m-4 rounded-medium border border-default-200 bg-content1 px-4 py-3 text-sm text-default-500">
-          Loading recognize window...
+          {t('status.loading_recognize_window')}
         </div>
       )}
     </div>
