@@ -17,6 +17,7 @@ import { promisify } from 'node:util'
 import { isLogLevel, toLogTransportLevel } from '../../shared/logLevel'
 import { getMainLogTransportLevel, logger, setMainLogTransportLevel } from '../logger'
 import { translate as translateService } from '../services'
+import { runPluginBinary } from '../plugins/binary'
 import {
   installPluginFromUrl,
   installPlugin,
@@ -27,6 +28,7 @@ import {
   uninstallPlugin,
 } from '../plugins/installer'
 import { getRedactedConfig, setConfig } from './config'
+import { setClipboardMonitorEnabled } from './clipboard'
 import {
   isGlobalShortcutRegistered,
   registerGlobalShortcutByName,
@@ -34,6 +36,7 @@ import {
 } from './hotkey'
 import { rendererHttpRequest } from './http'
 import { detectLanguage } from './lang-detect'
+import { applyProxyToSession } from './proxy'
 import {
   captureDisplayForPoint,
   getCaptureDataUrl,
@@ -42,7 +45,7 @@ import {
   getLastCroppedDataUrl,
 } from './screenshot'
 import { updateTrayMenu } from './tray'
-import { markWindowReady, type WindowLabel } from './window'
+import { getCurrentWindowDisplayInfo, markWindowReady, type WindowLabel } from './window'
 import {
   getCurrentScreenshotAction,
   getCurrentWorkflowText,
@@ -57,6 +60,7 @@ import {
 } from './workflow'
 import { APP_USER_MODEL_ID } from './appIdentity'
 import { check, download, install, openReleasePage } from './updater'
+import { safeOpenExternal } from './shellSafety'
 
 export interface NeoPotErrorPayload {
   code: 'IPC_UNKNOWN_CHANNEL' | 'IPC_INVALID_PAYLOAD' | 'IPC_HANDLER_FAILED'
@@ -342,6 +346,14 @@ const assertDialogOpenPayload = (payload: unknown) => {
   }
 }
 
+type SupportedBaseDirectory = 'AppConfig' | 'AppCache' | 'AppLog'
+
+const supportedBaseDirectories = new Set<SupportedBaseDirectory>([
+  'AppConfig',
+  'AppCache',
+  'AppLog',
+])
+
 const resolveBaseDirectory = (baseDir: unknown): string | null => {
   switch (baseDir) {
     case 'AppConfig':
@@ -355,7 +367,9 @@ const resolveBaseDirectory = (baseDir: unknown): string | null => {
   }
 }
 
-const assertPathPayload = (payload: unknown): { filePath: string; baseDir?: string } => {
+const assertPathPayload = (
+  payload: unknown,
+): { filePath: string; baseDir?: SupportedBaseDirectory } => {
   if (!isRecord(payload) || typeof payload.path !== 'string') {
     throw new NeoPotError({
       code: 'IPC_INVALID_PAYLOAD',
@@ -366,14 +380,84 @@ const assertPathPayload = (payload: unknown): { filePath: string; baseDir?: stri
 
   return {
     filePath: payload.path,
-    baseDir: typeof payload.baseDir === 'string' ? payload.baseDir : undefined,
+    baseDir:
+      typeof payload.baseDir === 'string' &&
+      supportedBaseDirectories.has(payload.baseDir as SupportedBaseDirectory)
+        ? (payload.baseDir as SupportedBaseDirectory)
+        : undefined,
   }
+}
+
+function assertPathInside(parent: string, child: string): void {
+  const parentPath = path.resolve(parent)
+  const childPath = path.resolve(child)
+  const comparisonParent = process.platform === 'win32' ? parentPath.toLowerCase() : parentPath
+  const comparisonChild = process.platform === 'win32' ? childPath.toLowerCase() : childPath
+  if (
+    comparisonChild !== comparisonParent &&
+    !comparisonChild.startsWith(comparisonParent + path.sep)
+  ) {
+    throw new NeoPotError({
+      code: 'IPC_INVALID_PAYLOAD',
+      message: 'Resolved path is outside the allowed base directory.',
+      field: 'path',
+    })
+  }
+}
+
+function allowedFileRoots(): string[] {
+  return [app.getPath('userData'), path.join(app.getPath('userData'), 'Cache'), app.getPath('logs')]
 }
 
 const resolveFilePath = (payload: unknown): string => {
   const { filePath, baseDir } = assertPathPayload(payload)
   const basePath = resolveBaseDirectory(baseDir)
-  return basePath && !path.isAbsolute(filePath) ? path.join(basePath, filePath) : filePath
+  if (basePath) {
+    const resolvedPath = path.resolve(basePath, filePath)
+    assertPathInside(basePath, resolvedPath)
+    return resolvedPath
+  }
+
+  if (!path.isAbsolute(filePath)) {
+    throw new NeoPotError({
+      code: 'IPC_INVALID_PAYLOAD',
+      message: 'Relative filesystem paths require a supported baseDir.',
+      field: 'baseDir',
+    })
+  }
+
+  const resolvedPath = path.resolve(filePath)
+  if (
+    !allowedFileRoots().some((root) => {
+      try {
+        assertPathInside(root, resolvedPath)
+        return true
+      } catch {
+        return false
+      }
+    })
+  ) {
+    throw new NeoPotError({
+      code: 'IPC_INVALID_PAYLOAD',
+      message: 'Absolute filesystem paths are limited to NeoPot app data paths.',
+      field: 'path',
+    })
+  }
+
+  return resolvedPath
+}
+
+const resolveRemovableFilePath = (payload: unknown): string => {
+  const { baseDir } = assertPathPayload(payload)
+  if (baseDir !== 'AppCache') {
+    throw new NeoPotError({
+      code: 'IPC_INVALID_PAYLOAD',
+      message: 'Renderer delete operations are limited to AppCache.',
+      field: 'baseDir',
+    })
+  }
+
+  return resolveFilePath(payload)
 }
 
 const assertTextPayload = (payload: unknown): string => {
@@ -536,6 +620,10 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
         }
       )
     },
+    'app:get-current-display': (event, payload) => {
+      assertNoPayload(payload)
+      return getCurrentWindowDisplayInfo(event.sender)
+    },
     'app:is-current-window-maximized': (event, payload) => {
       assertNoPayload(payload)
       return BrowserWindow.fromWebContents(event.sender)?.isMaximized() ?? false
@@ -607,7 +695,7 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
       return existsSync(resolveFilePath(payload))
     },
     'fs:remove': async (_event, payload) => {
-      const targetPath = resolveFilePath(payload)
+      const targetPath = resolveRemovableFilePath(payload)
       if (isRecord(payload) && payload.recursive === true) {
         await rm(targetPath, { recursive: true, force: true })
         return
@@ -695,7 +783,7 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
           await openUpdater()
           return undefined
         case 'open_url':
-          await shell.openExternal(assertUrlPayload(args))
+          await safeOpenExternal(assertUrlPayload(args))
           return undefined
         case 'open_log_dir':
           await shell.openPath(app.getPath('logs'))
@@ -704,8 +792,32 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
           await shell.openPath(app.getPath('userData'))
           return undefined
         case 'set_proxy':
-        case 'unset_proxy':
+          await applyProxyToSession(true)
           return true
+        case 'unset_proxy':
+          await applyProxyToSession(false)
+          return true
+        case 'set_clipboard_monitor':
+          setClipboardMonitorEnabled(assertBooleanPayload(args, 'enabled'))
+          return true
+        case 'run_binary':
+          if (
+            !args ||
+            typeof args.pluginType !== 'string' ||
+            typeof args.pluginName !== 'string' ||
+            typeof args.cmdName !== 'string'
+          ) {
+            throw new NeoPotError({
+              code: 'IPC_INVALID_PAYLOAD',
+              message: 'Expected plugin type, plugin name, and command name.',
+            })
+          }
+          return runPluginBinary({
+            pluginType: args.pluginType,
+            pluginName: args.pluginName,
+            cmdName: args.cmdName,
+            args: args.args,
+          })
         case 'open_devtools':
           BrowserWindow.getFocusedWindow()?.webContents.openDevTools({ mode: 'detach' })
           return undefined
@@ -743,6 +855,23 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
     'config:set': async (_event, payload) => {
       const { key, value } = assertKeyPayload(payload)
       await setConfig(key, value)
+      if (key === 'clipboard_monitor') {
+        setClipboardMonitorEnabled(Boolean(value))
+      }
+      if (
+        [
+          'proxy_enable',
+          'proxy_enabled',
+          'proxy_host',
+          'proxy_port',
+          'proxy_protocol',
+          'proxy_username',
+          'proxy_password',
+          'no_proxy',
+        ].includes(key)
+      ) {
+        await applyProxyToSession()
+      }
       broadcastAppEvent('config:changed', { key })
       logger.info('Config value change broadcasted.', {
         key,

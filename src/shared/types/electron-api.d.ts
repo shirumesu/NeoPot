@@ -59,6 +59,13 @@ export interface WindowBounds {
   height?: number
 }
 
+export interface DisplayInfo {
+  id: number
+  position: { x: number; y: number }
+  size: { width: number; height: number }
+  scaleFactor: number
+}
+
 export interface OpenDialogOptions {
   multiple?: boolean
   directory?: boolean
@@ -93,6 +100,7 @@ export interface NeoPotElectronApi {
     setCurrentWindowResizable(resizable: boolean): Promise<void>
     setCurrentWindowBounds(bounds: WindowBounds): Promise<void>
     getCurrentWindowBounds(): Promise<Required<WindowBounds>>
+    getCurrentDisplay(): Promise<DisplayInfo>
     isCurrentWindowMaximized(): Promise<boolean>
     setAutoStart(enabled: boolean): Promise<void>
     isAutoStartEnabled(): Promise<boolean>

@@ -3,10 +3,12 @@ import { useTranslation } from 'react-i18next'
 import React from 'react'
 
 import { createServiceInstanceKey } from '@/renderer/lib/service/service_instance'
+import type { InstalledPlugin } from '../../Plugin/installedPlugins'
 
 export default function SelectPluginModal(props: any) {
   const { isOpen, onOpenChange, setCurrentConfigKey, onConfigOpen, pluginList } = props
   const { t } = useTranslation()
+  const pluginEntries = Object.entries(pluginList as Record<string, InstalledPlugin>)
 
   return (
     <Modal isOpen={isOpen} onOpenChange={onOpenChange} scrollBehavior="inside">
@@ -15,13 +17,13 @@ export default function SelectPluginModal(props: any) {
           <>
             <ModalHeader>{t('config.service.add_installed_plugin_service')}</ModalHeader>
             <ModalBody>
-              {Object.keys(pluginList).length === 0 && (
-                <Button fullWidth variant="flat" isDisabled>
-                  <div className="w-full">Coming soon</div>
-                </Button>
+              {pluginEntries.length === 0 && (
+                <div className="rounded-small border border-default-200 bg-content2 px-3 py-4 text-center text-sm text-default-500">
+                  {t('config.service.no_installed_plugin_service')}
+                </div>
               )}
 
-              {Object.keys(pluginList).map((x) => {
+              {pluginEntries.map(([x, plugin]) => {
                 return (
                   <div className="flex justify-between" key={x}>
                     <Button
@@ -31,9 +33,9 @@ export default function SelectPluginModal(props: any) {
                         setCurrentConfigKey(createServiceInstanceKey(x))
                         onConfigOpen()
                       }}
-                      startContent={<img src={pluginList[x].icon} className="h-6 w-6 my-auto" />}
+                      startContent={<img src={plugin.icon} className="h-6 w-6 my-auto" />}
                     >
-                      <div className="w-full">{pluginList[x].display}</div>
+                      <div className="w-full">{plugin.display}</div>
                     </Button>
                   </div>
                 )

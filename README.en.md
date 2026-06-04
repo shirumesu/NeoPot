@@ -67,9 +67,8 @@
 ## Main Features
 
 - Parallel translation with multiple services
-- Text recognition with multiple services
-- Text-to-speech with multiple services
-- Vocabulary book export
+- Local-model text recognition
+- Text-to-speech through plugins
 - Screenshot OCR and screenshot translation
 - Clipboard monitoring translation
 - Local HTTP API for external invocation
@@ -80,7 +79,7 @@
 
 ## Supported Services
 
-> Services in the early refactored version have not been fully verified yet. Outdated or unavailable services will be gradually removed, and actively maintained services will be added.
+The current Electron version ships these built-in services. Additional translation, OCR, and text-to-speech services are provided through plugins.
 
 <details>
 <summary>Translation</summary>
@@ -89,82 +88,33 @@
 - Zhipu AI
 - Gemini Pro
 - Ollama
-- Alibaba Translate
-- Baidu Translate
-- Caiyun Translate
-- Tencent Translator
-- Tencent Interactive Translation
-- Volcano Translate
-- NiuTrans
 - Google
-- Bing
-- Bing Dictionary
 - DeepL
-- Youdao Translate
-- Cambridge Dictionary
-- Yandex
-- Lingva
-- Tatoeba
-- ECDICT
 
 </details>
 
 <details>
 <summary>Text Recognition</summary>
 
-- System OCR
-  - Windows: Windows.Media.OCR
-  - Linux: Tesseract OCR
-- Tesseract.js
-- Baidu OCR
-- Tencent OCR
-- Volcano OCR
-- iFLYTEK OCR
-- Tencent Image Translation
-- Baidu Image Translation
-- Simple LaTeX
-- OCRSpace
-- Rapid OCR
-- Paddle OCR
+- Local Model OCR (PaddleOCR.js PP-OCRv5)
 
 </details>
 
 <details>
 <summary>Text-to-Speech</summary>
 
-- Lingva
-
-</details>
-
-<details>
-<summary>Vocabulary Book</summary>
-
-- Anki
-- Eudic
-- Youdao
-- Shanbay
+- Plugins only
 
 </details>
 
 ## Installation
 
-Go to [Releases](https://github.com/shirumesu/NeoPot/releases/latest) and download the installer package for your system and architecture.
+Go to [Releases](https://github.com/shirumesu/NeoPot/releases) and download the installer package for your system and architecture.
 
 ### Windows
 
-Standard installers:
-
-- `neopot_{version}_x64-setup.exe`: 64-bit Windows
-- `neopot_{version}_x86-setup.exe`: 32-bit Windows
-- `neopot_{version}_arm64-setup.exe`: arm64 Windows
-
-Installers with the WebView2 Runtime bundled:
-
-- `neopot_{version}_x64_fix_webview2_runtime-setup.exe`
-- `neopot_{version}_x86_fix_webview2_runtime-setup.exe`
-- `neopot_{version}_arm64_fix_webview2_runtime-setup.exe`
-
-If WebView2 is not installed on your system, install Microsoft WebView2 Runtime first. Use the installer with the bundled runtime only when WebView2 cannot be installed, such as in some enterprise environments.
+- `NeoPot-Setup-{version}.exe`: 64-bit Windows installer
+- `NeoPot-{version}-portable-x64.exe`: 64-bit Windows portable build
 
 ### Linux
 
@@ -178,11 +128,7 @@ Arch, Manjaro, Flatpak, Homebrew, Winget, and other distribution channels have n
 
 ## Plugin System
 
-- [ ] TODO…
-
-Due to the architecture upgrade, the original `.potext` format will most likely not be supported. The refactored version provides an installation entry: go to `Preferences -> Service Settings -> Add External Plugin -> Install External Plugin` and select the corresponding file to install it. Availability is not guaranteed for now.
-
-Issues and PRs are welcome if needed.
+NeoPot can install `.zip` / `.npot` plugin packages or local plugin directories. See the [Electron compatibility surface](docs/electron-compat.md) for supported plugin capabilities and limits.
 
 ## External Invocation
 

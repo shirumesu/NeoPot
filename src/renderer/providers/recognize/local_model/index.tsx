@@ -1,6 +1,8 @@
 import { Language } from './info'
+import type { OrtOptions } from '@paddleocr/paddleocr-js'
 import textDetectionModelUrl from '@assets/models/ocr/PP-OCRv5_mobile_det_onnx.tar?url'
 import textRecognitionModelUrl from '@assets/models/ocr/PP-OCRv5_mobile_rec_onnx.tar?url'
+import ortWasmUrl from 'onnxruntime-web/ort-wasm-simd-threaded.jsep.wasm?url'
 
 const paddleLangMap = {
   [Language.auto]: 'ch',
@@ -11,6 +13,16 @@ const paddleLangMap = {
 }
 
 const ocrCache = new Map<string, any>()
+
+// PaddleOCR.js forwards this to onnxruntime-web, whose runtime supports a file map
+// even though PaddleOCR.js 0.3.2 declares `wasmPaths` as a string-only option.
+const ortOptions = {
+  backend: 'wasm',
+  numThreads: 1,
+  wasmPaths: {
+    wasm: ortWasmUrl,
+  },
+} as unknown as OrtOptions
 
 async function getOcr(language: Language) {
   const paddleLang = paddleLangMap[language]
@@ -33,9 +45,7 @@ async function getOcr(language: Language) {
         textRecognitionModelAsset: {
           url: textRecognitionModelUrl,
         },
-        ortOptions: {
-          backend: 'wasm',
-        },
+        ortOptions,
       }),
     )
   }

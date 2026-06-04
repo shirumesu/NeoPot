@@ -47,6 +47,7 @@
       "general": {
         "check_update": "Перевірити оновлення",
         "close_to_tray": "Згортати в трей під час закриття",
+        "clipboard_monitor": "Моніторинг буфера обміну",
         "auto_start": "Автозапуск",
         "label": "Загальні",
         "title": "Загальні налаштування",
@@ -166,6 +167,7 @@
         "least": "Залиште хоча б одну службу",
         "add_builtin_service": "Додати вбудовану службу",
         "add_external_service": "Додати розширення",
+        "no_installed_plugin_service": "No installed plugins detected",
         "add_service": "Додати службу",
         "test_failed": "Тест не пройдено",
         "install_plugin": "Встановити плагін",

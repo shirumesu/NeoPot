@@ -25,6 +25,10 @@ function parseVersion(version: string): ParsedVersion | null {
   }
 }
 
+export function isSemanticVersion(version: string): boolean {
+  return parseVersion(version) !== null
+}
+
 function comparePrereleaseIdentifier(a: string, b: string): number {
   if (a === b) {
     return 0

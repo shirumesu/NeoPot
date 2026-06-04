@@ -124,6 +124,7 @@ export default function General() {
   const [fontList, setFontList] = useState<string[] | null>(null)
   const [checkUpdate, setCheckUpdate] = useConfig('check_update', true)
   const [closeToTray, setCloseToTray] = useConfig('close_to_tray', true)
+  const [clipboardMonitor, setClipboardMonitor] = useConfig('clipboard_monitor', false)
   const [appLanguage, setAppLanguage] = useConfig('app_language', 'en')
   const [appTheme, setAppTheme] = useConfig('app_theme', 'system')
   const [appFont, setAppFont] = useConfig('app_font', 'default')
@@ -237,6 +238,25 @@ export default function General() {
                 isSelected={closeToTray}
                 onValueChange={(v) => {
                   saveConfig('close_to_tray', closeToTray, setCloseToTray, v)
+                }}
+              />
+            )}
+          </div>
+          <div className="config-item">
+            <h3>{t('config.general.clipboard_monitor')}</h3>
+            {clipboardMonitor !== null && (
+              <Switch
+                isSelected={clipboardMonitor}
+                onValueChange={async (v) => {
+                  const saved = await saveConfig(
+                    'clipboard_monitor',
+                    clipboardMonitor,
+                    setClipboardMonitor,
+                    v,
+                  )
+                  if (saved) {
+                    await invoke('set_clipboard_monitor', { enabled: v })
+                  }
                 }}
               />
             )}
@@ -644,41 +664,41 @@ export default function General() {
                       proxyHost.trim() === '' ||
                       !isValidProxyPort(proxyPort)
                     ) {
-                      setProxyEnable(false)
                       toast.error(t('config.general.proxy_error'), {
-                        duration: 3000,
-                        style: toastStyle,
-                      })
-                      return
-                    } else {
-                      setProxyEnable(v)
-                      try {
-                        await invoke('set_proxy')
-                      } catch (e) {
-                        setProxyEnable(false)
-                        toast.error(String(e), {
-                          duration: 3000,
-                          style: toastStyle,
-                        })
-                        return
-                      }
-                    }
-                  } else {
-                    setProxyEnable(v)
-                    try {
-                      await invoke('unset_proxy')
-                    } catch (e) {
-                      toast.error(String(e), {
                         duration: 3000,
                         style: toastStyle,
                       })
                       return
                     }
                   }
-                  toast.success(t('config.general.proxy_change'), {
-                    duration: 1000,
-                    style: toastStyle,
+
+                  const saved = await saveConfig('proxy_enable', proxyEnable, setProxyEnable, v, {
+                    notify: false,
                   })
+                  if (!saved) {
+                    return
+                  }
+
+                  try {
+                    await invoke(v ? 'set_proxy' : 'unset_proxy')
+                    toast.success(t('config.general.proxy_change'), {
+                      duration: 1000,
+                      style: toastStyle,
+                    })
+                  } catch (e) {
+                    await saveConfig('proxy_enable', v, setProxyEnable, !v, {
+                      notify: false,
+                    })
+                    try {
+                      await invoke(v ? 'unset_proxy' : 'set_proxy')
+                    } catch (rollbackError) {
+                      logger.error('Proxy rollback failed.', rollbackError)
+                    }
+                    toast.error(String(e), {
+                      duration: 3000,
+                      style: toastStyle,
+                    })
+                  }
                 }}
               />
             )}

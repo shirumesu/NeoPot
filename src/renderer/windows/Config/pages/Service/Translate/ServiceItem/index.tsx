@@ -106,6 +106,7 @@ export default function ServiceItem(props: ServiceItemProps) {
               })
             }}
           />
+          <Spacer x={2} />
           <Button
             isIconOnly
             size="sm"

@@ -1,4 +1,5 @@
 import { electronInvoke } from '../command'
+import { logger } from '@/renderer/lib/logger'
 
 export function convertFileSrc(path: string) {
   return path
@@ -10,7 +11,10 @@ export async function invoke<T = unknown>(
 ): Promise<T> {
   try {
     return await electronInvoke<T>({ command, payload: args })
-  } catch {
-    return null as T
+  } catch (error) {
+    logger.error('Electron command failed.', error, {
+      command,
+    })
+    throw error
   }
 }

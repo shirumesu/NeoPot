@@ -327,7 +327,7 @@ async function plugin_detect(text: string, pluginName: string) {
 }
 
 export default async function detect(text: string) {
-  const langDetectEngine = (await getStoreValue('translate_detect_engine')) ?? 'baidu'
+  const langDetectEngine = (await getStoreValue('translate_detect_engine')) ?? 'local'
 
   if (typeof langDetectEngine === 'string' && langDetectEngine.startsWith('plugin:')) {
     return await plugin_detect(text, langDetectEngine.slice('plugin:'.length))

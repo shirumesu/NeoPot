@@ -31,6 +31,7 @@
         "auto_start": "Awto Başlangyç",
         "check_update": "Täzelenmäni Barlaň",
         "close_to_tray": "Ýapanda treýde kiçelt",
+        "clipboard_monitor": "Clipboard Monitor",
         "server_port": "Serwer porty",
         "app_language": "Dili",
         "app_theme": "Tema",
@@ -42,6 +43,9 @@
       },
       "translate": {
         "plugin_missing": "Missing plugin"
+      },
+      "service": {
+        "no_installed_plugin_service": "No installed plugins detected"
       },
       "plugin": {
         "market": {

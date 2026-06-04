@@ -9,6 +9,7 @@ import { logger } from '../logger'
 const SERVICE_PLUGIN_TYPES = ['translate', 'recognize', 'tts']
 const PLUGIN_METADATA_FILE = '.neopot-plugin.json'
 const DEFAULT_PLUGIN_ICON = 'logo/plugin.svg'
+const PLUGIN_ID_PATTERN = /^[a-z0-9_-]+$/
 
 export interface PluginInfo {
   id: string
@@ -76,12 +77,53 @@ function pluginHotkeyConfigKey(type: string, name: string, key: string): string 
 function assertInside(parent: string, child: string): void {
   const parentPath = path.resolve(parent)
   const childPath = path.resolve(child)
-  if (!childPath.startsWith(parentPath + path.sep)) {
+  const comparisonParent = process.platform === 'win32' ? parentPath.toLowerCase() : parentPath
+  const comparisonChild = process.platform === 'win32' ? childPath.toLowerCase() : childPath
+  if (
+    comparisonChild !== comparisonParent &&
+    !comparisonChild.startsWith(comparisonParent + path.sep)
+  ) {
     throw new PluginInstallError(
       'PLUGIN_ZIP_SLIP',
       'Plugin package contains an unsafe extraction path.',
     )
   }
+}
+
+function isValidPluginIdentityPart(value: string): boolean {
+  return PLUGIN_ID_PATTERN.test(value)
+}
+
+export function assertValidPluginIdentity(
+  type: string,
+  name: string,
+): {
+  type: string
+  name: string
+} {
+  if (!isValidPluginIdentityPart(type) || !isValidPluginIdentityPart(name)) {
+    throw new PluginInstallError(
+      'PLUGIN_INVALID_PACKAGE',
+      'Plugin type and name may contain only lowercase letters, numbers, underscores, and hyphens.',
+    )
+  }
+
+  return { type, name }
+}
+
+export function installedPluginDir(type: string, name: string): string {
+  const identity = assertValidPluginIdentity(type, name)
+  const root = pluginRoot()
+  const pluginDir = path.resolve(root, identity.type, identity.name)
+  assertInside(root, pluginDir)
+  return pluginDir
+}
+
+function pluginTempDir(type: string, name: string): string {
+  const root = pluginRoot()
+  const tempDir = `${installedPluginDir(type, name)}.tmp`
+  assertInside(root, tempDir)
+  return tempDir
 }
 
 function getPluginEnabled(type: string, name: string): boolean {
@@ -172,11 +214,12 @@ function assertManifestIdentity(manifest: { plugin_type?: string; name?: string 
     )
   }
 
-  return { pluginType, pluginName }
+  const identity = assertValidPluginIdentity(pluginType, pluginName)
+  return { pluginType: identity.type, pluginName: identity.name }
 }
 
 async function readPluginManifest(type: string, name: string): Promise<PluginInfo | null> {
-  const pluginDir = path.join(pluginRoot(), type, name)
+  const pluginDir = installedPluginDir(type, name)
   const manifestPath = path.join(pluginDir, 'info.json')
   const manifestText = await readFile(manifestPath, 'utf8').catch(() => null)
   if (!manifestText) {
@@ -279,8 +322,8 @@ async function installFromZip(file: string): Promise<PluginInstallResult> {
   const { pluginType, pluginName } = assertManifestIdentity(
     parseManifest(manifestEntry.getData().toString('utf8')),
   )
-  const targetDir = path.join(pluginRoot(), pluginType, pluginName)
-  const tempDir = `${targetDir}.tmp`
+  const targetDir = installedPluginDir(pluginType, pluginName)
+  const tempDir = pluginTempDir(pluginType, pluginName)
   await rm(tempDir, { recursive: true, force: true })
   await mkdir(tempDir, { recursive: true })
 
@@ -335,8 +378,8 @@ async function installFromDirectory(dirPath: string): Promise<PluginInstallResul
     throw new PluginInstallError('PLUGIN_INVALID_PACKAGE', 'Directory must contain main.js.')
   }
 
-  const targetDir = path.join(pluginRoot(), pluginType, pluginName)
-  const tempDir = `${targetDir}.tmp`
+  const targetDir = installedPluginDir(pluginType, pluginName)
+  const tempDir = pluginTempDir(pluginType, pluginName)
   await rm(tempDir, { recursive: true, force: true })
   await mkdir(tempDir, { recursive: true })
 
@@ -375,7 +418,7 @@ export async function installPlugin(file: string): Promise<PluginInstallResult> 
     ? await installFromDirectory(normalizedSource)
     : await installFromZip(normalizedSource)
   await writeInstallMetadata(
-    path.join(pluginRoot(), result.type, result.name),
+    installedPluginDir(result.type, result.name),
     normalizedSource,
     'local',
   )
@@ -416,7 +459,7 @@ export async function installPluginFromUrl(source: string): Promise<PluginInstal
 
   try {
     const result = await installFromZip(tempFile)
-    await writeInstallMetadata(path.join(pluginRoot(), result.type, result.name), source, 'url')
+    await writeInstallMetadata(installedPluginDir(result.type, result.name), source, 'url')
     await registerPluginDefaultHotkeys(result.type, result.name)
     return result
   } finally {
@@ -532,7 +575,7 @@ export async function uninstallPlugin(type: string, name: string): Promise<void>
     }
   }
 
-  await rm(path.join(pluginRoot(), type, name), {
+  await rm(installedPluginDir(type, name), {
     recursive: true,
     force: true,
   })
@@ -604,10 +647,16 @@ export async function listInstalledPlugins(type?: string): Promise<PluginInfo[]>
     }
 
     const pluginType = typeEntry.name
+    if (!isValidPluginIdentityPart(pluginType)) {
+      continue
+    }
     const dir = path.join(root, pluginType)
     const entries = await readdir(dir, { withFileTypes: true }).catch(() => [])
     for (const entry of entries) {
       if (!entry.isDirectory()) {
+        continue
+      }
+      if (!isValidPluginIdentityPart(entry.name)) {
         continue
       }
       const manifest = await readPluginManifest(pluginType, entry.name)

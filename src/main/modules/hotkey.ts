@@ -1,8 +1,9 @@
-import { globalShortcut, shell } from 'electron'
+import { globalShortcut } from 'electron'
 import { logger } from '../logger'
 import { inputTranslate, ocrRecognize, ocrTranslate, selectionTranslate } from './workflow'
 import { getConfig, setConfig } from './config'
 import { getInstalledPluginHotkey, listInstalledPlugins } from '../plugins/installer'
+import { safeOpenExternal } from './shellSafety'
 
 const defaultShortcuts: Record<string, { handler: () => void | Promise<void> }> = {
   hotkey_selection_translate: {
@@ -74,7 +75,7 @@ async function handlePluginHotkey(name: string): Promise<void> {
 
   const url = getHotkeyOpenUrl(hotkey)
   if (url) {
-    await shell.openExternal(url)
+    await safeOpenExternal(url)
     return
   }
 

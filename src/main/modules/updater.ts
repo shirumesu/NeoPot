@@ -1,4 +1,4 @@
-import { BrowserWindow, app, net, shell } from 'electron'
+import { BrowserWindow, app, net } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import { existsSync } from 'node:fs'
 import path from 'node:path'
@@ -11,8 +11,14 @@ import type {
 } from '../../shared/types/electron-api'
 import { logger } from '../logger'
 import { getConfig } from './config'
-import { compareVersions, isPrereleaseVersion, stripVersionPrefix } from './updateVersion'
+import {
+  compareVersions,
+  isPrereleaseVersion,
+  isSemanticVersion,
+  stripVersionPrefix,
+} from './updateVersion'
 import { openUpdaterNotification, sendToWindow } from './window'
+import { safeOpenExternal } from './shellSafety'
 
 interface GithubRelease {
   tag_name?: string
@@ -98,14 +104,14 @@ function getDistributionMode(): { distribution: UpdateDistribution; mode: Update
 }
 
 function getReleaseVersion(release: GithubRelease): string | undefined {
-  return release.tag_name ? stripVersionPrefix(release.tag_name) : undefined
+  const version = release.tag_name ? stripVersionPrefix(release.tag_name) : undefined
+  return version && isSemanticVersion(version) ? version : undefined
 }
 
 async function fetchGithubRelease(): Promise<GithubRelease | null> {
   const currentVersion = app.getVersion()
   const allowPrerelease = isPrereleaseVersion(currentVersion)
-  const endpoint = allowPrerelease ? githubApiBaseUrl : `${githubApiBaseUrl}/latest`
-  const response = await net.fetch(endpoint, {
+  const response = await net.fetch(githubApiBaseUrl, {
     headers: {
       Accept: 'application/vnd.github+json',
     },
@@ -115,16 +121,20 @@ async function fetchGithubRelease(): Promise<GithubRelease | null> {
     throw new Error(`GitHub Releases returned HTTP ${response.status}.`)
   }
 
-  const payload = (await response.json()) as GithubRelease | GithubRelease[]
+  const payload = (await response.json()) as GithubRelease[]
   if (!Array.isArray(payload)) {
-    return payload
+    throw new Error('GitHub Releases returned unexpected metadata.')
   }
 
   return (
-    payload.find((release) => {
-      const version = getReleaseVersion(release)
-      return Boolean(version) && (allowPrerelease || release.prerelease !== true)
-    }) ?? null
+    payload
+      .filter((release) => {
+        const version = getReleaseVersion(release)
+        return Boolean(version) && (allowPrerelease || release.prerelease !== true)
+      })
+      .sort((left, right) =>
+        compareVersions(getReleaseVersion(right) ?? '0.0.0', getReleaseVersion(left) ?? '0.0.0'),
+      )[0] ?? null
   )
 }
 
@@ -311,7 +321,11 @@ export function install(): void {
 
 export async function openReleasePage(): Promise<void> {
   const target = lastCheckResult?.releasePageUrl ?? latestReleasePageUrl
-  await shell.openExternal(target)
+  await safeOpenExternal(target, {
+    allowedHosts: ['github.com'],
+    allowedProtocols: ['https:'],
+    allowSubdomains: false,
+  })
 }
 
 async function showStartupNotification(result: UpdateCheckResult): Promise<void> {

@@ -13,6 +13,7 @@
         "label": "に関する"
       },
       "general": {
+        "clipboard_monitor": "クリップボード監視",
         "label": "一般設定",
         "event": {
           "translate": "翻訳",
@@ -59,7 +60,8 @@
       },
       "service": {
         "title": "サービス設定",
-        "label": "サービス"
+        "label": "サービス",
+        "no_installed_plugin_service": "No installed plugins detected"
       },
       "plugin": {
         "market": {

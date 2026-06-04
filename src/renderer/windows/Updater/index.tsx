@@ -153,13 +153,14 @@ export default function Updater() {
           ? result.message || t('updater.error')
           : '')
 
-  const primaryLabel = updatePrimaryAction === 'check'
-    ? t('updater.check')
-    : updatePrimaryAction === 'open-release-page'
-      ? t('updater.go_to_download')
-      : updatePrimaryAction === 'install'
-        ? t('updater.restart')
-        : t('updater.update')
+  const primaryLabel =
+    updatePrimaryAction === 'check'
+      ? t('updater.check')
+      : updatePrimaryAction === 'open-release-page'
+        ? t('updater.go_to_download')
+        : updatePrimaryAction === 'install'
+          ? t('updater.restart')
+          : t('updater.update')
   const primaryDisabled = isChecking || isWorking || updatePrimaryAction === 'none'
 
   if (isNotification) {

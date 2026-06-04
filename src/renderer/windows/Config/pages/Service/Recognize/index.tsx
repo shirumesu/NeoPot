@@ -1,4 +1,4 @@
-import { Card, Spacer, Button, useDisclosure } from '@heroui/react'
+import { Card, Button, useDisclosure } from '@heroui/react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import React, { useState } from 'react'
@@ -102,14 +102,14 @@ export default function Recognize(props: any) {
       <Card
         className={`${
           osType === 'Linux' ? 'h-[calc(100vh-140px)]' : 'h-[calc(100vh-120px)]'
-        } overflow-y-auto p-5 flex justify-between`}
+        } w-full overflow-hidden p-5 flex flex-col`}
       >
         {recognizeServiceInstanceList !== null && (
           <ReorderGroup
             axis="y"
             values={recognizeServiceInstanceList}
             onReorder={handleServiceReorder}
-            className="overflow-y-auto h-full"
+            className="min-h-0 flex-1 space-y-2 overflow-y-auto"
           >
             {recognizeServiceInstanceList.map((x) => {
               return (
@@ -121,18 +121,15 @@ export default function Recognize(props: any) {
                     setCurrentConfigKey={setCurrentConfigKey}
                     onConfigOpen={onConfigOpen}
                   />
-                  <Spacer y={2} />
                 </Reorder.Item>
               )
             })}
           </ReorderGroup>
         )}
-        <Spacer y={2} />
-        <div className="flex">
+        <div className="flex shrink-0 gap-2 pt-2">
           <Button fullWidth onPress={onSelectOpen}>
             {t('config.service.add_builtin_service')}
           </Button>
-          <Spacer x={2} />
           <Button fullWidth onPress={onSelectPluginOpen}>
             {t('config.service.add_installed_plugin_service')}
           </Button>

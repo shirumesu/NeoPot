@@ -21,6 +21,27 @@ export interface ElectronCommandMap {
     args: undefined
     result: void
   }
+  set_proxy: {
+    args: undefined
+    result: boolean
+  }
+  unset_proxy: {
+    args: undefined
+    result: boolean
+  }
+  set_clipboard_monitor: {
+    args: {
+      enabled: boolean
+    }
+    result: boolean
+  }
+  run_binary: {
+    args: RunBinaryArgs
+    result: {
+      stdout: string
+      stderr: string
+    }
+  }
   register_shortcut_by_frontend: {
     args: {
       name: string

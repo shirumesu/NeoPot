@@ -43,6 +43,7 @@
     "languages": {},
     "config": {
       "general": {
+        "clipboard_monitor": "Clipboard Monitor",
         "proxy": {},
         "event": {},
         "theme": {},
@@ -54,7 +55,9 @@
       },
       "recognize": {},
       "hotkey": {},
-      "service": {},
+      "service": {
+        "no_installed_plugin_service": "No installed plugins detected"
+      },
       "about": {},
       "plugin": {
         "market": {

@@ -47,6 +47,7 @@
         "auto_start": "הפעלה אוטומטית",
         "check_update": "עדכון אוטומטי",
         "close_to_tray": "מזער למגש המערכת בעת סגירה",
+        "clipboard_monitor": "Clipboard Monitor",
         "theme": {
           "dark": "כהה",
           "system": "מערכת",
@@ -112,6 +113,7 @@
         "least": "שמור משהו אחד לפחות",
         "add_builtin_service": "הוסף שירות מובנה",
         "add_external_service": "הוסף הרחבה",
+        "no_installed_plugin_service": "No installed plugins detected",
         "add_service": "הוסף שירות",
         "test_failed": "הבדיקה נכשלה",
         "install_plugin": "התקן תוסף",

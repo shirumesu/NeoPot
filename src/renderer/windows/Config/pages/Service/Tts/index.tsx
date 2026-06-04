@@ -1,4 +1,4 @@
-import { Card, Spacer, Button, useDisclosure } from '@heroui/react'
+import { Card, Button, useDisclosure } from '@heroui/react'
 import { useTranslation } from 'react-i18next'
 import React, { useState } from 'react'
 import { Reorder } from 'framer-motion'
@@ -90,14 +90,14 @@ export default function Tts(props: any) {
       <Card
         className={`${
           osType === 'Linux' ? 'h-[calc(100vh-140px)]' : 'h-[calc(100vh-120px)]'
-        } overflow-y-auto p-5 flex justify-between`}
+        } w-full overflow-hidden p-5 flex flex-col`}
       >
         {ttsServiceInstanceList !== null && (
           <ReorderGroup
             axis="y"
             values={ttsServiceInstanceList}
             onReorder={handleServiceReorder}
-            className="overflow-y-auto h-full"
+            className="min-h-0 flex-1 space-y-2 overflow-y-auto"
           >
             {ttsServiceInstanceList.map((x) => {
               return (
@@ -109,14 +109,12 @@ export default function Tts(props: any) {
                     setCurrentConfigKey={setCurrentConfigKey}
                     onConfigOpen={onConfigOpen}
                   />
-                  <Spacer y={2} />
                 </Reorder.Item>
               )
             })}
           </ReorderGroup>
         )}
-        <Spacer y={2} />
-        <div className="flex">
+        <div className="flex shrink-0 pt-2">
           <Button fullWidth onPress={onSelectPluginOpen}>
             {t('config.service.add_installed_plugin_service')}
           </Button>

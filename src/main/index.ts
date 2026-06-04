@@ -46,16 +46,18 @@ if (!gotSingleInstanceLock) {
 }
 
 async function startApp(): Promise<void> {
-  const [clipboard, config, hotkey, ipc, server, tray, updater, windowModule] = await Promise.all([
-    import('./modules/clipboard'),
-    import('./modules/config'),
-    import('./modules/hotkey'),
-    import('./modules/ipc'),
-    import('./modules/server'),
-    import('./modules/tray'),
-    import('./modules/updater'),
-    import('./modules/window'),
-  ])
+  const [clipboard, config, hotkey, ipc, proxy, server, tray, updater, windowModule] =
+    await Promise.all([
+      import('./modules/clipboard'),
+      import('./modules/config'),
+      import('./modules/hotkey'),
+      import('./modules/ipc'),
+      import('./modules/proxy'),
+      import('./modules/server'),
+      import('./modules/tray'),
+      import('./modules/updater'),
+      import('./modules/window'),
+    ])
 
   ipc.registerIpcHandlers({
     getWindowLabel: (event) => windowModule.getCurrentWindowLabel(event.sender),
@@ -87,8 +89,9 @@ async function startApp(): Promise<void> {
     await windowModule.openWindow('config')
     tray.setupTray()
     hotkey.registerGlobalShortcuts('all')
+    await proxy.applyProxyToSession()
     clipboard.startClipboardMonitor()
-    clipboard.setClipboardMonitorEnabled(false)
+    clipboard.setClipboardMonitorEnabled(config.getConfig('clipboard_monitor') === true)
 
     const configuredServerPort = config.getConfig('server_port')
     const serverPort =

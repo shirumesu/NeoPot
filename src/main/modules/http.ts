@@ -1,5 +1,7 @@
 import axios, { type AxiosRequestConfig } from 'axios'
 import { applyProxyToAxios, applyProxyToFetch } from './proxy'
+import { assertPublicHttpRequestUrl, assertPublicHttpUrl } from './networkSafety'
+import { getConfig } from './config'
 
 export interface ProviderRequest extends AxiosRequestConfig {
   timeoutMs?: number
@@ -19,8 +21,78 @@ interface RendererHttpRequest {
   responseType?: unknown
 }
 
+const allowedRendererMethods = new Set(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD'])
+const forbiddenRendererHeaders = new Set([
+  'connection',
+  'content-length',
+  'host',
+  'proxy-authorization',
+  'te',
+  'transfer-encoding',
+  'upgrade',
+])
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function normalizeProviderUrl(value: unknown): URL | null {
+  if (typeof value !== 'string' || value.trim() === '') {
+    return null
+  }
+
+  let normalized = value.trim()
+  if (!/^https?:\/\//i.test(normalized)) {
+    normalized = `http://${normalized}`
+  }
+
+  try {
+    return new URL(normalized)
+  } catch {
+    return null
+  }
+}
+
+function configuredProviderOrigins(): Set<string> {
+  const origins = new Set(['http://localhost:11434'])
+  for (const serviceListKey of [
+    'translate_service_list',
+    'recognize_service_list',
+    'tts_service_list',
+  ]) {
+    const serviceList = getConfig(serviceListKey)
+    if (!Array.isArray(serviceList)) {
+      continue
+    }
+
+    for (const serviceInstanceKey of serviceList) {
+      if (typeof serviceInstanceKey !== 'string') {
+        continue
+      }
+
+      const serviceName = serviceInstanceKey.split('@')[0]
+      const config = getConfig(serviceInstanceKey)
+      if (!isRecord(config)) {
+        continue
+      }
+
+      const configuredUrl =
+        serviceName === 'ollama'
+          ? normalizeProviderUrl(config.requestPath)
+          : serviceName === 'deepl' && config.type === 'deeplx'
+            ? normalizeProviderUrl(config.customUrl)
+            : null
+      if (configuredUrl) {
+        origins.add(configuredUrl.origin)
+      }
+    }
+  }
+
+  return origins
+}
+
+function isConfiguredPrivateProviderTarget(url: URL): boolean {
+  return configuredProviderOrigins().has(url.origin)
 }
 
 function normalizeRendererHeaders(headers: unknown): Record<string, string> {
@@ -30,7 +102,10 @@ function normalizeRendererHeaders(headers: unknown): Record<string, string> {
 
   return Object.fromEntries(
     Object.entries(headers)
-      .filter((entry): entry is [string, string] => typeof entry[1] === 'string')
+      .filter(
+        (entry): entry is [string, string] =>
+          typeof entry[1] === 'string' && !forbiddenRendererHeaders.has(entry[0].toLowerCase()),
+      )
       .map(([key, value]) => [key.toLowerCase(), value]),
   )
 }
@@ -92,6 +167,15 @@ export async function rendererHttpRequest(input: unknown): Promise<{
   }
 
   const requestInput = input as RendererHttpRequest
+  const uncheckedUrl = assertPublicHttpUrl(input.url, { allowPrivateNetwork: true })
+  const url = await assertPublicHttpRequestUrl(input.url, {
+    allowPrivateNetwork: isConfiguredPrivateProviderTarget(uncheckedUrl),
+  })
+  const method = typeof requestInput.method === 'string' ? requestInput.method.toUpperCase() : 'GET'
+  if (!allowedRendererMethods.has(method)) {
+    throw new Error(`HTTP request method is not allowed: ${method}`)
+  }
+
   const headers = normalizeRendererHeaders(requestInput.headers)
   const responseType =
     requestInput.responseType === 3
@@ -102,12 +186,13 @@ export async function rendererHttpRequest(input: unknown): Promise<{
 
   const response = await axios.request(
     applyProxyToAxios({
-      url: input.url,
-      method: typeof requestInput.method === 'string' ? requestInput.method : 'GET',
+      url: url.toString(),
+      method,
       headers,
       params: isRecord(requestInput.query) ? requestInput.query : undefined,
       data: normalizeRendererBody(requestInput.body, headers),
       responseType,
+      maxRedirects: 0,
       timeout: 30000,
       validateStatus: () => true,
     }),

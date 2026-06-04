@@ -1,15 +1,26 @@
 import { fetch, Body } from '@/renderer/lib/electron/http'
+import { normalizeRequiredString } from './normalize'
 
 export async function translate(text: string, from: string, to: string, options: any = {}) {
-  const { config } = options
+  const config = options.config && typeof options.config === 'object' ? options.config : {}
 
   const serviceType = config['type']
   if (serviceType === 'free') {
     return translate_by_free(text, from, to)
   } else if (serviceType === 'api') {
-    return translate_by_key(text, from, to, config.authKey)
+    return translate_by_key(
+      text,
+      from,
+      to,
+      normalizeRequiredString(config.authKey, 'DeepL Auth Key'),
+    )
   } else if (serviceType === 'deeplx') {
-    return translate_by_deeplx(text, from, to, config.customUrl)
+    return translate_by_deeplx(
+      text,
+      from,
+      to,
+      normalizeRequiredString(config.customUrl, 'DeepLX URL'),
+    )
   } else {
     return translate_by_free(text, from, to)
   }

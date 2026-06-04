@@ -36,7 +36,16 @@ export default function Service() {
   }, [])
   return (
     pluginList !== null && (
-      <Tabs className="flex justify-center max-h-[calc(100%-40px)] overflow-y-auto">
+      <Tabs
+        className="w-full"
+        classNames={{
+          base: 'w-full',
+          tabList: 'mx-auto grid w-[18rem] max-w-full grid-cols-3 gap-1',
+          tab: 'h-9 min-w-0 px-0',
+          tabContent: 'w-full text-center',
+          panel: 'w-full px-0 pt-3',
+        }}
+      >
         <Tab key="translate" title={t(`config.service.translate`)}>
           <Translate pluginList={pluginList[ServiceType.TRANSLATE]} />
         </Tab>

@@ -72,6 +72,7 @@
         "proxy_error": "لطفا هاست و پورت را پر کنید",
         "check_update": "بررسی بروزرسانی",
         "close_to_tray": "هنگام بستن به سینی سیستم کوچک شود",
+        "clipboard_monitor": "Clipboard Monitor",
         "app_language": "زبان برنامه",
         "title": "تنظیمات عمومی",
         "default_font": "پیشفرض",
@@ -109,6 +110,9 @@
         "incremental_translate": "ترجمه افزایشی",
         "target_language": "زبان مقصد",
         "plugin_missing": "Missing plugin"
+      },
+      "service": {
+        "no_installed_plugin_service": "No installed plugins detected"
       },
       "plugin": {
         "market": {

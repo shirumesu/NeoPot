@@ -22,6 +22,7 @@ type IpcChannel =
   | 'app:set-current-window-resizable'
   | 'app:set-current-window-bounds'
   | 'app:get-current-window-bounds'
+  | 'app:get-current-display'
   | 'app:is-current-window-maximized'
   | 'app:set-auto-start'
   | 'app:is-auto-start-enabled'
@@ -73,6 +74,7 @@ const channels = new Set<IpcChannel>([
   'app:set-current-window-resizable',
   'app:set-current-window-bounds',
   'app:get-current-window-bounds',
+  'app:get-current-display',
   'app:is-current-window-maximized',
   'app:set-auto-start',
   'app:is-auto-start-enabled',
@@ -121,6 +123,21 @@ async function invokeChecked<TResult>(channel: IpcChannel, payload?: unknown): P
   return ipcRenderer.invoke(channel, payload) as Promise<TResult>
 }
 
+function isTrustedRendererLocation(): boolean {
+  const { protocol, hostname } = globalThis.location
+  if (protocol === 'neopot:') {
+    return true
+  }
+
+  return (
+    protocol === 'http:' &&
+    (hostname === 'localhost' ||
+      hostname === '127.0.0.1' ||
+      hostname === '[::1]' ||
+      hostname === '::1')
+  )
+}
+
 const api: NeoPotElectronApi = {
   app: {
     getWindowLabel: () => invokeChecked<WindowLabel>('app:get-window-label'),
@@ -137,6 +154,7 @@ const api: NeoPotElectronApi = {
     setCurrentWindowBounds: (bounds) =>
       invokeChecked<void>('app:set-current-window-bounds', bounds),
     getCurrentWindowBounds: () => invokeChecked('app:get-current-window-bounds'),
+    getCurrentDisplay: () => invokeChecked('app:get-current-display'),
     isCurrentWindowMaximized: () => invokeChecked<boolean>('app:is-current-window-maximized'),
     setAutoStart: (enabled) => invokeChecked<void>('app:set-auto-start', { enabled }),
     isAutoStartEnabled: () => invokeChecked<boolean>('app:is-auto-start-enabled'),
@@ -238,4 +256,6 @@ const api: NeoPotElectronApi = {
   },
 }
 
-contextBridge.exposeInMainWorld('neoPot', api)
+if (isTrustedRendererLocation()) {
+  contextBridge.exposeInMainWorld('neoPot', api)
+}

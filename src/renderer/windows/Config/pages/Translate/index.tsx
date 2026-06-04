@@ -22,7 +22,7 @@ export default function Translate() {
   const [sourceLanguage, setSourceLanguage] = useConfig('translate_source_language', 'auto')
   const [targetLanguage, setTargetLanguage] = useConfig('translate_target_language', 'zh_cn')
   const [secondLanguage, setSecondLanguage] = useConfig('translate_second_language', 'en')
-  const [detectEngine, setDetectEngine] = useConfig('translate_detect_engine', 'baidu')
+  const [detectEngine, setDetectEngine] = useConfig('translate_detect_engine', 'local')
   const [autoCopy, setAutoCopy] = useConfig('translate_auto_copy', 'disable')
   const [incrementalTranslate, setIncrementalTranslate] = useConfig('incremental_translate', false)
   const [dynamicTranslate, setDynamicTranslate] = useConfig('dynamic_translate', false)
@@ -177,12 +177,6 @@ export default function Translate() {
                     )
                   }}
                 >
-                  <DropdownItem key="baidu">{t(`config.translate.baidu`)}</DropdownItem>
-                  <DropdownItem key="tencent">{t(`config.translate.tencent`)}</DropdownItem>
-                  <DropdownItem key="niutrans">{t(`config.translate.niutrans`)}</DropdownItem>
-                  <DropdownItem key="google">{t(`config.translate.google`)}</DropdownItem>
-                  <DropdownItem key="bing">{t(`config.translate.bing`)}</DropdownItem>
-                  <DropdownItem key="yandex">{t(`config.translate.yandex`)}</DropdownItem>
                   <DropdownItem key="local">{t(`config.translate.local`)}</DropdownItem>
                   {langDetectPlugins.map((plugin) => (
                     <DropdownItem key={`plugin:${plugin.name}`}>

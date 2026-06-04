@@ -4,6 +4,7 @@ import { pathToFileURL } from 'node:url'
 import {
   app,
   BrowserWindow,
+  type Display,
   Menu,
   net,
   protocol,
@@ -99,9 +100,14 @@ function getRendererRoot(): string {
   return path.join(__dirname, '..', 'renderer')
 }
 
+function shouldUseDevRendererUrl(): boolean {
+  return !app.isPackaged && Boolean(process.env.ELECTRON_RENDERER_URL)
+}
+
 function rendererUrl(label: WindowLabel, presentation: UpdaterPresentation = 'full'): string {
-  if (process.env.ELECTRON_RENDERER_URL) {
-    const url = new URL(process.env.ELECTRON_RENDERER_URL)
+  const devRendererUrl = process.env.ELECTRON_RENDERER_URL
+  if (shouldUseDevRendererUrl() && devRendererUrl) {
+    const url = new URL(devRendererUrl)
     url.searchParams.set('window', label)
     if (label === 'updater') {
       url.searchParams.set('presentation', presentation)
@@ -124,7 +130,7 @@ function rendererUrl(label: WindowLabel, presentation: UpdaterPresentation = 'fu
 // the app is ready and before any window loads. Dev keeps using Vite's http
 // server, so the handler is only needed for packaged builds.
 export function registerRendererProtocol(): void {
-  if (process.env.ELECTRON_RENDERER_URL) {
+  if (shouldUseDevRendererUrl()) {
     return
   }
 
@@ -158,6 +164,13 @@ function positionUpdaterNotification(window: BrowserWindow) {
   const bounds = display.workArea
   const [width, height] = window.getSize()
   window.setPosition(bounds.x + bounds.width - width - 16, bounds.y + bounds.height - height - 16)
+}
+
+export interface DisplayInfo {
+  id: number
+  position: { x: number; y: number }
+  size: { width: number; height: number }
+  scaleFactor: number
 }
 
 function getUpdaterDefinition(presentation: UpdaterPresentation): WindowDefinition {
@@ -209,6 +222,21 @@ function getTranslateWindowSize(definition: WindowDefinition): { width: number; 
   return {
     width,
     height,
+  }
+}
+
+function toDisplayInfo(display: Display): DisplayInfo {
+  return {
+    id: display.id,
+    position: {
+      x: display.bounds.x,
+      y: display.bounds.y,
+    },
+    size: {
+      width: display.bounds.width,
+      height: display.bounds.height,
+    },
+    scaleFactor: display.scaleFactor,
   }
 }
 
@@ -271,9 +299,16 @@ function createBrowserWindow(label: WindowLabel): BrowserWindow {
       ? updaterNotificationDefinition
       : windowDefinitions[label]
   const size = label === 'translate' ? getTranslateWindowSize(definition) : definition
+  const screenshotDisplay =
+    label === 'screenshot'
+      ? (screen.getDisplayNearestPoint(screen.getCursorScreenPoint()) ?? screen.getPrimaryDisplay())
+      : undefined
+  const screenshotBounds = screenshotDisplay?.bounds
   const options: BrowserWindowConstructorOptions = {
-    width: size.width,
-    height: size.height,
+    x: screenshotBounds?.x,
+    y: screenshotBounds?.y,
+    width: screenshotBounds?.width ?? size.width,
+    height: screenshotBounds?.height ?? size.height,
     minWidth: definition.minWidth,
     minHeight: definition.minHeight,
     show: false,
@@ -445,6 +480,15 @@ export function sendToWindow(label: WindowLabel, event: string, payload: unknown
 
 export function getCurrentWindowLabel(webContents: WebContents): WindowLabel {
   return windowLabelsByWebContentsId.get(webContents.id) ?? 'config'
+}
+
+export function getCurrentWindowDisplayInfo(webContents: WebContents): DisplayInfo {
+  const window = BrowserWindow.fromWebContents(webContents)
+  if (window && !window.isDestroyed()) {
+    return toDisplayInfo(screen.getDisplayMatching(window.getBounds()))
+  }
+
+  return toDisplayInfo(screen.getDisplayNearestPoint(screen.getCursorScreenPoint()))
 }
 
 export function getWindow(label: WindowLabel): BrowserWindow | undefined {
