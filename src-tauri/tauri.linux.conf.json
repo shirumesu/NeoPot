@@ -1,8 +1,0 @@
-{
-    "app": {
-        "trayIcon": {
-            "iconPath": "icons/icon.ico",
-            "iconAsTemplate": true
-        }
-    }
-}

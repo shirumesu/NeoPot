@@ -10,6 +10,8 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+.vite
+out
 *.local
 
 # Editor directories and files
@@ -24,6 +26,5 @@ dist-ssr
 # Spec document
 spec/
 
-.code-review-graph
-
-.depwire
+# temp
+docs/electron-compat.md

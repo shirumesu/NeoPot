@@ -1,0 +1,164 @@
+import React, { useEffect, useState, useRef } from 'react'
+import { appCacheDir, join } from '@/renderer/lib/electron/compat/path'
+import { currentMonitor } from '@/renderer/lib/electron/compat/window'
+import { convertFileSrc } from '@/renderer/lib/electron/compat/core'
+import { getCurrentWebviewWindow } from '@/renderer/lib/electron/compat/webviewWindow'
+import { invoke } from '@/renderer/lib/electron/compat/core'
+import { listen } from '@/renderer/lib/electron/compat/event'
+import { logger } from '@/renderer/lib/logger'
+const appWindow = getCurrentWebviewWindow()
+
+export default function Screenshot() {
+  const [imgurl, setImgurl] = useState('')
+  const [error, setError] = useState('')
+  const [action, setAction] = useState('recognize')
+  const [isMoved, setIsMoved] = useState(false)
+  const [isDown, setIsDown] = useState(false)
+  const [mouseDownX, setMouseDownX] = useState(0)
+  const [mouseDownY, setMouseDownY] = useState(0)
+  const [mouseMoveX, setMouseMoveX] = useState(0)
+  const [mouseMoveY, setMouseMoveY] = useState(0)
+
+  const imgRef = useRef<HTMLImageElement>(null)
+
+  const captureScreenshot = async () => {
+    try {
+      setError('')
+      const monitor = await currentMonitor()
+      const position = monitor?.position ?? { x: 0, y: 0 }
+      const dataUrl = await invoke('screenshot', { x: position.x, y: position.y })
+      if (typeof dataUrl === 'string' && dataUrl.length > 0) {
+        setImgurl(dataUrl)
+      } else {
+        const appCacheDirPath = await appCacheDir()
+        const filePath = await join(appCacheDirPath, 'pot_screenshot.png')
+        setImgurl(`${convertFileSrc(filePath)}?t=${Date.now()}`)
+      }
+      await appWindow.show()
+      await appWindow.setFocus()
+    } catch (e) {
+      logger.error('Screenshot capture failed.', e)
+      setError(String(e))
+      await appWindow.show()
+      await appWindow.setFocus()
+    }
+  }
+
+  useEffect(() => {
+    void captureScreenshot()
+    const unlisten = listen('capture_screenshot', (event) => {
+      if (event.payload === 'translate' || event.payload === 'recognize') {
+        setAction(event.payload)
+      }
+      void captureScreenshot()
+    })
+    void window.neoPot?.app.rendererReady()
+
+    return () => {
+      void unlisten.then((f) => f())
+    }
+  }, [])
+
+  return (
+    <>
+      {error && (
+        <div className="fixed inset-0 z-20 bg-background p-4 text-sm text-danger">{error}</div>
+      )}
+      <img
+        ref={imgRef}
+        className="fixed top-0 left-0 w-full select-none"
+        src={imgurl}
+        draggable={false}
+        onLoad={() => {
+          if (imgurl !== '' && imgRef.current?.complete) {
+            void appWindow.show()
+            void appWindow.setFocus()
+            void appWindow.setResizable(false)
+          }
+        }}
+      />
+      <div
+        className={`fixed bg-[#2080f020] border border-solid border-sky-500 ${!isMoved && 'hidden'}`}
+        style={{
+          top: Math.min(mouseDownY, mouseMoveY),
+          left: Math.min(mouseDownX, mouseMoveX),
+          bottom: window.innerHeight - Math.max(mouseDownY, mouseMoveY),
+          right: window.innerWidth - Math.max(mouseDownX, mouseMoveX),
+        }}
+      />
+      <div
+        className="fixed top-0 left-0 bottom-0 right-0 cursor-crosshair select-none"
+        onMouseDown={(e) => {
+          if (e.buttons === 1) {
+            setIsDown(true)
+            setMouseDownX(e.clientX)
+            setMouseDownY(e.clientY)
+            logger.debug('Screenshot selection started.', {
+              clientX: e.clientX,
+              clientY: e.clientY,
+            })
+          } else {
+            void appWindow.close()
+          }
+        }}
+        onMouseMove={(e) => {
+          if (isDown) {
+            setIsMoved(true)
+            setMouseMoveX(e.clientX)
+            setMouseMoveY(e.clientY)
+          }
+        }}
+        onMouseUp={async (e) => {
+          const monitor = await currentMonitor()
+          const dpi = monitor.size.width / window.innerWidth
+          logger.debug('Screenshot selection ended.', {
+            clientX: e.clientX,
+            clientY: e.clientY,
+            mouseDownX,
+            mouseDownY,
+            monitorWidth: monitor.size.width,
+            windowWidth: window.innerWidth,
+            dpi,
+            isMoved,
+          })
+          appWindow.hide()
+          setIsDown(false)
+          setIsMoved(false)
+          const left = Math.floor(Math.min(mouseDownX, e.clientX) * dpi)
+          const top = Math.floor(Math.min(mouseDownY, e.clientY) * dpi)
+          const right = Math.floor(Math.max(mouseDownX, e.clientX) * dpi)
+          const bottom = Math.floor(Math.max(mouseDownY, e.clientY) * dpi)
+          const width = right - left
+          const height = bottom - top
+          logger.debug('Screenshot crop selected.', {
+            left,
+            top,
+            width,
+            height,
+            action,
+          })
+          if (width <= 0 || height <= 0) {
+            logger.warn('Screenshot area is too small.', {
+              width,
+              height,
+            })
+            await appWindow.close()
+          } else {
+            try {
+              await invoke('cut_image', { left, top, width, height })
+              await invoke('screenshot_complete', { action })
+              await appWindow.close()
+            } catch (error) {
+              logger.error('Screenshot completion failed.', error, {
+                action,
+              })
+              setError(String(error))
+              await appWindow.show()
+              await appWindow.setFocus()
+            }
+          }
+        }}
+      />
+    </>
+  )
+}

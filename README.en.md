@@ -22,15 +22,14 @@
 
 <p align="center">
   <img alt="License" src="https://img.shields.io/github/license/shirumesu/NeoPot.svg" />
-  <img alt="Tauri" src="https://img.shields.io/badge/Tauri-2.10-blue?logo=tauri" />
+  <img alt="Electron" src="https://img.shields.io/badge/Electron-41-blue?logo=electron" />
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.6-blue?logo=typescript&logoColor=white" />
-  <img alt="Rust" src="https://img.shields.io/badge/Rust-1.80%2B-orange?logo=rust&logoColor=white" />
   <img alt="Windows" src="https://img.shields.io/badge/Windows-supported-blue?logo=windows&logoColor=white" />
   <img alt="Linux" src="https://img.shields.io/badge/Linux-supported-yellow?logo=linux&logoColor=white" />
 </p>
 
-> NeoPot is maintained as a continuation of Pot Desktop, with migrations to Tauri v2, HeroUI, and TypeScript completed.
-> A macOS version is not published for now. macOS distribution requires an Apple Developer account, and the current CI, updater, and installation instructions are only targeted at Windows and Linux.
+> NeoPot is maintained as a continuation of Pot Desktop, with migrations to Electron, HeroUI, and TypeScript completed.
+> A macOS version is not published for now. macOS distribution requires an Apple Developer account, and the current installation instructions are only targeted at Windows and Linux.
 > The early development versions currently focus on migration, refactoring, and feature updates. Some Pot Desktop resources or websites may still be used temporarily and will be gradually removed or replaced as soon as possible.
 
 ## Table of Contents
@@ -49,14 +48,14 @@
 
 ## Feature Preview
 
-| Selection Translation | Input Translation | External Invocation |
-| --- | --- | --- |
-| Select text and press a shortcut to translate it | Open the translation window, enter text, and press Enter | Invoke NeoPot from other tools through the local HTTP API |
+| Selection Translation                                                     | Input Translation                                                     | External Invocation                                                     |
+| ------------------------------------------------------------------------- | --------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Select text and press a shortcut to translate it                          | Open the translation window, enter text, and press Enter              | Invoke NeoPot from other tools through the local HTTP API               |
 | <img src="docs/assets/readme/eg1.gif" alt="Selection translation demo" /> | <img src="docs/assets/readme/eg2.gif" alt="Input translation demo" /> | <img src="docs/assets/readme/eg3.gif" alt="External invocation demo" /> |
 
-| Clipboard Monitoring | Screenshot OCR | Screenshot Translation |
-| --- | --- | --- |
-| Translate copied text after enabling clipboard monitoring | Select a screen region and recognize text | Select a screen region and translate the recognized result |
+| Clipboard Monitoring                                                     | Screenshot OCR                                                     | Screenshot Translation                                                     |
+| ------------------------------------------------------------------------ | ------------------------------------------------------------------ | -------------------------------------------------------------------------- |
+| Translate copied text after enabling clipboard monitoring                | Select a screen region and recognize text                          | Select a screen region and translate the recognized result                 |
 | <img src="docs/assets/readme/eg4.gif" alt="Clipboard monitoring demo" /> | <img src="docs/assets/readme/eg5.gif" alt="Screenshot OCR demo" /> | <img src="docs/assets/readme/eg6.gif" alt="Screenshot translation demo" /> |
 
 <p align="center">
@@ -68,9 +67,8 @@
 ## Main Features
 
 - Parallel translation with multiple services
-- Text recognition with multiple services
-- Text-to-speech with multiple services
-- Vocabulary book export
+- Local-model text recognition
+- Text-to-speech through plugins
 - Screenshot OCR and screenshot translation
 - Clipboard monitoring translation
 - Local HTTP API for external invocation
@@ -81,7 +79,7 @@
 
 ## Supported Services
 
-> Services in the early refactored version have not been fully verified yet. Outdated or unavailable services will be gradually removed, and actively maintained services will be added.
+The current Electron version ships these built-in services. Additional translation, OCR, and text-to-speech services are provided through plugins.
 
 <details>
 <summary>Translation</summary>
@@ -90,100 +88,47 @@
 - Zhipu AI
 - Gemini Pro
 - Ollama
-- Alibaba Translate
-- Baidu Translate
-- Caiyun Translate
-- Tencent Translator
-- Tencent Interactive Translation
-- Volcano Translate
-- NiuTrans
 - Google
-- Bing
-- Bing Dictionary
 - DeepL
-- Youdao Translate
-- Cambridge Dictionary
-- Yandex
-- Lingva
-- Tatoeba
-- ECDICT
 
 </details>
 
 <details>
 <summary>Text Recognition</summary>
 
-- System OCR
-  - Windows: Windows.Media.OCR
-  - Linux: Tesseract OCR
-- Tesseract.js
-- Baidu OCR
-- Tencent OCR
-- Volcano OCR
-- iFLYTEK OCR
-- Tencent Image Translation
-- Baidu Image Translation
-- Simple LaTeX
-- OCRSpace
-- Rapid OCR
-- Paddle OCR
+- Local Model OCR (PaddleOCR.js PP-OCRv5)
 
 </details>
 
 <details>
 <summary>Text-to-Speech</summary>
 
-- Lingva
-
-</details>
-
-<details>
-<summary>Vocabulary Book</summary>
-
-- Anki
-- Eudic
-- Youdao
-- Shanbay
+- Plugins only
 
 </details>
 
 ## Installation
 
-Go to [Releases](https://github.com/shirumesu/NeoPot/releases/latest) and download the installer package for your system and architecture.
+Go to [Releases](https://github.com/shirumesu/NeoPot/releases) and download the installer package for your system and architecture.
 
 ### Windows
 
-Standard installers:
-
-- `neopot_{version}_x64-setup.exe`: 64-bit Windows
-- `neopot_{version}_x86-setup.exe`: 32-bit Windows
-- `neopot_{version}_arm64-setup.exe`: arm64 Windows
-
-Installers with the WebView2 Runtime bundled:
-
-- `neopot_{version}_x64_fix_webview2_runtime-setup.exe`
-- `neopot_{version}_x86_fix_webview2_runtime-setup.exe`
-- `neopot_{version}_arm64_fix_webview2_runtime-setup.exe`
-
-If WebView2 is not installed on your system, install Microsoft WebView2 Runtime first. Use the installer with the bundled runtime only when WebView2 cannot be installed, such as in some enterprise environments.
+- `NeoPot-Setup-{version}.exe`: 64-bit Windows installer
+- `NeoPot-{version}-portable-x64.exe`: 64-bit Windows portable build
 
 ### Linux
 
 The release page provides `deb`, `rpm`, and `AppImage` packages. On Debian/Ubuntu, you can install the downloaded deb file directly:
 
 ```bash
-sudo apt-get install ./neopot_{version}_amd64.deb
-````
+sudo apt-get install ./NeoPot-*.deb
+```
 
 Arch, Manjaro, Flatpak, Homebrew, Winget, and other distribution channels have not been connected to NeoPot yet. Use GitHub Releases as the source of truth.
 
 ## Plugin System
 
-* [ ] TODO…  
-
-Due to the architecture upgrade, the original `.potext` format will most likely not be supported. The refactored version provides an installation entry: go to `Preferences -> Service Settings -> Add External Plugin -> Install External Plugin` and select the corresponding file to install it. Availability is not guaranteed for now.
-
-Issues and PRs are welcome if needed.
+NeoPot can install `.zip` / `.npot` plugin packages or local plugin directories. See the [Electron compatibility surface](docs/electron-compat.md) for supported plugin capabilities and limits.
 
 ## External Invocation
 
@@ -233,7 +178,7 @@ Windows users can install SnipDo from the Microsoft Store, then download the `ne
 
 ## Wayland Support
 
-Tauri’s global shortcut solution has limited support for Wayland. Wayland users can bind shortcuts through their desktop environment or window manager, then use `curl` to call NeoPot’s local HTTP API.
+Linux global shortcuts may be limited by the desktop environment on Wayland. Wayland users can bind shortcuts through their desktop environment or window manager, then use `curl` to call NeoPot’s local HTTP API.
 
 Hyprland external screenshot example:
 
@@ -253,9 +198,8 @@ windowrulev2 = move cursor 0 0, class:(neopot), title:(Translator|Screenshot Tra
 
 Verified environment:
 
-* Node.js `>= 24.0.0`
-* pnpm `>= 9`
-* Rust `>= 1.80.0`
+- Node.js `>= 24.0.0`
+- pnpm `>= 9`
 
 Clone the repository:
 
@@ -284,21 +228,21 @@ Common commands:
 
 ```bash
 pnpm dev
-pnpm run build
-pnpm run typecheck
-pnpm tauri build
+pnpm lint
+pnpm test
+pnpm make
 ```
 
 ## Future TODO
 
-* [ ] Gradually replace and remove Pot-related resources  
-* [ ] Verify each specific service and update, remove, or maintain them as needed  
+- [ ] Gradually replace and remove Pot-related resources
+- [ ] Verify each specific service and update, remove, or maintain them as needed
 
 ## Known Issues
 
-* Text recognition / screenshot features may fail to launch properly  
-* Some services may become unavailable after proxy settings are configured  
-* Content entered in settings may be lost and reset to the original content  
+- Text recognition / screenshot features may fail to launch properly
+- Some services may become unavailable after proxy settings are configured
+- Content entered in settings may be lost and reset to the original content
 
 ## Acknowledgements
 

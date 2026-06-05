@@ -1,0 +1,54 @@
+appId: com.squirrel.neopot.neopot
+productName: NeoPot
+directories:
+  output: dist
+files:
+  - out/main/**
+  - out/preload/**
+  - out/renderer/**
+  - public/**
+  - package.json
+  - '!node_modules/**'
+  - '!out/package/**'
+  - '!dist/**'
+asar: true
+asarUnpack:
+  - '**/*.node'
+artifactName: NeoPot-${version}-${os}-${arch}.${ext}
+publish:
+  provider: github
+  owner: shirumesu
+  repo: NeoPot
+win:
+  icon: public/icon.ico
+  target:
+    - target: nsis
+      arch:
+        - x64
+    - target: portable
+      arch:
+        - x64
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  runAfterFinish: true
+  artifactName: NeoPot-Setup-${version}.${ext}
+portable:
+  artifactName: NeoPot-${version}-portable-${arch}.${ext}
+linux:
+  icon: public
+  category: Utility
+  maintainer: NeoPot contributors
+  target:
+    - target: AppImage
+      arch:
+        - x64
+    - target: deb
+      arch:
+        - x64
+    - target: rpm
+      arch:
+        - x64

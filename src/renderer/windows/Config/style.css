@@ -1,0 +1,14 @@
+@reference "tailwindcss";
+
+.config-item {
+  @apply my-3 flex min-h-10 items-center justify-between gap-4;
+}
+
+.config-item > h3 {
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+.config-item > :last-child {
+  min-width: 0;
+}

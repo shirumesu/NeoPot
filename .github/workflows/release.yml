@@ -1,0 +1,180 @@
+name: CI and Release
+
+on:
+  pull_request:
+    branches:
+      - master
+  push:
+    branches:
+      - master
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Quality gate
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check formatting
+        run: pnpm run format:check
+
+      - name: Lint
+        run: pnpm run lint
+
+      - name: Test
+        run: pnpm test
+
+      - name: Typecheck
+        run: pnpm exec tsc --noEmit
+
+      - name: Build
+        run: pnpm run build
+
+  package:
+    name: Package ${{ matrix.name }}
+    needs: quality
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows
+            os: windows-latest
+            builder-target: win
+            artifact-name: neopot-windows
+          - name: Linux
+            os: ubuntu-latest
+            builder-target: linux
+            artifact-name: neopot-linux
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Linux packaging tools
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y rpm
+
+      - name: Build renderer and main bundles
+        run: pnpm run build
+
+      - name: Package application
+        run: pnpm exec electron-builder --${{ matrix.builder-target }} --publish never
+
+      - name: Upload packaged artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact-name }}
+          if-no-files-found: error
+          path: |
+            dist/*.AppImage
+            dist/*.blockmap
+            dist/*.deb
+            dist/*.exe
+            dist/*.rpm
+            dist/latest*.yml
+
+  release:
+    name: Publish GitHub Release
+    needs: package
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download packaged artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          merge-multiple: true
+
+      - name: Build release notes from root CHANGELOG
+        shell: bash
+        run: |
+          node <<'NODE'
+          const { readFileSync, writeFileSync } = require('node:fs')
+
+          const tag = process.env.GITHUB_REF_NAME || ''
+          const version = tag.replace(/^v/, '')
+          const changelog = readFileSync('CHANGELOG', 'utf8').replace(/\r\n/g, '\n')
+          const lines = changelog.split('\n')
+          const heading = new RegExp(`^##\\s+${version.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')}(?:\\s|$)`)
+          let start = lines.findIndex((line) => heading.test(line))
+
+          if (start === -1) {
+            start = lines.findIndex((line) => /^##\s+/.test(line))
+          }
+
+          const end =
+            start === -1
+              ? lines.length
+              : lines.findIndex((line, index) => index > start && /^##\s+/.test(line))
+          const releaseNotes =
+            start === -1
+              ? `Release ${tag}`
+              : lines.slice(start, end === -1 ? lines.length : end).join('\n').trim()
+
+          writeFileSync('release-notes.md', `${releaseNotes}\n`)
+          NODE
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          if gh release view "$TAG_NAME" --json tagName --jq .tagName > release-check.txt 2>&1; then
+            gh release edit "$TAG_NAME" --title "$TAG_NAME" --notes-file release-notes.md
+          else
+            gh release create "$TAG_NAME" --title "$TAG_NAME" --notes-file release-notes.md
+          fi
+
+          rm -f release-check.txt
+          gh release upload "$TAG_NAME" release-assets/* --clobber

@@ -22,15 +22,14 @@
 
 <p align="center">
   <img alt="License" src="https://img.shields.io/github/license/shirumesu/NeoPot.svg" />
-  <img alt="Tauri" src="https://img.shields.io/badge/Tauri-2.10-blue?logo=tauri" />
+  <img alt="Electron" src="https://img.shields.io/badge/Electron-41-blue?logo=electron" />
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.6-blue?logo=typescript&logoColor=white" />
-  <img alt="Rust" src="https://img.shields.io/badge/Rust-1.80%2B-orange?logo=rust&logoColor=white" />
   <img alt="Windows" src="https://img.shields.io/badge/Windows-supported-blue?logo=windows&logoColor=white" />
   <img alt="Linux" src="https://img.shields.io/badge/Linux-supported-yellow?logo=linux&logoColor=white" />
 </p>
 
-> NeoPot 基于 Pot Desktop 继续维护，并完成 Tauri v2、HeroUI、TypeScript 迁移。
-> macOS 版本暂不发布。原因是 macOS 分发需要 Apple Developer 账号；当前 CI、updater 和安装说明只面向 Windows 与 Linux。
+> NeoPot 基于 Pot Desktop 继续维护，并迁移到 Electron、HeroUI 和 TypeScript。
+> macOS 版本暂不发布。原因是 macOS 分发需要 Apple Developer 账号；当前安装说明只面向 Windows 与 Linux。
 > 目前早期开发版本重心在移植重构和功能更新，仍可能沿用部分 pot desktop 资源或是网站，后续会尽快逐步移除替换。
 
 ## 目录
@@ -49,14 +48,14 @@
 
 ## 功能预览
 
-| 划词翻译 | 输入翻译 | 外部调用 |
-| --- | --- | --- |
-| 选中文字后按下快捷键翻译 | 呼出翻译窗口后输入文本并回车 | 通过本地 HTTP 接口被其他工具调用 |
+| 划词翻译                                                    | 输入翻译                                                    | 外部调用                                                    |
+| ----------------------------------------------------------- | ----------------------------------------------------------- | ----------------------------------------------------------- |
+| 选中文字后按下快捷键翻译                                    | 呼出翻译窗口后输入文本并回车                                | 通过本地 HTTP 接口被其他工具调用                            |
 | <img src="docs/assets/readme/eg1.gif" alt="划词翻译演示" /> | <img src="docs/assets/readme/eg2.gif" alt="输入翻译演示" /> | <img src="docs/assets/readme/eg3.gif" alt="外部调用演示" /> |
 
-| 剪贴板监听 | 截图 OCR | 截图翻译 |
-| --- | --- | --- |
-| 开启监听后复制文本即可翻译 | 框选屏幕区域并识别文字 | 框选屏幕区域并翻译识别结果 |
+| 剪贴板监听                                                    | 截图 OCR                                                     | 截图翻译                                                    |
+| ------------------------------------------------------------- | ------------------------------------------------------------ | ----------------------------------------------------------- |
+| 开启监听后复制文本即可翻译                                    | 框选屏幕区域并识别文字                                       | 框选屏幕区域并翻译识别结果                                  |
 | <img src="docs/assets/readme/eg4.gif" alt="剪贴板监听演示" /> | <img src="docs/assets/readme/eg5.gif" alt="截图 OCR 演示" /> | <img src="docs/assets/readme/eg6.gif" alt="截图翻译演示" /> |
 
 <p align="center">
@@ -68,9 +67,8 @@
 ## 主要功能
 
 - 多接口并行翻译
-- 多接口文字识别
-- 多接口语音合成
-- 生词本导出
+- 本地模型文字识别
+- 插件语音合成
 - 截图 OCR 与截图翻译
 - 剪贴板监听翻译
 - 本地 HTTP 外部调用
@@ -81,7 +79,7 @@
 
 ## 支持接口
 
-> 重构早期版本未验证，后续会逐步删除过期、不可用版本，并新增持续维护的可用接口。
+当前 Electron 版内置接口如下；更多翻译、OCR 与语音合成能力通过插件扩展。
 
 <details>
 <summary>翻译</summary>
@@ -90,98 +88,47 @@
 - 智谱 AI
 - Gemini Pro
 - Ollama
-- 阿里翻译
-- 百度翻译
-- 彩云小译
-- 腾讯翻译君
-- 腾讯交互翻译
-- 火山翻译
-- 小牛翻译
 - Google
-- Bing
-- Bing 词典
 - DeepL
-- 有道翻译
-- 剑桥词典
-- Yandex
-- Lingva
-- Tatoeba
-- ECDICT
 
 </details>
 
 <details>
 <summary>文字识别</summary>
 
-- 系统 OCR
-  - Windows: Windows.Media.OCR
-  - Linux: Tesseract OCR
-- Tesseract.js
-- 百度 OCR
-- 腾讯 OCR
-- 火山 OCR
-- 讯飞 OCR
-- 腾讯图片翻译
-- 百度图片翻译
-- Simple LaTeX
-- OCRSpace
-- Rapid OCR
-- Paddle OCR
+- 本地模型 OCR（PaddleOCR.js PP-OCRv5）
 
 </details>
 
 <details>
 <summary>语音合成</summary>
 
-- Lingva
-
-</details>
-
-<details>
-<summary>生词本</summary>
-
-- Anki
-- 欧路词典
-- 有道
-- 扇贝
+- 仅插件
 
 </details>
 
 ## 安装
 
-请前往 [Releases](https://github.com/shirumesu/NeoPot/releases/latest) 下载对应系统和架构的安装包。
+请前往 [Releases](https://github.com/shirumesu/NeoPot/releases) 下载对应系统和架构的安装包。
 
 ### Windows
 
-普通安装包：
-
-- `neopot_{version}_x64-setup.exe`: 64 位 Windows
-- `neopot_{version}_x86-setup.exe`: 32 位 Windows
-- `neopot_{version}_arm64-setup.exe`: arm64 Windows
-
-内置 WebView2 Runtime 的安装包：
-
-- `neopot_{version}_x64_fix_webview2_runtime-setup.exe`
-- `neopot_{version}_x86_fix_webview2_runtime-setup.exe`
-- `neopot_{version}_arm64_fix_webview2_runtime-setup.exe`
-
-如果系统没有安装 WebView2，优先安装 Microsoft WebView2 Runtime；企业环境无法安装 WebView2 时，再使用内置 runtime 的安装包。
+- `NeoPot-Setup-{version}.exe`: 64 位 Windows 安装包
+- `NeoPot-{version}-portable-x64.exe`: 64 位 Windows 便携版
 
 ### Linux
 
 发布页会提供 `deb`、`rpm` 和 `AppImage` 包。Debian/Ubuntu 可以直接安装下载到本地的 deb 文件：
 
 ```bash
-sudo apt-get install ./neopot_{version}_amd64.deb
+sudo apt-get install ./NeoPot-*.deb
 ```
 
 Arch、Manjaro、Flatpak、Homebrew、Winget 等分发入口尚未接入 NeoPot，请以 GitHub Releases 为准。
 
 ## 插件系统
 
-- [ ] TODO…  
-> 由于架构升级，大概率不支持原本的 `.potext`，但重构版本提供了安装接口，可在 `偏好设置 -> 服务设置 -> 添加外部插件 -> 安装外部插件` 中选择对应文件即可安装，暂不保证可用性  
-若有需要欢迎提出 issue 或欢迎任何 pr。
+NeoPot 支持安装 `.zip` / `.npot` 插件包或本地插件目录。兼容能力和限制见 [Electron 兼容能力表](docs/electron-compat.md)。
 
 ## 外部调用
 
@@ -231,7 +178,7 @@ Windows 用户可以从 Microsoft Store 安装 SnipDo，然后在 NeoPot Release
 
 ## Wayland 支持
 
-Tauri 的全局快捷键方案对 Wayland 支持有限。Wayland 用户可以通过桌面环境或窗口管理器绑定快捷键，再用 `curl` 调用 NeoPot 的本地 HTTP 接口。
+Linux 全局快捷键在 Wayland 下可能受桌面环境限制。Wayland 用户可以通过桌面环境或窗口管理器绑定快捷键，再用 `curl` 调用 NeoPot 的本地 HTTP 接口。
 
 Hyprland 外部截图示例：
 
@@ -253,7 +200,6 @@ windowrulev2 = move cursor 0 0, class:(neopot), title:(Translator|Screenshot Tra
 
 - Node.js `>= 24.0.0`
 - pnpm `>= 9`
-- Rust `>= 1.80.0`
 
 拉取代码：
 
@@ -282,14 +228,14 @@ sudo apt-get install -y \
 
 ```bash
 pnpm dev
-pnpm run build
-pnpm run typecheck
-pnpm tauri build
+pnpm lint
+pnpm test
+pnpm make
 ```
 
 ## 未来TODO
 
-- [ ] 验证每个具体的服务，修改/删除/维护  
+- [ ] 验证每个具体的服务，修改/删除/维护
 
 ## 致谢
 
