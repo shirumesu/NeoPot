@@ -1,51 +1,13 @@
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from '@heroui/react'
-import { useTranslation } from 'react-i18next'
-import React from 'react'
-
 import * as builtinServices from '@/renderer/providers/translate'
-import { createServiceInstanceKey } from '@/renderer/lib/service/service_instance'
+import SharedSelectModal from '../../SelectModal'
+import { ServiceType } from '@/renderer/lib/service/service_instance'
 
 export default function SelectModal(props: any) {
-  const { isOpen, onOpenChange, setCurrentConfigKey, onConfigOpen } = props
-  const { t } = useTranslation()
-  const builtinServiceMap = builtinServices as Record<string, any>
-
   return (
-    <Modal isOpen={isOpen} onOpenChange={onOpenChange} scrollBehavior="inside">
-      <ModalContent className="max-h-[80vh]">
-        {(onClose) => (
-          <>
-            <ModalHeader>{t('config.service.add_service')}</ModalHeader>
-            <ModalBody>
-              {Object.keys(builtinServices).map((x) => {
-                return (
-                  <div key={x}>
-                    <Button
-                      fullWidth
-                      onPress={() => {
-                        setCurrentConfigKey(createServiceInstanceKey(x))
-                        onConfigOpen()
-                      }}
-                      startContent={
-                        <img src={builtinServiceMap[x].info.icon} className="h-6 w-6 my-auto" />
-                      }
-                    >
-                      <div className="w-full">
-                        {t(`services.translate.${builtinServiceMap[x].info.name}.title`)}
-                      </div>
-                    </Button>
-                  </div>
-                )
-              })}
-            </ModalBody>
-            <ModalFooter>
-              <Button color="danger" variant="light" onPress={onClose}>
-                {t('common.cancel')}
-              </Button>
-            </ModalFooter>
-          </>
-        )}
-      </ModalContent>
-    </Modal>
+    <SharedSelectModal
+      {...props}
+      serviceType={ServiceType.TRANSLATE}
+      builtinServices={builtinServices as any}
+    />
   )
 }

@@ -5,8 +5,17 @@ import React from 'react'
 
 import { getCardActions } from '../logic'
 import { openUrl } from '@/renderer/lib/electron/compat/opener'
+import type { InstalledPlugin } from '../installedPlugins'
 
-export default function PluginCard(props: any) {
+interface PluginCardProps {
+  plugin: InstalledPlugin
+  onOpenHotkeys: (plugin: InstalledPlugin) => void
+  onToggleEnabled: (plugin: InstalledPlugin, enabled: boolean) => void
+  onDelete: (plugin: InstalledPlugin) => void
+  onOpenSettings: (plugin: InstalledPlugin) => void
+}
+
+export default function PluginCard(props: PluginCardProps) {
   const { plugin, onOpenHotkeys, onToggleEnabled, onDelete, onOpenSettings } = props
   const { t } = useTranslation()
   const actions = getCardActions(plugin)

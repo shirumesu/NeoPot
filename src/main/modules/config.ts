@@ -88,7 +88,7 @@ function applyConfigValue(
 function writeConfigValueDirectly(key: string, value: ConfigValue): void {
   const nextStore = store.store
   applyConfigValue(nextStore, key, encryptSensitiveConfigValue(value, secretCipher, [key]))
-  writeFileSync(store.path, JSON.stringify(nextStore, undefined, '\t'), { mode: 0o666 })
+  writeFileSync(store.path, JSON.stringify(nextStore, undefined, '\t'), { mode: 0o600 })
   store.events.dispatchEvent(new Event('change'))
 }
 

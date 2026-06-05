@@ -23,6 +23,7 @@ const windows = new Map<WindowLabel, BrowserWindow>()
 const windowLabelsByWebContentsId = new Map<number, WindowLabel>()
 const readyWindows = new Set<WindowLabel>()
 const pendingWindowEvents = new Map<WindowLabel, Array<{ event: string; payload: unknown }>>()
+const MAX_PENDING_WINDOW_EVENTS_PER_WINDOW = 25
 let updaterPresentation: UpdaterPresentation = 'full'
 let appIsQuitting = false
 let translateResizeTimer: NodeJS.Timeout | null = null
@@ -269,6 +270,32 @@ function flushPendingWindowEvents(label: WindowLabel): void {
   }
 }
 
+function queuePendingWindowEvent(
+  label: WindowLabel,
+  event: string,
+  payload: unknown,
+  reason: 'missing' | 'pending',
+): void {
+  const events = pendingWindowEvents.get(label) ?? []
+  if (events.length >= MAX_PENDING_WINDOW_EVENTS_PER_WINDOW) {
+    const droppedEvent = events.shift()
+    logger.warn('Dropped queued window event because the pending queue is full.', {
+      window: label,
+      reason,
+      droppedEvent: droppedEvent?.event,
+      maxQueueLength: MAX_PENDING_WINDOW_EVENTS_PER_WINDOW,
+    })
+  }
+
+  events.push({ event, payload })
+  pendingWindowEvents.set(label, events)
+  logger.debug(`Queued event for ${reason} window.`, {
+    window: label,
+    event,
+    queueLength: events.length,
+  })
+}
+
 function showWindowInForeground(window: BrowserWindow, label: WindowLabel): void {
   const restoreAlwaysOnTop = window.isAlwaysOnTop()
 
@@ -452,26 +479,12 @@ export function focusWindow(label: WindowLabel): void {
 export function sendToWindow(label: WindowLabel, event: string, payload: unknown): void {
   const window = windows.get(label)
   if (!window || window.isDestroyed()) {
-    const events = pendingWindowEvents.get(label) ?? []
-    events.push({ event, payload })
-    pendingWindowEvents.set(label, events)
-    logger.debug('Queued event for missing window.', {
-      window: label,
-      event,
-      queueLength: events.length,
-    })
+    queuePendingWindowEvent(label, event, payload, 'missing')
     return
   }
 
   if (!readyWindows.has(label)) {
-    const events = pendingWindowEvents.get(label) ?? []
-    events.push({ event, payload })
-    pendingWindowEvents.set(label, events)
-    logger.debug('Queued event for pending window.', {
-      window: label,
-      event,
-      queueLength: events.length,
-    })
+    queuePendingWindowEvent(label, event, payload, 'pending')
     return
   }
 

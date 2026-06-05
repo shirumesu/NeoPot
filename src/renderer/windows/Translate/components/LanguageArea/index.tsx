@@ -1,12 +1,4 @@
-import {
-  Card,
-  Button,
-  CardFooter,
-  Dropdown,
-  DropdownMenu,
-  DropdownTrigger,
-  DropdownItem,
-} from '@heroui/react'
+import { Card, Button, CardFooter, Dropdown, DropdownTrigger, DropdownItem } from '@heroui/react'
 import { useTranslation } from 'react-i18next'
 import { BiTransferAlt } from 'react-icons/bi'
 import React, { useEffect } from 'react'
@@ -15,8 +7,7 @@ import { atom, useAtom, useAtomValue } from 'jotai'
 import { languageList } from '@/renderer/lib/language/language'
 import { detectLanguageAtom } from '../SourceArea'
 import { useConfig } from '../../../../hooks'
-
-const DropdownMenuAny = DropdownMenu as any
+import SafeDropdownMenu from '@/renderer/components/SafeDropdownMenu'
 
 export const sourceLanguageAtom = atom('auto')
 export const targetLanguageAtom = atom('zh_cn')
@@ -70,7 +61,7 @@ export default function LanguageArea() {
                 {t(`languages.${sourceLanguage}`)}
               </Button>
             </DropdownTrigger>
-            <DropdownMenuAny
+            <SafeDropdownMenu
               aria-label={t('accessibility.source_language')}
               className="max-h-[50vh] overflow-y-auto"
               onAction={(key: React.Key) => {
@@ -81,7 +72,7 @@ export default function LanguageArea() {
               {languageList.map((x) => {
                 return <DropdownItem key={x}>{t(`languages.${x}`)}</DropdownItem>
               })}
-            </DropdownMenuAny>
+            </SafeDropdownMenu>
           </Dropdown>
         </div>
         <div className="flex">
@@ -122,7 +113,7 @@ export default function LanguageArea() {
                 {t(`languages.${targetLanguage}`)}
               </Button>
             </DropdownTrigger>
-            <DropdownMenuAny
+            <SafeDropdownMenu
               aria-label={t('accessibility.target_language')}
               className="max-h-[50vh] overflow-y-auto"
               onAction={(key: React.Key) => {
@@ -132,7 +123,7 @@ export default function LanguageArea() {
               {languageList.map((x) => {
                 return <DropdownItem key={x}>{t(`languages.${x}`)}</DropdownItem>
               })}
-            </DropdownMenuAny>
+            </SafeDropdownMenu>
           </Dropdown>
         </div>
       </CardFooter>

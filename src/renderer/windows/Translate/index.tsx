@@ -1,11 +1,11 @@
 import { getCurrentWebviewWindow } from '@/renderer/lib/electron/compat/webviewWindow'
 import { Spacer, Button } from '@heroui/react'
-import { AiFillCloseCircle } from 'react-icons/ai'
 import React, { useState, useEffect } from 'react'
 import { listen } from '@/renderer/lib/electron/compat/event'
 import { BsPinFill } from 'react-icons/bs'
 import { useTranslation } from 'react-i18next'
 
+import WindowControl from '../../components/WindowControl'
 import LanguageArea from './components/LanguageArea'
 import SourceArea from './components/SourceArea'
 import TargetArea from './components/TargetArea'
@@ -244,7 +244,7 @@ export default function Translate() {
           size="sm"
           variant="flat"
           disableAnimation
-          className="my-auto bg-transparent"
+          className="my-auto mx-1.25 bg-transparent"
           aria-label={t(pined ? 'accessibility.unpin_window' : 'accessibility.pin_window')}
           onPress={() => {
             if (pined) {
@@ -261,19 +261,7 @@ export default function Translate() {
         >
           <BsPinFill className={`text-[20px] ${pined ? 'text-primary' : 'text-default-400'}`} />
         </Button>
-        <Button
-          isIconOnly
-          size="sm"
-          variant="flat"
-          disableAnimation
-          className={`my-auto ${osType === 'Darwin' && 'hidden'} bg-transparent`}
-          aria-label={t('accessibility.close_window')}
-          onPress={() => {
-            void appWindow.close()
-          }}
-        >
-          <AiFillCloseCircle className="text-[20px] text-default-400" />
-        </Button>
+        {osType !== 'Darwin' && <WindowControl />}
       </div>
       <div
         className={`${osType === 'Linux' ? 'h-[calc(100vh-37px)]' : 'h-[calc(100vh-35px)]'} px-2`}

@@ -1,4 +1,5 @@
 import { execFile } from 'node:child_process'
+import { randomUUID } from 'node:crypto'
 import { promisify } from 'node:util'
 import { clipboard } from 'electron'
 import { logger } from '../logger'
@@ -6,6 +7,8 @@ import { logger } from '../logger'
 const execFileAsync = promisify(execFile)
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+const COPY_POLL_INTERVAL_MS = 30
+const COPY_TIMEOUT_MS = 600
 
 async function tryExecFile(file: string, args: string[]): Promise<string | null> {
   try {
@@ -47,9 +50,25 @@ async function sendLinuxCopyKeystroke(): Promise<void> {
   logger.warn('No supported Linux selection copy helper was available.')
 }
 
+async function sendMacCopyKeystroke(): Promise<void> {
+  await execFileAsync(
+    'osascript',
+    ['-e', 'tell application "System Events" to keystroke "c" using command down'],
+    {
+      windowsHide: true,
+      timeout: 2000,
+    },
+  )
+}
+
 async function sendCopyKeystroke(): Promise<void> {
   if (process.platform === 'linux') {
     await sendLinuxCopyKeystroke()
+    return
+  }
+
+  if (process.platform === 'darwin') {
+    await sendMacCopyKeystroke()
     return
   }
 
@@ -71,6 +90,20 @@ async function sendCopyKeystroke(): Promise<void> {
   )
 }
 
+async function waitForCopiedClipboardValue(marker: string): Promise<string | null> {
+  const deadline = Date.now() + COPY_TIMEOUT_MS
+
+  while (Date.now() < deadline) {
+    await delay(COPY_POLL_INTERVAL_MS)
+    const currentText = clipboard.readText()
+    if (currentText !== marker) {
+      return currentText
+    }
+  }
+
+  return null
+}
+
 export async function readSelectedText(): Promise<string> {
   if (process.platform === 'linux') {
     const primarySelection = await readLinuxPrimarySelection()
@@ -80,16 +113,20 @@ export async function readSelectedText(): Promise<string> {
   }
 
   const previousText = clipboard.readText()
-  const marker = `__NEOPOT_SELECTION_${Date.now()}__`
+  const marker = `__NEOPOT_SELECTION_${randomUUID()}__`
+  let copiedClipboardValue: string | null = null
 
   try {
     clipboard.writeText(marker)
     await sendCopyKeystroke()
-    await delay(120)
-    const selectedText = clipboard.readText()
-    return selectedText === marker ? '' : selectedText
+    copiedClipboardValue = await waitForCopiedClipboardValue(marker)
+    return copiedClipboardValue ?? ''
   } finally {
-    if (previousText !== clipboard.readText()) {
+    const currentText = clipboard.readText()
+    if (
+      currentText === marker ||
+      (copiedClipboardValue !== null && currentText === copiedClipboardValue)
+    ) {
       clipboard.writeText(previousText)
     }
   }

@@ -78,10 +78,6 @@ export function applyProxyToAxios(config: AxiosRequestConfig): AxiosRequestConfi
   }
 }
 
-export function applyProxyToFetch(init: RequestInit = {}): RequestInit {
-  return init
-}
-
 export async function applyProxyToSession(enabled = getProxyConfig().enabled): Promise<void> {
   const proxy = getProxyConfig()
   if (!enabled || !proxy.host || !proxy.port) {

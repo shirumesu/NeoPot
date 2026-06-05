@@ -1,5 +1,4 @@
 import { DropdownTrigger } from '@heroui/react'
-import { DropdownMenu } from '@heroui/react'
 import { DropdownItem } from '@heroui/react'
 import { useTranslation } from 'react-i18next'
 import { CardBody } from '@heroui/react'
@@ -12,8 +11,7 @@ import React from 'react'
 import { languageList } from '@/renderer/lib/language/language'
 import { useConfig } from '../../../../hooks'
 import { useConfigSave } from '../../hooks/useConfigSave'
-
-const DropdownMenuAny = DropdownMenu as any
+import SafeDropdownMenu from '@/renderer/components/SafeDropdownMenu'
 
 export default function Recognize() {
   const [recognizeLanguage, setRecognizeLanguage] = useConfig('recognize_language', 'auto')
@@ -33,7 +31,7 @@ export default function Recognize() {
               <DropdownTrigger>
                 <Button variant="bordered">{t(`languages.${recognizeLanguage}`)}</Button>
               </DropdownTrigger>
-              <DropdownMenuAny
+              <SafeDropdownMenu
                 aria-label={t('accessibility.recognize_language')}
                 className="max-h-[50vh] overflow-y-auto"
                 onAction={(key: React.Key) => {
@@ -49,7 +47,7 @@ export default function Recognize() {
                 {languageList.map((item) => {
                   return <DropdownItem key={item}>{t(`languages.${item}`)}</DropdownItem>
                 })}
-              </DropdownMenuAny>
+              </SafeDropdownMenu>
             </Dropdown>
           )}
         </div>

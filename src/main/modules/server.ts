@@ -13,12 +13,46 @@ import {
 
 let server: Server | null = null
 
-async function readBody(request: IncomingMessage): Promise<string> {
-  const chunks: Buffer[] = []
-  for await (const chunk of request) {
-    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
+const MAX_LOCAL_REQUEST_BODY_BYTES = 1024 * 1024
+
+class RequestBodyTooLargeError extends Error {
+  constructor() {
+    super('Local server request body is too large.')
   }
-  return Buffer.concat(chunks).toString('utf8')
+}
+
+function readContentLength(request: IncomingMessage): number | null {
+  const rawLength = request.headers['content-length']
+  const contentLength = Array.isArray(rawLength) ? rawLength[0] : rawLength
+  if (!contentLength) {
+    return null
+  }
+
+  const parsedLength = Number(contentLength)
+  return Number.isFinite(parsedLength) && parsedLength >= 0 ? parsedLength : null
+}
+
+async function readBody(
+  request: IncomingMessage,
+  maxBytes = MAX_LOCAL_REQUEST_BODY_BYTES,
+): Promise<string> {
+  const contentLength = readContentLength(request)
+  if (contentLength !== null && contentLength > maxBytes) {
+    throw new RequestBodyTooLargeError()
+  }
+
+  const chunks: Buffer[] = []
+  let totalBytes = 0
+
+  for await (const chunk of request) {
+    const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)
+    totalBytes += buffer.byteLength
+    if (totalBytes > maxBytes) {
+      throw new RequestBodyTooLargeError()
+    }
+    chunks.push(buffer)
+  }
+  return Buffer.concat(chunks, totalBytes).toString('utf8')
 }
 
 function ok(response: ServerResponse): void {
@@ -73,6 +107,20 @@ export function startServer(port = 60828): void {
 
   server = http.createServer((request, response) => {
     handleRoute(request, response).catch((error) => {
+      if (error instanceof RequestBodyTooLargeError) {
+        logger.warn('Local server rejected oversized request body.', {
+          path: request.url ?? '/',
+          maxBytes: MAX_LOCAL_REQUEST_BODY_BYTES,
+        })
+        response.statusCode = 413
+        response.end('request body too large', () => {
+          if (!request.complete) {
+            request.destroy()
+          }
+        })
+        return
+      }
+
       logger.warn('Local server route failed.', {
         path: request.url ?? '/',
         error: error instanceof Error ? error.message : String(error),

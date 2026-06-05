@@ -1,5 +1,4 @@
 import { DropdownTrigger } from '@heroui/react'
-import { DropdownMenu } from '@heroui/react'
 import { DropdownItem } from '@heroui/react'
 import { useTranslation } from 'react-i18next'
 import { CardBody } from '@heroui/react'
@@ -15,8 +14,7 @@ import { invoke } from '@/renderer/lib/electron/compat/core'
 import { useConfigSave } from '../../hooks/useConfigSave'
 import { loadInstalledPlugins, type InstalledPlugin } from '../Plugin/installedPlugins'
 import { listen } from '@/renderer/lib/electron/compat/event'
-
-const DropdownMenuAny = DropdownMenu as any
+import SafeDropdownMenu from '@/renderer/components/SafeDropdownMenu'
 
 export default function Translate() {
   const [sourceLanguage, setSourceLanguage] = useConfig('translate_source_language', 'auto')
@@ -87,7 +85,7 @@ export default function Translate() {
                 <DropdownTrigger>
                   <Button variant="bordered">{t(`languages.${sourceLanguage}`)}</Button>
                 </DropdownTrigger>
-                <DropdownMenuAny
+                <SafeDropdownMenu
                   aria-label={t('accessibility.source_language')}
                   className="max-h-[50vh] overflow-y-auto"
                   onAction={(key: React.Key) => {
@@ -103,7 +101,7 @@ export default function Translate() {
                   {languageList.map((item) => {
                     return <DropdownItem key={item}>{t(`languages.${item}`)}</DropdownItem>
                   })}
-                </DropdownMenuAny>
+                </SafeDropdownMenu>
               </Dropdown>
             )}
           </div>
@@ -114,7 +112,7 @@ export default function Translate() {
                 <DropdownTrigger>
                   <Button variant="bordered">{t(`languages.${targetLanguage}`)}</Button>
                 </DropdownTrigger>
-                <DropdownMenuAny
+                <SafeDropdownMenu
                   aria-label={t('accessibility.target_language')}
                   className="max-h-[50vh] overflow-y-auto"
                   onAction={(key: React.Key) => {
@@ -129,7 +127,7 @@ export default function Translate() {
                   {languageList.map((item) => {
                     return <DropdownItem key={item}>{t(`languages.${item}`)}</DropdownItem>
                   })}
-                </DropdownMenuAny>
+                </SafeDropdownMenu>
               </Dropdown>
             )}
           </div>
@@ -140,7 +138,7 @@ export default function Translate() {
                 <DropdownTrigger>
                   <Button variant="bordered">{t(`languages.${secondLanguage}`)}</Button>
                 </DropdownTrigger>
-                <DropdownMenuAny
+                <SafeDropdownMenu
                   aria-label={t('accessibility.second_language')}
                   className="max-h-[50vh] overflow-y-auto"
                   onAction={(key: React.Key) => {
@@ -155,7 +153,7 @@ export default function Translate() {
                   {languageList.map((item) => {
                     return <DropdownItem key={item}>{t(`languages.${item}`)}</DropdownItem>
                   })}
-                </DropdownMenuAny>
+                </SafeDropdownMenu>
               </Dropdown>
             )}
           </div>
@@ -166,7 +164,7 @@ export default function Translate() {
                 <DropdownTrigger>
                   <Button variant="bordered">{detectEngineLabel(detectEngine)}</Button>
                 </DropdownTrigger>
-                <DropdownMenuAny
+                <SafeDropdownMenu
                   aria-label={t('accessibility.detect_engine')}
                   className="max-h-[50vh] overflow-y-auto"
                   onAction={(key: React.Key) => {
@@ -184,7 +182,7 @@ export default function Translate() {
                       {plugin.display} [{t('common.plugin')}]
                     </DropdownItem>
                   ))}
-                </DropdownMenuAny>
+                </SafeDropdownMenu>
               </Dropdown>
             )}
           </div>
@@ -199,7 +197,7 @@ export default function Translate() {
                 <DropdownTrigger>
                   <Button variant="bordered">{t(`config.translate.${autoCopy}`)}</Button>
                 </DropdownTrigger>
-                <DropdownMenuAny
+                <SafeDropdownMenu
                   aria-label={t('accessibility.auto_copy')}
                   className="max-h-[50vh] overflow-y-auto"
                   onAction={(key: React.Key) => {
@@ -219,7 +217,7 @@ export default function Translate() {
                     {t('config.translate.source_target')}
                   </DropdownItem>
                   <DropdownItem key="disable">{t('config.translate.disable')}</DropdownItem>
-                </DropdownMenuAny>
+                </SafeDropdownMenu>
               </Dropdown>
             )}
           </div>
@@ -334,7 +332,7 @@ export default function Translate() {
                 <DropdownTrigger>
                   <Button variant="bordered">{t(`config.translate.${windowPosition}`)}</Button>
                 </DropdownTrigger>
-                <DropdownMenuAny
+                <SafeDropdownMenu
                   aria-label={t('accessibility.window_position')}
                   className="max-h-[50vh] overflow-y-auto"
                   onAction={(key: React.Key) => {
@@ -348,7 +346,7 @@ export default function Translate() {
                 >
                   <DropdownItem key="mouse">{t('config.translate.mouse')}</DropdownItem>
                   <DropdownItem key="pre_state">{t('config.translate.pre_state')}</DropdownItem>
-                </DropdownMenuAny>
+                </SafeDropdownMenu>
               </Dropdown>
             )}
           </div>

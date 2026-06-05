@@ -2,7 +2,6 @@ import {
   Button,
   Dropdown,
   DropdownItem,
-  DropdownMenu,
   DropdownTrigger,
   Input,
   Modal,
@@ -17,8 +16,7 @@ import { useTranslation } from 'react-i18next'
 import type { InstalledPlugin } from '../installedPlugins'
 import { useConfig } from '../../../../../hooks'
 import { useConfigSave } from '../../../hooks/useConfigSave'
-
-const DropdownMenuAny = DropdownMenu as any
+import SafeDropdownMenu from '@/renderer/components/SafeDropdownMenu'
 
 function pluginOptionsConfigKey(plugin: InstalledPlugin): string {
   return `plugin_options:${plugin.type}:${plugin.name}`
@@ -66,7 +64,7 @@ export default function PluginSettingsModal(props: {
                               {option.options[currentValue] ?? currentValue}
                             </Button>
                           </DropdownTrigger>
-                          <DropdownMenuAny
+                          <SafeDropdownMenu
                             aria-label={option.key}
                             className="max-h-[40vh] overflow-y-auto"
                             onAction={(key: React.Key) => {
@@ -79,7 +77,7 @@ export default function PluginSettingsModal(props: {
                             {Object.keys(option.options).map((key) => (
                               <DropdownItem key={key}>{option.options[key]}</DropdownItem>
                             ))}
-                          </DropdownMenuAny>
+                          </SafeDropdownMenu>
                         </Dropdown>
                       ) : (
                         <Input

@@ -1,5 +1,6 @@
 import axios, { type AxiosRequestConfig } from 'axios'
-import { applyProxyToAxios, applyProxyToFetch } from './proxy'
+import { net } from 'electron'
+import { applyProxyToAxios } from './proxy'
 import { assertPublicHttpRequestUrl, assertPublicHttpUrl } from './networkSafety'
 import { getConfig } from './config'
 
@@ -223,7 +224,8 @@ export async function streamRequest(
   input: RequestInfo | URL,
   init: RequestInit = {},
 ): Promise<ReadableStream<Uint8Array> | null> {
-  const response = await fetch(input, applyProxyToFetch(init))
+  const fetchInput = input instanceof URL ? input.toString() : input
+  const response = await net.fetch(fetchInput, init)
   if (!response.ok) {
     throw new Error(`SERVICE_HTTP_ERROR:${response.status}`)
   }

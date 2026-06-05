@@ -1,4 +1,4 @@
-import { Dropdown, DropdownItem, DropdownMenu, DropdownTrigger, Button } from '@heroui/react'
+import { Dropdown, DropdownItem, DropdownTrigger, Button } from '@heroui/react'
 import { atom, useAtom, useSetAtom, useAtomValue } from 'jotai'
 import { useTranslation } from 'react-i18next'
 import { HiTranslate } from 'react-icons/hi'
@@ -18,8 +18,7 @@ import {
   INSTANCE_NAME_CONFIG_KEY,
   getDisplayInstanceName,
 } from '@/renderer/lib/service/service_instance'
-
-const DropdownMenuAny = DropdownMenu as any
+import SafeDropdownMenu from '@/renderer/components/SafeDropdownMenu'
 
 export const currentServiceInstanceKeyAtom = atom('')
 export const languageAtom = atom('auto')
@@ -82,7 +81,7 @@ export default function ControlArea(props: any) {
                   )}
             </Button>
           </DropdownTrigger>
-          <DropdownMenuAny
+          <SafeDropdownMenu
             aria-label={t('accessibility.recognize_service')}
             className="max-h-[70vh] overflow-y-auto"
             onAction={(key: React.Key) => {
@@ -115,7 +114,7 @@ export default function ControlArea(props: any) {
                 </DropdownItem>
               )
             })}
-          </DropdownMenuAny>
+          </SafeDropdownMenu>
         </Dropdown>
       )}
       {language && (
@@ -125,7 +124,7 @@ export default function ControlArea(props: any) {
               {t(`languages.${language}`)}
             </Button>
           </DropdownTrigger>
-          <DropdownMenuAny
+          <SafeDropdownMenu
             aria-label={t('accessibility.recognize_language')}
             className="max-h-[70vh] overflow-y-auto"
             onAction={(key: React.Key) => {
@@ -136,7 +135,7 @@ export default function ControlArea(props: any) {
             {languageList.map((name) => {
               return <DropdownItem key={name}>{t(`languages.${name}`)}</DropdownItem>
             })}
-          </DropdownMenuAny>
+          </SafeDropdownMenu>
         </Dropdown>
       )}
       <Button
