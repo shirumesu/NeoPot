@@ -3,12 +3,20 @@ import { useTranslation } from 'react-i18next'
 import React from 'react'
 
 import { createServiceInstanceKey } from '@/renderer/lib/service/service_instance'
-import type { InstalledPlugin } from '../../Plugin/installedPlugins'
+import { SERVICE_ICON_CLASS, type ServicePluginMap } from '../types'
 
-export default function SelectPluginModal(props: any) {
+interface SelectPluginModalProps {
+  isOpen: boolean
+  onOpenChange: (isOpen: boolean) => void
+  setCurrentConfigKey: (key: string) => void
+  onConfigOpen: () => void
+  pluginList: ServicePluginMap
+}
+
+export default function SelectPluginModal(props: SelectPluginModalProps) {
   const { isOpen, onOpenChange, setCurrentConfigKey, onConfigOpen, pluginList } = props
   const { t } = useTranslation()
-  const pluginEntries = Object.entries(pluginList as Record<string, InstalledPlugin>)
+  const pluginEntries = Object.entries(pluginList)
 
   return (
     <Modal isOpen={isOpen} onOpenChange={onOpenChange} scrollBehavior="inside">
@@ -33,7 +41,7 @@ export default function SelectPluginModal(props: any) {
                         setCurrentConfigKey(createServiceInstanceKey(x))
                         onConfigOpen()
                       }}
-                      startContent={<img src={plugin.icon} className="h-6 w-6 my-auto" />}
+                      startContent={<img src={plugin.icon} className={SERVICE_ICON_CLASS} />}
                     >
                       <div className="w-full">{plugin.display}</div>
                     </Button>

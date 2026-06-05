@@ -2,14 +2,16 @@ import { Button, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from
 import { useTranslation } from 'react-i18next'
 
 import { ServiceType, createServiceInstanceKey } from '@/renderer/lib/service/service_instance'
+import { SERVICE_ICON_CLASS } from './types'
+import type { BuiltinServices } from './types'
 
-interface SelectModalProps {
+export interface SelectModalProps {
   isOpen: boolean
   onOpenChange: (isOpen: boolean) => void
   setCurrentConfigKey: (key: string) => void
   onConfigOpen: () => void
   serviceType: ServiceType
-  builtinServices: Record<string, any>
+  builtinServices: BuiltinServices
 }
 
 export default function SelectModal(props: SelectModalProps) {
@@ -34,7 +36,7 @@ export default function SelectModal(props: SelectModalProps) {
                         onConfigOpen()
                       }}
                       startContent={
-                        <img src={builtinServices[x].info.icon} className="h-6 w-6 my-auto" />
+                        <img src={builtinServices[x].info.icon} className={SERVICE_ICON_CLASS} />
                       }
                     >
                       <div className="w-full">

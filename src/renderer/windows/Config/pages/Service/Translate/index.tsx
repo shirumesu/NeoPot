@@ -1,22 +1,24 @@
 import { Card, Button, useDisclosure } from '@heroui/react'
-import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import React, { useState } from 'react'
 import { Reorder } from 'framer-motion'
 
-import { useToastStyle } from '../../../../../hooks'
 import SelectPluginModal from '../SelectPluginModal'
 import { osType } from '@/renderer/lib/config/env'
-import { useConfig, deleteKey, isSameConfigValue } from '../../../../../hooks'
 import ServiceItem from './ServiceItem'
 import SelectModal from './SelectModal'
 import ConfigModal from './ConfigModal'
-import { useConfigSave } from '../../../hooks/useConfigSave'
+import { useServiceInstanceList } from '../useServiceInstanceList'
+import type { ServicePluginMap } from '../types'
 
-const ReorderGroup = Reorder.Group as any
+const TRANSLATE_SERVICE_LIST_KEY = 'translate_service_list'
+const DEFAULT_TRANSLATE_SERVICE_LIST = ['deepl', 'google']
 
-export default function Translate(props: any) {
-  const { pluginList } = props
+interface TranslateProps {
+  pluginList: ServicePluginMap
+}
+
+export default function Translate({ pluginList }: TranslateProps) {
   const {
     isOpen: isSelectPluginOpen,
     onOpen: onSelectPluginOpen,
@@ -33,69 +35,18 @@ export default function Translate(props: any) {
     onOpenChange: onConfigOpenChange,
   } = useDisclosure()
   const [currentConfigKey, setCurrentConfigKey] = useState('deepl')
-  // now it's service instance list
-  const [translateServiceInstanceList, setTranslateServiceInstanceList] = useConfig<string[]>(
-    'translate_service_list',
-    ['deepl', 'google'],
-  )
+  const {
+    serviceInstanceList: translateServiceInstanceList,
+    deleteServiceInstance,
+    updateServiceInstanceList,
+    handleServiceReorder,
+  } = useServiceInstanceList({
+    configKey: TRANSLATE_SERVICE_LIST_KEY,
+    defaultList: DEFAULT_TRANSLATE_SERVICE_LIST,
+    protectLastService: true,
+  })
 
   const { t } = useTranslation()
-  const toastStyle = useToastStyle()
-  const { saveConfig } = useConfigSave()
-
-  const deleteServiceInstance = async (instanceKey: string) => {
-    if (translateServiceInstanceList === null) {
-      return
-    }
-    if (translateServiceInstanceList.length === 1) {
-      toast.error(t('config.service.least'), { style: toastStyle })
-      return
-    } else {
-      const newList = translateServiceInstanceList.filter((x) => x !== instanceKey)
-      const saved = await saveConfig(
-        'translate_service_list',
-        translateServiceInstanceList,
-        setTranslateServiceInstanceList,
-        newList,
-      )
-      if (saved) {
-        await deleteKey(instanceKey)
-      }
-    }
-  }
-  const updateServiceInstanceList = async (instanceKey: string) => {
-    if (translateServiceInstanceList === null) {
-      return
-    }
-    if (translateServiceInstanceList.includes(instanceKey)) {
-      return
-    } else {
-      const newList = [...translateServiceInstanceList, instanceKey]
-      await saveConfig(
-        'translate_service_list',
-        translateServiceInstanceList,
-        setTranslateServiceInstanceList,
-        newList,
-        { notify: false },
-      )
-    }
-  }
-  const handleServiceReorder = (serviceInstanceList: string[]) => {
-    if (translateServiceInstanceList === null) {
-      return
-    }
-    if (isSameConfigValue(translateServiceInstanceList, serviceInstanceList)) {
-      return
-    }
-
-    void saveConfig(
-      'translate_service_list',
-      translateServiceInstanceList,
-      setTranslateServiceInstanceList,
-      serviceInstanceList,
-      { notify: false },
-    )
-  }
 
   return (
     <>
@@ -105,26 +56,29 @@ export default function Translate(props: any) {
         } w-full overflow-hidden p-5 flex flex-col`}
       >
         {translateServiceInstanceList !== null && (
-          <ReorderGroup
-            axis="y"
-            values={translateServiceInstanceList}
-            onReorder={handleServiceReorder}
-            className="min-h-0 flex-1 space-y-2 overflow-y-auto"
-          >
-            {translateServiceInstanceList.map((x) => {
-              return (
-                <Reorder.Item key={x} value={x}>
-                  <ServiceItem
-                    serviceInstanceKey={x}
-                    pluginList={pluginList}
-                    deleteServiceInstance={deleteServiceInstance}
-                    setCurrentConfigKey={setCurrentConfigKey}
-                    onConfigOpen={onConfigOpen}
-                  />
-                </Reorder.Item>
-              )
-            })}
-          </ReorderGroup>
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            <Reorder.Group
+              axis="y"
+              values={translateServiceInstanceList}
+              onReorder={handleServiceReorder}
+            >
+              {translateServiceInstanceList.map((x) => {
+                return (
+                  <Reorder.Item key={x} value={x}>
+                    <div className="mb-2">
+                      <ServiceItem
+                        serviceInstanceKey={x}
+                        pluginList={pluginList}
+                        deleteServiceInstance={deleteServiceInstance}
+                        setCurrentConfigKey={setCurrentConfigKey}
+                        onConfigOpen={onConfigOpen}
+                      />
+                    </div>
+                  </Reorder.Item>
+                )
+              })}
+            </Reorder.Group>
+          </div>
         )}
         <div className="flex shrink-0 gap-2 pt-2">
           <Button fullWidth onPress={onSelectOpen}>

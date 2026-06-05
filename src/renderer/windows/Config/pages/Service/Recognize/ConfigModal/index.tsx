@@ -1,13 +1,15 @@
 import * as builtinServices from '@/renderer/providers/recognize'
-import SharedConfigModal from '../../ConfigModal'
+import SharedConfigModal, { type ConfigModalProps } from '../../ConfigModal'
 import { ServiceType } from '@/renderer/lib/service/service_instance'
 
-export default function ConfigModal(props: any) {
+type RecognizeConfigModalProps = Omit<ConfigModalProps, 'serviceType' | 'builtinServices'>
+
+export default function ConfigModal(props: RecognizeConfigModalProps) {
   return (
     <SharedConfigModal
       {...props}
       serviceType={ServiceType.RECOGNIZE}
-      builtinServices={builtinServices as any}
+      builtinServices={builtinServices}
     />
   )
 }

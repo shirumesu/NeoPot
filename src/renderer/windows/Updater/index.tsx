@@ -15,6 +15,11 @@ import { getCurrentWebviewWindow } from '@/renderer/lib/electron/compat/webviewW
 import { osType } from '@/renderer/lib/config/env'
 import { useToastStyle } from '../../hooks'
 import { getUpdatePrimaryAction } from './updateActions'
+import {
+  DragRegion,
+  LINUX_WINDOW_FRAME_CLASS,
+  WINDOW_TOPBAR_HEIGHT_CLASS,
+} from '@/renderer/components/windowChrome'
 
 const appWindow = getCurrentWebviewWindow()
 
@@ -28,6 +33,188 @@ function progressValue(progress: UpdateProgress | null): number | undefined {
   }
 
   return Math.max(0, Math.min(100, progress.percent))
+}
+
+interface UpdaterHeaderProps {
+  title: string
+  subtitle?: string
+  compact?: boolean
+}
+
+function UpdaterHeader({ title, subtitle, compact = false }: UpdaterHeaderProps) {
+  if (compact) {
+    return (
+      <div className="flex items-center gap-2">
+        <img src="icon.png" className="h-7 w-7" draggable={false} />
+        <div className="min-w-0">
+          <h2 className="text-base font-semibold leading-5">{title}</h2>
+          {subtitle && <p className="truncate text-xs text-default-500">{subtitle}</p>}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className={`p-1.25 ${WINDOW_TOPBAR_HEIGHT_CLASS} w-full select-none cursor-default`}>
+      <DragRegion
+        className={`flex h-full w-full ${osType === 'Darwin' ? 'justify-end' : 'justify-start'}`}
+      >
+        <img src="icon.png" className="mr-2.5 h-6.25 w-6.25" draggable={false} />
+        <h2>{title}</h2>
+      </DragRegion>
+    </div>
+  )
+}
+
+interface UpdaterProgressProps {
+  progress: UpdateProgress | null
+  progressLabel: string
+  compact?: boolean
+  isWorking?: boolean
+}
+
+function UpdaterProgress({
+  progress,
+  progressLabel,
+  compact = false,
+  isWorking,
+}: UpdaterProgressProps) {
+  if (!progress && !isWorking) {
+    return null
+  }
+
+  const value = progressValue(progress)
+
+  return (
+    <Progress
+      aria-label={progressLabel}
+      label={compact ? undefined : progressLabel}
+      value={value}
+      isIndeterminate={value === undefined}
+      className={compact ? 'mb-3' : undefined}
+      classNames={
+        compact
+          ? undefined
+          : {
+              base: 'w-full px-[80px]',
+              track: 'drop-shadow-md border border-default',
+              indicator: 'bg-linear-to-r from-pink-500 to-yellow-500',
+              label: 'tracking-wider font-medium text-default-600',
+              value: 'text-foreground/60',
+            }
+      }
+      showValueLabel={!compact}
+      size="sm"
+    />
+  )
+}
+
+interface UpdaterActionsProps {
+  primaryLabel: string
+  cancelLabel: string
+  isWorking: boolean
+  isChecking?: boolean
+  primaryDisabled: boolean
+  onPrimary: () => void
+  onCancel: () => void
+  compact?: boolean
+  workingLabel?: string
+}
+
+function UpdaterActions({
+  primaryLabel,
+  cancelLabel,
+  isWorking,
+  isChecking = false,
+  primaryDisabled,
+  onPrimary,
+  onCancel,
+  compact = false,
+  workingLabel,
+}: UpdaterActionsProps) {
+  return (
+    <div
+      className={compact ? 'grid grid-cols-2 gap-3' : 'mx-20 my-2.5 grid h-12.5 grid-cols-2 gap-4'}
+    >
+      <Button
+        size={compact ? 'sm' : undefined}
+        variant={compact ? undefined : 'flat'}
+        color="primary"
+        isLoading={compact ? isWorking : isWorking || isChecking}
+        isDisabled={primaryDisabled}
+        onPress={onPrimary}
+      >
+        {isWorking && workingLabel ? workingLabel : primaryLabel}
+      </Button>
+      <Button
+        size={compact ? 'sm' : undefined}
+        variant="flat"
+        color={compact ? undefined : 'danger'}
+        onPress={onCancel}
+      >
+        {cancelLabel}
+      </Button>
+    </div>
+  )
+}
+
+interface ReleaseNotesCardProps {
+  isChecking: boolean
+  releaseNotes: string
+  statusText: string
+}
+
+function ReleaseNotesCard({ isChecking, releaseNotes, statusText }: ReleaseNotesCardProps) {
+  return (
+    <Card className="mx-20 mt-2.5 h-[calc(100vh-150px)] overscroll-auto">
+      <CardBody>
+        {isChecking && !releaseNotes ? (
+          <div className="space-y-3">
+            <Skeleton className="w-3/5 rounded-lg">
+              <div className="h-3 w-3/5 rounded-lg bg-default-200"></div>
+            </Skeleton>
+            <Skeleton className="w-4/5 rounded-lg">
+              <div className="h-3 w-4/5 rounded-lg bg-default-200"></div>
+            </Skeleton>
+            <Skeleton className="w-2/5 rounded-lg">
+              <div className="h-3 w-2/5 rounded-lg bg-default-300"></div>
+            </Skeleton>
+          </div>
+        ) : (
+          <div className="markdown-body select-text">
+            <ReactMarkdown
+              components={{
+                code: ({ node: _node, ...props }) => {
+                  const { children } = props
+                  return <Code size="sm">{children}</Code>
+                },
+                h2: ({ node: _node, ...props }) => (
+                  <b>
+                    <h2 className="text-[24px]" {...props} />
+                    <hr />
+                    <br />
+                  </b>
+                ),
+                h3: ({ node: _node, ...props }) => (
+                  <b>
+                    <br />
+                    <h3 className="text-[18px]" {...props} />
+                    <br />
+                  </b>
+                ),
+                li: ({ node: _node, ...props }) => {
+                  const { children } = props
+                  return <li className="list-inside list-disc" children={children} />
+                },
+              }}
+            >
+              {releaseNotes || statusText}
+            </ReactMarkdown>
+          </div>
+        )}
+      </CardBody>
+    </Card>
+  )
 }
 
 export default function Updater() {
@@ -165,161 +352,58 @@ export default function Updater() {
 
   if (isNotification) {
     return (
-      <div
-        className={`bg-background h-screen p-4 select-none ${
-          osType === 'Linux' && 'rounded-[10px] border-1 border-default-100'
-        }`}
-      >
+      <div className={`h-screen bg-background p-4 select-none ${LINUX_WINDOW_FRAME_CLASS}`}>
         <Toaster />
-        <div className="flex items-center gap-2">
-          <img src="icon.png" className="h-7 w-7" draggable={false} />
-          <div className="min-w-0">
-            <h2 className="text-base font-semibold leading-5">{t('updater.title')}</h2>
-            <p className="text-xs text-default-500 truncate">
-              {result?.version
-                ? t('updater.version_available', { version: result.version })
-                : statusText}
-            </p>
-          </div>
-        </div>
+        <UpdaterHeader
+          title={t('updater.title')}
+          subtitle={
+            result?.version
+              ? t('updater.version_available', { version: result.version })
+              : statusText
+          }
+          compact
+        />
         <p className="mt-4 h-14 text-sm text-default-600 line-clamp-3">
           {statusText || result?.releaseName || t('updater.available')}
         </p>
-        {progress && (
-          <Progress
-            aria-label={t('updater.progress')}
-            value={progressValue(progress)}
-            isIndeterminate={progressValue(progress) === undefined}
-            size="sm"
-            className="mb-3"
-          />
-        )}
-        <div className="grid grid-cols-2 gap-3">
-          <Button
-            size="sm"
-            color="primary"
-            isLoading={isWorking}
-            isDisabled={primaryDisabled}
-            onPress={primaryAction}
-          >
-            {primaryLabel}
-          </Button>
-          <Button
-            size="sm"
-            variant="flat"
-            onPress={() => {
-              appWindow.close()
-            }}
-          >
-            {t('updater.cancel')}
-          </Button>
-        </div>
+        <UpdaterProgress progress={progress} progressLabel={t('updater.progress')} compact />
+        <UpdaterActions
+          primaryLabel={primaryLabel}
+          cancelLabel={t('updater.cancel')}
+          isWorking={isWorking}
+          primaryDisabled={primaryDisabled}
+          onPrimary={primaryAction}
+          onCancel={() => appWindow.close()}
+          compact
+        />
       </div>
     )
   }
 
   return (
-    <div
-      className={`bg-background h-screen ${
-        osType === 'Linux' && 'rounded-[10px] border-1 border-default-100'
-      }`}
-    >
+    <div className={`h-screen bg-background ${LINUX_WINDOW_FRAME_CLASS}`}>
       <Toaster />
-      <div className="p-1.25 h-8.75 w-full select-none cursor-default">
-        <div
-          data-tauri-drag-region="true"
-          className={`h-full w-full flex ${osType === 'Darwin' ? 'justify-end' : 'justify-start'}`}
-        >
-          <img src="icon.png" className="h-6.25 w-6.25 mr-2.5" draggable={false} />
-          <h2>{t('updater.title')}</h2>
-        </div>
-      </div>
-      <Card className="mx-20 mt-2.5 overscroll-auto h-[calc(100vh-150px)]">
-        <CardBody>
-          {isChecking && !releaseNotes ? (
-            <div className="space-y-3">
-              <Skeleton className="w-3/5 rounded-lg">
-                <div className="h-3 w-3/5 rounded-lg bg-default-200"></div>
-              </Skeleton>
-              <Skeleton className="w-4/5 rounded-lg">
-                <div className="h-3 w-4/5 rounded-lg bg-default-200"></div>
-              </Skeleton>
-              <Skeleton className="w-2/5 rounded-lg">
-                <div className="h-3 w-2/5 rounded-lg bg-default-300"></div>
-              </Skeleton>
-            </div>
-          ) : (
-            <div className="markdown-body select-text">
-              <ReactMarkdown
-                components={{
-                  code: ({ node: _node, ...props }) => {
-                    const { children } = props
-                    return <Code size="sm">{children}</Code>
-                  },
-                  h2: ({ node: _node, ...props }) => (
-                    <b>
-                      <h2 className="text-[24px]" {...props} />
-                      <hr />
-                      <br />
-                    </b>
-                  ),
-                  h3: ({ node: _node, ...props }) => (
-                    <b>
-                      <br />
-                      <h3 className="text-[18px]" {...props} />
-                      <br />
-                    </b>
-                  ),
-                  li: ({ node: _node, ...props }) => {
-                    const { children } = props
-                    return <li className="list-disc list-inside" children={children} />
-                  },
-                }}
-              >
-                {releaseNotes || statusText}
-              </ReactMarkdown>
-            </div>
-          )}
-        </CardBody>
-      </Card>
-      {(isWorking || progress) && (
-        <Progress
-          aria-label={t('updater.progress')}
-          label={t('updater.progress')}
-          value={progressValue(progress)}
-          isIndeterminate={progressValue(progress) === undefined}
-          classNames={{
-            base: 'w-full px-[80px]',
-            track: 'drop-shadow-md border border-default',
-            indicator: 'bg-linear-to-r from-pink-500 to-yellow-500',
-            label: 'tracking-wider font-medium text-default-600',
-            value: 'text-foreground/60',
-          }}
-          showValueLabel
-          size="sm"
-        />
-      )}
-
-      <div className="grid gap-4 grid-cols-2 h-12.5 my-2.5 mx-20">
-        <Button
-          variant="flat"
-          isLoading={isWorking || isChecking}
-          isDisabled={primaryDisabled}
-          color="primary"
-          onPress={primaryAction}
-        >
-          {isWorking ? statusText || t('updater.downloading') : primaryLabel}
-        </Button>
-        <Button
-          variant="flat"
-          color="danger"
-          onPress={() => {
-            appWindow.close()
-          }}
-        >
-          {t('updater.cancel')}
-        </Button>
-      </div>
+      <UpdaterHeader title={t('updater.title')} />
+      <ReleaseNotesCard
+        isChecking={isChecking}
+        releaseNotes={releaseNotes}
+        statusText={statusText}
+      />
+      <UpdaterProgress
+        progress={progress}
+        progressLabel={t('updater.progress')}
+        isWorking={isWorking}
+      />
+      <UpdaterActions
+        primaryLabel={primaryLabel}
+        cancelLabel={t('updater.cancel')}
+        isWorking={isWorking}
+        isChecking={isChecking}
+        primaryDisabled={primaryDisabled}
+        onPrimary={primaryAction}
+        onCancel={() => appWindow.close()}
+        workingLabel={statusText || t('updater.downloading')}
+      />
     </div>
   )
 }

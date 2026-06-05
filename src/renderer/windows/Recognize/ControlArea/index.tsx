@@ -19,6 +19,7 @@ import {
   getDisplayInstanceName,
 } from '@/renderer/lib/service/service_instance'
 import SafeDropdownMenu from '@/renderer/components/SafeDropdownMenu'
+import { CONTROL_ICON_CLASS } from '@/renderer/components/uiSize'
 
 export const currentServiceInstanceKeyAtom = atom('')
 export const languageAtom = atom('auto')
@@ -52,7 +53,7 @@ export default function ControlArea(props: any) {
   }, [serviceInstanceList, recognizeLanguage, setCurrentServiceInstanceKey, setLanguage])
 
   return (
-    <div className="flex justify-between px-[12px] h-full">
+    <div className="flex justify-between px-3 h-full">
       {currentServiceInstanceKey && (
         <Dropdown>
           <DropdownTrigger>
@@ -62,7 +63,7 @@ export default function ControlArea(props: any) {
               size="sm"
               startContent={
                 <img
-                  className="h-[16px] w-[16px] my-auto"
+                  className={`${CONTROL_ICON_CLASS} my-auto`}
                   src={
                     getServiceSouceType(currentServiceInstanceKey) === ServiceSourceType.PLUGIN
                       ? pluginList[getServiceName(currentServiceInstanceKey)].icon
@@ -94,7 +95,7 @@ export default function ControlArea(props: any) {
                   key={instanceKey}
                   startContent={
                     <img
-                      className="h-[16px] w-[16px] my-auto"
+                      className={`${CONTROL_ICON_CLASS} my-auto`}
                       src={
                         getServiceSouceType(instanceKey) === ServiceSourceType.PLUGIN
                           ? pluginList[getServiceName(instanceKey)].icon
@@ -143,7 +144,7 @@ export default function ControlArea(props: any) {
         color="secondary"
         size="sm"
         className="my-auto"
-        startContent={<GiCycle className="text-[16px]" />}
+        startContent={<GiCycle className={CONTROL_ICON_CLASS} />}
         onPress={() => {
           setRecognizeFlag(nanoid())
         }}
@@ -155,7 +156,7 @@ export default function ControlArea(props: any) {
         color="primary"
         size="sm"
         className="my-auto"
-        startContent={<HiTranslate className="text-[16px]" />}
+        startContent={<HiTranslate className={CONTROL_ICON_CLASS} />}
         onPress={async () => {
           if (text) {
             await electronCommand('translate_text', { text })

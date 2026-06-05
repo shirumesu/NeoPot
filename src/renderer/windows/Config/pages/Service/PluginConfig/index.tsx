@@ -10,8 +10,34 @@ import React from 'react'
 
 import { useConfig } from '../../../../../hooks'
 import { useConfigSave } from '../../../hooks/useConfigSave'
+import type { ServiceConfigComponentProps } from '../types'
 
-export function PluginConfig(props: any) {
+interface PluginNeed {
+  key: string
+  display: string
+  type?: string
+  options?: Record<string, string>
+}
+
+function isPluginNeed(value: unknown): value is PluginNeed {
+  if (typeof value !== 'object' || value === null) {
+    return false
+  }
+
+  const candidate = value as Record<string, unknown>
+  const options = candidate.options
+  return (
+    typeof candidate.key === 'string' &&
+    typeof candidate.display === 'string' &&
+    (candidate.type === undefined || typeof candidate.type === 'string') &&
+    (options === undefined ||
+      (typeof options === 'object' &&
+        options !== null &&
+        Object.values(options).every((option) => typeof option === 'string')))
+  )
+}
+
+export function PluginConfig(props: ServiceConfigComponentProps) {
   const { instanceKey, updateServiceList, onClose, name, pluginList } = props
   const [pluginConfig, setPluginConfig] = useConfig<Record<string, any>>(
     instanceKey,
@@ -20,6 +46,7 @@ export function PluginConfig(props: any) {
   )
   const { t } = useTranslation()
   const { saveConfig } = useConfigSave()
+  const pluginNeeds = (pluginList[name].needs as unknown[]).filter(isPluginNeed)
 
   return (
     <>
@@ -55,10 +82,15 @@ export function PluginConfig(props: any) {
         </div>
       )}
 
-      {pluginList[name].needs.length === 0 ? (
+      {pluginNeeds.length === 0 ? (
         <div>{t('services.no_need')}</div>
       ) : (
-        pluginList[name].needs.map((x: any) => {
+        pluginNeeds.map((x) => {
+          const options = x.options ?? {}
+          const selectedOptionKey = Object.prototype.hasOwnProperty.call(pluginConfig ?? {}, x.key)
+            ? String(pluginConfig?.[x.key])
+            : Object.keys(options)[0]
+
           return (
             pluginConfig &&
             (x.type ? (
@@ -81,13 +113,7 @@ export function PluginConfig(props: any) {
                   <Dropdown>
                     <DropdownTrigger>
                       <Button variant="bordered" className="max-w-[60%]">
-                        {
-                          x.options[
-                            Object.prototype.hasOwnProperty.call(pluginConfig, x.key)
-                              ? pluginConfig[x.key]
-                              : Object.keys(x.options)[0]
-                          ]
-                        }
+                        {options[selectedOptionKey]}
                       </Button>
                     </DropdownTrigger>
                     <DropdownMenu
@@ -100,8 +126,8 @@ export function PluginConfig(props: any) {
                         })
                       }}
                     >
-                      {Object.keys(x.options).map((y) => {
-                        return <DropdownItem key={y}>{x.options[y]}</DropdownItem>
+                      {Object.keys(options).map((y) => {
+                        return <DropdownItem key={y}>{options[y]}</DropdownItem>
                       })}
                     </DropdownMenu>
                   </Dropdown>

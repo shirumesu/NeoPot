@@ -10,7 +10,7 @@ import { listen } from '@/renderer/lib/electron/compat/event'
 import { Button } from '@heroui/react'
 import { useTranslation } from 'react-i18next'
 
-import { osType } from '@/renderer/lib/config/env'
+import { LINUX_CLOSE_WINDOW_CORNER_CLASS, WINDOW_CONTROL_ICON_CLASS } from '../windowChrome'
 import './style.css'
 const appWindow = getCurrentWebviewWindow()
 
@@ -37,7 +37,7 @@ export default function WindowControl() {
         aria-label={t('accessibility.minimize_window')}
         onPress={() => appWindow.minimize()}
       >
-        <VscChromeMinimize className="text-[16px]" />
+        <VscChromeMinimize className={WINDOW_CONTROL_ICON_CLASS} />
       </Button>
       <Button
         isIconOnly
@@ -53,19 +53,19 @@ export default function WindowControl() {
         }}
       >
         {isMax ? (
-          <VscChromeRestore className="text-[16px]" />
+          <VscChromeRestore className={WINDOW_CONTROL_ICON_CLASS} />
         ) : (
-          <VscChromeMaximize className="text-[16px]" />
+          <VscChromeMaximize className={WINDOW_CONTROL_ICON_CLASS} />
         )}
       </Button>
       <Button
         isIconOnly
         variant="light"
-        className={`w-8.75 h-8.75 rounded-none close-button ${osType === 'Linux' && 'rounded-tr-[10px]'}`}
+        className={`w-8.75 h-8.75 rounded-none close-button ${LINUX_CLOSE_WINDOW_CORNER_CLASS}`}
         aria-label={t('accessibility.close_window')}
         onPress={() => void appWindow.close()}
       >
-        <VscChromeClose className="text-[16px]" />
+        <VscChromeClose className={WINDOW_CONTROL_ICON_CLASS} />
       </Button>
     </div>
   )

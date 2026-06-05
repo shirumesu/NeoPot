@@ -2,13 +2,13 @@ import { unregister, isRegistered } from '@/renderer/lib/electron/compat/globalS
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { CardBody } from '@heroui/react'
-import { Button } from '@heroui/react'
-import { Input } from '@heroui/react'
 import { Card } from '@heroui/react'
 import React, { useEffect, useState } from 'react'
 
 import { useConfig } from '../../../../hooks/useConfig'
 import PluginHotkeyEditor from '../../components/PluginHotkeyEditor'
+import HotkeyField from '../../components/HotkeyField'
+import type { HotkeySetter } from '../../components/HotkeyField'
 import { useToastStyle } from '../../../../hooks'
 import { osType } from '@/renderer/lib/config/env'
 import { invoke } from '@/renderer/lib/electron/compat/core'
@@ -17,7 +17,7 @@ import { loadInstalledPlugins } from '../Plugin/installedPlugins'
 import { useConfigSave } from '../../hooks/useConfigSave'
 import { listen } from '@/renderer/lib/electron/compat/event'
 
-const keyMap = {
+const keyMap: Record<string, string> = {
   Backquote: '`',
   Backslash: '\\',
   BracketLeft: '[',
@@ -60,6 +60,25 @@ type PluginHotkeyRow = {
   hotkey: string
 }
 
+type PluginManifestHotkey = {
+  key: string
+  display: string
+  default: string
+}
+
+function isPluginManifestHotkey(value: unknown): value is PluginManifestHotkey {
+  if (typeof value !== 'object' || value === null) {
+    return false
+  }
+
+  const candidate = value as Record<string, unknown>
+  return (
+    typeof candidate.key === 'string' &&
+    typeof candidate.display === 'string' &&
+    typeof candidate.default === 'string'
+  )
+}
+
 export default function Hotkey() {
   const [selectionTranslate, setSelectionTranslate] = useConfig('hotkey_selection_translate', '', {
     sync: false,
@@ -85,8 +104,10 @@ export default function Hotkey() {
         setPluginHotkeyRows(
           plugins
             .filter((plugin) => plugin.enabled)
-            .flatMap((plugin) =>
-              (plugin.hotkeys ?? []).map((hotkey: any) => ({
+            .flatMap((plugin) => {
+              const hotkeys = Array.isArray(plugin.hotkeys) ? (plugin.hotkeys as unknown[]) : []
+
+              return hotkeys.filter(isPluginManifestHotkey).map((hotkey) => ({
                 pluginId: plugin.id,
                 pluginType: plugin.type,
                 pluginName: plugin.name,
@@ -94,8 +115,8 @@ export default function Hotkey() {
                 key: hotkey.key,
                 display: hotkey.display,
                 hotkey: hotkey.default,
-              })),
-            ),
+              }))
+            }),
         )
       })
     }
@@ -111,7 +132,7 @@ export default function Hotkey() {
     }
   }, [])
 
-  function keyDown(e: React.KeyboardEvent, name: string, setKey: any) {
+  function keyDown(e: React.KeyboardEvent, name: string, setKey: HotkeySetter) {
     e.preventDefault()
     if (e.keyCode === 8) {
       void clearHandler(name, setKey)
@@ -141,17 +162,17 @@ export default function Hotkey() {
       } else if (code.startsWith('Intl')) {
         code = code.substring(4)
       } else if (!/F\d+/.test(code)) {
-        if ((keyMap as Record<string, string>)[code] !== undefined) {
-          code = (keyMap as Record<string, string>)[code]
+        if (keyMap[code] !== undefined) {
+          code = keyMap[code]
         } else {
           code = ''
         }
       }
-      setKey(`${newValue}${newValue.length > 0 && code.length > 0 ? '+' : ''}${code}`)
+      void setKey(`${newValue}${newValue.length > 0 && code.length > 0 ? '+' : ''}${code}`)
     }
   }
 
-  async function clearHandler(name: string, setKey: any) {
+  async function clearHandler(name: string, setKey: HotkeySetter) {
     try {
       const savedValue = await getStoreValue(name)
       if (typeof savedValue === 'string' && savedValue !== '') {
@@ -165,7 +186,7 @@ export default function Hotkey() {
     }
   }
 
-  function registerHandler(name: string, key: string, setKey: any) {
+  function registerHandler(name: string, key: string, setKey: HotkeySetter) {
     isRegistered(key).then((res) => {
       if (res) {
         toast.error(t('config.hotkey.is_register'), { style: toastStyle })
@@ -200,118 +221,46 @@ export default function Hotkey() {
     <>
       <Card className="mb-2.5">
         <CardBody>
-          <div className="config-item">
-            <h3>{t('config.hotkey.selection_translate')}</h3>
-            {selectionTranslate !== null && (
-              <Input
-                type="hotkey"
-                variant="bordered"
-                value={selectionTranslate}
-                label={t('config.hotkey.set_hotkey')}
-                className="max-w-[60%]"
-                onKeyDown={(e) => {
-                  keyDown(e, 'hotkey_selection_translate', setSelectionTranslate)
-                }}
-                endContent={
-                  <Button
-                    size="sm"
-                    variant="flat"
-                    className={`${selectionTranslate === '' && 'hidden'}`}
-                    onPress={() => {
-                      registerHandler(
-                        'hotkey_selection_translate',
-                        selectionTranslate,
-                        setSelectionTranslate,
-                      )
-                    }}
-                  >
-                    {t('common.ok')}
-                  </Button>
-                }
-              />
-            )}
-          </div>
-          <div className="config-item">
-            <h3>{t('config.hotkey.input_translate')}</h3>
-            {inputTranslate !== null && (
-              <Input
-                type="hotkey"
-                variant="bordered"
-                value={inputTranslate}
-                label={t('config.hotkey.set_hotkey')}
-                className="max-w-[60%]"
-                onKeyDown={(e) => {
-                  keyDown(e, 'hotkey_input_translate', setInputTranslate)
-                }}
-                endContent={
-                  <Button
-                    size="sm"
-                    variant="flat"
-                    className={`${inputTranslate === '' && 'hidden'}`}
-                    onPress={() => {
-                      registerHandler('hotkey_input_translate', inputTranslate, setInputTranslate)
-                    }}
-                  >
-                    {t('common.ok')}
-                  </Button>
-                }
-              />
-            )}
-          </div>
-          <div className="config-item">
-            <h3>{t('config.hotkey.ocr_recognize')}</h3>
-            {ocrRecognize !== null && (
-              <Input
-                type="hotkey"
-                variant="bordered"
-                value={ocrRecognize}
-                label={t('config.hotkey.set_hotkey')}
-                className="max-w-[60%]"
-                onKeyDown={(e) => {
-                  keyDown(e, 'hotkey_ocr_recognize', setOcrRecognize)
-                }}
-                endContent={
-                  <Button
-                    size="sm"
-                    variant="flat"
-                    className={`${ocrRecognize === '' && 'hidden'}`}
-                    onPress={() => {
-                      registerHandler('hotkey_ocr_recognize', ocrRecognize, setOcrRecognize)
-                    }}
-                  >
-                    {t('common.ok')}
-                  </Button>
-                }
-              />
-            )}
-          </div>
-          <div className="config-item">
-            <h3>{t('config.hotkey.ocr_translate')}</h3>
-            {ocrTranslate !== null && (
-              <Input
-                type="hotkey"
-                variant="bordered"
-                value={ocrTranslate}
-                label={t('config.hotkey.set_hotkey')}
-                className="max-w-[60%]"
-                onKeyDown={(e) => {
-                  keyDown(e, 'hotkey_ocr_translate', setOcrTranslate)
-                }}
-                endContent={
-                  <Button
-                    size="sm"
-                    variant="flat"
-                    className={`${ocrTranslate === '' && 'hidden'}`}
-                    onPress={() => {
-                      registerHandler('hotkey_ocr_translate', ocrTranslate, setOcrTranslate)
-                    }}
-                  >
-                    {t('common.ok')}
-                  </Button>
-                }
-              />
-            )}
-          </div>
+          <HotkeyField
+            title={t('config.hotkey.selection_translate')}
+            name="hotkey_selection_translate"
+            value={selectionTranslate}
+            setValue={setSelectionTranslate}
+            inputLabel={t('config.hotkey.set_hotkey')}
+            okLabel={t('common.ok')}
+            onKeyDown={keyDown}
+            onConfirm={registerHandler}
+          />
+          <HotkeyField
+            title={t('config.hotkey.input_translate')}
+            name="hotkey_input_translate"
+            value={inputTranslate}
+            setValue={setInputTranslate}
+            inputLabel={t('config.hotkey.set_hotkey')}
+            okLabel={t('common.ok')}
+            onKeyDown={keyDown}
+            onConfirm={registerHandler}
+          />
+          <HotkeyField
+            title={t('config.hotkey.ocr_recognize')}
+            name="hotkey_ocr_recognize"
+            value={ocrRecognize}
+            setValue={setOcrRecognize}
+            inputLabel={t('config.hotkey.set_hotkey')}
+            okLabel={t('common.ok')}
+            onKeyDown={keyDown}
+            onConfirm={registerHandler}
+          />
+          <HotkeyField
+            title={t('config.hotkey.ocr_translate')}
+            name="hotkey_ocr_translate"
+            value={ocrTranslate}
+            setValue={setOcrTranslate}
+            inputLabel={t('config.hotkey.set_hotkey')}
+            okLabel={t('common.ok')}
+            onKeyDown={keyDown}
+            onConfirm={registerHandler}
+          />
         </CardBody>
       </Card>
       {pluginHotkeyRows.length > 0 && (

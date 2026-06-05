@@ -36,10 +36,10 @@ html {
 }
 
 *::-webkit-scrollbar-thumb {
-  background: #c0c1c550;
+  background: color-mix(in srgb, var(--heroui-default-500, #71717a) 42%, transparent);
   border-radius: 5px;
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background: #c0c1c550;
+  background: color-mix(in srgb, var(--heroui-default-600, #52525b) 58%, transparent);
 }

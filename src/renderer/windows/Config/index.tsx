@@ -9,6 +9,12 @@ import ErrorBoundary from '../../components/ErrorBoundary'
 import WindowControl from '../../components/WindowControl'
 import SideBar from './components/SideBar'
 import { osType } from '@/renderer/lib/config/env'
+import {
+  DragRegion,
+  LINUX_LEFT_WINDOW_FRAME_CLASS,
+  LINUX_RIGHT_WINDOW_FRAME_CLASS,
+  WINDOW_TOPBAR_HEIGHT_CLASS,
+} from '@/renderer/components/windowChrome'
 import routes from './routes'
 import './style.css'
 const appWindow = getCurrentWebviewWindow()
@@ -30,32 +36,28 @@ export default function Config() {
       <Toaster position="top-center" />
       <Card
         shadow="none"
-        className={`bg-content1 h-screen w-57.5 shrink-0 rounded-none ${
-          osType === 'Linux' && 'rounded-l-[10px] border-1'
-        } border-r-1 border-default-100 select-none cursor-default`}
+        className={`h-screen w-57.5 shrink-0 rounded-none bg-content1 ${LINUX_LEFT_WINDOW_FRAME_CLASS} border-r-1 border-default-100 select-none cursor-default`}
       >
-        <div className="h-8.75 p-1.25">
-          <div className="w-full h-full" data-tauri-drag-region="true" />
+        <div className={`${WINDOW_TOPBAR_HEIGHT_CLASS} p-1.25`}>
+          <DragRegion className="h-full w-full" />
         </div>
         <div className="p-1.25">
-          <div data-tauri-drag-region="true">
+          <DragRegion>
             <img
               alt={t('accessibility.app_logo')}
               src="icon.svg"
               className="h-15 w-15 m-auto mb-7.5"
               draggable={false}
             />
-          </div>
+          </DragRegion>
         </div>
         <SideBar />
       </Card>
       <div
-        className={`bg-background h-screen min-w-0 flex-1 select-none cursor-default ${
-          osType === 'Linux' && 'rounded-r-[10px] border-1 border-l-0 border-default-100'
-        }`}
+        className={`flex h-screen min-w-0 flex-1 flex-col bg-background ${LINUX_RIGHT_WINDOW_FRAME_CLASS} select-none cursor-default`}
       >
-        <div data-tauri-drag-region="true" className="top-1.25 left-58.75 right-1.25 h-7.5 fixed" />
-        <div className="h-8.75 flex justify-between">
+        <DragRegion className="fixed top-1.25 left-58.75 right-1.25 h-7.5" />
+        <div className={`${WINDOW_TOPBAR_HEIGHT_CLASS} flex justify-between`}>
           <div className="flex">
             <h2 className="m-auto ml-2.5">{t(`config.${pageTitleKey}.title`)}</h2>
           </div>
@@ -63,11 +65,7 @@ export default function Config() {
           <div className="flex">{osType !== 'Darwin' && <WindowControl />}</div>
         </div>
         <Divider />
-        <div
-          className={`p-2.5 overflow-y-auto ${
-            osType === 'Linux' ? 'h-[calc(100vh-38px)]' : 'h-[calc(100vh-36px)]'
-          }`}
-        >
+        <div className="min-h-0 flex-1 overflow-y-auto p-2.5">
           <ErrorBoundary fallbackTitle={t('errors.config_page_render_failed')}>
             {page ?? (
               <div className="rounded-medium border border-warning/30 bg-warning/10 p-4 text-sm text-warning-700">

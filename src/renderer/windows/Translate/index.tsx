@@ -6,10 +6,17 @@ import { BsPinFill } from 'react-icons/bs'
 import { useTranslation } from 'react-i18next'
 
 import WindowControl from '../../components/WindowControl'
+import ErrorPanel from '../../components/ErrorPanel'
 import LanguageArea from './components/LanguageArea'
 import SourceArea from './components/SourceArea'
 import TargetArea from './components/TargetArea'
 import { osType } from '@/renderer/lib/config/env'
+import {
+  LINUX_WINDOW_FRAME_CLASS,
+  PIN_ICON_CLASS,
+  TopDragRegion,
+  WINDOW_TOPBAR_HEIGHT_CLASS,
+} from '@/renderer/components/windowChrome'
 import { useConfig } from '../../hooks'
 import { getStoreValue, saveStore, setStoreValue } from '@/renderer/lib/config/store'
 import {
@@ -230,14 +237,12 @@ export default function Translate() {
   }, [isServiceConfigReady, serviceConfigError])
 
   return (
-    <div
-      className={`bg-background h-screen w-screen ${
-        osType === 'Linux' && 'rounded-[10px] border-1 border-default-100'
-      }`}
-    >
-      <div className="fixed top-1.25 left-1.25 right-1.25 h-7.5" data-tauri-drag-region="true" />
+    <div className={`flex h-screen w-screen flex-col bg-background ${LINUX_WINDOW_FRAME_CLASS}`}>
+      <TopDragRegion />
       <div
-        className={`h-8.75 w-full flex ${osType === 'Darwin' ? 'justify-end' : 'justify-between'}`}
+        className={`${WINDOW_TOPBAR_HEIGHT_CLASS} flex w-full ${
+          osType === 'Darwin' ? 'justify-end' : 'justify-between'
+        }`}
       >
         <Button
           isIconOnly
@@ -259,23 +264,23 @@ export default function Translate() {
             setPined(!pined)
           }}
         >
-          <BsPinFill className={`text-[20px] ${pined ? 'text-primary' : 'text-default-400'}`} />
+          <BsPinFill
+            className={`${PIN_ICON_CLASS} ${pined ? 'text-primary' : 'text-default-400'}`}
+          />
         </Button>
         {osType !== 'Darwin' && <WindowControl />}
       </div>
-      <div
-        className={`${osType === 'Linux' ? 'h-[calc(100vh-37px)]' : 'h-[calc(100vh-35px)]'} px-2`}
-      >
+      <div className="min-h-0 flex-1 px-2">
         <div className="h-full overflow-y-auto">
           {hasInitError ? (
-            <div className="rounded-medium border border-danger/30 bg-danger/10 p-4 text-sm text-danger">
-              <div className="mb-2 font-semibold">
-                {t('errors.translate_window_initialization_failed')}
-              </div>
-              <pre className="whitespace-pre-wrap wrap-break-word">{`${pluginLoadError ?? ''}${
+            <ErrorPanel
+              title={t('errors.translate_window_initialization_failed')}
+              messageClassName="wrap-break-word text-sm"
+            >
+              {`${pluginLoadError ?? ''}${
                 pluginLoadError && serviceConfigError ? '\n' : ''
-              }${serviceConfigError ?? ''}`}</pre>
-            </div>
+              }${serviceConfigError ?? ''}`}
+            </ErrorPanel>
           ) : (
             <>
               <div>

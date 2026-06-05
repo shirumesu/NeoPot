@@ -1,12 +1,4 @@
-import {
-  Button,
-  Modal,
-  ModalBody,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  Spacer,
-} from '@heroui/react'
+import { Button, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from '@heroui/react'
 import { useTranslation } from 'react-i18next'
 
 import { PluginConfig } from './PluginConfig'
@@ -17,15 +9,17 @@ import {
   getServiceSouceType,
   whetherPluginService,
 } from '@/renderer/lib/service/service_instance'
+import { SERVICE_ICON_CLASS } from './types'
+import type { BuiltinServices, ServicePluginMap } from './types'
 
-interface ConfigModalProps {
+export interface ConfigModalProps {
   serviceInstanceKey: string
-  pluginList: Record<string, { icon: string; display: string }>
+  pluginList: ServicePluginMap
   isOpen: boolean
   onOpenChange: (isOpen: boolean) => void
-  updateServiceInstanceList: (key: string) => void
+  updateServiceInstanceList: (key: string) => void | Promise<void>
   serviceType: ServiceType
-  builtinServices: Record<string, any>
+  builtinServices: BuiltinServices
   guardEmptyServiceKey?: boolean
 }
 
@@ -49,24 +43,28 @@ export default function ConfigModal(props: ConfigModalProps) {
   const builtinService = builtinServices[serviceName]
   const ConfigComponent = pluginServiceFlag ? PluginConfig : builtinService?.Config
 
-  return (guardEmptyServiceKey && serviceInstanceKey === '') ||
+  if (
+    (guardEmptyServiceKey && serviceInstanceKey === '') ||
     (pluginServiceFlag && !(serviceName in pluginList)) ||
-    (!pluginServiceFlag && (!builtinService || typeof ConfigComponent !== 'function')) ? (
-    <></>
-  ) : (
+    !ConfigComponent ||
+    (!pluginServiceFlag && !builtinService)
+  ) {
+    return null
+  }
+
+  return (
     <Modal isOpen={isOpen} onOpenChange={onOpenChange} scrollBehavior="inside">
       <ModalContent className="max-h-[75vh]">
         {(onClose) => (
           <>
-            <ModalHeader>
+            <ModalHeader className="flex items-center gap-2">
               {serviceSourceType === ServiceSourceType.BUILDIN && (
                 <>
                   <img
                     src={builtinService.info.icon}
-                    className="h-6 w-6 my-auto"
+                    className={SERVICE_ICON_CLASS}
                     draggable={false}
                   />
-                  <Spacer x={2} />
                   {t(`services.${serviceType}.${serviceName}.title`)}
                 </>
               )}
@@ -74,11 +72,10 @@ export default function ConfigModal(props: ConfigModalProps) {
                 <>
                   <img
                     src={pluginList[serviceName].icon}
-                    className="h-6 w-6 my-auto"
+                    className={SERVICE_ICON_CLASS}
                     draggable={false}
                   />
 
-                  <Spacer x={2} />
                   {`${pluginList[serviceName].display} [${t('common.plugin')}]`}
                 </>
               )}

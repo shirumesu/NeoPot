@@ -1,22 +1,24 @@
 import { Card, Button, useDisclosure } from '@heroui/react'
-import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import React, { useState } from 'react'
 import { Reorder } from 'framer-motion'
 
-import { useToastStyle } from '../../../../../hooks'
 import SelectPluginModal from '../SelectPluginModal'
 import { osType } from '@/renderer/lib/config/env'
-import { useConfig, deleteKey, isSameConfigValue } from '../../../../../hooks'
 import ServiceItem from './ServiceItem'
 import SelectModal from './SelectModal'
 import ConfigModal from './ConfigModal'
-import { useConfigSave } from '../../../hooks/useConfigSave'
+import { useServiceInstanceList } from '../useServiceInstanceList'
+import type { ServicePluginMap } from '../types'
 
-const ReorderGroup = Reorder.Group as any
+const RECOGNIZE_SERVICE_LIST_KEY = 'recognize_service_list'
+const DEFAULT_RECOGNIZE_SERVICE_LIST = ['local_model']
 
-export default function Recognize(props: any) {
-  const { pluginList } = props
+interface RecognizeProps {
+  pluginList: ServicePluginMap
+}
+
+export default function Recognize({ pluginList }: RecognizeProps) {
   const {
     isOpen: isSelectPluginOpen,
     onOpen: onSelectPluginOpen,
@@ -33,69 +35,18 @@ export default function Recognize(props: any) {
     onOpenChange: onConfigOpenChange,
   } = useDisclosure()
   const [currentConfigKey, setCurrentConfigKey] = useState('local_model')
-  // now it's service instance list
-  const [recognizeServiceInstanceList, setRecognizeServiceInstanceList] = useConfig<string[]>(
-    'recognize_service_list',
-    ['local_model'],
-  )
+  const {
+    serviceInstanceList: recognizeServiceInstanceList,
+    deleteServiceInstance,
+    updateServiceInstanceList,
+    handleServiceReorder,
+  } = useServiceInstanceList({
+    configKey: RECOGNIZE_SERVICE_LIST_KEY,
+    defaultList: DEFAULT_RECOGNIZE_SERVICE_LIST,
+    protectLastService: true,
+  })
 
   const { t } = useTranslation()
-  const toastStyle = useToastStyle()
-  const { saveConfig } = useConfigSave()
-
-  const deleteServiceInstance = async (instanceKey: string) => {
-    if (recognizeServiceInstanceList === null) {
-      return
-    }
-    if (recognizeServiceInstanceList.length === 1) {
-      toast.error(t('config.service.least'), { style: toastStyle })
-      return
-    } else {
-      const newList = recognizeServiceInstanceList.filter((x) => x !== instanceKey)
-      const saved = await saveConfig(
-        'recognize_service_list',
-        recognizeServiceInstanceList,
-        setRecognizeServiceInstanceList,
-        newList,
-      )
-      if (saved) {
-        await deleteKey(instanceKey)
-      }
-    }
-  }
-  const updateServiceInstanceList = async (instanceKey: string) => {
-    if (recognizeServiceInstanceList === null) {
-      return
-    }
-    if (recognizeServiceInstanceList.includes(instanceKey)) {
-      return
-    } else {
-      const newList = [...recognizeServiceInstanceList, instanceKey]
-      await saveConfig(
-        'recognize_service_list',
-        recognizeServiceInstanceList,
-        setRecognizeServiceInstanceList,
-        newList,
-        { notify: false },
-      )
-    }
-  }
-  const handleServiceReorder = (serviceInstanceList: string[]) => {
-    if (recognizeServiceInstanceList === null) {
-      return
-    }
-    if (isSameConfigValue(recognizeServiceInstanceList, serviceInstanceList)) {
-      return
-    }
-
-    void saveConfig(
-      'recognize_service_list',
-      recognizeServiceInstanceList,
-      setRecognizeServiceInstanceList,
-      serviceInstanceList,
-      { notify: false },
-    )
-  }
 
   return (
     <>
@@ -105,26 +56,29 @@ export default function Recognize(props: any) {
         } w-full overflow-hidden p-5 flex flex-col`}
       >
         {recognizeServiceInstanceList !== null && (
-          <ReorderGroup
-            axis="y"
-            values={recognizeServiceInstanceList}
-            onReorder={handleServiceReorder}
-            className="min-h-0 flex-1 space-y-2 overflow-y-auto"
-          >
-            {recognizeServiceInstanceList.map((x) => {
-              return (
-                <Reorder.Item key={x} value={x}>
-                  <ServiceItem
-                    serviceInstanceKey={x}
-                    pluginList={pluginList}
-                    deleteServiceInstance={deleteServiceInstance}
-                    setCurrentConfigKey={setCurrentConfigKey}
-                    onConfigOpen={onConfigOpen}
-                  />
-                </Reorder.Item>
-              )
-            })}
-          </ReorderGroup>
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            <Reorder.Group
+              axis="y"
+              values={recognizeServiceInstanceList}
+              onReorder={handleServiceReorder}
+            >
+              {recognizeServiceInstanceList.map((x) => {
+                return (
+                  <Reorder.Item key={x} value={x}>
+                    <div className="mb-2">
+                      <ServiceItem
+                        serviceInstanceKey={x}
+                        pluginList={pluginList}
+                        deleteServiceInstance={deleteServiceInstance}
+                        setCurrentConfigKey={setCurrentConfigKey}
+                        onConfigOpen={onConfigOpen}
+                      />
+                    </div>
+                  </Reorder.Item>
+                )
+              })}
+            </Reorder.Group>
+          </div>
         )}
         <div className="flex shrink-0 gap-2 pt-2">
           <Button fullWidth onPress={onSelectOpen}>

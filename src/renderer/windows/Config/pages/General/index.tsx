@@ -24,6 +24,8 @@ import { useToastStyle } from '../../../../hooks'
 import { osType } from '@/renderer/lib/config/env'
 import { logger } from '@/renderer/lib/logger'
 import { useConfigSave } from '../../hooks/useConfigSave'
+import ConfigItem from '../../components/ConfigItem'
+import SafeDropdownMenu from '@/renderer/components/SafeDropdownMenu'
 
 const normalizeProxyHost = (value: string) => {
   const trimmed = value.trim()
@@ -152,6 +154,16 @@ export default function General() {
     t(`app_languages.${language}`, {
       defaultValue: t(`languages.${language}`, { defaultValue: language }),
     })
+  const fontMenuItems: React.ReactElement[] = [
+    <DropdownItem style={{ fontFamily: 'sans-serif' }} key="default">
+      {t('config.general.default_font')}
+    </DropdownItem>,
+    ...(fontList?.map((font) => (
+      <DropdownItem style={{ fontFamily: font }} key={font}>
+        {font}
+      </DropdownItem>
+    )) ?? []),
+  ]
 
   useEffect(() => {
     isEnabled().then((v) => {
@@ -166,8 +178,7 @@ export default function General() {
     <>
       <Card className="mb-2.5">
         <CardBody>
-          <div className="config-item">
-            <h3>{t('config.general.auto_start')}</h3>
+          <ConfigItem title={t('config.general.auto_start')}>
             <Switch
               isSelected={autoStart}
               onValueChange={async (v) => {
@@ -206,9 +217,8 @@ export default function General() {
                 }
               }}
             />
-          </div>
-          <div className="config-item">
-            <h3>{t('config.general.check_update')}</h3>
+          </ConfigItem>
+          <ConfigItem title={t('config.general.check_update')}>
             {checkUpdate !== null && (
               <Switch
                 isSelected={checkUpdate}
@@ -217,9 +227,8 @@ export default function General() {
                 }}
               />
             )}
-          </div>
-          <div className="config-item">
-            <h3>{t('config.general.close_to_tray')}</h3>
+          </ConfigItem>
+          <ConfigItem title={t('config.general.close_to_tray')}>
             {closeToTray !== null && (
               <Switch
                 isSelected={closeToTray}
@@ -228,17 +237,15 @@ export default function General() {
                 }}
               />
             )}
-          </div>
-          <div className="config-item">
-            <h3>{t('config.general.server_port')}</h3>
+          </ConfigItem>
+          <ConfigItem title={t('config.general.server_port')}>
             <ServerPortInput />
-          </div>
+          </ConfigItem>
         </CardBody>
       </Card>
       <Card className="mb-2.5">
         <CardBody>
-          <div className="config-item">
-            <h3>{t('config.general.app_language')}</h3>
+          <ConfigItem title={t('config.general.app_language')}>
             {appLanguage !== null && (
               <Dropdown>
                 <DropdownTrigger>
@@ -270,9 +277,8 @@ export default function General() {
                 </DropdownMenu>
               </Dropdown>
             )}
-          </div>
-          <div className="config-item">
-            <h3>{t('config.general.app_theme')}</h3>
+          </ConfigItem>
+          <ConfigItem title={t('config.general.app_theme')}>
             {appTheme !== null && (
               <Dropdown>
                 <DropdownTrigger>
@@ -309,9 +315,8 @@ export default function General() {
                 </DropdownMenu>
               </Dropdown>
             )}
-          </div>
-          <div className="config-item">
-            <h3>{t('config.general.app_font')}</h3>
+          </ConfigItem>
+          <ConfigItem title={t('config.general.app_font')}>
             {appFont !== null && fontList !== null && (
               <Dropdown>
                 <DropdownTrigger>
@@ -324,7 +329,7 @@ export default function General() {
                     {appFont === 'default' ? t('config.general.default_font') : appFont}
                   </Button>
                 </DropdownTrigger>
-                <DropdownMenu
+                <SafeDropdownMenu
                   aria-label={t('accessibility.app_font')}
                   className="max-h-[50vh] overflow-y-auto"
                   onAction={(key) => {
@@ -335,24 +340,12 @@ export default function General() {
                     saveConfig('app_font', appFont, setAppFont, font)
                   }}
                 >
-                  <DropdownItem style={{ fontFamily: 'sans-serif' }} key="default">
-                    {t('config.general.default_font')}
-                  </DropdownItem>
-                  {
-                    fontList.map((x: string) => {
-                      return (
-                        <DropdownItem style={{ fontFamily: x }} key={x}>
-                          {x}
-                        </DropdownItem>
-                      )
-                    }) as any
-                  }
-                </DropdownMenu>
+                  {fontMenuItems}
+                </SafeDropdownMenu>
               </Dropdown>
             )}
-          </div>
-          <div className="config-item">
-            <h3>{t('config.general.app_fallback_font')}</h3>
+          </ConfigItem>
+          <ConfigItem title={t('config.general.app_fallback_font')}>
             {appFallbackFont !== null && fontList !== null && (
               <Dropdown>
                 <DropdownTrigger>
@@ -367,7 +360,7 @@ export default function General() {
                       : appFallbackFont}
                   </Button>
                 </DropdownTrigger>
-                <DropdownMenu
+                <SafeDropdownMenu
                   aria-label={t('accessibility.app_fallback_font')}
                   className="max-h-[50vh] overflow-y-auto"
                   onAction={(key) => {
@@ -383,24 +376,12 @@ export default function General() {
                     )
                   }}
                 >
-                  <DropdownItem style={{ fontFamily: 'sans-serif' }} key="default">
-                    {t('config.general.default_font')}
-                  </DropdownItem>
-                  {
-                    fontList.map((x: string) => {
-                      return (
-                        <DropdownItem style={{ fontFamily: x }} key={x}>
-                          {x}
-                        </DropdownItem>
-                      )
-                    }) as any
-                  }
-                </DropdownMenu>
+                  {fontMenuItems}
+                </SafeDropdownMenu>
               </Dropdown>
             )}
-          </div>
-          <div className="config-item">
-            <h3>{t('config.general.font_size.title')}</h3>
+          </ConfigItem>
+          <ConfigItem title={t('config.general.font_size.title')}>
             {appFontSize !== null && (
               <Dropdown>
                 <DropdownTrigger>
@@ -424,9 +405,11 @@ export default function General() {
                 </DropdownMenu>
               </Dropdown>
             )}
-          </div>
-          <div className={`config-item ${osType !== 'Windows_NT' && 'hidden'}`}>
-            <h3>{t('config.general.tray_click_event')}</h3>
+          </ConfigItem>
+          <ConfigItem
+            title={t('config.general.tray_click_event')}
+            className={osType !== 'Windows_NT' ? 'hidden' : ''}
+          >
             {trayClickEvent !== null && (
               <Dropdown>
                 <DropdownTrigger>
@@ -450,9 +433,8 @@ export default function General() {
                 </DropdownMenu>
               </Dropdown>
             )}
-          </div>
-          <div className="config-item">
-            <h3>{t('config.general.dev_mode')}</h3>
+          </ConfigItem>
+          <ConfigItem title={t('config.general.dev_mode')}>
             {devMode !== null && (
               <Switch
                 isSelected={devMode}
@@ -461,9 +443,8 @@ export default function General() {
                 }}
               />
             )}
-          </div>
-          <div className="config-item">
-            <h3>{t('config.general.log_level')}</h3>
+          </ConfigItem>
+          <ConfigItem title={t('config.general.log_level')}>
             {logLevel !== null && (
               <Dropdown>
                 <DropdownTrigger>
@@ -502,7 +483,7 @@ export default function General() {
                 </DropdownMenu>
               </Dropdown>
             )}
-          </div>
+          </ConfigItem>
         </CardBody>
       </Card>
       <Card>

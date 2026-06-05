@@ -1,13 +1,18 @@
 import * as builtinServices from '@/renderer/providers/translate'
-import SharedServiceItem from '../../ServiceItem'
+import SharedServiceItem, { type ServiceItemProps } from '../../ServiceItem'
 import { ServiceType } from '@/renderer/lib/service/service_instance'
 
-export default function ServiceItem(props: any) {
+type TranslateServiceItemProps = Omit<
+  ServiceItemProps,
+  'serviceType' | 'builtinServices' | 'showEnableSwitch' | 'pluginLabelSeparator'
+>
+
+export default function ServiceItem(props: TranslateServiceItemProps) {
   return (
     <SharedServiceItem
       {...props}
       serviceType={ServiceType.TRANSLATE}
-      builtinServices={builtinServices as any}
+      builtinServices={builtinServices}
       showEnableSwitch
       pluginLabelSeparator=""
     />

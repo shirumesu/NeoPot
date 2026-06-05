@@ -7,8 +7,15 @@ import { atom, useAtom } from 'jotai'
 import { useTranslation } from 'react-i18next'
 
 import WindowControl from '../../components/WindowControl'
+import ErrorPanel from '../../components/ErrorPanel'
 import { getStoreValue } from '@/renderer/lib/config/store'
 import { osType } from '@/renderer/lib/config/env'
+import {
+  LINUX_WINDOW_FRAME_CLASS,
+  PIN_ICON_CLASS,
+  TopDragRegion,
+  WINDOW_TOPBAR_HEIGHT_CLASS,
+} from '@/renderer/components/windowChrome'
 import { useConfig } from '../../hooks'
 import ControlArea from './ControlArea'
 import ImageArea from './ImageArea'
@@ -114,13 +121,13 @@ export default function Recognize() {
   const isRecognizeConfigReady = serviceInstanceList !== null
 
   return (
-    <div
-      className={`bg-background h-screen ${
-        osType === 'Linux' && 'rounded-[10px] border-1 border-default-100'
-      }`}
-    >
-      <div data-tauri-drag-region="true" className="fixed top-1.25 left-1.25 right-1.25 h-7.5" />
-      <div className={`h-8.75 flex ${osType === 'Darwin' ? 'justify-end' : 'justify-between'}`}>
+    <div className={`flex h-screen flex-col bg-background ${LINUX_WINDOW_FRAME_CLASS}`}>
+      <TopDragRegion />
+      <div
+        className={`${WINDOW_TOPBAR_HEIGHT_CLASS} flex ${
+          osType === 'Darwin' ? 'justify-end' : 'justify-between'
+        }`}
+      >
         <Button
           isIconOnly
           size="sm"
@@ -141,26 +148,25 @@ export default function Recognize() {
             setPined(!pined)
           }}
         >
-          <BsPinFill className={`text-[20px] ${pined ? 'text-primary' : 'text-default-400'}`} />
+          <BsPinFill
+            className={`${PIN_ICON_CLASS} ${pined ? 'text-primary' : 'text-default-400'}`}
+          />
         </Button>
         {osType !== 'Darwin' && <WindowControl />}
       </div>
       {hasInitError ? (
-        <div className="m-4 rounded-medium border border-danger/30 bg-danger/10 p-4 text-sm text-danger">
-          <div className="mb-2 font-semibold">
-            {t('errors.recognize_window_initialization_failed')}
-          </div>
-          <pre className="whitespace-pre-wrap wrap-break-word">{`${pluginLoadError ?? ''}${
+        <ErrorPanel
+          className="m-4"
+          title={t('errors.recognize_window_initialization_failed')}
+          messageClassName="wrap-break-word text-sm"
+        >
+          {`${pluginLoadError ?? ''}${
             pluginLoadError && serviceConfigError ? '\n' : ''
-          }${serviceConfigError ?? ''}`}</pre>
-        </div>
+          }${serviceConfigError ?? ''}`}
+        </ErrorPanel>
       ) : isRecognizeConfigReady ? (
         <>
-          <div
-            className={`${
-              osType === 'Linux' ? 'h-[calc(100vh-87px)]' : 'h-[calc(100vh-85px)]'
-            } grid grid-cols-2`}
-          >
+          <div className="grid min-h-0 flex-1 grid-cols-2">
             <ImageArea />
             <TextArea serviceInstanceConfigMap={serviceInstanceConfigMap} />
           </div>

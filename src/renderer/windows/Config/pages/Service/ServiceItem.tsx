@@ -1,4 +1,4 @@
-import { Button, Spacer, Switch } from '@heroui/react'
+import { Button, Switch } from '@heroui/react'
 import { useTranslation } from 'react-i18next'
 import { BiSolidEdit } from 'react-icons/bi'
 import { MdDeleteOutline } from 'react-icons/md'
@@ -13,31 +13,22 @@ import {
   getServiceName,
   getServiceSouceType,
 } from '@/renderer/lib/service/service_instance'
-
-interface PluginInfo {
-  icon: string
-  display: string
-}
+import { SERVICE_ICON_CLASS } from './types'
+import type { BuiltinServices, ServicePluginMap } from './types'
 
 interface ServiceInstanceConfig {
   [INSTANCE_NAME_CONFIG_KEY]?: string
   enable?: boolean
 }
 
-interface BuiltinService {
-  info: {
-    icon?: string
-  }
-}
-
-interface ServiceItemProps {
+export interface ServiceItemProps {
   serviceInstanceKey: string
-  pluginList: Record<string, PluginInfo>
+  pluginList: ServicePluginMap
   deleteServiceInstance: (key: string) => void
   setCurrentConfigKey: (key: string) => void
   onConfigOpen: () => void
   serviceType: ServiceType
-  builtinServices: Record<string, BuiltinService>
+  builtinServices: BuiltinServices
   showEnableSwitch?: boolean
   guardMissingBuiltin?: boolean
   pluginLabelSeparator?: string
@@ -96,11 +87,14 @@ export default function ServiceItem(props: ServiceItemProps) {
   ) : (
     serviceInstanceConfig !== null && (
       <div className="bg-content2 rounded-md px-2.5 py-5 flex justify-between">
-        <div className="flex">
+        <div className="flex items-center gap-2">
           {serviceSourceType === ServiceSourceType.BUILDIN && (
             <>
-              <img src={builtinService.info.icon} className="h-6 w-6 my-auto" draggable={false} />
-              <Spacer x={2} />
+              <img
+                src={builtinService.info.icon}
+                className={SERVICE_ICON_CLASS}
+                draggable={false}
+              />
               <h2 className="my-auto">
                 {getDisplayInstanceName(serviceInstanceConfig[INSTANCE_NAME_CONFIG_KEY] ?? '', () =>
                   t(`services.${serviceType}.${serviceName}.title`),
@@ -112,10 +106,9 @@ export default function ServiceItem(props: ServiceItemProps) {
             <>
               <img
                 src={pluginList[serviceName].icon}
-                className="h-6 w-6 my-auto"
+                className={SERVICE_ICON_CLASS}
                 draggable={false}
               />
-              <Spacer x={2} />
               <h2 className="my-auto">
                 {`${getDisplayInstanceName(
                   serviceInstanceConfig[INSTANCE_NAME_CONFIG_KEY] ?? '',
@@ -125,16 +118,13 @@ export default function ServiceItem(props: ServiceItemProps) {
             </>
           )}
         </div>
-        <div className="flex">
+        <div className="flex items-center gap-2">
           {showEnableSwitch && (
-            <>
-              <EnableSwitch
-                serviceInstanceKey={serviceInstanceKey}
-                serviceInstanceConfig={serviceInstanceConfig}
-                setServiceInstanceConfig={setServiceInstanceConfig}
-              />
-              <Spacer x={2} />
-            </>
+            <EnableSwitch
+              serviceInstanceKey={serviceInstanceKey}
+              serviceInstanceConfig={serviceInstanceConfig}
+              setServiceInstanceConfig={setServiceInstanceConfig}
+            />
           )}
           <Button
             isIconOnly
@@ -147,7 +137,6 @@ export default function ServiceItem(props: ServiceItemProps) {
           >
             <BiSolidEdit className="text-2xl" />
           </Button>
-          <Spacer x={2} />
           <Button
             isIconOnly
             size="sm"

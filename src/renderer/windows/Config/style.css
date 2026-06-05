@@ -1,10 +1,7 @@
+@reference "tailwindcss";
+
 .config-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin: 12px 0;
-  min-height: 40px;
+  @apply my-3 flex min-h-10 items-center justify-between gap-4;
 }
 
 .config-item > h3 {

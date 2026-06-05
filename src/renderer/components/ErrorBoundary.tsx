@@ -1,6 +1,7 @@
 import React from 'react'
 import { logger } from '@/renderer/lib/logger'
 import i18n from '@/renderer/i18n'
+import ErrorPanel from './ErrorPanel'
 
 interface ErrorBoundaryProps {
   children: React.ReactNode
@@ -33,12 +34,11 @@ export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, E
 
     if (error) {
       return (
-        <div className="rounded-medium border border-danger/30 bg-danger/10 p-4 text-danger">
-          <div className="mb-2 font-semibold">
-            {this.props.fallbackTitle ?? i18n.t('errors.window_render_failed_generic')}
-          </div>
-          <pre className="whitespace-pre-wrap wrap-break-words text-sm">{`${error.name}: ${error.message}`}</pre>
-        </div>
+        <ErrorPanel
+          title={this.props.fallbackTitle ?? i18n.t('errors.window_render_failed_generic')}
+        >
+          {`${error.name}: ${error.message}`}
+        </ErrorPanel>
       )
     }
 

@@ -8,6 +8,7 @@ import { languageList } from '@/renderer/lib/language/language'
 import { detectLanguageAtom } from '../SourceArea'
 import { useConfig } from '../../../../hooks'
 import SafeDropdownMenu from '@/renderer/components/SafeDropdownMenu'
+import { ACTION_ICON_CLASS } from '@/renderer/components/uiSize'
 
 export const sourceLanguageAtom = atom('auto')
 export const targetLanguageAtom = atom('zh_cn')
@@ -80,7 +81,7 @@ export default function LanguageArea() {
             isIconOnly
             size="sm"
             variant="light"
-            className="text-[20px]"
+            className={ACTION_ICON_CLASS}
             onPress={async () => {
               if (sourceLanguage !== 'auto') {
                 const oldSourceLanguage = sourceLanguage

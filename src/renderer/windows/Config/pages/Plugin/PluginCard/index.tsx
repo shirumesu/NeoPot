@@ -6,6 +6,7 @@ import React from 'react'
 import { getCardActions } from '../logic'
 import { openUrl } from '@/renderer/lib/electron/compat/opener'
 import type { InstalledPlugin } from '../installedPlugins'
+import { ACTION_ICON_CLASS } from '@/renderer/components/uiSize'
 
 interface PluginCardProps {
   plugin: InstalledPlugin
@@ -52,7 +53,7 @@ export default function PluginCard(props: PluginCardProps) {
                 void openUrl(plugin.homepage)
               }}
             >
-              <MdHome className="text-xl" />
+              <MdHome className={ACTION_ICON_CLASS} />
             </Button>
           </Tooltip>
         )}
@@ -65,7 +66,7 @@ export default function PluginCard(props: PluginCardProps) {
               aria-label={t('config.plugin.settings')}
               onPress={() => onOpenSettings(plugin)}
             >
-              <MdSettings className="text-xl" />
+              <MdSettings className={ACTION_ICON_CLASS} />
             </Button>
           </Tooltip>
         )}
@@ -78,7 +79,7 @@ export default function PluginCard(props: PluginCardProps) {
               aria-label={t('config.plugin.hotkeys')}
               onPress={() => onOpenHotkeys(plugin)}
             >
-              <MdKeyboardAlt className="text-xl" />
+              <MdKeyboardAlt className={ACTION_ICON_CLASS} />
             </Button>
           </Tooltip>
         )}
@@ -92,7 +93,7 @@ export default function PluginCard(props: PluginCardProps) {
               aria-label={t('config.plugin.delete')}
               onPress={() => onDelete(plugin)}
             >
-              <MdDeleteOutline className="text-xl" />
+              <MdDeleteOutline className={ACTION_ICON_CLASS} />
             </Button>
           </Tooltip>
         )}
