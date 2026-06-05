@@ -21,8 +21,9 @@
 </p>
 
 <p align="center">
+  <img alt="Version" src="https://img.shields.io/github/v/release/shirumesu/NeoPot.svg" />
   <img alt="License" src="https://img.shields.io/github/license/shirumesu/NeoPot.svg" />
-  <img alt="Electron" src="https://img.shields.io/badge/Electron-41-blue?logo=electron" />
+  <img alt="Electron" src="https://img.shields.io/badge/Electron-42-blue?logo=electron" />
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.6-blue?logo=typescript&logoColor=white" />
   <img alt="Windows" src="https://img.shields.io/badge/Windows-supported-blue?logo=windows&logoColor=white" />
   <img alt="Linux" src="https://img.shields.io/badge/Linux-supported-yellow?logo=linux&logoColor=white" />
@@ -30,7 +31,6 @@
 
 > NeoPot is maintained as a continuation of Pot Desktop, with migrations to Electron, HeroUI, and TypeScript completed.
 > A macOS version is not published for now. macOS distribution requires an Apple Developer account, and the current installation instructions are only targeted at Windows and Linux.
-> The early development versions currently focus on migration, refactoring, and feature updates. Some Pot Desktop resources or websites may still be used temporarily and will be gradually removed or replaced as soon as possible.
 
 ## Table of Contents
 
@@ -79,17 +79,14 @@
 
 ## Supported Services
 
-The current Electron version ships these built-in services. Additional translation, OCR, and text-to-speech services are provided through plugins.
+The current version ships these built-in services:
 
 <details>
 <summary>Translation</summary>
 
-- OpenAI
-- Zhipu AI
-- Gemini Pro
-- Ollama
 - Google
 - DeepL
+- Ollama
 
 </details>
 
@@ -103,9 +100,12 @@ The current Electron version ships these built-in services. Additional translati
 <details>
 <summary>Text-to-Speech</summary>
 
-- Plugins only
+- Plugin support only
 
 </details>
+
+**More translation engines and services** can be added through the plugin system. Open the built-in plugin marketplace to browse community plugins.  
+Welcome to contribute to the official [plugin marketplace](https://github.com/shirumesu/Neopot-releases).
 
 ## Installation
 
@@ -128,7 +128,14 @@ Arch, Manjaro, Flatpak, Homebrew, Winget, and other distribution channels have n
 
 ## Plugin System
 
-NeoPot can install `.zip` / `.npot` plugin packages or local plugin directories. See the [Electron compatibility surface](docs/electron-compat.md) for supported plugin capabilities and limits.
+NeoPot supports extending translation, OCR, and text-to-speech functionality through plugins.
+
+**Installation methods**:
+- Install directly from the built-in plugin marketplace
+- Import `.zip` plugin packages
+- Select local plugin directories (for development)
+
+Plugins can add new translation engines, OCR services, and TTS providers. Developers can refer to templates and documentation in the plugin marketplace to create their own plugins.
 
 ## External Invocation
 
@@ -152,29 +159,9 @@ Example:
 curl "127.0.0.1:60828/selection_translate"
 ```
 
-### Using an External Screenshot Tool
-
-1. Take a screenshot with another screenshot tool.
-2. Save the screenshot as `$CACHE/neopot/pot_screenshot_cut.png`.
-3. Request `127.0.0.1:60828/ocr_recognize?screenshot=false` or `127.0.0.1:60828/ocr_translate?screenshot=false`.
-
-Windows cache directory example:
-
-```text
-%LOCALAPPDATA%\neopot\pot_screenshot_cut.png
-```
-
-Linux Flameshot example:
-
-```bash
-rm ~/.cache/neopot/pot_screenshot_cut.png \
-  && flameshot gui -s -p ~/.cache/neopot/pot_screenshot_cut.png \
-  && curl "127.0.0.1:60828/ocr_recognize?screenshot=false"
-```
-
 ### SnipDo
 
-Windows users can install SnipDo from the Microsoft Store, then download the `neopot.pbar` extension from NeoPot Releases and double-click it to install.
+Windows users can install SnipDo from the Microsoft Store. The SnipDo extension source code is located in the `.scripts/snipdo/` directory and can be built into a `.pbar` file for installation.
 
 ## Wayland Support
 
@@ -196,10 +183,22 @@ windowrulev2 = move cursor 0 0, class:(neopot), title:(Translator|Screenshot Tra
 
 ## Development and Build
 
+### Technology Stack
+
+- **Desktop framework**: Electron 42+ with electron-vite
+- **Frontend**: React 19, TypeScript, Vite 7
+- **UI framework**: HeroUI, Tailwind CSS 4
+- **State management**: Jotai
+- **Internationalization**: i18next
+
+### Environment Requirements
+
 Verified environment:
 
 - Node.js `>= 24.0.0`
 - pnpm `>= 9`
+
+### Getting Started
 
 Clone the repository:
 
@@ -209,40 +208,21 @@ cd NeoPot
 pnpm install
 ```
 
-Example Linux build dependencies:
+Linux packaging tools (optional, only for building deb/rpm):
 
 ```bash
-sudo apt-get install -y \
-  libgtk-3-dev \
-  libwebkit2gtk-4.0-dev \
-  libayatana-appindicator3-dev \
-  librsvg2-dev \
-  patchelf \
-  libxdo-dev \
-  libxcb1 \
-  libxrandr2 \
-  libdbus-1-3
+sudo apt-get install -y rpm
 ```
 
 Common commands:
 
 ```bash
-pnpm dev
-pnpm lint
-pnpm test
-pnpm make
+pnpm run dev
+pnpm run lint
+pnpm run test
+pnpm run format
+pnpm run make
 ```
-
-## Future TODO
-
-- [ ] Gradually replace and remove Pot-related resources
-- [ ] Verify each specific service and update, remove, or maintain them as needed
-
-## Known Issues
-
-- Text recognition / screenshot features may fail to launch properly
-- Some services may become unavailable after proxy settings are configured
-- Content entered in settings may be lost and reset to the original content
 
 ## Acknowledgements
 
