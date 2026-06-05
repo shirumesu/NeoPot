@@ -17,7 +17,6 @@ import { INSTANCE_NAME_CONFIG_KEY } from '@/renderer/lib/service/service_instanc
 import { MdDeleteOutline } from 'react-icons/md'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
-import { openUrl as open } from '@/renderer/lib/electron/compat/opener'
 import React, { useEffect, useState } from 'react'
 
 import { useConfig } from '../../../hooks/useConfig'
@@ -227,16 +226,6 @@ export function Config(props: any) {
             </CardBody>
           </Card>
         )}
-        <div className="config-item">
-          <h3 className="my-auto">{t('services.help')}</h3>
-          <Button
-            onPress={() => {
-              open('https://pot-app.com/docs/api/translate/ollama.html')
-            }}
-          >
-            {t('services.help')}
-          </Button>
-        </div>
         <div className="config-item">
           <Switch
             isSelected={serviceConfig['stream']}

@@ -4,7 +4,7 @@
       "ok": "OK",
       "cancel": "Abbrechen",
       "save": "Speichern",
-      "write_clipboard": "In Zwischenablage schreiben",
+      "write_clipboard": "In Zwischenablage kopieren",
       "plugin": "Plugin",
       "coming": "Demnächst…",
       "clear": "Löschen",
@@ -12,8 +12,8 @@
     },
     "languages": {
       "auto": "Automatisch erkennen",
-      "zh_cn": "Vereinfachtes Chinesisch",
-      "zh_tw": "Traditionelles Chinesisch",
+      "zh_cn": "Chinesisch (vereinfacht)",
+      "zh_tw": "Chinesisch (traditionell)",
       "ja": "Japanisch",
       "en": "Englisch",
       "ko": "Koreanisch",
@@ -34,8 +34,8 @@
       "mn_mo": "Mongolisch",
       "mn_cy": "Mongolisch (Kyrillisch)",
       "km": "Khmer",
-      "nb_no": "Norwegisch Bokmål",
-      "nn_no": "Norwegisch Nynorsk",
+      "nb_no": "Norwegisch (Bokmål)",
+      "nn_no": "Norwegisch (Nynorsk)",
       "fa": "Persisch",
       "sv": "Schwedisch",
       "pl": "Polnisch",
@@ -64,17 +64,17 @@
       "app_font": "Schriftart",
       "app_fallback_font": "Ersatzschriftart",
       "font_size": "Schriftgröße",
-      "tray_click_event": "Taskleisten-Klickereignis",
+      "tray_click_event": "Infobereich-Klickaktion",
       "log_level": "Protokollstufe",
       "source_language": "Ausgangssprache",
       "target_language": "Zielsprache",
       "second_language": "Zweite Zielsprache",
-      "detect_engine": "Spracherkennungs-Engine",
+      "detect_engine": "Spracherkennungsmodul",
       "auto_copy": "Automatisch kopieren",
       "window_position": "Fensterposition",
       "recognize_language": "Erkennungssprache",
       "translate_service": "Übersetzungsdienst",
-      "recognize_service": "Erkennungsdienst",
+      "recognize_service": "Texterkennungsdienst",
       "thinking_mode": "Denkmodus",
       "minimize_window": "Fenster minimieren",
       "maximize_window": "Fenster maximieren",
@@ -84,24 +84,24 @@
       "unpin_window": "Fenster lösen"
     },
     "errors": {
-      "window_render_failed": "{{window}}-Fenster konnte nicht gerendert werden",
-      "window_render_failed_generic": "Fenster konnte nicht gerendert werden",
-      "config_page_render_failed": "Konfigurationsseite konnte nicht gerendert werden",
-      "config_route_missing": "Keine Konfigurationsroute für {{route}} gefunden.",
-      "translate_window_initialization_failed": "Initialisierung des Übersetzungsfensters fehlgeschlagen",
-      "recognize_window_initialization_failed": "Initialisierung des Erkennungsfensters fehlgeschlagen",
+      "window_render_failed": "Das Fenster „{{window}}“ konnte nicht gerendert werden",
+      "window_render_failed_generic": "Fenster-Rendering fehlgeschlagen",
+      "config_page_render_failed": "Die Einstellungsseite konnte nicht geladen werden",
+      "config_route_missing": "Keine passende Einstellungsroute für „{{route}}“ gefunden.",
+      "translate_window_initialization_failed": "Übersetzungsfenster konnte nicht initialisiert werden",
+      "recognize_window_initialization_failed": "Texterkennungsfenster konnte nicht initialisiert werden",
       "language_not_supported": "Sprache wird nicht unterstützt",
-      "recognize_service_not_configured": "Erkennungsdienst ist nicht konfiguriert",
-      "recognize_timeout": "Zeitüberschreitung bei Erkennungsanfrage"
+      "recognize_service_not_configured": "Der Texterkennungsdienst ist nicht konfiguriert",
+      "recognize_timeout": "Zeitüberschreitung bei der Texterkennung"
     },
     "status": {
-      "loading_translation_window": "Übersetzungsfenster wird geladen...",
-      "loading_recognize_window": "Erkennungsfenster wird geladen..."
+      "loading_translation_window": "Übersetzungsfenster wird geladen…",
+      "loading_recognize_window": "Texterkennungsfenster wird geladen…"
     },
     "windows": {
       "config": "Einstellungen",
       "translate": "Übersetzen",
-      "recognize": "Erkennen",
+      "recognize": "Texterkennung",
       "screenshot": "Screenshot",
       "updater": "Update"
     },
@@ -114,11 +114,11 @@
         "label": "Allgemein",
         "title": "Allgemeine Einstellungen",
         "auto_start": "Autostart",
-        "check_update": "Update prüfen",
-        "close_to_tray": "Beim Schließen in Taskleiste minimieren",
-        "clipboard_monitor": "Zwischenablage-Überwachung",
-        "server_port": "Port",
-        "server_port_change": "Der Port wurde geändert. Bitte starten Sie die Anwendung neu, damit die Änderungen wirksam werden",
+        "check_update": "Nach Updates suchen",
+        "close_to_tray": "Beim Schließen in den Infobereich minimieren",
+        "clipboard_monitor": "Zwischenablage überwachen",
+        "server_port": "Server-Port",
+        "server_port_change": "Der Server-Port wurde geändert. Bitte starten Sie die Anwendung neu, damit die Änderung wirksam wird.",
         "app_language": "Anzeigesprache",
         "app_theme": "Design",
         "app_font": "Schriftart",
@@ -126,11 +126,11 @@
         "font_size": {
           "10": "Sehr klein (10px)",
           "12": "Klein (12px)",
-          "14": "Mittel (14px)",
+          "14": "Etwas klein (14px)",
           "16": "Standard (16px)",
           "18": "Groß (18px)",
           "20": "Sehr groß (20px)",
-          "24": "Riesig (24px)",
+          "24": "Extra groß (24px)",
           "title": "Schriftgröße"
         },
         "default_font": "Standard",
@@ -142,11 +142,11 @@
         "dev_mode": "Entwicklermodus",
         "log_level": "Protokollstufe",
         "log_levels": {
-          "debug": "Debug",
-          "info": "Info",
-          "warn": "Warnung",
-          "error": "Fehler",
-          "silent": "Stumm"
+          "debug": "debug",
+          "info": "info",
+          "warn": "warn",
+          "error": "error",
+          "silent": "silent"
         },
         "proxy": {
           "title": "Proxy",
@@ -154,12 +154,12 @@
           "port": "Port",
           "username": "Benutzername",
           "password": "Passwort",
-          "no_proxy": "Kein Proxy"
+          "no_proxy": "Proxy-Ausnahmen"
         },
-        "proxy_change": "Der Proxy wurde geändert. Starten Sie die Anwendung neu, damit die Änderungen wirksam werden",
+        "proxy_change": "Die Proxy-Einstellungen wurden geändert. Starten Sie die Anwendung neu, damit die Änderung wirksam wird.",
         "proxy_error": "Bitte geben Sie Host und Port an",
         "invalid_port": "Bitte geben Sie eine Zahl zwischen 1 und 65535 ein",
-        "tray_click_event": "Taskleisten-Klickereignis",
+        "tray_click_event": "Infobereich-Klickaktion",
         "event": {
           "config": "Einstellungen",
           "translate": "Übersetzen",
@@ -169,19 +169,19 @@
         }
       },
       "translate": {
-        "label": "Übersetzen",
+        "label": "Übersetzung",
         "title": "Übersetzungseinstellungen",
         "source_language": "Ausgangssprache",
         "target_language": "Zielsprache",
         "second_language": "Zweite Zielsprache",
         "auto_copy": "Automatisch kopieren",
-        "source": "Quelle",
-        "target": "Ziel",
-        "source_target": "Quelle+Ziel",
+        "source": "Ausgangstext",
+        "target": "Übersetzung",
+        "source_target": "Ausgangstext + Übersetzung",
         "disable": "Deaktiviert",
         "incremental_translate": "Inkrementelle Übersetzung",
         "dynamic_translate": "Dynamische Übersetzung",
-        "delete_newline": "Zeilenumbruch löschen",
+        "delete_newline": "Zeilenumbrüche entfernen",
         "remember_language": "Zielsprache merken",
         "font_size": {
           "10": "Sehr sehr klein (10px)",
@@ -199,10 +199,10 @@
         "remember_window_size": "Fenstergröße merken",
         "close_on_blur": "Fenster bei Fokusverlust schließen",
         "always_on_top": "Immer im Vordergrund",
-        "hide_source": "Quellbereich ausblenden",
-        "hide_language": "Sprachbereich ausblenden",
+        "hide_source": "Ausgangstext ausblenden",
+        "hide_language": "Sprachleiste ausblenden",
         "hide_window": "Übersetzungsfenster ausblenden",
-        "detect_engine": "Spracherkennungs-Engine",
+        "detect_engine": "Spracherkennungsmodul",
         "baidu": "Baidu",
         "tencent": "Tencent",
         "niutrans": "NiuTrans",
@@ -213,13 +213,13 @@
         "plugin_missing": "Plugin fehlt"
       },
       "recognize": {
-        "label": "Erkennen",
-        "title": "Erkennungseinstellungen",
+        "label": "Texterkennung",
+        "title": "Texterkennungseinstellungen",
         "language": "Erkennungssprache",
-        "delete_newline": "Zeilenumbruch automatisch löschen",
+        "delete_newline": "Zeilenumbrüche automatisch entfernen",
         "auto_copy": "Automatisch kopieren",
         "close_on_blur": "Fenster bei Fokusverlust schließen",
-        "hide_window": "Erkennungsfenster ausblenden"
+        "hide_window": "Texterkennungsfenster ausblenden"
       },
       "hotkey": {
         "label": "Tastenkürzel",
@@ -228,28 +228,28 @@
         "input_translate": "Text übersetzen",
         "ocr_recognize": "Texterkennung",
         "ocr_translate": "Screenshot-Übersetzung",
-        "is_register": "Das Tastenkürzel ist bereits registriert",
-        "success": "Tastenkürzel erfolgreich registriert",
-        "set_hotkey": "Drücken, um Tastenkürzel festzulegen",
+        "is_register": "Dieses Tastenkürzel ist bereits vergeben",
+        "success": "Tastenkürzel registriert",
+        "set_hotkey": "Zum Festlegen Tasten drücken",
         "plugin_section": "Plugin-Tastenkürzel"
       },
       "service": {
         "label": "Dienste",
         "title": "Diensteinstellungen",
-        "translate": "Übersetzen",
+        "translate": "Übersetzung",
         "tts": "TTS",
-        "recognize": "Erkennen",
-        "least": "Bitte behalten Sie mindestens einen",
+        "recognize": "Texterkennung",
+        "least": "Bitte behalten Sie mindestens einen Dienst",
         "add_builtin_service": "Integrierten Dienst hinzufügen",
         "add_external_service": "Erweiterung hinzufügen",
         "add_installed_plugin_service": "Installiertes Plugin hinzufügen",
-        "no_installed_plugin_service": "Keine installierten Plugins erkannt",
+        "no_installed_plugin_service": "Keine installierten Plugins gefunden",
         "add_service": "Dienst hinzufügen",
         "test_failed": "Test fehlgeschlagen",
         "install_plugin": "Plugin installieren",
         "view_plugin_list": "Plugin-Liste anzeigen",
         "uninstall_success": "Plugin erfolgreich deinstalliert",
-        "homepage": "Webseite",
+        "homepage": "Website",
         "test_success": "Test erfolgreich"
       },
       "plugin": {
@@ -257,7 +257,7 @@
         "title": "Plugin-Verwaltung",
         "version": "Version",
         "author": "Autor",
-        "homepage": "Plugin-Webseite",
+        "homepage": "Plugin-Website",
         "settings": "Plugin-Einstellungen",
         "hotkeys": "Plugin-Tastenkürzel",
         "delete": "Plugin löschen",
@@ -266,28 +266,43 @@
           "title": "Community-Plugin-Marktplatz",
           "description": "Durchsuchen und installieren Sie Drittanbieter-Plugins aus der Community.",
           "browse": "Durchsuchen",
-          "search": "Plugins suchen",
+          "search": "Plugins durchsuchen",
           "install": "Installieren",
           "install_success": "Plugin installiert",
-          "install_failed": "Plugin konnte nicht installiert werden"
+          "install_failed": "Plugin-Installation fehlgeschlagen",
+          "refresh": "Marktplatz aktualisieren",
+          "refresh_failed": "Marktplatz-Aktualisierung fehlgeschlagen",
+          "empty": "Keine installierbaren Plugins aus den konfigurierten Marktplatz-Quellen gefunden.",
+          "sources": "Marktplatz-Quellen",
+          "sources_description": "Verwenden Sie eine GitHub-Repository-URL, eine direkte Marktplatz-JSON-URL oder eine lokale Marktplatz-JSON-Datei oder einen Ordner.",
+          "default_source": "Standard-Marktplatz",
+          "source_ok": "{{count}} Plugins",
+          "source_failed": "Fehlgeschlagen",
+          "add_source": "Marktplatz-Quelle hinzufügen",
+          "source_placeholder": "GitHub-Repo, URL, Dateipfad oder Ordnerpfad",
+          "add": "Hinzufügen",
+          "add_file": "JSON auswählen",
+          "add_folder": "Ordner auswählen",
+          "remove_source": "Quelle entfernen",
+          "marketplace_files": "Marktplatz-JSON"
         },
         "update": {
           "title": "Plugin-Installationsstatus",
           "installed_count": "Sie haben derzeit {{count}} Plugins installiert.",
-          "check": "Updates prüfen",
-          "available_count": "{{count}} Plugin-Updates sind verfügbar.",
-          "none": "Alle installierten Plugins sind aktuell.",
+          "check": "Nach Updates suchen",
+          "available_count": "Es sind {{count}} Plugin-Updates verfügbar.",
+          "none": "Alle installierten Plugins sind auf dem neuesten Stand.",
           "checked": "Plugin-Update-Prüfung abgeschlossen",
           "install": "Aktualisieren",
           "install_all": "Alle aktualisieren",
           "install_success": "Plugin aktualisiert",
-          "install_failed": "Plugin konnte nicht aktualisiert werden",
+          "install_failed": "Plugin-Update fehlgeschlagen",
           "ignore": "Dieses Update ignorieren",
           "ignored": "Update ignoriert"
         },
         "auto_update": {
           "title": "Plugin-Updates automatisch prüfen",
-          "description": "Regelmäßig auf Updates für Drittanbieter-Plugins prüfen."
+          "description": "Regelmäßig nach Updates für Drittanbieter-Plugins suchen."
         },
         "installed": "Installierte Plugins",
         "refresh": "Aktualisieren",
@@ -295,28 +310,28 @@
         "install_from_file": "Aus Datei installieren",
         "install_from_folder": "Aus Ordner installieren",
         "install_success": "Plugin installiert",
-        "install_failed": "Plugin konnte nicht installiert werden",
+        "install_failed": "Plugin-Installation fehlgeschlagen",
         "file_filter": {
           "plugin_files": "Plugin-Dateien",
           "all_files": "Alle Dateien"
         }
       },
       "about": {
-        "label": "Über",
+        "label": "Info",
         "title": "Über die Anwendung",
-        "website": "Webseite",
+        "website": "Website",
         "github": "GitHub",
         "feedback": "Feedback",
-        "issue": "Problem",
+        "issue": "Problem melden",
         "email": "E-Mail",
         "community": "Community",
-        "check_update": "Update prüfen",
+        "check_update": "Nach Updates suchen",
         "view_log": "Protokoll anzeigen",
         "view_config": "Konfiguration anzeigen",
-        "qq_channel": "QQ Channel",
-        "qq_group": "QQ Group",
+        "qq_channel": "QQ-Kanal",
+        "qq_group": "QQ-Gruppe",
         "telegram": "Telegram",
-        "discussion": "Github Discussion"
+        "discussion": "GitHub-Diskussion"
       }
     },
     "tray": {
@@ -329,7 +344,7 @@
       "quit": "Beenden"
     },
     "updater": {
-      "title": "Update prüfen",
+      "title": "Nach Updates suchen",
       "latest": "## Die neueste Version ist installiert",
       "progress": "Download-Fortschritt",
       "check": "Prüfen",
@@ -337,15 +352,15 @@
       "available": "Ein neues Update ist verfügbar.",
       "version_available": "Version {{version}} ist verfügbar",
       "update": "Aktualisieren",
-      "downloading": "Download läuft…",
-      "installing": "Installation läuft…",
+      "downloading": "Wird heruntergeladen…",
+      "installing": "Wird installiert…",
       "restart": "Neustart",
       "ready_restart": "Bereit zum Neustart",
       "go_to_download": "Herunterladen",
-      "unsupported": "## Updates sind für diesen Build nicht verfügbar\n\nÖffnen Sie die Release-Seite, um die neueste Version manuell herunterzuladen.",
+      "unsupported": "## Updates sind für diese Version nicht verfügbar\n\nÖffnen Sie die Release-Seite, um die neueste Version manuell herunterzuladen.",
       "error": "Update-Prüfung fehlgeschlagen",
       "cancel": "Abbrechen",
-      "installed": "Installation abgeschlossen. Starten Sie die Anwendung neu, damit die Änderungen wirksam werden"
+      "installed": "Installation abgeschlossen. Starten Sie die Anwendung neu, damit die Änderung wirksam wird."
     },
     "services": {
       "help": "Konfigurationsanleitung",
@@ -355,10 +370,10 @@
         "deepl": {
           "title": "DeepL",
           "custom_url": "DeepLX-URL",
-          "auth_key": "Auth-Schlüssel",
+          "auth_key": "Authentifizierungsschlüssel",
           "type": "Diensttyp",
           "free": "Kostenlos",
-          "api": "Auth-Schlüssel",
+          "api": "API-Schlüssel",
           "deeplx": "DeepLX"
         },
         "google": {
@@ -367,13 +382,13 @@
         },
         "ollama": {
           "title": "Ollama",
-          "install_ollama": "Keine Verbindung zum lokalen Ollama möglich. Bitte laden Sie Ollama herunter, installieren und starten Sie es. Falls Sie Ollama auf einem anderen Rechner verwenden, ändern Sie bitte die Anfrageadresse.",
+          "install_ollama": "Keine Verbindung zum lokalen Ollama möglich. Bitte laden Sie Ollama herunter, installieren und starten Sie es. Falls Sie Ollama auf einem anderen Rechner verwenden, ändern Sie bitte die Anfrage-Adresse.",
           "install_ollama_link": "Ollama herunterladen",
           "request_path": "Anfragepfad",
-          "stream": "Stream-Modus",
+          "stream": "Streaming-Modus",
           "model": "Modell",
           "advanced_options": "Erweiterte Optionen",
-          "advanced_description": "Leer lassen, um die Standardwerte des Modells oder von Ollama zu verwenden. Der Denkmodus gilt nur für Modelle, die ihn unterstützen.",
+          "advanced_description": "Leer lassen, um die Standardwerte des Modells oder Ollama zu verwenden. Der Denkmodus gilt nur für Modelle, die ihn unterstützen.",
           "thinking_mode": "Denkmodus",
           "thinking_default": "Modellstandard verwenden",
           "thinking_on": "Denken aktivieren",
@@ -381,35 +396,35 @@
           "temperature": "Temperatur",
           "top_p": "Top P",
           "top_k": "Top K",
-          "use_model_default": "Leer lassen für Standardwerte",
+          "use_model_default": "Leer lassen, um Standardwerte zu verwenden",
           "install_model": "Installieren",
           "ready": "Bereit",
-          "not_installed": "Dieses Modell wurde noch nicht installiert. Klicken, um es jetzt herunterzuladen und zu installieren",
-          "supported_models": "Klicken, um eine Liste der verfügbaren Ollama-Modelle anzuzeigen",
+          "not_installed": "Dieses Modell wurde noch nicht installiert. Klicken Sie hier, um es jetzt herunterzuladen und zu installieren.",
+          "supported_models": "Klicken Sie hier, um eine Liste der verfügbaren Ollama-Modelle anzuzeigen",
           "prompt_list": "Prompt-Liste",
-          "prompt_description": "Durch Anpassen des Prompts können Sie das Verhalten der KI individualisieren. $text $from $to $detect werden durch den zu übersetzenden Text, die Ausgangssprache, die Zielsprache und die erkannte Sprache ersetzt.",
-          "prompt_placeholder": "Geben Sie einen {{role}}-Prompt ein",
+          "prompt_description": "Durch Anpassen des Prompts können Sie das Verhalten der KI steuern. $text, $from, $to und $detect werden durch den zu übersetzenden Text, die Ausgangssprache, die Zielsprache bzw. die erkannte Sprache ersetzt.",
+          "prompt_placeholder": "Geben Sie einen Prompt für {{role}} ein",
           "add": "Prompt hinzufügen"
         }
       },
       "recognize": {
         "local_model": {
           "title": "Lokales OCR-Modell",
-          "description": "Verwendet die integrierten PaddleOCR.js PP-OCRv5-Modellassets der App. Die Erkennung verwendet keine Cloud-OCR-API."
+          "description": "Verwendet die integrierten lokalen Modellressourcen von PaddleOCR.js PP-OCRv5. Die Texterkennung erfolgt ohne Cloud-OCR-API."
         }
       },
       "tts": {}
     },
     "translate": {
       "translate": "Übersetzen",
-      "recognizing": "Erkennen…",
-      "speak": "Sprechen",
+      "recognizing": "Texterkennung läuft…",
+      "speak": "Vorlesen",
       "copy": "Kopieren",
       "retry": "Erneut versuchen",
       "show_preview": "Vorschau anzeigen",
-      "show_source": "Quelle anzeigen",
-      "delete_newline": "Zeilenumbruch löschen",
-      "translate_back": "Rückübersetzung zum Original",
+      "show_source": "Ausgangstext anzeigen",
+      "delete_newline": "Zeilenumbrüche entfernen",
+      "translate_back": "Rückübersetzung",
       "tts_not_configured": "Kein TTS-Dienst konfiguriert"
     },
     "recognize": {
@@ -417,8 +432,8 @@
       "translate": "Übersetzen",
       "copy_img": "Bild kopieren",
       "copy_text": "Kopieren",
-      "delete_newline": "Zeilenumbruch löschen",
-      "delete_space": "Leerzeichen löschen"
+      "delete_newline": "Zeilenumbrüche entfernen",
+      "delete_space": "Leerzeichen entfernen"
     }
   }
 }

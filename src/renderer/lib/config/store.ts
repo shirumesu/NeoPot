@@ -12,8 +12,8 @@ interface SetStoreValueOptions {
 }
 
 export let store: LazyStore | null = null
-export const STORE_RELOADED_EVENT = 'pot:store-reloaded'
-export const STORE_CHANGED_EVENT = 'pot:store-changed'
+export const STORE_RELOADED_EVENT = 'neopot:store-reloaded'
+export const STORE_CHANGED_EVENT = 'neopot:store-changed'
 export const CONFIG_CHANGED_APP_EVENT = 'config:changed'
 
 let ignoreWatchEventsUntil = 0

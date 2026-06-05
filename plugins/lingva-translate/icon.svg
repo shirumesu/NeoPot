@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Lingva">
-  <rect width="64" height="64" rx="16" fill="#e7f5ed" />
-  <rect x="9" y="11" width="32" height="32" rx="10" fill="#3cb371" />
-  <rect x="23" y="23" width="32" height="32" rx="10" fill="#ffffff" />
-  <path d="M18 20h14v4H18zm4 8h18v4H22zm-1 8h12v4H21z" fill="#e7f5ed" />
-  <path d="M34 34h5l7 15h-5l-1-3h-7l-1 3h-5zm1 8h4l-2-5z" fill="#3cb371" />
-</svg>

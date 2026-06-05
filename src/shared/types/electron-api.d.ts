@@ -16,6 +16,19 @@ export interface PluginInfo {
   [key: string]: unknown
 }
 
+export interface PluginMarketplaceEntry {
+  id: string
+  type: string
+  name: string
+  display: string
+  version: string
+  author: string
+  description: string
+  repo: string
+  download: string
+  dev?: string
+}
+
 export type StreamCallback = (payload: unknown) => void
 export type Unsubscribe = () => void
 
@@ -160,6 +173,7 @@ export interface NeoPotElectronApi {
     install(file: string): Promise<PluginInstallResult>
     installFromUrl(url: string): Promise<PluginInstallResult>
     inspectSource(url: string): Promise<PluginInfo>
+    inspectMarketplace(url: string): Promise<PluginMarketplaceEntry[]>
     list(type: string): Promise<PluginInfo[]>
     listInstalled(type?: string): Promise<PluginInfo[]>
     uninstall(type: string, name: string): Promise<void>

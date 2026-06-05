@@ -62,7 +62,7 @@
       "app_language": "显示语言",
       "app_theme": "主题",
       "app_font": "字体",
-      "app_fallback_font": "回退字体",
+      "app_fallback_font": "备用字体",
       "font_size": "字体大小",
       "tray_click_event": "托盘点击事件",
       "log_level": "日志级别",
@@ -111,7 +111,7 @@
         "save_failed": "保存设置失败"
       },
       "general": {
-        "label": "通用",
+        "label": "通用设置",
         "title": "通用设置",
         "auto_start": "开机自启",
         "check_update": "检查更新",
@@ -122,7 +122,7 @@
         "app_language": "显示语言",
         "app_theme": "主题",
         "app_font": "字体",
-        "app_fallback_font": "回退字体",
+        "app_fallback_font": "备用字体",
         "font_size": {
           "10": "超小（10px）",
           "12": "很小（12px）",
@@ -139,37 +139,37 @@
           "dark": "深色",
           "system": "跟随系统"
         },
-        "dev_mode": "开发者模式",
+        "dev_mode": "开发模式",
         "log_level": "日志级别",
         "log_levels": {
-          "debug": "调试",
-          "info": "信息",
-          "warn": "警告",
-          "error": "错误",
-          "silent": "静默"
+          "debug": "debug",
+          "info": "info",
+          "warn": "warn",
+          "error": "error",
+          "silent": "silent"
         },
         "proxy": {
-          "title": "代理",
+          "title": "代理设置",
           "host": "主机",
           "port": "端口",
           "username": "用户名",
           "password": "密码",
-          "no_proxy": "不使用代理"
+          "no_proxy": "代理绕过"
         },
         "proxy_change": "代理已更改，请重启应用程序以使更改生效",
         "proxy_error": "请填写主机和端口",
         "invalid_port": "请输入 1-65535 之间的数字",
         "tray_click_event": "托盘点击事件",
         "event": {
-          "config": "设置",
-          "translate": "翻译",
+          "config": "偏好设置",
+          "translate": "输入翻译",
           "disable": "禁用",
           "ocr_recognize": "文字识别",
           "ocr_translate": "截图翻译"
         }
       },
       "translate": {
-        "label": "翻译",
+        "label": "翻译设置",
         "title": "翻译设置",
         "source_language": "源语言",
         "target_language": "目标语言",
@@ -184,13 +184,13 @@
         "delete_newline": "删除换行",
         "remember_language": "记住目标语言",
         "font_size": {
-          "10": "非常非常小（10px）",
-          "12": "非常小（12px）",
+          "10": "超小（10px）",
+          "12": "很小（12px）",
           "14": "小（14px）",
           "16": "标准（16px）",
           "18": "大（18px）",
-          "20": "非常大（20px）",
-          "24": "非常非常大（24px）",
+          "20": "很大（20px）",
+          "24": "超大（24px）",
           "title": "字体大小"
         },
         "window_position": "窗口位置",
@@ -213,8 +213,8 @@
         "plugin_missing": "缺少插件"
       },
       "recognize": {
-        "label": "识别",
-        "title": "识别设置",
+        "label": "文字识别",
+        "title": "文字识别设置",
         "language": "识别语言",
         "delete_newline": "自动删除换行",
         "auto_copy": "自动复制",
@@ -222,7 +222,7 @@
         "hide_window": "隐藏识别窗口"
       },
       "hotkey": {
-        "label": "快捷键",
+        "label": "热键设置",
         "title": "快捷键设置",
         "selection_translate": "划词翻译",
         "input_translate": "输入翻译",
@@ -234,12 +234,12 @@
         "plugin_section": "插件快捷键"
       },
       "service": {
-        "label": "服务",
+        "label": "服务设置",
         "title": "服务设置",
-        "translate": "翻译",
-        "tts": "TTS",
-        "recognize": "识别",
-        "least": "请至少保留一个",
+        "translate": "文本翻译",
+        "tts": "语音合成",
+        "recognize": "文字识别",
+        "least": "请至少保留一个服务",
         "add_builtin_service": "添加内置服务",
         "add_external_service": "添加扩展",
         "add_installed_plugin_service": "添加已安装插件",
@@ -253,7 +253,7 @@
         "test_success": "测试成功"
       },
       "plugin": {
-        "label": "插件",
+        "label": "插件管理",
         "title": "插件管理",
         "version": "版本",
         "author": "作者",
@@ -269,7 +269,29 @@
           "search": "搜索插件",
           "install": "安装",
           "install_success": "插件已安装",
-          "install_failed": "安装插件失败"
+          "install_failed": "安装插件失败",
+          "refresh": "刷新插件市场",
+          "refresh_list": "刷新插件列表",
+          "refresh_failed": "刷新插件市场失败",
+          "empty": "当前插件市场源没有可安装插件。",
+          "sources": "插件市场源",
+          "sources_description": "可使用 GitHub 仓库地址、raw 市场 JSON 地址、本地市场 JSON 文件或文件夹。",
+          "default_source": "默认插件市场",
+          "source_ok": "{{count}} 个插件",
+          "source_failed": "获取失败",
+          "source_error_http": "插件市场源不可用（HTTP {{status}}）。",
+          "source_error_invalid": "插件市场 JSON 格式不正确。",
+          "source_error_local_json": "本地插件市场源必须是 JSON 文件，或包含 marketplace-plugins.json 的文件夹。",
+          "source_error_missing": "找不到插件市场源文件。",
+          "source_error_unavailable": "插件市场源不可用。",
+          "source_error_generic": "插件市场源不可用：{{message}}",
+          "add_source": "添加插件市场源",
+          "source_placeholder": "GitHub 仓库、URL、文件路径或文件夹路径",
+          "add": "添加",
+          "add_file": "选择 JSON",
+          "add_folder": "选择文件夹",
+          "remove_source": "移除源",
+          "marketplace_files": "插件市场 JSON"
         },
         "update": {
           "title": "插件安装状态",
@@ -278,8 +300,8 @@
           "available_count": "有 {{count}} 个插件更新可用。",
           "none": "所有已安装的插件均为最新版本。",
           "checked": "插件更新检查完成",
-          "install": "更新",
-          "install_all": "更新全部",
+          "install": "更新插件",
+          "install_all": "更新全部插件",
           "install_success": "插件已更新",
           "install_failed": "更新插件失败",
           "ignore": "忽略此更新",
@@ -302,14 +324,14 @@
         }
       },
       "about": {
-        "label": "关于",
+        "label": "关于应用",
         "title": "关于应用",
         "website": "官网",
         "github": "GitHub",
-        "feedback": "反馈",
-        "issue": "问题报告",
+        "feedback": "问题反馈",
+        "issue": "issue",
         "email": "邮箱",
-        "community": "社区",
+        "community": "社区讨论",
         "check_update": "检查更新",
         "view_log": "查看日志",
         "view_config": "查看配置",
@@ -320,7 +342,7 @@
       }
     },
     "tray": {
-      "config": "设置",
+      "config": "偏好设置",
       "selection_translate": "划词翻译",
       "input_translate": "输入翻译",
       "ocr_recognize": "文字识别",
@@ -355,10 +377,10 @@
         "deepl": {
           "title": "DeepL",
           "custom_url": "DeepLX URL",
-          "auth_key": "授权密钥",
+          "auth_key": "Apikey",
           "type": "服务类型",
           "free": "免费版",
-          "api": "授权密钥",
+          "api": "Auth_api",
           "deeplx": "DeepLX"
         },
         "google": {

@@ -1,10 +1,10 @@
 {
   "translation": {
     "common": {
-      "ok": "Ok",
+      "ok": "OK",
       "cancel": "Cancel",
       "save": "Save",
-      "write_clipboard": "Write to Clipboard",
+      "write_clipboard": "Copy to Clipboard",
       "plugin": "Plugin",
       "coming": "Coming soon…",
       "clear": "Clear",
@@ -113,12 +113,12 @@
       "general": {
         "label": "General",
         "title": "General Settings",
-        "auto_start": "Auto Startup",
-        "check_update": "Check Update",
+        "auto_start": "Launch at startup",
+        "check_update": "Check for updates",
         "close_to_tray": "Minimize to tray on close",
         "clipboard_monitor": "Clipboard Monitor",
         "server_port": "Listening Port",
-        "server_port_change": "The listening port has been changed, Please restart the application for the changes to take effect",
+        "server_port_change": "The listening port has been changed. Please restart the application for the changes to take effect.",
         "app_language": "Display Language",
         "app_theme": "Theme",
         "app_font": "Font",
@@ -142,11 +142,11 @@
         "dev_mode": "Developer Mode",
         "log_level": "Log Level",
         "log_levels": {
-          "debug": "Debug",
-          "info": "Info",
-          "warn": "Warn",
-          "error": "Error",
-          "silent": "Silent"
+          "debug": "debug",
+          "info": "info",
+          "warn": "warn",
+          "error": "error",
+          "silent": "silent"
         },
         "proxy": {
           "title": "Proxy",
@@ -156,20 +156,20 @@
           "password": "Password",
           "no_proxy": "No Proxy"
         },
-        "proxy_change": "The proxy has been changed, Restart the application for the changes to take effect",
+        "proxy_change": "The proxy has been changed. Restart the application for the changes to take effect.",
         "proxy_error": "Please fill in the host and port",
         "invalid_port": "Please enter a number between 1-65535",
         "tray_click_event": "Tray Click Event",
         "event": {
-          "config": "Preference",
-          "translate": "Translate",
+          "config": "Preferences",
+          "translate": "Input Translation",
           "disable": "Disable",
           "ocr_recognize": "Text Recognition",
           "ocr_translate": "Screenshot Translation"
         }
       },
       "translate": {
-        "label": "Translate",
+        "label": "Translation",
         "title": "Translation Settings",
         "source_language": "Source Language",
         "target_language": "Target Language",
@@ -177,20 +177,20 @@
         "auto_copy": "Auto Copy",
         "source": "Source",
         "target": "Target",
-        "source_target": "Source+Target",
+        "source_target": "Source + Target",
         "disable": "Disable",
         "incremental_translate": "Incremental Translation",
         "dynamic_translate": "Dynamic Translation",
         "delete_newline": "Delete Newline",
         "remember_language": "Remember Target Language",
         "font_size": {
-          "10": "Very Very Small (10px)",
+          "10": "Extra Small (10px)",
           "12": "Very Small (12px)",
           "14": "Small (14px)",
           "16": "Standard (16px)",
           "18": "Large (18px)",
           "20": "Very Large (20px)",
-          "24": "Very Very Large (24px)",
+          "24": "Extra Large (24px)",
           "title": "Font Size"
         },
         "window_position": "Window Position",
@@ -213,8 +213,8 @@
         "plugin_missing": "Missing plugin"
       },
       "recognize": {
-        "label": "Recognize",
-        "title": "Recognition Settings",
+        "label": "Text Recognition",
+        "title": "Text Recognition Settings",
         "language": "Recognition Language",
         "delete_newline": "Auto Delete Newline",
         "auto_copy": "Auto Copy",
@@ -222,25 +222,25 @@
         "hide_window": "Hide Recognition Window"
       },
       "hotkey": {
-        "label": "Hotkey",
+        "label": "Hotkeys",
         "title": "Hotkey Settings",
         "selection_translate": "Selection Translation",
         "input_translate": "Text Translation",
         "ocr_recognize": "Text Recognition",
         "ocr_translate": "Screenshot Translation",
         "is_register": "The hotkey is already registered",
-        "success": "Hotkey register success",
+        "success": "Hotkey registered",
         "set_hotkey": "Press to Set Hotkey",
         "plugin_section": "Plugin Hotkeys"
       },
       "service": {
-        "label": "Service",
+        "label": "Services",
         "title": "Service Settings",
-        "translate": "Translate",
+        "translate": "Translation",
         "tts": "TTS",
-        "recognize": "Recognize",
+        "recognize": "Text Recognition",
         "least": "Please keep at least one",
-        "add_builtin_service": "Add Builtin Service",
+        "add_builtin_service": "Add Built-in Service",
         "add_external_service": "Add Extension",
         "add_installed_plugin_service": "Add Installed Plugin",
         "no_installed_plugin_service": "No installed plugins detected",
@@ -248,12 +248,12 @@
         "test_failed": "Test Failed",
         "install_plugin": "Install Plugin",
         "view_plugin_list": "View Plugin List",
-        "uninstall_success": "Plugin Uninstall Successfully",
+        "uninstall_success": "Plugin uninstalled",
         "homepage": "Homepage",
         "test_success": "Test Succeeded"
       },
       "plugin": {
-        "label": "Plugin",
+        "label": "Plugins",
         "title": "Plugin Management",
         "version": "Version",
         "author": "Author",
@@ -269,7 +269,29 @@
           "search": "Search plugins",
           "install": "Install",
           "install_success": "Plugin installed",
-          "install_failed": "Failed to install plugin"
+          "install_failed": "Failed to install plugin",
+          "refresh": "Refresh marketplace",
+          "refresh_list": "Refresh plugin list",
+          "refresh_failed": "Failed to refresh marketplace",
+          "empty": "No installable plugins found from the configured marketplace sources.",
+          "sources": "Marketplace sources",
+          "sources_description": "Use a GitHub repository URL, a raw marketplace JSON URL, or a local marketplace JSON file or folder.",
+          "default_source": "Default marketplace",
+          "source_ok": "{{count}} plugins",
+          "source_failed": "Failed",
+          "source_error_http": "Marketplace source is unavailable (HTTP {{status}}).",
+          "source_error_invalid": "Marketplace JSON format is invalid.",
+          "source_error_local_json": "Local marketplace sources must be JSON files or folders containing marketplace-plugins.json.",
+          "source_error_missing": "Marketplace source file was not found.",
+          "source_error_unavailable": "Marketplace source is unavailable.",
+          "source_error_generic": "Marketplace source is unavailable: {{message}}",
+          "add_source": "Add marketplace source",
+          "source_placeholder": "GitHub repo, URL, file path, or folder path",
+          "add": "Add",
+          "add_file": "Choose JSON",
+          "add_folder": "Choose folder",
+          "remove_source": "Remove source",
+          "marketplace_files": "Marketplace JSON"
         },
         "update": {
           "title": "Plugin Installation Status",
@@ -310,13 +332,13 @@
         "issue": "Issue",
         "email": "Email",
         "community": "Community",
-        "check_update": "Check Update",
+        "check_update": "Check for updates",
         "view_log": "View Log",
         "view_config": "View Config",
         "qq_channel": "QQ Channel",
         "qq_group": "QQ Group",
         "telegram": "Telegram",
-        "discussion": "Github Discussion"
+        "discussion": "GitHub Discussions"
       }
     },
     "tray": {
@@ -329,7 +351,7 @@
       "quit": "Quit"
     },
     "updater": {
-      "title": "Check Update",
+      "title": "Check for updates",
       "latest": "## The latest version is installed",
       "progress": "Download Progress",
       "check": "Check",
@@ -345,7 +367,7 @@
       "unsupported": "## Updates are not available for this build\n\nOpen the release page to download the latest version manually.",
       "error": "Update check failed",
       "cancel": "Cancel",
-      "installed": "Install completed, Restart the application for the changes to take effect"
+      "installed": "Installation completed. Restart the application for the changes to take effect."
     },
     "services": {
       "help": "Configuration Guide",
@@ -367,7 +389,7 @@
         },
         "ollama": {
           "title": "Ollama",
-          "install_ollama": "Unable to connect to local ollama, please download, install and start ollama first. If you use ollama that is not on this machine, please change the request address.",
+          "install_ollama": "Unable to connect to local Ollama. Download, install, and start Ollama first. If you use Ollama on another machine, change the request URL.",
           "install_ollama_link": "Download Ollama",
           "request_path": "Request Path",
           "stream": "Stream Mode",
@@ -387,7 +409,7 @@
           "not_installed": "This model has not been installed yet, click to download and install now",
           "supported_models": "Click to see a list of Ollama available models",
           "prompt_list": "Prompt List",
-          "prompt_description": "By customizing the Prompt, you can customize the behavior of AI. $text $from $to $detect will be replaced with the text to be translated, source language, target language and detected language.",
+          "prompt_description": "Customize the Prompt to change AI behavior. $text, $from, $to, and $detect will be replaced with the text to translate, source language, target language, and detected language.",
           "prompt_placeholder": "Enter a {{role}} prompt",
           "add": "Add Prompt"
         }
@@ -409,7 +431,7 @@
       "show_preview": "Show preview",
       "show_source": "Show source",
       "delete_newline": "Delete Newline",
-      "translate_back": "Translation back to the original",
+      "translate_back": "Translate back to original",
       "tts_not_configured": "No TTS service configured"
     },
     "recognize": {

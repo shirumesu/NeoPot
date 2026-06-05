@@ -18,6 +18,7 @@ import { isLogLevel, toLogTransportLevel } from '../../shared/logLevel'
 import { getMainLogTransportLevel, logger, setMainLogTransportLevel } from '../logger'
 import { translate as translateService } from '../services'
 import { runPluginBinary } from '../plugins/binary'
+import { readPluginMarketplaceFromSource } from '../plugins/marketplace'
 import {
   installPluginFromUrl,
   installPlugin,
@@ -931,6 +932,10 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
       const { url } = assertPluginInstallUrlPayload(payload)
       return readPluginManifestFromSource(url)
     },
+    'plugins:inspect-marketplace': (_event, payload) => {
+      const { url } = assertPluginInstallUrlPayload(payload)
+      return readPluginMarketplaceFromSource(url)
+    },
     'plugins:list': (_event, payload) => {
       const { type } = assertPluginListPayload(payload)
       return listInstalledPlugins(type)
@@ -969,7 +974,7 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
           message: normalizedError.message,
           ...summarizePayloadForLog(payload),
         })
-        throw normalizedError
+        throw new NeoPotError(normalizedError)
       }
     })
   }

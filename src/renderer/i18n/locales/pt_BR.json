@@ -58,13 +58,13 @@
       "ar": "العربية"
     },
     "accessibility": {
-      "app_logo": "Logo do NeoPot",
+      "app_logo": "Logotipo do NeoPot",
       "app_language": "Idioma de exibição",
       "app_theme": "Tema",
       "app_font": "Fonte",
       "app_fallback_font": "Fonte alternativa",
       "font_size": "Tamanho da fonte",
-      "tray_click_event": "Evento de clique na bandeja",
+      "tray_click_event": "Ação ao clicar na bandeja",
       "log_level": "Nível de log",
       "source_language": "Idioma de origem",
       "target_language": "Idioma de destino",
@@ -86,24 +86,24 @@
     "errors": {
       "window_render_failed": "Falha ao renderizar a janela {{window}}",
       "window_render_failed_generic": "Falha ao renderizar a janela",
-      "config_page_render_failed": "Falha ao renderizar a página de configuração",
+      "config_page_render_failed": "Falha ao carregar a página de configuração",
       "config_route_missing": "Nenhuma rota de configuração encontrada para {{route}}.",
       "translate_window_initialization_failed": "Falha ao inicializar a janela de tradução",
       "recognize_window_initialization_failed": "Falha ao inicializar a janela de reconhecimento",
-      "language_not_supported": "Idioma não suportado",
-      "recognize_service_not_configured": "Serviço de reconhecimento não configurado",
-      "recognize_timeout": "Tempo limite da solicitação de reconhecimento excedido"
+      "language_not_supported": "Idioma não compatível",
+      "recognize_service_not_configured": "O serviço de reconhecimento não está configurado",
+      "recognize_timeout": "A requisição de reconhecimento expirou"
     },
     "status": {
-      "loading_translation_window": "Carregando janela de tradução...",
-      "loading_recognize_window": "Carregando janela de reconhecimento..."
+      "loading_translation_window": "Carregando janela de tradução…",
+      "loading_recognize_window": "Carregando janela de reconhecimento…"
     },
     "windows": {
-      "config": "Configuração",
+      "config": "Configurações",
       "translate": "Traduzir",
       "recognize": "Reconhecer",
-      "screenshot": "Captura de tela",
-      "updater": "Atualizador"
+      "screenshot": "Captura",
+      "updater": "Atualização"
     },
     "config": {
       "common": {
@@ -113,24 +113,24 @@
       "general": {
         "label": "Geral",
         "title": "Configurações gerais",
-        "auto_start": "Iniciar automaticamente",
+        "auto_start": "Iniciar com o sistema",
         "check_update": "Verificar atualizações",
         "close_to_tray": "Minimizar para a bandeja ao fechar",
         "clipboard_monitor": "Monitor da área de transferência",
         "server_port": "Porta de escuta",
-        "server_port_change": "A porta de escuta foi alterada. Reinicie o aplicativo para que as alterações tenham efeito",
+        "server_port_change": "A porta de escuta foi alterada. Reinicie o aplicativo para aplicar as mudanças.",
         "app_language": "Idioma de exibição",
         "app_theme": "Tema",
         "app_font": "Fonte",
         "app_fallback_font": "Fonte alternativa",
         "font_size": {
-          "10": "Muito muito pequeno (10px)",
-          "12": "Muito pequeno (12px)",
+          "10": "Muito pequeno (10px)",
+          "12": "Bem pequeno (12px)",
           "14": "Pequeno (14px)",
           "16": "Padrão (16px)",
           "18": "Grande (18px)",
-          "20": "Muito grande (20px)",
-          "24": "Muito muito grande (24px)",
+          "20": "Bem grande (20px)",
+          "24": "Muito grande (24px)",
           "title": "Tamanho da fonte"
         },
         "default_font": "Padrão",
@@ -142,11 +142,11 @@
         "dev_mode": "Modo desenvolvedor",
         "log_level": "Nível de log",
         "log_levels": {
-          "debug": "Depuração",
-          "info": "Informação",
-          "warn": "Aviso",
-          "error": "Erro",
-          "silent": "Silencioso"
+          "debug": "debug",
+          "info": "info",
+          "warn": "warn",
+          "error": "error",
+          "silent": "silent"
         },
         "proxy": {
           "title": "Proxy",
@@ -156,16 +156,16 @@
           "password": "Senha",
           "no_proxy": "Sem proxy"
         },
-        "proxy_change": "O proxy foi alterado. Reinicie o aplicativo para que as alterações tenham efeito",
+        "proxy_change": "O proxy foi alterado. Reinicie o aplicativo para aplicar as mudanças.",
         "proxy_error": "Preencha o host e a porta",
         "invalid_port": "Digite um número entre 1 e 65535",
-        "tray_click_event": "Evento de clique na bandeja",
+        "tray_click_event": "Ação ao clicar na bandeja",
         "event": {
           "config": "Preferências",
-          "translate": "Traduzir",
-          "disable": "Desativar",
-          "ocr_recognize": "Reconhecimento de texto",
-          "ocr_translate": "Tradução de captura"
+          "translate": "Traduzir texto",
+          "disable": "Desativado",
+          "ocr_recognize": "Reconhecer texto",
+          "ocr_translate": "Traduzir captura"
         }
       },
       "translate": {
@@ -177,11 +177,11 @@
         "auto_copy": "Cópia automática",
         "source": "Origem",
         "target": "Destino",
-        "source_target": "Origem+Destino",
-        "disable": "Desativar",
+        "source_target": "Origem + destino",
+        "disable": "Desativado",
         "incremental_translate": "Tradução incremental",
         "dynamic_translate": "Tradução dinâmica",
-        "delete_newline": "Excluir quebras de linha",
+        "delete_newline": "Remover quebras de linha",
         "remember_language": "Lembrar idioma de destino",
         "font_size": {
           "10": "Muito muito pequeno (10px)",
@@ -197,7 +197,7 @@
         "mouse": "Seguir o mouse",
         "pre_state": "Lembrar posição",
         "remember_window_size": "Lembrar tamanho da janela",
-        "close_on_blur": "Fechar janela ao perder o foco",
+        "close_on_blur": "Fechar ao perder o foco",
         "always_on_top": "Sempre visível",
         "hide_source": "Ocultar área de origem",
         "hide_language": "Ocultar área de idioma",
@@ -216,30 +216,30 @@
         "label": "Reconhecimento",
         "title": "Configurações de reconhecimento",
         "language": "Idioma de reconhecimento",
-        "delete_newline": "Excluir quebras de linha automaticamente",
+        "delete_newline": "Remover quebras de linha automaticamente",
         "auto_copy": "Cópia automática",
-        "close_on_blur": "Fechar janela ao perder o foco",
+        "close_on_blur": "Fechar ao perder o foco",
         "hide_window": "Ocultar janela de reconhecimento"
       },
       "hotkey": {
         "label": "Atalhos",
         "title": "Configurações de atalhos",
-        "selection_translate": "Tradução de seleção",
-        "input_translate": "Tradução de texto",
-        "ocr_recognize": "Reconhecimento de texto",
-        "ocr_translate": "Tradução de captura",
-        "is_register": "O atalho já está registrado",
+        "selection_translate": "Traduzir seleção",
+        "input_translate": "Traduzir texto",
+        "ocr_recognize": "Reconhecer texto",
+        "ocr_translate": "Traduzir captura",
+        "is_register": "Este atalho já está registrado",
         "success": "Atalho registrado com sucesso",
         "set_hotkey": "Pressione para definir o atalho",
-        "plugin_section": "Atalhos de plugins"
+        "plugin_section": "Atalhos dos plugins"
       },
       "service": {
-        "label": "Serviço",
-        "title": "Configurações de serviço",
+        "label": "Serviços",
+        "title": "Configurações de serviços",
         "translate": "Tradução",
         "tts": "TTS",
         "recognize": "Reconhecimento",
-        "least": "Mantenha pelo menos um",
+        "least": "Mantenha pelo menos um serviço",
         "add_builtin_service": "Adicionar serviço integrado",
         "add_external_service": "Adicionar extensão",
         "add_installed_plugin_service": "Adicionar plugin instalado",
@@ -260,24 +260,39 @@
         "homepage": "Página do plugin",
         "settings": "Configurações do plugin",
         "hotkeys": "Atalhos do plugin",
-        "delete": "Excluir plugin",
+        "delete": "Remover plugin",
         "enabled": "Ativar plugin",
         "market": {
           "title": "Mercado de plugins da comunidade",
           "description": "Navegue e instale plugins de terceiros criados pela comunidade.",
           "browse": "Navegar",
-          "search": "Pesquisar plugins",
+          "search": "Buscar plugins",
           "install": "Instalar",
           "install_success": "Plugin instalado",
-          "install_failed": "Falha ao instalar o plugin"
+          "install_failed": "Falha ao instalar o plugin",
+          "refresh": "Atualizar mercado",
+          "refresh_failed": "Falha ao atualizar o mercado",
+          "empty": "Nenhum plugin disponível encontrado nas fontes de mercado configuradas.",
+          "sources": "Fontes do mercado",
+          "sources_description": "Use uma URL de repositório do GitHub, uma URL de arquivo JSON de mercado ou um arquivo/pasta JSON de mercado local.",
+          "default_source": "Mercado padrão",
+          "source_ok": "{{count}} plugins",
+          "source_failed": "Falhou",
+          "add_source": "Adicionar fonte de mercado",
+          "source_placeholder": "Repositório GitHub, URL, caminho de arquivo ou pasta",
+          "add": "Adicionar",
+          "add_file": "Escolher JSON",
+          "add_folder": "Escolher pasta",
+          "remove_source": "Remover fonte",
+          "marketplace_files": "JSON do mercado"
         },
         "update": {
           "title": "Status de instalação dos plugins",
-          "installed_count": "Você tem atualmente {{count}} plugins instalados.",
+          "installed_count": "Você tem {{count}} plugins instalados.",
           "check": "Verificar atualizações",
-          "available_count": "{{count}} atualizações de plugins estão disponíveis.",
+          "available_count": "Há {{count}} atualizações de plugins disponíveis.",
           "none": "Todos os plugins instalados estão atualizados.",
-          "checked": "Verificação de atualizações de plugins concluída",
+          "checked": "Verificação de atualizações concluída",
           "install": "Atualizar",
           "install_all": "Atualizar todos",
           "install_success": "Plugin atualizado",
@@ -292,8 +307,8 @@
         "installed": "Plugins instalados",
         "refresh": "Atualizar",
         "open_folder": "Abrir pasta de plugins",
-        "install_from_file": "Instalar do arquivo",
-        "install_from_folder": "Instalar da pasta",
+        "install_from_file": "Instalar a partir de arquivo",
+        "install_from_folder": "Instalar a partir de pasta",
         "install_success": "Plugin instalado",
         "install_failed": "Falha ao instalar o plugin",
         "file_filter": {
@@ -306,36 +321,36 @@
         "title": "Sobre o aplicativo",
         "website": "Site",
         "github": "GitHub",
-        "feedback": "Feedback",
-        "issue": "Problema",
+        "feedback": "Enviar feedback",
+        "issue": "Issue",
         "email": "E-mail",
         "community": "Comunidade",
-        "check_update": "Verificar atualizações",
-        "view_log": "Ver log",
+        "check_update": "Verificar atualização",
+        "view_log": "Ver logs",
         "view_config": "Ver configuração",
         "qq_channel": "Canal QQ",
         "qq_group": "Grupo QQ",
         "telegram": "Telegram",
-        "discussion": "Discussão no GitHub"
+        "discussion": "GitHub Discussion"
       }
     },
     "tray": {
       "config": "Preferências",
-      "selection_translate": "Tradução de seleção",
-      "input_translate": "Tradução de texto",
-      "ocr_recognize": "Reconhecimento de texto",
-      "ocr_translate": "Tradução de captura",
+      "selection_translate": "Traduzir seleção",
+      "input_translate": "Traduzir texto",
+      "ocr_recognize": "Reconhecer texto",
+      "ocr_translate": "Traduzir captura",
       "restart": "Reiniciar",
       "quit": "Sair"
     },
     "updater": {
-      "title": "Verificar atualizações",
-      "latest": "## A versão mais recente está instalada",
+      "title": "Verificar atualização",
+      "latest": "## Você já está na versão mais recente",
       "progress": "Progresso do download",
       "check": "Verificar",
-      "checking": "Verificando atualizações…",
+      "checking": "Procurando atualizações…",
       "available": "Uma nova atualização está disponível.",
-      "version_available": "A versão {{version}} está disponível",
+      "version_available": "Versão {{version}} disponível",
       "update": "Atualizar",
       "downloading": "Baixando…",
       "installing": "Instalando…",
@@ -345,11 +360,11 @@
       "unsupported": "## Atualizações não estão disponíveis para esta versão\n\nAbra a página de lançamentos para baixar a versão mais recente manualmente.",
       "error": "Falha ao verificar atualizações",
       "cancel": "Cancelar",
-      "installed": "Instalação concluída, reinicie o aplicativo para que as alterações tenham efeito"
+      "installed": "Instalação concluída. Reinicie o aplicativo para aplicar as mudanças."
     },
     "services": {
       "help": "Guia de configuração",
-      "no_need": "Nenhuma configuração necessária",
+      "no_need": "Não requer configuração",
       "instance_name": "Nome da configuração",
       "translate": {
         "deepl": {
@@ -367,35 +382,35 @@
         },
         "ollama": {
           "title": "Ollama",
-          "install_ollama": "Não foi possível conectar ao ollama local. Baixe, instale e inicie o ollama primeiro. Se você usa ollama em outra máquina, altere o endereço de solicitação.",
+          "install_ollama": "Não foi possível conectar ao Ollama local. Baixe, instale e inicie o Ollama primeiro. Se você usa uma instância do Ollama em outra máquina, altere o endereço de requisição.",
           "install_ollama_link": "Baixar Ollama",
-          "request_path": "Caminho da solicitação",
-          "stream": "Modo de streaming",
+          "request_path": "Caminho da requisição",
+          "stream": "Modo streaming",
           "model": "Modelo",
           "advanced_options": "Opções avançadas",
-          "advanced_description": "Deixe em branco para usar os padrões do modelo ou do Ollama. O modo de raciocínio aplica-se apenas a modelos que o suportam.",
+          "advanced_description": "Deixe em branco para usar os valores padrão do modelo ou do Ollama. O modo de raciocínio só se aplica a modelos que oferecem suporte a essa funcionalidade.",
           "thinking_mode": "Modo de raciocínio",
           "thinking_default": "Usar padrão do modelo",
           "thinking_on": "Ativar raciocínio",
           "thinking_off": "Desativar raciocínio",
-          "temperature": "Temperature",
+          "temperature": "Temperatura",
           "top_p": "Top P",
           "top_k": "Top K",
-          "use_model_default": "Deixe em branco para usar os padrões",
+          "use_model_default": "Deixe em branco para usar os valores padrão",
           "install_model": "Instalar",
           "ready": "Pronto",
-          "not_installed": "Este modelo ainda não foi instalado, clique para baixar e instalar agora",
-          "supported_models": "Clique para ver a lista de modelos Ollama disponíveis",
+          "not_installed": "Este modelo ainda não foi instalado. Clique para baixar e instalar agora.",
+          "supported_models": "Clique para ver a lista de modelos disponíveis do Ollama",
           "prompt_list": "Lista de Prompts",
-          "prompt_description": "Personalizando o Prompt, você pode ajustar o comportamento da IA. $text $from $to $detect serão substituídos pelo texto a ser traduzido, idioma de origem, idioma de destino e idioma detectado.",
-          "prompt_placeholder": "Insira um prompt {{role}}",
+          "prompt_description": "Ao personalizar o Prompt, você pode ajustar o comportamento da IA. $text, $from, $to e $detect serão substituídos respectivamente pelo texto a traduzir, idioma de origem, idioma de destino e idioma detectado.",
+          "prompt_placeholder": "Insira um Prompt de {{role}}",
           "add": "Adicionar Prompt"
         }
       },
       "recognize": {
         "local_model": {
           "title": "OCR com modelo local",
-          "description": "Usa os ativos do modelo local PaddleOCR.js PP-OCRv5 incluídos no aplicativo. O reconhecimento não usa uma API OCR na nuvem."
+          "description": "Utiliza os recursos do modelo local PaddleOCR.js PP-OCRv5 integrados ao aplicativo. O reconhecimento não usa nenhuma API de OCR na nuvem."
         }
       },
       "tts": {}
@@ -403,13 +418,13 @@
     "translate": {
       "translate": "Traduzir",
       "recognizing": "Reconhecendo…",
-      "speak": "Falar",
+      "speak": "Ouvir pronúncia",
       "copy": "Copiar",
       "retry": "Tentar novamente",
       "show_preview": "Mostrar pré-visualização",
-      "show_source": "Mostrar origem",
-      "delete_newline": "Excluir quebras de linha",
-      "translate_back": "Traduzir de volta para o original",
+      "show_source": "Mostrar original",
+      "delete_newline": "Remover quebras de linha",
+      "translate_back": "Tradução reversa para o original",
       "tts_not_configured": "Nenhum serviço TTS configurado"
     },
     "recognize": {
@@ -417,8 +432,8 @@
       "translate": "Traduzir",
       "copy_img": "Copiar imagem",
       "copy_text": "Copiar",
-      "delete_newline": "Excluir quebras de linha",
-      "delete_space": "Excluir espaços"
+      "delete_newline": "Remover quebras de linha",
+      "delete_space": "Remover espaços"
     }
   }
 }

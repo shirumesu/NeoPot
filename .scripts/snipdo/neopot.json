@@ -6,7 +6,7 @@
     {
       "title": "NeoPot Translation",
       "icon": "neopot.png",
-      "powershellFile": "pot.ps1"
+      "powershellFile": "neopot.ps1"
     }
   ]
 }

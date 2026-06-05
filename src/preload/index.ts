@@ -3,6 +3,7 @@ import type {
   NeoPotElectronApi,
   PluginInfo,
   PluginInstallResult,
+  PluginMarketplaceEntry,
   TranslateRequest,
   TranslateResult,
   UpdateCheckResult,
@@ -56,6 +57,7 @@ type IpcChannel =
   | 'plugins:install'
   | 'plugins:install-url'
   | 'plugins:inspect-source'
+  | 'plugins:inspect-marketplace'
   | 'plugins:list'
   | 'plugins:list-installed'
   | 'plugins:uninstall'
@@ -108,6 +110,7 @@ const channels = new Set<IpcChannel>([
   'plugins:install',
   'plugins:install-url',
   'plugins:inspect-source',
+  'plugins:inspect-marketplace',
   'plugins:list',
   'plugins:list-installed',
   'plugins:uninstall',
@@ -120,7 +123,26 @@ async function invokeChecked<TResult>(channel: IpcChannel, payload?: unknown): P
     throw new Error(`Unknown IPC channel: ${channel}`)
   }
 
-  return ipcRenderer.invoke(channel, payload) as Promise<TResult>
+  try {
+    return (await ipcRenderer.invoke(channel, payload)) as TResult
+  } catch (error) {
+    throw normalizeIpcInvokeError(error)
+  }
+}
+
+function normalizeIpcInvokeError(error: unknown): unknown {
+  if (!(error instanceof Error)) {
+    return error
+  }
+
+  const message = error.message.replace(/^Error invoking remote method '[^']+':\s*/i, '').trim()
+  const readableMessage =
+    message.length === 0 || message === '[object Object]' ? 'IPC request failed.' : message
+  const normalizedError = new Error(readableMessage)
+  normalizedError.name = error.name
+  normalizedError.stack = error.stack
+
+  return normalizedError
 }
 
 function isTrustedRendererLocation(): boolean {
@@ -247,6 +269,8 @@ const api: NeoPotElectronApi = {
     install: (file) => invokeChecked<PluginInstallResult>('plugins:install', { file }),
     installFromUrl: (url) => invokeChecked<PluginInstallResult>('plugins:install-url', { url }),
     inspectSource: (url) => invokeChecked<PluginInfo>('plugins:inspect-source', { url }),
+    inspectMarketplace: (url) =>
+      invokeChecked<PluginMarketplaceEntry[]>('plugins:inspect-marketplace', { url }),
     list: (type) => invokeChecked<PluginInfo[]>('plugins:list', { type }),
     listInstalled: (type) => invokeChecked<PluginInfo[]>('plugins:list-installed', { type }),
     uninstall: (type, name) => invokeChecked<void>('plugins:uninstall', { type, name }),

@@ -1,1 +1,1 @@
-zip neopot.pbar pot.json neopot.png pot.ps1
+zip neopot.pbar neopot.json neopot.png neopot.ps1
