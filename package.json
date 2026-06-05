@@ -36,6 +36,7 @@
     "jotai": "^2.10.1",
     "nanoid": "^5.1.6",
     "next-themes": "^0.3.0",
+    "onnxruntime-web": "1.25.1",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-hot-toast": "^2.4.1",

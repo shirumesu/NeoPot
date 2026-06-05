@@ -59,6 +59,9 @@ importers:
       next-themes:
         specifier: ^0.3.0
         version: 0.3.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+      onnxruntime-web:
+        specifier: 1.25.1
+        version: 1.25.1
       react:
         specifier: ^19.2.5
         version: 19.2.5
