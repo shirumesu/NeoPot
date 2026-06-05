@@ -121,7 +121,7 @@
 发布页会提供 `deb`、`rpm` 和 `AppImage` 包。Debian/Ubuntu 可以直接安装下载到本地的 deb 文件：
 
 ```bash
-sudo apt-get install ./neopot_{version}_amd64.deb
+sudo apt-get install ./NeoPot-*.deb
 ```
 
 Arch、Manjaro、Flatpak、Homebrew、Winget 等分发入口尚未接入 NeoPot，请以 GitHub Releases 为准。

@@ -121,7 +121,7 @@ Go to [Releases](https://github.com/shirumesu/NeoPot/releases) and download the 
 The release page provides `deb`, `rpm`, and `AppImage` packages. On Debian/Ubuntu, you can install the downloaded deb file directly:
 
 ```bash
-sudo apt-get install ./neopot_{version}_amd64.deb
+sudo apt-get install ./NeoPot-*.deb
 ```
 
 Arch, Manjaro, Flatpak, Homebrew, Winget, and other distribution channels have not been connected to NeoPot yet. Use GitHub Releases as the source of truth.

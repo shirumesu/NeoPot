@@ -92,6 +92,6 @@
 - 应用 ESLint 和 Tailwind CSS 修复到服务、窗口和工具模块
 
 ### 其他变更
-- 简化包脚本为 `dev`、`make`、`rebuild:native`、`lint`、`format`、`format:check`、`test`
+- 简化包脚本为 `dev`、`build`、`make`、`release`、`lint`、`format`、`format:check`、`test`
 - 移除过时的 Tauri/updater/build 别名、陈旧的发布工作流/actions 和旧的更新器辅助脚本
 - 打包后的 NSIS 和便携版安装包约 126 MB，`app.asar` 约 80 MB，解包后约 424 MB
