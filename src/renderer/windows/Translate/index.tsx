@@ -12,9 +12,9 @@ import SourceArea from './components/SourceArea'
 import TargetArea from './components/TargetArea'
 import { osType } from '@/renderer/lib/config/env'
 import {
+  DragRegion,
   LINUX_WINDOW_FRAME_CLASS,
   PIN_ICON_CLASS,
-  TopDragRegion,
   WINDOW_TOPBAR_HEIGHT_CLASS,
 } from '@/renderer/components/windowChrome'
 import { useConfig } from '../../hooks'
@@ -237,39 +237,10 @@ export default function Translate() {
   }, [isServiceConfigReady, serviceConfigError])
 
   return (
-    <div className={`flex h-screen w-screen flex-col bg-background ${LINUX_WINDOW_FRAME_CLASS}`}>
-      <TopDragRegion />
-      <div
-        className={`${WINDOW_TOPBAR_HEIGHT_CLASS} flex w-full ${
-          osType === 'Darwin' ? 'justify-end' : 'justify-between'
-        }`}
-      >
-        <Button
-          isIconOnly
-          size="sm"
-          variant="flat"
-          disableAnimation
-          className="my-auto mx-1.25 bg-transparent"
-          aria-label={t(pined ? 'accessibility.unpin_window' : 'accessibility.pin_window')}
-          onPress={() => {
-            if (pined) {
-              if (closeOnBlur) {
-                unlisten = listenBlur()
-              }
-              appWindow.setAlwaysOnTop(false)
-            } else {
-              unlistenBlur()
-              appWindow.setAlwaysOnTop(true)
-            }
-            setPined(!pined)
-          }}
-        >
-          <BsPinFill
-            className={`${PIN_ICON_CLASS} ${pined ? 'text-primary' : 'text-default-400'}`}
-          />
-        </Button>
-        {osType !== 'Darwin' && <WindowControl />}
-      </div>
+    <div
+      className={`relative flex h-screen w-screen flex-col bg-background ${LINUX_WINDOW_FRAME_CLASS}`}
+    >
+      <div className={`${WINDOW_TOPBAR_HEIGHT_CLASS} shrink-0`} aria-hidden="true" />
       <div className="min-h-0 flex-1 px-2">
         <div className="h-full overflow-y-auto">
           {hasInitError ? (
@@ -324,6 +295,37 @@ export default function Translate() {
           )}
         </div>
       </div>
+      <DragRegion
+        className={`absolute top-0 left-0 right-0 z-50 ${WINDOW_TOPBAR_HEIGHT_CLASS} flex w-full select-none ${
+          osType === 'Darwin' ? 'justify-end' : 'justify-between'
+        }`}
+      >
+        <Button
+          isIconOnly
+          size="sm"
+          variant="flat"
+          disableAnimation
+          className="my-auto mx-1.25 bg-transparent"
+          aria-label={t(pined ? 'accessibility.unpin_window' : 'accessibility.pin_window')}
+          onPress={() => {
+            if (pined) {
+              if (closeOnBlur) {
+                unlisten = listenBlur()
+              }
+              appWindow.setAlwaysOnTop(false)
+            } else {
+              unlistenBlur()
+              appWindow.setAlwaysOnTop(true)
+            }
+            setPined(!pined)
+          }}
+        >
+          <BsPinFill
+            className={`${PIN_ICON_CLASS} ${pined ? 'text-primary' : 'text-default-400'}`}
+          />
+        </Button>
+        {osType !== 'Darwin' && <WindowControl />}
+      </DragRegion>
     </div>
   )
 }
