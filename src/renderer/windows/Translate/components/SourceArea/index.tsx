@@ -43,6 +43,10 @@ export const manualTranslateFlagAtom = atom('')
 const DEFAULT_RECOGNIZE_SERVICE_LIST = ['local_model']
 const DEFAULT_TTS_SERVICE_LIST: string[] = []
 
+function toWorkflowText(value: unknown): string {
+  return typeof value === 'string' ? value : ''
+}
+
 export default function SourceArea(props: any) {
   const { pluginList, serviceInstanceConfigMap } = props
   const [appFontSize] = useConfig('app_font_size', 16)
@@ -79,6 +83,7 @@ export default function SourceArea(props: any) {
   const { t } = useTranslation()
   const textAreaRef = useRef<HTMLTextAreaElement>(null)
   const initialTextLoadedRef = useRef(false)
+  const workflowTextVersionRef = useRef(0)
   const sourceTextChangeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const speak = useVoice()
 
@@ -115,8 +120,8 @@ export default function SourceArea(props: any) {
   )
 
   const handleNewText = useCallback(
-    async (text: string) => {
-      text = text.trim()
+    async (payload: unknown) => {
+      const text = toWorkflowText(payload).trim()
       if (hideWindow) {
         appWindow.hide()
       } else {
@@ -124,7 +129,11 @@ export default function SourceArea(props: any) {
         appWindow.setFocus()
       }
       setDetectLanguage('')
-      if (text === '[INPUT_TRANSLATE]') {
+      if (text === '') {
+        setWindowType('[SELECTION_TRANSLATE]')
+        setSourceText('', true)
+        syncSourceText('')
+      } else if (text === '[INPUT_TRANSLATE]') {
         setWindowType('[INPUT_TRANSLATE]')
         appWindow.show()
         appWindow.setFocus()
@@ -276,7 +285,8 @@ export default function SourceArea(props: any) {
     let removeListener: (() => void) | null = null
     const unlistenPromise = listen('new_text', (event: any) => {
       appWindow.setFocus()
-      handleNewTextRef.current(event.payload)
+      workflowTextVersionRef.current += 1
+      void handleNewTextRef.current(event.payload)
     })
     unlistenPromise.then((unlisten) => {
       if (disposed) {
@@ -329,8 +339,12 @@ export default function SourceArea(props: any) {
       hideWindow !== null
     ) {
       initialTextLoadedRef.current = true
+      const requestVersion = workflowTextVersionRef.current
       electronCommand('get_text').then((v) => {
-        handleNewText(String(v))
+        if (workflowTextVersionRef.current !== requestVersion) {
+          return
+        }
+        void handleNewText(v)
       })
     }
   }, [
@@ -543,7 +557,8 @@ export default function SourceArea(props: any) {
                   isIconOnly
                   isDisabled={sourceText === ''}
                   onPress={() => {
-                    setSourceText('')
+                    setDetectLanguage('')
+                    setSourceText('', true)
                   }}
                 >
                   <LuDelete className="text-[16px]" />

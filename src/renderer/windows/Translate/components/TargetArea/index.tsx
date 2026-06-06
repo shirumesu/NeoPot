@@ -214,26 +214,32 @@ export default function TargetArea(props: any) {
     setResult('')
     setError('')
     setResultViewMode(null)
-    if (
+    const canTranslate =
       sourceText.trim() !== '' &&
       sourceLanguage &&
       targetLanguage &&
       autoCopy !== null &&
       hideWindow !== null &&
       clipboardMonitor !== null
-    ) {
-      if (autoCopy === 'source' && !clipboardMonitor) {
-        writeText(sourceText).then(() => {
-          if (hideWindow) {
-            sendNotification({
-              title: t('common.write_clipboard'),
-              body: sourceText,
-            })
-          }
-        })
-      }
-      translate()
+
+    if (!canTranslate) {
+      translateID[index] = ''
+      setIsLoading(false)
+      setHide(true)
+      return
     }
+
+    if (autoCopy === 'source' && !clipboardMonitor) {
+      writeText(sourceText).then(() => {
+        if (hideWindow) {
+          sendNotification({
+            title: t('common.write_clipboard'),
+            body: sourceText,
+          })
+        }
+      })
+    }
+    translate()
   }, [
     sourceText,
     sourceLanguage,
@@ -244,6 +250,7 @@ export default function TargetArea(props: any) {
     clipboardMonitor,
     manualTranslateFlag,
     serviceInstanceConfigMap,
+    index,
   ])
 
   function invokeOnce(fn: (...args: any[]) => void) {

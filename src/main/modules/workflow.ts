@@ -4,6 +4,7 @@ import { logger } from '../logger'
 
 let currentWorkflowText = ''
 let currentScreenshotAction: 'recognize' | 'translate' = 'recognize'
+let selectionTranslateInFlight: Promise<void> | null = null
 
 export function getCurrentWorkflowText(): string {
   return currentWorkflowText
@@ -37,16 +38,31 @@ export async function textTranslate(text: string): Promise<void> {
   sendToWindow('translate', 'new_text', text)
 }
 
-export async function selectionTranslate(): Promise<void> {
+async function runSelectionTranslate(): Promise<void> {
   logger.debug('Selection translation workflow requested.')
   const text = await readSelectedText()
   if (text.trim() === '') {
-    logger.debug('Selection translation opened empty input.')
-    await openWindow('translate')
+    logger.debug('Selection translation captured empty input.')
+    await textTranslate('')
     return
   }
 
   await textTranslate(text)
+}
+
+export function selectionTranslate(): Promise<void> {
+  if (selectionTranslateInFlight) {
+    logger.debug('Selection translation workflow already in progress.')
+    return selectionTranslateInFlight
+  }
+
+  const run = runSelectionTranslate().finally(() => {
+    if (selectionTranslateInFlight === run) {
+      selectionTranslateInFlight = null
+    }
+  })
+  selectionTranslateInFlight = run
+  return run
 }
 
 export async function inputTranslate(): Promise<void> {

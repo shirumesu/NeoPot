@@ -1,10 +1,28 @@
 import { clipboard } from 'electron'
 import { logger } from '../logger'
 import { selectionTranslate } from './workflow'
+import {
+  getSelectionClipboardCaptureBaseline,
+  isSelectionClipboardCaptureActive,
+} from './selection'
 
 let timer: ReturnType<typeof setInterval> | null = null
 let lastText = ''
 let enabled = false
+let selectionClipboardBaselineVersion = 0
+
+function syncSelectionClipboardBaseline(): boolean {
+  const baseline = getSelectionClipboardCaptureBaseline()
+  if (baseline.version === selectionClipboardBaselineVersion) {
+    return false
+  }
+
+  selectionClipboardBaselineVersion = baseline.version
+  if (baseline.text !== null) {
+    lastText = baseline.text
+  }
+  return true
+}
 
 export function startClipboardMonitor(): void {
   if (timer) {
@@ -19,6 +37,10 @@ export function startClipboardMonitor(): void {
     }
 
     try {
+      if (isSelectionClipboardCaptureActive() || syncSelectionClipboardBaseline()) {
+        return
+      }
+
       const nextText = clipboard.readText()
       if (nextText && nextText !== lastText) {
         lastText = nextText

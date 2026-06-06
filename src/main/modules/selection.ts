@@ -8,7 +8,24 @@ const execFileAsync = promisify(execFile)
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 const COPY_POLL_INTERVAL_MS = 30
-const COPY_TIMEOUT_MS = 600
+const COPY_TIMEOUT_MS = 1000
+let selectionClipboardCaptureDepth = 0
+let selectionClipboardBaselineVersion = 0
+let selectionClipboardBaselineText: string | null = null
+
+export function isSelectionClipboardCaptureActive(): boolean {
+  return selectionClipboardCaptureDepth > 0
+}
+
+export function getSelectionClipboardCaptureBaseline(): {
+  version: number
+  text: string | null
+} {
+  return {
+    version: selectionClipboardBaselineVersion,
+    text: selectionClipboardBaselineText,
+  }
+}
 
 async function tryExecFile(file: string, args: string[]): Promise<string | null> {
   try {
@@ -116,18 +133,25 @@ export async function readSelectedText(): Promise<string> {
   const marker = `__NEOPOT_SELECTION_${randomUUID()}__`
   let copiedClipboardValue: string | null = null
 
+  selectionClipboardCaptureDepth += 1
   try {
     clipboard.writeText(marker)
     await sendCopyKeystroke()
     copiedClipboardValue = await waitForCopiedClipboardValue(marker)
     return copiedClipboardValue ?? ''
   } finally {
-    const currentText = clipboard.readText()
-    if (
-      currentText === marker ||
-      (copiedClipboardValue !== null && currentText === copiedClipboardValue)
-    ) {
-      clipboard.writeText(previousText)
+    try {
+      const currentText = clipboard.readText()
+      if (
+        currentText === marker ||
+        (copiedClipboardValue !== null && currentText === copiedClipboardValue)
+      ) {
+        clipboard.writeText(previousText)
+      }
+      selectionClipboardBaselineVersion += 1
+      selectionClipboardBaselineText = clipboard.readText()
+    } finally {
+      selectionClipboardCaptureDepth -= 1
     }
   }
 }
