@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import toast, { Toaster } from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import type { UpdateCheckResult, UpdateEvent, UpdateProgress } from '@/shared/types/electron-api'
 import {
   check,
@@ -20,6 +21,7 @@ import {
   LINUX_WINDOW_FRAME_CLASS,
   WINDOW_TOPBAR_HEIGHT_CLASS,
 } from '@/renderer/components/windowChrome'
+import { normalizeReleaseNotes } from './releaseNotes'
 
 const appWindow = getCurrentWebviewWindow()
 
@@ -165,6 +167,11 @@ interface ReleaseNotesCardProps {
 }
 
 function ReleaseNotesCard({ isChecking, releaseNotes, statusText }: ReleaseNotesCardProps) {
+  const renderedReleaseNotes = useMemo(
+    () => normalizeReleaseNotes(releaseNotes || statusText),
+    [releaseNotes, statusText],
+  )
+
   return (
     <Card className="mx-20 mt-2.5 h-[calc(100vh-150px)] overscroll-auto">
       <CardBody>
@@ -183,6 +190,7 @@ function ReleaseNotesCard({ isChecking, releaseNotes, statusText }: ReleaseNotes
         ) : (
           <div className="markdown-body select-text">
             <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
               components={{
                 code: ({ node: _node, ...props }) => {
                   const { children } = props
@@ -208,7 +216,7 @@ function ReleaseNotesCard({ isChecking, releaseNotes, statusText }: ReleaseNotes
                 },
               }}
             >
-              {releaseNotes || statusText}
+              {renderedReleaseNotes}
             </ReactMarkdown>
           </div>
         )}

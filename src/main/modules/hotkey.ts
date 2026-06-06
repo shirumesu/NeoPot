@@ -3,7 +3,7 @@ import { logger } from '../logger'
 import { inputTranslate, ocrRecognize, ocrTranslate, selectionTranslate } from './workflow'
 import { getConfig, setConfig } from './config'
 import { getInstalledPluginHotkey, listInstalledPlugins } from '../plugins/installer'
-import { safeOpenExternal } from './shellSafety'
+import { sendToPreferredWindow } from './window'
 
 const defaultShortcuts: Record<string, { handler: () => void | Promise<void> }> = {
   hotkey_selection_translate: {
@@ -40,22 +40,6 @@ function parsePluginHotkeyName(name: string): {
   return { type, pluginName, key }
 }
 
-function getHotkeyOpenUrl(hotkey: Record<string, unknown>): string {
-  if (typeof hotkey.url === 'string') {
-    return hotkey.url
-  }
-
-  const action = hotkey.action
-  if (typeof action === 'object' && action !== null) {
-    const actionRecord = action as Record<string, unknown>
-    if (actionRecord.type === 'open_url' && typeof actionRecord.url === 'string') {
-      return actionRecord.url
-    }
-  }
-
-  return ''
-}
-
 async function handlePluginHotkey(name: string): Promise<void> {
   const identity = parsePluginHotkeyName(name)
   if (!identity) {
@@ -73,13 +57,18 @@ async function handlePluginHotkey(name: string): Promise<void> {
     return
   }
 
-  const url = getHotkeyOpenUrl(hotkey)
-  if (url) {
-    await safeOpenExternal(url)
+  const handler = hotkey.handler
+  if (typeof handler === 'string' && handler.trim()) {
+    sendToPreferredWindow('config', 'plugin_hotkey_triggered', {
+      type: identity.type,
+      name: identity.pluginName,
+      key: identity.key,
+      handler: handler.trim(),
+    })
     return
   }
 
-  logger.warn('Plugin hotkey has no supported action.', {
+  logger.warn('Plugin hotkey has no handler.', {
     name,
     type: identity.type,
     pluginName: identity.pluginName,
@@ -208,8 +197,10 @@ async function registerInstalledPluginShortcuts(): Promise<void> {
         continue
       }
 
-      const key = (hotkey as { key?: unknown }).key
-      if (typeof key !== 'string' || !key) {
+      const hotkeyRecord = hotkey as Record<string, unknown>
+      const key = hotkeyRecord.key
+      const handler = hotkeyRecord.handler
+      if (typeof key !== 'string' || !key || typeof handler !== 'string' || !handler.trim()) {
         continue
       }
 

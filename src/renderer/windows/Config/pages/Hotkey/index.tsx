@@ -64,6 +64,7 @@ type PluginManifestHotkey = {
   key: string
   display: string
   default: string
+  handler: string
 }
 
 function isPluginManifestHotkey(value: unknown): value is PluginManifestHotkey {
@@ -75,7 +76,9 @@ function isPluginManifestHotkey(value: unknown): value is PluginManifestHotkey {
   return (
     typeof candidate.key === 'string' &&
     typeof candidate.display === 'string' &&
-    typeof candidate.default === 'string'
+    typeof candidate.default === 'string' &&
+    typeof candidate.handler === 'string' &&
+    candidate.handler.trim().length > 0
   )
 }
 

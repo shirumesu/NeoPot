@@ -15,6 +15,7 @@ import Recognize from './windows/Recognize'
 import Updater from './windows/Updater'
 import { store } from '@/renderer/lib/config/store'
 import { electronCommand } from '@/renderer/lib/electron/command'
+import { attachPluginHotkeyListener } from '@/renderer/lib/plugin/plugin_hotkey'
 import Config from './windows/Config'
 import ErrorBoundary from './components/ErrorBoundary'
 import { useConfig } from './hooks'
@@ -74,6 +75,8 @@ export default function App() {
       void store.reload({ ignoreDefaults: true })
     }
   }, [])
+
+  useEffect(() => attachPluginHotkeyListener(), [])
 
   useEffect(() => {
     let cancelled = false

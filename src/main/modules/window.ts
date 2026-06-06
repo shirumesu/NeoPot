@@ -491,6 +491,27 @@ export function sendToWindow(label: WindowLabel, event: string, payload: unknown
   window.webContents.send('app:event', { event, payload })
 }
 
+export function sendToPreferredWindow(
+  preferredLabel: WindowLabel,
+  event: string,
+  payload: unknown,
+): void {
+  const preferredWindow = windows.get(preferredLabel)
+  if (preferredWindow && !preferredWindow.isDestroyed()) {
+    sendToWindow(preferredLabel, event, payload)
+    return
+  }
+
+  for (const [label, window] of windows) {
+    if (!window.isDestroyed()) {
+      sendToWindow(label, event, payload)
+      return
+    }
+  }
+
+  queuePendingWindowEvent(preferredLabel, event, payload, 'missing')
+}
+
 export function getCurrentWindowLabel(webContents: WebContents): WindowLabel {
   return windowLabelsByWebContentsId.get(webContents.id) ?? 'config'
 }

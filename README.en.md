@@ -131,6 +131,7 @@ Arch, Manjaro, Flatpak, Homebrew, Winget, and other distribution channels have n
 NeoPot supports extending translation, OCR, and text-to-speech functionality through plugins.
 
 **Installation methods**:
+
 - Install directly from the built-in plugin marketplace
 - Import `.zip` plugin packages
 - Select local plugin directories (for development)

@@ -5,11 +5,31 @@ import React from 'react'
 import PluginHotkeyEditor from '../../../components/PluginHotkeyEditor'
 import { hotkeysForPlugin } from '../logic'
 
+function isPluginManifestHotkey(value: unknown): value is {
+  key: string
+  display: string
+  default: string
+  handler: string
+} {
+  if (typeof value !== 'object' || value === null) {
+    return false
+  }
+
+  const candidate = value as Record<string, unknown>
+  return (
+    typeof candidate.key === 'string' &&
+    typeof candidate.display === 'string' &&
+    typeof candidate.default === 'string' &&
+    typeof candidate.handler === 'string' &&
+    candidate.handler.trim().length > 0
+  )
+}
+
 export default function PluginHotkeyModal(props: any) {
   const { isOpen, onOpenChange, plugin } = props
   const { t } = useTranslation()
   const rows = hotkeysForPlugin(
-    (plugin?.hotkeys ?? []).map((hotkey: any) => ({
+    (plugin?.hotkeys ?? []).filter(isPluginManifestHotkey).map((hotkey: any) => ({
       pluginId: plugin.id,
       pluginType: plugin.type,
       pluginName: plugin.name,

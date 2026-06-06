@@ -28,6 +28,7 @@ export default function Config() {
   useEffect(() => {
     if (appWindow.label === 'config') {
       appWindow.show()
+      void window.neoPot?.app.rendererReady()
     }
   }, [])
 

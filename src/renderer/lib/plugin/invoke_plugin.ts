@@ -121,6 +121,9 @@ async function handleSandboxRequest(message: SandboxRequest): Promise<void> {
       case 'run':
         value = await invoke('run_binary', args[0] as Record<string, unknown>)
         break
+      case 'openUrl':
+        value = await invoke('open_url', { url: String(args[0] ?? '') })
+        break
       case 'hostCallback': {
         const callback = callbackMap.get(String(args[0] ?? ''))
         if (!callback) {
@@ -314,6 +317,7 @@ const utils = {
   readFile: async (path, options) => new Uint8Array(await rpc('readFile', path, options)),
   readTextFile: (path, options) => rpc('readTextFile', path, options),
   run: (cmdName, args) => rpc('run', { pluginType, pluginName: pluginId.split(':')[1], cmdName, args }),
+  openUrl: (url) => rpc('openUrl', url),
   cacheDir: '',
   pluginDir: '',
   pluginOptions: {},
@@ -327,6 +331,15 @@ const utils = {
 };
 
 let entrypoint;
+let pluginModuleExports = {};
+
+function resolveEntrypoint(exportName) {
+  if (typeof exportName === 'string' && exportName.length > 0) {
+    return pluginModuleExports[exportName];
+  }
+
+  return entrypoint;
+}
 
 window.addEventListener('message', async (event) => {
   const data = event.data;
@@ -342,11 +355,12 @@ window.addEventListener('message', async (event) => {
 
   if (data.channel !== 'neopot-plugin-call' || data.pluginId !== pluginId) return;
   try {
-    if (typeof entrypoint !== 'function') {
+    const selectedEntrypoint = resolveEntrypoint(data.exportName);
+    if (typeof selectedEntrypoint !== 'function') {
       throw new Error('Plugin entrypoint is not loaded.');
     }
     const args = revive(data.args || []);
-    const value = await entrypoint(...args);
+    const value = await selectedEntrypoint(...args);
     parent.postMessage({ channel: 'neopot-plugin-result', pluginId, requestId: data.requestId, ok: true, value }, '*');
   } catch (error) {
     parent.postMessage({
@@ -364,10 +378,8 @@ try {
   const moduleUrl = URL.createObjectURL(new Blob([source], { type: 'text/javascript' }));
   const pluginModule = await import(moduleUrl);
   URL.revokeObjectURL(moduleUrl);
+  pluginModuleExports = pluginModule || {};
   entrypoint = pluginModule.default || pluginModule[pluginType] || pluginModule.__neopot_entry || globalThis[pluginType];
-  if (typeof entrypoint !== 'function') {
-    throw new Error('Plugin does not export the expected entrypoint.');
-  }
   parent.postMessage({ channel: 'neopot-plugin-ready', pluginId, ok: true }, '*');
 } catch (error) {
   parent.postMessage({
@@ -447,7 +459,11 @@ function prepareCallArgs(value: unknown, localCallbacks: string[]): unknown {
   )
 }
 
-async function callSandbox(sandbox: PluginSandbox, args: unknown[]): Promise<unknown> {
+async function callSandbox(
+  sandbox: PluginSandbox,
+  args: unknown[],
+  exportName?: string,
+): Promise<unknown> {
   await sandbox.ready
   const requestId = createRequestId()
   const localCallbacks: string[] = []
@@ -463,6 +479,7 @@ async function callSandbox(sandbox: PluginSandbox, args: unknown[]): Promise<unk
         channel: 'neopot-plugin-call',
         pluginId: sandbox.pluginId,
         requestId,
+        exportName,
         args: preparedArgs,
       },
       '*',
@@ -476,7 +493,7 @@ async function callSandbox(sandbox: PluginSandbox, args: unknown[]): Promise<unk
   }
 }
 
-export async function invoke_plugin(pluginType: string, pluginName: string) {
+async function getPluginRuntime(pluginType: string, pluginName: string) {
   const pluginId = `${pluginType}:${pluginName}`
   let sandbox = sandboxMap.get(pluginId)
 
@@ -500,8 +517,32 @@ export async function invoke_plugin(pluginType: string, pluginName: string) {
     osType,
   }
 
+  return { sandbox, utils }
+}
+
+export async function invoke_plugin(pluginType: string, pluginName: string) {
+  const { sandbox, utils } = await getPluginRuntime(pluginType, pluginName)
   const activeSandbox = sandbox
   const func = (...args: unknown[]): Promise<any> =>
     callSandbox(activeSandbox, args) as Promise<any>
   return [func, utils] as const
+}
+
+export async function invoke_plugin_handler(
+  pluginType: string,
+  pluginName: string,
+  handler: string,
+  payload: Record<string, unknown> = {},
+): Promise<unknown> {
+  const { sandbox, utils } = await getPluginRuntime(pluginType, pluginName)
+  return callSandbox(
+    sandbox,
+    [
+      {
+        ...payload,
+        utils,
+      },
+    ],
+    handler,
+  )
 }

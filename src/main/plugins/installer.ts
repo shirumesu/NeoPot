@@ -258,6 +258,23 @@ function getHotkeyDefault(hotkey: Record<string, unknown>): string {
   return typeof hotkey.default === 'string' ? hotkey.default.trim() : ''
 }
 
+function isPluginHotkeyWithHandler(hotkey: unknown): hotkey is Record<string, unknown> & {
+  key: string
+  handler: string
+} {
+  if (typeof hotkey !== 'object' || hotkey === null) {
+    return false
+  }
+
+  const hotkeyRecord = hotkey as Record<string, unknown>
+  return (
+    typeof hotkeyRecord.key === 'string' &&
+    hotkeyRecord.key.length > 0 &&
+    typeof hotkeyRecord.handler === 'string' &&
+    hotkeyRecord.handler.trim().length > 0
+  )
+}
+
 export async function getInstalledPluginHotkey(
   type: string,
   name: string,
@@ -269,7 +286,7 @@ export async function getInstalledPluginHotkey(
   }
 
   const hotkey = manifest?.hotkeys.find((item) => {
-    return typeof item === 'object' && item !== null && (item as { key?: unknown }).key === key
+    return isPluginHotkeyWithHandler(item) && item.key === key
   })
 
   return hotkey && typeof hotkey === 'object' ? (hotkey as Record<string, unknown>) : null
@@ -531,16 +548,11 @@ async function registerPluginDefaultHotkeys(type: string, name: string): Promise
 
   const { registerGlobalShortcutByName } = await import('../modules/hotkey')
   for (const hotkey of manifest.hotkeys) {
-    if (typeof hotkey !== 'object' || hotkey === null) {
+    if (!isPluginHotkeyWithHandler(hotkey)) {
       continue
     }
 
-    const key = (hotkey as { key?: unknown }).key
-    if (typeof key !== 'string' || !key) {
-      continue
-    }
-
-    const configKey = pluginHotkeyConfigKey(type, name, key)
+    const configKey = pluginHotkeyConfigKey(type, name, hotkey.key)
     const stored = getConfig(configKey)
     if (stored !== undefined) {
       continue
@@ -557,16 +569,11 @@ export async function uninstallPlugin(type: string, name: string): Promise<void>
   const manifest = await readPluginManifest(type, name)
   if (manifest) {
     for (const hotkey of manifest.hotkeys) {
-      if (typeof hotkey !== 'object' || hotkey === null) {
+      if (!isPluginHotkeyWithHandler(hotkey)) {
         continue
       }
 
-      const key = (hotkey as { key?: unknown }).key
-      if (typeof key !== 'string' || !key) {
-        continue
-      }
-
-      const configKey = pluginHotkeyConfigKey(type, name, key)
+      const configKey = pluginHotkeyConfigKey(type, name, hotkey.key)
       const shortcut = getConfig(configKey)
       if (typeof shortcut === 'string' && shortcut.trim()) {
         globalShortcut.unregister(shortcut.trim())
@@ -599,16 +606,11 @@ export async function setPluginEnabled(
   const manifest = await readPluginManifest(type, name)
   if (manifest) {
     for (const hotkey of manifest.hotkeys) {
-      if (typeof hotkey !== 'object' || hotkey === null) {
+      if (!isPluginHotkeyWithHandler(hotkey)) {
         continue
       }
 
-      const key = (hotkey as { key?: unknown }).key
-      if (typeof key !== 'string' || !key) {
-        continue
-      }
-
-      const configKey = pluginHotkeyConfigKey(type, name, key)
+      const configKey = pluginHotkeyConfigKey(type, name, hotkey.key)
       const storedShortcut = getConfig(configKey)
       const shortcut =
         typeof storedShortcut === 'string'
