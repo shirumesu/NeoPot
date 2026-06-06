@@ -1,12 +1,21 @@
-import { Divider, Button, Popover, PopoverTrigger, PopoverContent } from '@heroui/react'
+import {
+  Divider,
+  Button,
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  useDisclosure,
+} from '@heroui/react'
 import { useTranslation } from 'react-i18next'
 import { invoke } from '@/renderer/lib/electron/compat/core'
 import React from 'react'
 
 import { appVersion } from '@/renderer/lib/config/env'
+import AboutUpdateModal from './AboutUpdateModal'
 
 export default function About() {
   const { t } = useTranslation()
+  const { isOpen, onOpen, onOpenChange } = useDisclosure()
 
   return (
     <div className="h-full w-full px-6 py-12 sm:px-12 sm:py-16">
@@ -82,14 +91,7 @@ export default function About() {
       </div>
       <div className="mx-auto max-w-sm px-0 sm:px-10">
         <div className="flex justify-between">
-          <Button
-            variant="light"
-            className="my-1.5"
-            size="sm"
-            onPress={() => {
-              invoke('updater_window')
-            }}
-          >
+          <Button variant="light" className="my-1.5" size="sm" onPress={onOpen}>
             {t('config.about.check_update')}
           </Button>
           <Button
@@ -116,6 +118,7 @@ export default function About() {
 
         <Divider />
       </div>
+      <AboutUpdateModal isOpen={isOpen} onOpenChange={onOpenChange} />
     </div>
   )
 }

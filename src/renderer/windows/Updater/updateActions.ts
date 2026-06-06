@@ -14,6 +14,10 @@ export function getUpdatePrimaryAction(
     return 'open-release-page'
   }
 
+  if (result.status === 'not-available') {
+    return 'check'
+  }
+
   if (result.status !== 'available') {
     return 'none'
   }
