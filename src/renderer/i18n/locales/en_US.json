@@ -90,6 +90,8 @@
       "config_route_missing": "No config route matched for {{route}}.",
       "translate_window_initialization_failed": "Translate window initialization failed",
       "recognize_window_initialization_failed": "Recognize window initialization failed",
+      "runtime_unavailable": "Feature unavailable",
+      "runtime_details_hint": "Check logs for more details.",
       "language_not_supported": "Language not supported",
       "recognize_service_not_configured": "Recognition service is not configured",
       "recognize_timeout": "Recognition request timed out"

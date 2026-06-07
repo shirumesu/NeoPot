@@ -18,6 +18,7 @@ import { electronCommand } from '@/renderer/lib/electron/command'
 import { attachPluginHotkeyListener } from '@/renderer/lib/plugin/plugin_hotkey'
 import Config from './windows/Config'
 import ErrorBoundary from './components/ErrorBoundary'
+import RuntimeToaster from './components/RuntimeToaster'
 import { useConfig } from './hooks'
 import { logger } from './lib/logger'
 import './style.css'
@@ -165,29 +166,35 @@ export default function App() {
 
   if (label === 'config') {
     return (
-      <MemoryRouter
-        initialEntries={[getInitialConfigRoute()]}
-        future={{
-          v7_relativeSplatPath: true,
-          v7_startTransition: true,
-        }}
-      >
-        <ErrorBoundary
-          fallbackTitle={t('errors.window_render_failed', { window: t('windows.config') })}
+      <>
+        <RuntimeToaster />
+        <MemoryRouter
+          initialEntries={[getInitialConfigRoute()]}
+          future={{
+            v7_relativeSplatPath: true,
+            v7_startTransition: true,
+          }}
         >
-          <CurrentWindow />
-        </ErrorBoundary>
-      </MemoryRouter>
+          <ErrorBoundary
+            fallbackTitle={t('errors.window_render_failed', { window: t('windows.config') })}
+          >
+            <CurrentWindow />
+          </ErrorBoundary>
+        </MemoryRouter>
+      </>
     )
   }
 
   return (
-    <ErrorBoundary
-      fallbackTitle={t('errors.window_render_failed', {
-        window: t(`windows.${label}`, { defaultValue: label }),
-      })}
-    >
-      <CurrentWindow />
-    </ErrorBoundary>
+    <>
+      <RuntimeToaster />
+      <ErrorBoundary
+        fallbackTitle={t('errors.window_render_failed', {
+          window: t(`windows.${label}`, { defaultValue: label }),
+        })}
+      >
+        <CurrentWindow />
+      </ErrorBoundary>
+    </>
   )
 }

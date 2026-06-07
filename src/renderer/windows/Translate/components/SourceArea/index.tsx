@@ -13,7 +13,6 @@ import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { writeText } from '@/renderer/lib/electron/compat/clipboard'
 import { HiOutlineVolumeUp } from 'react-icons/hi'
 import { getCurrentWebviewWindow } from '@/renderer/lib/electron/compat/webviewWindow'
-import toast, { Toaster } from 'react-hot-toast'
 import { listen } from '@/renderer/lib/electron/compat/event'
 import { MdContentCopy } from 'react-icons/md'
 import { MdSmartButton } from 'react-icons/md'
@@ -28,12 +27,13 @@ import {
   isValidServiceInstanceKey,
   ServiceSourceType,
 } from '@/renderer/lib/service/service_instance'
-import { useConfig, useSyncAtom, useVoice, useToastStyle } from '../../../../hooks'
+import { useConfig, useSyncAtom, useVoice } from '../../../../hooks'
 import { invoke_plugin } from '@/renderer/lib/plugin/invoke_plugin'
 import { electronCommand } from '@/renderer/lib/electron/command'
 import * as recognizeServices from '@/renderer/providers/recognize'
 import * as builtinTtsServices from '@/renderer/providers/tts'
 import detect from '@/renderer/lib/language/lang_detect'
+import { reportRuntimeError } from '@/renderer/lib/runtimeError'
 const appWindow = getCurrentWebviewWindow()
 
 export const sourceTextAtom = atom('')
@@ -79,13 +79,23 @@ export default function SourceArea(props: any) {
   const [hideSource] = useConfig('hide_source', false)
   const [ttsPluginInfo, setTtsPluginInfo] = useState<any>()
   const [windowType, setWindowType] = useState('[SELECTION_TRANSLATE]')
-  const toastStyle = useToastStyle()
   const { t } = useTranslation()
   const textAreaRef = useRef<HTMLTextAreaElement>(null)
   const initialTextLoadedRef = useRef(false)
   const workflowTextVersionRef = useRef(0)
   const sourceTextChangeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const speak = useVoice()
+
+  const reportSourceAreaError = useCallback((error: unknown, source: string) => {
+    reportRuntimeError(error, {
+      source,
+      logMessage: 'Translate source operation failed.',
+      toastId: source,
+      context: {
+        window: 'translate',
+      },
+    })
+  }, [])
 
   const detect_language = useCallback(
     async (text: string) => {
@@ -171,6 +181,15 @@ export default function SourceArea(props: any) {
                 void commitSourceText(normalizeInputText(v))
               },
               (e: any) => {
+                reportRuntimeError(e, {
+                  source: 'translate.image_recognize.plugin',
+                  logMessage: 'Image translation OCR plugin failed.',
+                  toastId: `translate.image_recognize.plugin:${getServiceName(serviceInstanceKey)}`,
+                  context: {
+                    service: serviceInstanceKey,
+                    language: recognizeLanguage,
+                  },
+                })
                 setSourceText(e.toString())
               },
             )
@@ -195,6 +214,15 @@ export default function SourceArea(props: any) {
                   void commitSourceText(normalizeInputText(v))
                 },
                 (e: any) => {
+                  reportRuntimeError(e, {
+                    source: 'translate.image_recognize.builtin',
+                    logMessage: 'Image translation OCR provider failed.',
+                    toastId: `translate.image_recognize.builtin:${getServiceName(serviceInstanceKey)}`,
+                    context: {
+                      service: serviceInstanceKey,
+                      language: recognizeLanguage,
+                    },
+                  })
                   setSourceText(e.toString())
                 },
               )
@@ -263,7 +291,7 @@ export default function SourceArea(props: any) {
         config: pluginConfig,
         utils,
       })
-      speak(data)
+      await speak(data)
     } else {
       if (!(detected in builtinTtsServiceMap[getServiceName(instanceKey)].Language)) {
         throw new Error(t('errors.language_not_supported'))
@@ -276,7 +304,7 @@ export default function SourceArea(props: any) {
           config: instanceConfig,
         },
       )
-      speak(data)
+      await speak(data)
     }
   }
 
@@ -286,7 +314,9 @@ export default function SourceArea(props: any) {
     const unlistenPromise = listen('new_text', (event: any) => {
       appWindow.setFocus()
       workflowTextVersionRef.current += 1
-      void handleNewTextRef.current(event.payload)
+      void handleNewTextRef.current(event.payload).catch((error) => {
+        reportSourceAreaError(error, 'translate.new_text')
+      })
     })
     unlistenPromise.then((unlisten) => {
       if (disposed) {
@@ -344,7 +374,9 @@ export default function SourceArea(props: any) {
         if (workflowTextVersionRef.current !== requestVersion) {
           return
         }
-        void handleNewText(v)
+        void handleNewText(v).catch((error) => {
+          reportSourceAreaError(error, 'translate.initial_text')
+        })
       })
     }
   }, [
@@ -490,7 +522,6 @@ export default function SourceArea(props: any) {
   return (
     <div className={hideSource && windowType !== '[INPUT_TRANSLATE]' ? 'hidden' : undefined}>
       <Card shadow="none" className="bg-content1 rounded-[10px] mt-px pb-0">
-        <Toaster />
         <CardBody className="bg-content1 p-3 pb-0 max-h-[40vh] overflow-y-auto">
           <textarea
             autoFocus
@@ -515,7 +546,15 @@ export default function SourceArea(props: any) {
                   size="sm"
                   onPress={() => {
                     handleSpeak().catch((e) => {
-                      toast.error(e.toString(), { style: toastStyle })
+                      reportRuntimeError(e, {
+                        source: 'translate.source.tts',
+                        logMessage: 'Source text TTS failed.',
+                        toastId: 'translate.source.tts',
+                        context: {
+                          service: ttsServiceInstanceKey ?? 'none',
+                          detectedLanguage: detectLanguage,
+                        },
+                      })
                     })
                   }}
                 >

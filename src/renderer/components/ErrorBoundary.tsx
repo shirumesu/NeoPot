@@ -1,5 +1,5 @@
 import React from 'react'
-import { logger } from '@/renderer/lib/logger'
+import { reportRuntimeError } from '@/renderer/lib/runtimeError'
 import i18n from '@/renderer/i18n'
 import ErrorPanel from './ErrorPanel'
 
@@ -24,8 +24,13 @@ export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, E
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    logger.error('Render error boundary caught an error.', error, {
-      componentStack: errorInfo.componentStack,
+    reportRuntimeError(error, {
+      source: 'renderer.react.error_boundary',
+      logMessage: 'Render error boundary caught an error.',
+      toastId: 'renderer.react.error_boundary',
+      context: {
+        componentStack: errorInfo.componentStack,
+      },
     })
   }
 

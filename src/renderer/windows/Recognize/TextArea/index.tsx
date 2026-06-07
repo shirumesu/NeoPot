@@ -20,6 +20,7 @@ import * as builtinServices from '@/renderer/providers/recognize'
 import { useConfig } from '../../../hooks'
 import { base64Atom } from '../ImageArea'
 import { pluginListAtom } from '..'
+import { reportRuntimeError } from '@/renderer/lib/runtimeError'
 
 export const textAtom = atom('')
 let recognizeId = ''
@@ -105,6 +106,15 @@ export default function TextArea(props: any) {
                 },
                 (e: any) => {
                   if (recognizeId !== id) return
+                  reportRuntimeError(e, {
+                    source: 'recognize.plugin',
+                    logMessage: 'Recognition plugin rejected.',
+                    toastId: `recognize.plugin:${currentServiceInstanceKey}`,
+                    context: {
+                      service: currentServiceInstanceKey,
+                      language,
+                    },
+                  })
                   setError(e.toString())
                   setLoading(false)
                 },
@@ -112,6 +122,15 @@ export default function TextArea(props: any) {
             },
             (e: any) => {
               if (recognizeId !== id) return
+              reportRuntimeError(e, {
+                source: 'recognize.plugin.load',
+                logMessage: 'Recognition plugin failed to load.',
+                toastId: `recognize.plugin.load:${currentServiceInstanceKey}`,
+                context: {
+                  service: currentServiceInstanceKey,
+                  language,
+                },
+              })
               setError(e.toString())
               setLoading(false)
             },
@@ -156,6 +175,15 @@ export default function TextArea(props: any) {
             },
             (e: any) => {
               if (recognizeId !== id) return
+              reportRuntimeError(e, {
+                source: 'recognize.builtin',
+                logMessage: 'Recognition provider rejected.',
+                toastId: `recognize.builtin:${currentServiceInstanceKey}`,
+                context: {
+                  service: currentServiceInstanceKey,
+                  language,
+                },
+              })
               setError(e.toString())
               setLoading(false)
             },

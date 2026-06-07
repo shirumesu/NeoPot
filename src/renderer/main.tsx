@@ -7,6 +7,7 @@ import { initStore } from '@/renderer/lib/config/store'
 import { initEnv } from '@/renderer/lib/config/env'
 import { applyConfiguredRendererLogLevel } from '@/renderer/lib/electron/logLevel'
 import { logger } from '@/renderer/lib/logger'
+import { reportRuntimeError } from '@/renderer/lib/runtimeError'
 import App from './App'
 
 if (import.meta.env.PROD) {
@@ -39,11 +40,17 @@ function renderFatalError(error: unknown) {
 }
 
 window.addEventListener('error', (event) => {
-  logger.error('Unhandled window error.', event.error ?? event.message)
+  reportRuntimeError(event.error ?? event.message, {
+    source: 'renderer.window.error',
+    logMessage: 'Unhandled window error.',
+  })
 })
 
 window.addEventListener('unhandledrejection', (event) => {
-  logger.error('Unhandled promise rejection.', event.reason)
+  reportRuntimeError(event.reason, {
+    source: 'renderer.window.unhandledrejection',
+    logMessage: 'Unhandled promise rejection.',
+  })
 })
 
 async function bootstrap() {

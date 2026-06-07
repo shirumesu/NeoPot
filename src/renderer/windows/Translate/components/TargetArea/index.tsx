@@ -20,7 +20,6 @@ import { PulseLoader } from 'react-spinners'
 import { TbTransformFilled } from 'react-icons/tb'
 import { HiOutlineVolumeUp } from 'react-icons/hi'
 import { semanticColors } from '@heroui/theme'
-import toast, { Toaster } from 'react-hot-toast'
 import { MdArticle, MdCode, MdContentCopy } from 'react-icons/md'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -33,11 +32,12 @@ import { useSpring, animated } from '@react-spring/web'
 import useMeasure from 'react-use-measure'
 
 import { sourceLanguageAtom, targetLanguageAtom } from '../LanguageArea'
-import { useConfig, useToastStyle, useVoice } from '../../../../hooks'
+import { useConfig, useVoice } from '../../../../hooks'
 import { sourceTextAtom, detectLanguageAtom, manualTranslateFlagAtom } from '../SourceArea'
 import { invoke_plugin } from '@/renderer/lib/plugin/invoke_plugin'
 import * as builtinServices from '@/renderer/providers/translate'
 import * as builtinTtsServices from '@/renderer/providers/tts'
+import { reportRuntimeError } from '@/renderer/lib/runtimeError'
 
 import { logger } from '@/renderer/lib/logger'
 import {
@@ -196,7 +196,6 @@ export default function TargetArea(props: any) {
   const [ttsPluginInfo, setTtsPluginInfo] = useState<any>()
   const { t } = useTranslation()
   const textAreaRef = useRef<HTMLTextAreaElement>(null)
-  const toastStyle = useToastStyle()
   const speak = useVoice()
   const { theme } = useTheme()
 
@@ -239,7 +238,18 @@ export default function TargetArea(props: any) {
         }
       })
     }
-    translate()
+    void translate().catch((error) => {
+      reportRuntimeError(error, {
+        source: 'translate.request',
+        logMessage: 'Translation request failed.',
+        toastId: `translate.request:${currentTranslateServiceInstanceKey}`,
+        context: {
+          service: currentTranslateServiceInstanceKey,
+        },
+      })
+      setError(error instanceof Error ? error.toString() : String(error))
+      setIsLoading(false)
+    })
   }, [
     sourceText,
     sourceLanguage,
@@ -369,13 +379,17 @@ export default function TargetArea(props: any) {
           },
           (e: any) => {
             if (translateID[index] !== id) return
-            logger.warn('Translation rejected.', {
-              service: currentTranslateServiceInstanceKey,
-              from: resolvedSourceLanguage,
-              to: resolvedTargetLanguage,
-              inputLength: sourceText.trim().length,
-              durationMs: Date.now() - startedAt,
-              message: e instanceof Error ? e.message : String(e),
+            reportRuntimeError(e, {
+              source: 'translate.plugin',
+              logMessage: 'Translation plugin rejected.',
+              toastId: `translate.plugin:${currentTranslateServiceInstanceKey}`,
+              context: {
+                service: currentTranslateServiceInstanceKey,
+                from: resolvedSourceLanguage,
+                to: resolvedTargetLanguage,
+                inputLength: sourceText.trim().length,
+                durationMs: Date.now() - startedAt,
+              },
             })
             setError(e.toString())
             setIsLoading(false)
@@ -455,13 +469,17 @@ export default function TargetArea(props: any) {
             },
             (e: any) => {
               if (translateID[index] !== id) return
-              logger.warn('Translation rejected.', {
-                service: currentTranslateServiceInstanceKey,
-                from: resolvedSourceLanguage,
-                to: resolvedTargetLanguage,
-                inputLength: sourceText.trim().length,
-                durationMs: Date.now() - startedAt,
-                message: e instanceof Error ? e.message : String(e),
+              reportRuntimeError(e, {
+                source: 'translate.builtin',
+                logMessage: 'Translation provider rejected.',
+                toastId: `translate.builtin:${currentTranslateServiceInstanceKey}`,
+                context: {
+                  service: currentTranslateServiceInstanceKey,
+                  from: resolvedSourceLanguage,
+                  to: resolvedTargetLanguage,
+                  inputLength: sourceText.trim().length,
+                  durationMs: Date.now() - startedAt,
+                },
               })
               setError(e.toString())
               setIsLoading(false)
@@ -521,7 +539,7 @@ export default function TargetArea(props: any) {
         config: pluginConfig,
         utils,
       })
-      speak(data)
+      await speak(data)
     } else {
       if (!(targetLanguage in builtinTtsServiceMap[getServiceName(instanceKey)].Language)) {
         throw new Error(t('errors.language_not_supported'))
@@ -534,7 +552,7 @@ export default function TargetArea(props: any) {
           config: instanceConfig,
         },
       )
-      speak(data)
+      await speak(data)
     }
   }
 
@@ -548,7 +566,6 @@ export default function TargetArea(props: any) {
 
   return (
     <Card shadow="none" className="rounded-[10px]">
-      <Toaster />
       <CardHeader
         className={`flex justify-between py-1 px-0 bg-content2 h-7.5 ${hide ? 'rounded-[10px]' : 'rounded-t-[10px]'}`}
       >
@@ -699,7 +716,16 @@ export default function TargetArea(props: any) {
                           <HiOutlineVolumeUp
                             className={`text-[${resolvedAppFontSize}px] inline-block my-auto cursor-pointer`}
                             onClick={() => {
-                              speak(pronunciation['voice'])
+                              void speak(pronunciation['voice']).catch((error) => {
+                                reportRuntimeError(error, {
+                                  source: 'translate.pronunciation.tts',
+                                  logMessage: 'Pronunciation audio playback failed.',
+                                  toastId: 'translate.pronunciation.tts',
+                                  context: {
+                                    service: currentTranslateServiceInstanceKey,
+                                  },
+                                })
+                              })
                             }}
                           />
                         )}
@@ -835,7 +861,15 @@ export default function TargetArea(props: any) {
                   isDisabled={typeof result !== 'string' || result === ''}
                   onPress={() => {
                     handleSpeak().catch((e) => {
-                      toast.error(e.toString(), { style: toastStyle })
+                      reportRuntimeError(e, {
+                        source: 'translate.target.tts',
+                        logMessage: 'Target text TTS failed.',
+                        toastId: 'translate.target.tts',
+                        context: {
+                          service: ttsServiceInstanceKey ?? 'none',
+                          targetLanguage,
+                        },
+                      })
                     })
                   }}
                 >
@@ -917,6 +951,16 @@ export default function TargetArea(props: any) {
                             }
                           },
                           (e: any) => {
+                            reportRuntimeError(e, {
+                              source: 'translate_back.plugin',
+                              logMessage: 'Translate-back plugin rejected.',
+                              toastId: `translate_back.plugin:${currentTranslateServiceInstanceKey}`,
+                              context: {
+                                service: currentTranslateServiceInstanceKey,
+                                from: newSourceLanguage ?? 'unknown',
+                                to: newTargetLanguage ?? 'unknown',
+                              },
+                            })
                             setError(e.toString())
                             setIsLoading(false)
                           },
@@ -961,6 +1005,16 @@ export default function TargetArea(props: any) {
                               }
                             },
                             (e: any) => {
+                              reportRuntimeError(e, {
+                                source: 'translate_back.builtin',
+                                logMessage: 'Translate-back provider rejected.',
+                                toastId: `translate_back.builtin:${currentTranslateServiceInstanceKey}`,
+                                context: {
+                                  service: currentTranslateServiceInstanceKey,
+                                  from: newSourceLanguage ?? 'unknown',
+                                  to: newTargetLanguage ?? 'unknown',
+                                },
+                              })
                               setError(e.toString())
                               setIsLoading(false)
                             },

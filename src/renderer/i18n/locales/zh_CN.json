@@ -90,6 +90,8 @@
       "config_route_missing": "未找到匹配 {{route}} 的配置路由。",
       "translate_window_initialization_failed": "翻译窗口初始化失败",
       "recognize_window_initialization_failed": "识别窗口初始化失败",
+      "runtime_unavailable": "功能暂不可用",
+      "runtime_details_hint": "查看日志获取更多信息。",
       "language_not_supported": "不支持该语言",
       "recognize_service_not_configured": "未配置识别服务",
       "recognize_timeout": "识别请求超时"

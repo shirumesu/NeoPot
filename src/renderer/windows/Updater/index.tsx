@@ -1,6 +1,6 @@
 import { Button, Progress } from '@heroui/react'
 import React, { useCallback, useEffect, useMemo } from 'react'
-import toast, { Toaster } from 'react-hot-toast'
+import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 
 import WindowControl from '@/renderer/components/WindowControl'
@@ -116,7 +116,6 @@ function UpdaterNotification({ controller }: { controller: UpdaterController }) 
     <div
       className={`flex h-screen flex-col bg-background p-4 select-none ${LINUX_WINDOW_FRAME_CLASS}`}
     >
-      <Toaster />
       <DragRegion className="mb-3 flex items-center gap-2">
         <img src="icon.png" className="h-7 w-7" draggable={false} />
         <div className="min-w-0">
@@ -198,7 +197,6 @@ export default function Updater() {
 
   return (
     <div className={`flex h-screen flex-col bg-background ${LINUX_WINDOW_FRAME_CLASS}`}>
-      <Toaster />
       <UpdaterHeader />
       <main className="min-h-0 flex-1 p-4">
         <UpdaterPanel controller={controller} onCancel={() => void appWindow.close()} />

@@ -1,4 +1,5 @@
 import { logger } from '../logger'
+import { reportRuntimeError } from '../runtimeError'
 import { invoke_plugin_handler } from './invoke_plugin'
 
 interface PluginHotkeyPayload {
@@ -58,11 +59,16 @@ export function attachPluginHotkeyListener(): () => void {
     void invoke_plugin_handler(hotkey.type, hotkey.name, hotkey.handler, {
       key: hotkey.key,
     }).catch((error) => {
-      logger.error('Plugin hotkey handler failed.', error, {
-        pluginType: hotkey.type,
-        pluginName: hotkey.name,
-        key: hotkey.key,
-        handler: hotkey.handler,
+      reportRuntimeError(error, {
+        source: 'plugin.hotkey',
+        logMessage: 'Plugin hotkey handler failed.',
+        toastId: `plugin.hotkey:${hotkey.type}:${hotkey.name}:${hotkey.handler}`,
+        context: {
+          pluginType: hotkey.type,
+          pluginName: hotkey.name,
+          key: hotkey.key,
+          handler: hotkey.handler,
+        },
       })
     })
   })

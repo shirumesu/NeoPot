@@ -3,7 +3,6 @@ import React, { useEffect } from 'react'
 import { getCurrentWebviewWindow } from '@/renderer/lib/electron/compat/webviewWindow'
 import { Card, Divider } from '@heroui/react'
 import { useTranslation } from 'react-i18next'
-import { Toaster } from 'react-hot-toast'
 
 import ErrorBoundary from '../../components/ErrorBoundary'
 import WindowControl from '../../components/WindowControl'
@@ -34,7 +33,6 @@ export default function Config() {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden">
-      <Toaster position="top-center" />
       <Card
         shadow="none"
         className={`h-screen w-57.5 shrink-0 rounded-none bg-content1 ${LINUX_LEFT_WINDOW_FRAME_CLASS} border-r-1 border-default-100 select-none cursor-default`}
