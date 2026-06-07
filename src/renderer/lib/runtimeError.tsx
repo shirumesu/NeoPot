@@ -98,7 +98,7 @@ function shouldShowToast(key: string): boolean {
 
 function RuntimeErrorToast({ type, message }: { type: string; message: string }) {
   return (
-    <div className="w-full min-w-[280px] max-w-[calc(100vw-72px)] sm:max-w-[456px]">
+    <div className="min-w-[240px] max-w-[calc(100vw-72px)] sm:max-w-[456px]">
       <div className="text-sm font-medium leading-5">{i18n.t('errors.runtime_unavailable')}</div>
       <div className="mt-1 text-xs leading-4 text-default-500">
         {i18n.t('errors.runtime_details_hint')}
@@ -139,5 +139,9 @@ export function reportRuntimeError(error: unknown, options: ReportRuntimeErrorOp
 
   toast.error(<RuntimeErrorToast type={type} message={message} />, {
     id: toastKey,
+    style: {
+      maxWidth: 'min(520px, calc(100vw - 32px))',
+      width: 'fit-content',
+    },
   })
 }

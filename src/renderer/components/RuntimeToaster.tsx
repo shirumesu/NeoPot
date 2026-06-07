@@ -12,7 +12,6 @@ export default function RuntimeToaster() {
       toastOptions={{
         style: {
           ...toastStyle,
-          width: 'min(520px, calc(100vw - 32px))',
           maxWidth: 'min(520px, calc(100vw - 32px))',
           padding: '10px 12px',
           wordBreak: 'normal',
