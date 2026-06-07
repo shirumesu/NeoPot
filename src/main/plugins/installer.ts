@@ -5,6 +5,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { getConfig, setConfig } from '../modules/config'
 import { logger } from '../logger'
+import { isServiceInstanceForPlugin } from '../../shared/serviceInstance'
 
 const SERVICE_PLUGIN_TYPES = ['translate', 'recognize', 'tts']
 const PLUGIN_METADATA_FILE = '.neopot-plugin.json'
@@ -307,7 +308,7 @@ async function removePluginServiceInstances(type: string, name: string): Promise
     if (typeof instanceKey !== 'string') {
       return true
     }
-    return instanceKey.split('@')[0] !== name
+    return !isServiceInstanceForPlugin(instanceKey, name)
   })
 
   if (retained.length === serviceList.length) {
@@ -316,7 +317,7 @@ async function removePluginServiceInstances(type: string, name: string): Promise
 
   await setConfig(serviceListKey, retained)
   for (const instanceKey of serviceList) {
-    if (typeof instanceKey === 'string' && instanceKey.split('@')[0] === name) {
+    if (typeof instanceKey === 'string' && isServiceInstanceForPlugin(instanceKey, name)) {
       await setConfig(instanceKey, undefined)
     }
   }

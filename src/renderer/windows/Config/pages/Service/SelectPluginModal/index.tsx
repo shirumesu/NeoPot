@@ -2,7 +2,10 @@ import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from
 import { useTranslation } from 'react-i18next'
 import React from 'react'
 
-import { createServiceInstanceKey } from '@/renderer/lib/service/service_instance'
+import {
+  ServiceSourceType,
+  createServiceInstanceKey,
+} from '@/renderer/lib/service/service_instance'
 import { SERVICE_ICON_CLASS, type ServicePluginMap } from '../types'
 
 interface SelectPluginModalProps {
@@ -38,7 +41,7 @@ export default function SelectPluginModal(props: SelectPluginModalProps) {
                       fullWidth
                       className="mr-2"
                       onPress={() => {
-                        setCurrentConfigKey(createServiceInstanceKey(x))
+                        setCurrentConfigKey(createServiceInstanceKey(x, ServiceSourceType.PLUGIN))
                         onConfigOpen()
                       }}
                       startContent={<img src={plugin.icon} className={SERVICE_ICON_CLASS} />}
