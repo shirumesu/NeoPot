@@ -12,7 +12,7 @@ import { useServiceInstanceList } from '../useServiceInstanceList'
 import type { ServicePluginMap } from '../types'
 
 const TTS_SERVICE_LIST_KEY = 'tts_service_list'
-const DEFAULT_TTS_SERVICE_LIST: string[] = []
+const DEFAULT_TTS_SERVICE_LIST = ['lingva']
 
 interface TtsProps {
   pluginList: ServicePluginMap
@@ -34,7 +34,7 @@ export default function Tts({ pluginList }: TtsProps) {
     onOpen: onConfigOpen,
     onOpenChange: onConfigOpenChange,
   } = useDisclosure()
-  const [currentConfigKey, setCurrentConfigKey] = useState('')
+  const [currentConfigKey, setCurrentConfigKey] = useState('lingva')
   const {
     serviceInstanceList: ttsServiceInstanceList,
     deleteServiceInstance,

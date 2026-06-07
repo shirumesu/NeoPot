@@ -441,7 +441,13 @@
           "description": "使用应用中内置的 PaddleOCR.js PP-OCRv5 本地模型资源。识别不使用云端 OCR API。"
         }
       },
-      "tts": {}
+      "tts": {
+        "lingva": {
+          "title": "Lingva",
+          "custom_url": "Lingva URL",
+          "description": "使用 Lingva Translate 实例进行在线语音合成。公开实例是尽力可用服务，稳定性可能随实例变化。"
+        }
+      }
     },
     "translate": {
       "translate": "翻译",

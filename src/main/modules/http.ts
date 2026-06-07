@@ -83,7 +83,9 @@ function configuredProviderOrigins(): Set<string> {
           ? normalizeProviderUrl(config.requestPath)
           : serviceName === 'deepl' && normalizeDeepLServiceType(config.type) === 'deeplx'
             ? normalizeProviderUrl(getDeepLXCustomUrl(config))
-            : null
+            : serviceName === 'lingva'
+              ? normalizeProviderUrl(config.custom_url)
+              : null
       if (configuredUrl) {
         origins.add(configuredUrl.origin)
       }

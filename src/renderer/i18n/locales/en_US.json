@@ -441,7 +441,13 @@
           "description": "Uses the bundled PaddleOCR.js PP-OCRv5 local model assets in the app. Recognition does not use a cloud OCR API."
         }
       },
-      "tts": {}
+      "tts": {
+        "lingva": {
+          "title": "Lingva",
+          "custom_url": "Lingva URL",
+          "description": "Uses a Lingva Translate instance for online text-to-speech. Public instances are best-effort services, so availability may vary."
+        }
+      }
     },
     "translate": {
       "translate": "Translate",

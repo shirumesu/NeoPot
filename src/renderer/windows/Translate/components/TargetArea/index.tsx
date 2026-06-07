@@ -162,7 +162,7 @@ export default function TargetArea(props: any) {
 
   const [appFontSize] = useConfig('app_font_size', 16)
   const resolvedAppFontSize = appFontSize ?? 16
-  const [ttsServiceList] = useConfig<string[]>('tts_service_list', [])
+  const [ttsServiceList] = useConfig<string[]>('tts_service_list', ['lingva'])
   const builtinServiceMap = builtinServices as Record<string, any>
   const builtinTtsServiceMap = builtinTtsServices as Record<string, any>
   const ttsServiceInstanceKey = Array.isArray(ttsServiceList)

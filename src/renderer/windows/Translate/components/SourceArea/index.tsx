@@ -41,7 +41,7 @@ export const detectLanguageAtom = atom('')
 export const manualTranslateFlagAtom = atom('')
 
 const DEFAULT_RECOGNIZE_SERVICE_LIST = ['local_model']
-const DEFAULT_TTS_SERVICE_LIST: string[] = []
+const DEFAULT_TTS_SERVICE_LIST = ['lingva']
 
 function toWorkflowText(value: unknown): string {
   return typeof value === 'string' ? value : ''

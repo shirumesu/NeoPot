@@ -81,7 +81,7 @@ export default function Translate() {
   const [recognizeServiceInstanceList] = useConfig<string[]>('recognize_service_list', [
     'local_model',
   ])
-  const [ttsServiceInstanceList] = useConfig<string[]>('tts_service_list', [])
+  const [ttsServiceInstanceList] = useConfig<string[]>('tts_service_list', ['lingva'])
   const [hideLanguage] = useConfig('hide_language', false)
   const [pined, setPined] = useState(false)
   const [pluginList, setPluginList] = useState<EnabledServicePluginList>({
