@@ -136,7 +136,7 @@ NeoPot supports extending translation, OCR, and text-to-speech functionality thr
 - Import `.zip` plugin packages
 - Select local plugin directories (for development)
 
-Plugins can add new translation engines, OCR services, and TTS providers. Developers can refer to templates and documentation in the plugin marketplace to create their own plugins.
+Plugins can add new translation engines, OCR services, and TTS providers. Developers can refer to templates and documentation in the [plugin marketplace](https://github.com/shirumesu/Neopot-releases) to create their own plugins.
 
 ## External Invocation
 
