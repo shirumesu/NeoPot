@@ -1,10 +1,11 @@
 import { fetch, Body } from '@/renderer/lib/electron/http'
 import { normalizeRequiredString } from './normalize'
+import { createDeepLXAuthHeaders, normalizeDeepLConfig } from '@/shared/deeplConfig'
 
 export async function translate(text: string, from: string, to: string, options: any = {}) {
-  const config = options.config && typeof options.config === 'object' ? options.config : {}
+  const config = normalizeDeepLConfig(options.config)
 
-  const serviceType = config['type']
+  const serviceType = config.type
   if (serviceType === 'free') {
     return translate_by_free(text, from, to)
   } else if (serviceType === 'api') {
@@ -12,14 +13,15 @@ export async function translate(text: string, from: string, to: string, options:
       text,
       from,
       to,
-      normalizeRequiredString(config.authKey, 'DeepL Auth Key'),
+      normalizeRequiredString(config.authApi.authKey, 'DeepL Auth Key'),
     )
   } else if (serviceType === 'deeplx') {
     return translate_by_deeplx(
       text,
       from,
       to,
-      normalizeRequiredString(config.customUrl, 'DeepLX URL'),
+      normalizeRequiredString(config.deeplx.customUrl, 'DeepLX URL'),
+      config.deeplx.authKey,
     )
   } else {
     return translate_by_free(text, from, to)
@@ -73,7 +75,13 @@ async function translate_by_free(text: string, from: string, to: string) {
     }
   }
 }
-async function translate_by_deeplx(text: string, from: string, to: string, url: string) {
+async function translate_by_deeplx(
+  text: string,
+  from: string,
+  to: string,
+  url: string,
+  authKey: string,
+) {
   const res = await fetch(url, {
     method: 'POST',
     body: Body.json({
@@ -81,6 +89,7 @@ async function translate_by_deeplx(text: string, from: string, to: string, url: 
       target_lang: to,
       text: text,
     }),
+    headers: createDeepLXAuthHeaders(authKey),
   })
 
   if (res.ok) {

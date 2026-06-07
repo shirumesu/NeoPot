@@ -398,7 +398,7 @@
           "custom_url": "DeepLX URL",
           "auth_key": "Apikey",
           "type": "服务类型",
-          "free": "免费版",
+          "free": "内置免费",
           "api": "Auth_api",
           "deeplx": "DeepLX"
         },

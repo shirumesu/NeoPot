@@ -3,6 +3,7 @@ import { net } from 'electron'
 import { applyProxyToAxios } from './proxy'
 import { assertPublicHttpRequestUrl, assertPublicHttpUrl } from './networkSafety'
 import { getConfig } from './config'
+import { getDeepLXCustomUrl, normalizeDeepLServiceType } from '../../shared/deeplConfig'
 
 export interface ProviderRequest extends AxiosRequestConfig {
   timeoutMs?: number
@@ -80,8 +81,8 @@ function configuredProviderOrigins(): Set<string> {
       const configuredUrl =
         serviceName === 'ollama'
           ? normalizeProviderUrl(config.requestPath)
-          : serviceName === 'deepl' && config.type === 'deeplx'
-            ? normalizeProviderUrl(config.customUrl)
+          : serviceName === 'deepl' && normalizeDeepLServiceType(config.type) === 'deeplx'
+            ? normalizeProviderUrl(getDeepLXCustomUrl(config))
             : null
       if (configuredUrl) {
         origins.add(configuredUrl.origin)

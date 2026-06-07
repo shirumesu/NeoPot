@@ -13,32 +13,44 @@ import { useToastStyle } from '../../../hooks'
 import { translate } from './index'
 import { Language } from './index'
 import { useConfigSave } from '@/renderer/windows/Config/hooks/useConfigSave'
+import {
+  createDefaultDeepLConfig,
+  getDeepLConfigFieldVisibility,
+  isDeepLServiceType,
+  normalizeDeepLConfig,
+  type DeepLConfig,
+} from '@/shared/deeplConfig'
 
 export function Config(props: any) {
   const { instanceKey, updateServiceList, onClose } = props
   const { t } = useTranslation()
-  const [deeplConfig, setDeeplConfig] = useConfig(
+  const defaultInstanceName = t('services.translate.deepl.title')
+  const [rawDeeplConfig, setRawDeeplConfig] = useConfig<DeepLConfig>(
     instanceKey,
-    {
-      [INSTANCE_NAME_CONFIG_KEY]: t('services.translate.deepl.title'),
-      type: 'free',
-      authKey: '',
-      customUrl: '',
-    },
+    createDefaultDeepLConfig(defaultInstanceName),
     { sync: false },
   )
+  const deeplConfig =
+    rawDeeplConfig === null ? null : normalizeDeepLConfig(rawDeeplConfig, defaultInstanceName)
   const [isLoading, setIsLoading] = useState(false)
 
   const toastStyle = useToastStyle()
   const { saveConfig } = useConfigSave()
+  const updateDeeplConfig = (nextConfig: DeepLConfig) =>
+    setRawDeeplConfig(normalizeDeepLConfig(nextConfig, defaultInstanceName))
+  const fieldVisibility =
+    deeplConfig === null ? null : getDeepLConfigFieldVisibility(deeplConfig.type)
 
   return (
-    deeplConfig !== null && (
+    deeplConfig !== null &&
+    fieldVisibility !== null && (
       <form
         onSubmit={async (e) => {
           e.preventDefault()
-          const saved = await saveConfig(instanceKey, null, setDeeplConfig, deeplConfig, {
+          const normalizedConfig = normalizeDeepLConfig(deeplConfig, defaultInstanceName)
+          const saved = await saveConfig(instanceKey, null, setRawDeeplConfig, normalizedConfig, {
             compareCurrent: false,
+            verify: true,
           })
           if (saved) {
             await updateServiceList(instanceKey)
@@ -58,7 +70,7 @@ export function Config(props: any) {
               mainWrapper: 'max-w-[50%]',
             }}
             onValueChange={(value) => {
-              setDeeplConfig({
+              updateDeeplConfig({
                 ...deeplConfig,
                 [INSTANCE_NAME_CONFIG_KEY]: value,
               })
@@ -78,9 +90,14 @@ export function Config(props: any) {
                 autoFocus="first"
                 aria-label={t('services.translate.deepl.type')}
                 onAction={(key) => {
-                  setDeeplConfig({
+                  const nextType = String(key)
+                  if (!isDeepLServiceType(nextType)) {
+                    return
+                  }
+
+                  updateDeeplConfig({
                     ...deeplConfig,
-                    type: String(key),
+                    type: nextType,
                   })
                 }}
               >
@@ -91,51 +108,88 @@ export function Config(props: any) {
             </Dropdown>
           </div>
         </div>
-        <div className={`config-item ${deeplConfig.type !== 'api' && 'hidden'}`}>
-          <Input
-            label={t('services.translate.deepl.auth_key')}
-            labelPlacement="outside-left"
-            type="password"
-            value={deeplConfig['authKey']}
-            variant="bordered"
-            classNames={{
-              base: 'justify-between',
-              label: 'text-(length:--heroui-font-size-medium)',
-              mainWrapper: 'max-w-[50%]',
-            }}
-            onValueChange={(value) => {
-              setDeeplConfig({
-                ...deeplConfig,
-                authKey: value,
-              })
-            }}
-          />
-        </div>
-        <div className={`config-item ${deeplConfig.type !== 'deeplx' && 'hidden'}`}>
-          <Input
-            label={t('services.translate.deepl.custom_url')}
-            labelPlacement="outside-left"
-            value={deeplConfig.customUrl}
-            variant="bordered"
-            classNames={{
-              base: 'justify-between',
-              label: 'text-(length:--heroui-font-size-medium)',
-              mainWrapper: 'max-w-[50%]',
-            }}
-            onValueChange={(value) => {
-              setDeeplConfig({
-                ...deeplConfig,
-                customUrl: value,
-              })
-            }}
-          />
-        </div>
+        {fieldVisibility.authApiAuthKey && (
+          <div className="config-item">
+            <Input
+              label={t('services.translate.deepl.auth_key')}
+              labelPlacement="outside-left"
+              type="password"
+              value={deeplConfig.authApi.authKey}
+              variant="bordered"
+              classNames={{
+                base: 'justify-between',
+                label: 'text-(length:--heroui-font-size-medium)',
+                mainWrapper: 'max-w-[50%]',
+              }}
+              onValueChange={(value) => {
+                updateDeeplConfig({
+                  ...deeplConfig,
+                  authApi: {
+                    ...deeplConfig.authApi,
+                    authKey: value,
+                  },
+                })
+              }}
+            />
+          </div>
+        )}
+        {fieldVisibility.deeplxAuthKey && (
+          <div className="config-item">
+            <Input
+              label={t('services.translate.deepl.auth_key')}
+              labelPlacement="outside-left"
+              type="password"
+              value={deeplConfig.deeplx.authKey}
+              variant="bordered"
+              classNames={{
+                base: 'justify-between',
+                label: 'text-(length:--heroui-font-size-medium)',
+                mainWrapper: 'max-w-[50%]',
+              }}
+              onValueChange={(value) => {
+                updateDeeplConfig({
+                  ...deeplConfig,
+                  deeplx: {
+                    ...deeplConfig.deeplx,
+                    authKey: value,
+                  },
+                })
+              }}
+            />
+          </div>
+        )}
+        {fieldVisibility.deeplxCustomUrl && (
+          <div className="config-item">
+            <Input
+              label={t('services.translate.deepl.custom_url')}
+              labelPlacement="outside-left"
+              value={deeplConfig.deeplx.customUrl}
+              variant="bordered"
+              classNames={{
+                base: 'justify-between',
+                label: 'text-(length:--heroui-font-size-medium)',
+                mainWrapper: 'max-w-[50%]',
+              }}
+              onValueChange={(value) => {
+                updateDeeplConfig({
+                  ...deeplConfig,
+                  deeplx: {
+                    ...deeplConfig.deeplx,
+                    customUrl: value,
+                  },
+                })
+              }}
+            />
+          </div>
+        )}
         <div className="flex gap-2">
           <Button
             type="button"
             onPress={() => {
               setIsLoading(true)
-              translate('hello', Language.auto, Language.zh_cn, { config: deeplConfig }).then(
+              translate('hello', Language.auto, Language.zh_cn, {
+                config: normalizeDeepLConfig(deeplConfig, defaultInstanceName),
+              }).then(
                 () => {
                   setIsLoading(false)
                   toast.success(t('config.service.test_success'), { style: toastStyle })
