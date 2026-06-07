@@ -203,12 +203,6 @@
         "hide_language": "Dil alanını gizle",
         "hide_window": "Çeviri penceresini gizle",
         "detect_engine": "Dil algılama motoru",
-        "baidu": "Baidu",
-        "tencent": "Tencent",
-        "niutrans": "NiuTrans",
-        "google": "Google",
-        "bing": "Bing",
-        "yandex": "Yandex",
         "local": "Yerel",
         "plugin_missing": "Eklenti eksik"
       },

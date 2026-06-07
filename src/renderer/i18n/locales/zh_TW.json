@@ -203,12 +203,6 @@
         "hide_language": "隱藏語言區域",
         "hide_window": "隱藏翻譯視窗",
         "detect_engine": "語言偵測引擎",
-        "baidu": "Baidu",
-        "tencent": "Tencent",
-        "niutrans": "NiuTrans",
-        "google": "Google",
-        "bing": "Bing",
-        "yandex": "Yandex",
         "local": "本機",
         "plugin_missing": "缺少外掛程式"
       },

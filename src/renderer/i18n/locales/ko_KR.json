@@ -203,12 +203,6 @@
         "hide_language": "언어 영역 숨기기",
         "hide_window": "번역 창 숨기기",
         "detect_engine": "언어 감지 엔진",
-        "baidu": "Baidu",
-        "tencent": "Tencent",
-        "niutrans": "NiuTrans",
-        "google": "Google",
-        "bing": "Bing",
-        "yandex": "Yandex",
         "local": "로컬",
         "plugin_missing": "플러그인 누락"
       },

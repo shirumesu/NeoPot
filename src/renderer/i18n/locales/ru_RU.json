@@ -203,12 +203,6 @@
         "hide_language": "Скрыть панель языков",
         "hide_window": "Скрыть окно перевода",
         "detect_engine": "Движок определения языка",
-        "baidu": "Baidu",
-        "tencent": "Tencent",
-        "niutrans": "NiuTrans",
-        "google": "Google",
-        "bing": "Bing",
-        "yandex": "Yandex",
         "local": "Локально",
         "plugin_missing": "Плагин отсутствует"
       },

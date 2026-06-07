@@ -205,12 +205,6 @@
         "hide_language": "Hide Language Area",
         "hide_window": "Hide Translation Window",
         "detect_engine": "Language Detection Engine",
-        "baidu": "Baidu",
-        "tencent": "Tencent",
-        "niutrans": "NiuTrans",
-        "google": "Google",
-        "bing": "Bing",
-        "yandex": "Yandex",
         "local": "Local",
         "plugin_missing": "Missing plugin"
       },

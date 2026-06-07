@@ -203,12 +203,6 @@
         "hide_language": "إخفاء شريط اللغة",
         "hide_window": "إخفاء نافذة الترجمة",
         "detect_engine": "محرك اكتشاف اللغة",
-        "baidu": "Baidu",
-        "tencent": "Tencent",
-        "niutrans": "NiuTrans",
-        "google": "Google",
-        "bing": "Bing",
-        "yandex": "Yandex",
         "local": "محلي",
         "plugin_missing": "الإضافة مفقودة"
       },

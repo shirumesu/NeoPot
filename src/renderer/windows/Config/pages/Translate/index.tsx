@@ -71,7 +71,7 @@ export default function Translate() {
       )
     }
 
-    return t(`config.translate.${engine}`)
+    return t('config.translate.local')
   }
 
   return (

@@ -203,12 +203,6 @@
         "hide_language": "言語エリアを非表示",
         "hide_window": "翻訳ウィンドウを非表示",
         "detect_engine": "言語検出エンジン",
-        "baidu": "Baidu",
-        "tencent": "Tencent",
-        "niutrans": "NiuTrans",
-        "google": "Google",
-        "bing": "Bing",
-        "yandex": "Yandex",
         "local": "ローカル",
         "plugin_missing": "プラグインが不足しています"
       },

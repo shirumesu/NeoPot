@@ -203,12 +203,6 @@
         "hide_language": "Ocultar área de idioma",
         "hide_window": "Ocultar ventana de traducción",
         "detect_engine": "Motor de detección de idioma",
-        "baidu": "Baidu",
-        "tencent": "Tencent",
-        "niutrans": "NiuTrans",
-        "google": "Google",
-        "bing": "Bing",
-        "yandex": "Yandex",
         "local": "Local",
         "plugin_missing": "Falta el plugin"
       },

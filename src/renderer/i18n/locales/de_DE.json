@@ -203,12 +203,6 @@
         "hide_language": "Sprachleiste ausblenden",
         "hide_window": "Übersetzungsfenster ausblenden",
         "detect_engine": "Spracherkennungsmodul",
-        "baidu": "Baidu",
-        "tencent": "Tencent",
-        "niutrans": "NiuTrans",
-        "google": "Google",
-        "bing": "Bing",
-        "yandex": "Yandex",
         "local": "Lokal",
         "plugin_missing": "Plugin fehlt"
       },

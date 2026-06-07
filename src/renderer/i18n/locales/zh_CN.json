@@ -205,12 +205,6 @@
         "hide_language": "隐藏语言区域",
         "hide_window": "隐藏翻译窗口",
         "detect_engine": "语言检测引擎",
-        "baidu": "百度",
-        "tencent": "腾讯",
-        "niutrans": "小牛翻译",
-        "google": "Google",
-        "bing": "Bing",
-        "yandex": "Yandex",
         "local": "本地",
         "plugin_missing": "缺少插件"
       },
