@@ -1,9 +1,26 @@
 import axios, { type AxiosRequestConfig } from 'axios'
 import { net } from 'electron'
 import { applyProxyToAxios } from './proxy'
-import { assertPublicHttpRequestUrl, assertPublicHttpUrl } from './networkSafety'
+import {
+  assertPublicHttpRequestUrl,
+  assertPublicHttpUrl,
+  isBlockedNetworkAddress,
+} from './networkSafety'
 import { getConfig } from './config'
 import { getDeepLXCustomUrl, normalizeDeepLServiceType } from '../../shared/deeplConfig'
+import {
+  DEFAULT_GOOGLE_TRANSLATE_URL,
+  DEFAULT_LINGVA_URL,
+  normalizeDeepLXEndpointUrl,
+  normalizeGoogleTranslateBaseUrl,
+  normalizeLingvaBaseUrl,
+  normalizeOllamaBaseUrl,
+} from '../../shared/providerUrl'
+import {
+  getServiceName,
+  getServiceSouceType,
+  ServiceSourceType,
+} from '../../shared/serviceInstance'
 
 export interface ProviderRequest extends AxiosRequestConfig {
   timeoutMs?: number
@@ -34,69 +51,130 @@ const forbiddenRendererHeaders = new Set([
   'upgrade',
 ])
 
+const defaultServiceInstanceLists: Record<string, string[]> = {
+  translate_service_list: ['deepl', 'google'],
+  recognize_service_list: ['local_model'],
+  tts_service_list: ['lingva'],
+}
+const localHostnames = new Set(['localhost', 'localhost.localdomain'])
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
-function normalizeProviderUrl(value: unknown): URL | null {
-  if (typeof value !== 'string' || value.trim() === '') {
-    return null
-  }
-
-  let normalized = value.trim()
-  if (!/^https?:\/\//i.test(normalized)) {
-    normalized = `http://${normalized}`
+function addOrigin(origins: Set<string>, value: string): void {
+  if (!value) {
+    return
   }
 
   try {
-    return new URL(normalized)
+    origins.add(new URL(value).origin)
   } catch {
-    return null
+    // Invalid provider URLs are rejected when the provider builds the request.
   }
 }
 
+function addConfiguredOrigin(origins: Set<string>, supplier: () => string): void {
+  try {
+    addOrigin(origins, supplier())
+  } catch {
+    // Invalid provider URLs are rejected when that provider builds its request.
+  }
+}
+
+function readServiceInstanceList(serviceListKey: string): string[] {
+  const serviceList = getConfig(serviceListKey)
+  const configuredList = Array.isArray(serviceList)
+    ? serviceList
+    : (defaultServiceInstanceLists[serviceListKey] ?? [])
+
+  return [...new Set(configuredList.filter((value): value is string => typeof value === 'string'))]
+}
+
 function configuredProviderOrigins(): Set<string> {
-  const origins = new Set(['http://localhost:11434'])
-  for (const serviceListKey of [
-    'translate_service_list',
-    'recognize_service_list',
-    'tts_service_list',
-  ]) {
-    const serviceList = getConfig(serviceListKey)
-    if (!Array.isArray(serviceList)) {
-      continue
-    }
+  const origins = new Set<string>()
+  for (const serviceListKey of Object.keys(defaultServiceInstanceLists)) {
+    const serviceList = readServiceInstanceList(serviceListKey)
 
     for (const serviceInstanceKey of serviceList) {
-      if (typeof serviceInstanceKey !== 'string') {
+      if (getServiceSouceType(serviceInstanceKey) !== ServiceSourceType.BUILDIN) {
         continue
       }
 
-      const serviceName = serviceInstanceKey.split('@')[0]
+      const serviceName = getServiceName(serviceInstanceKey)
       const config = getConfig(serviceInstanceKey)
-      if (!isRecord(config)) {
-        continue
-      }
+      const providerConfig = isRecord(config) ? config : {}
 
-      const configuredUrl =
-        serviceName === 'ollama'
-          ? normalizeProviderUrl(config.requestPath)
-          : serviceName === 'deepl' && normalizeDeepLServiceType(config.type) === 'deeplx'
-            ? normalizeProviderUrl(getDeepLXCustomUrl(config))
-            : serviceName === 'lingva'
-              ? normalizeProviderUrl(config.custom_url)
-              : null
-      if (configuredUrl) {
-        origins.add(configuredUrl.origin)
+      if (serviceName === 'ollama') {
+        addConfiguredOrigin(origins, () => normalizeOllamaBaseUrl(providerConfig.requestPath))
+      } else if (
+        serviceName === 'deepl' &&
+        normalizeDeepLServiceType(providerConfig.type) === 'deeplx'
+      ) {
+        addConfiguredOrigin(origins, () =>
+          normalizeDeepLXEndpointUrl(getDeepLXCustomUrl(providerConfig)),
+        )
+      } else if (serviceName === 'lingva') {
+        addConfiguredOrigin(origins, () => normalizeLingvaBaseUrl(providerConfig.custom_url))
+      } else if (serviceName === 'google') {
+        addConfiguredOrigin(origins, () =>
+          normalizeGoogleTranslateBaseUrl(providerConfig.custom_url),
+        )
       }
     }
   }
+
+  addOrigin(origins, DEFAULT_LINGVA_URL)
+  addOrigin(origins, DEFAULT_GOOGLE_TRANSLATE_URL)
 
   return origins
 }
 
 function isConfiguredPrivateProviderTarget(url: URL): boolean {
-  return configuredProviderOrigins().has(url.origin)
+  const hostname = url.hostname.toLowerCase()
+  return (
+    (localHostnames.has(hostname) || isBlockedNetworkAddress(hostname)) &&
+    configuredProviderOrigins().has(url.origin)
+  )
+}
+
+function resolveAxiosRequestUrl(config: AxiosRequestConfig): string {
+  if (typeof config.url === 'string') {
+    try {
+      return new URL(config.url, config.baseURL).toString()
+    } catch {
+      throw new Error('Expected a valid HTTP request URL.')
+    }
+  }
+
+  if (typeof config.baseURL === 'string') {
+    return config.baseURL
+  }
+
+  throw new Error('Expected a valid HTTP request URL.')
+}
+
+function resolveFetchRequestUrl(input: RequestInfo | URL): string {
+  if (input instanceof URL) {
+    return input.toString()
+  }
+
+  if (typeof input === 'string') {
+    return input
+  }
+
+  if (input instanceof Request) {
+    return input.url
+  }
+
+  throw new Error('Expected a valid HTTP request URL.')
+}
+
+async function assertAllowedProviderRequestUrl(input: string): Promise<URL> {
+  const uncheckedUrl = assertPublicHttpUrl(input, { allowPrivateNetwork: true })
+  return assertPublicHttpRequestUrl(input, {
+    allowPrivateNetwork: isConfiguredPrivateProviderTarget(uncheckedUrl),
+  })
 }
 
 function normalizeRendererHeaders(headers: unknown): Record<string, string> {
@@ -149,10 +227,22 @@ function normalizeRendererBody(body: unknown, headers: Record<string, string>): 
 }
 
 export async function request<T = unknown>(options: ProviderRequest): Promise<T> {
+  const url = await assertAllowedProviderRequestUrl(resolveAxiosRequestUrl(options))
+  const {
+    baseURL: _baseURL,
+    maxRedirects: _maxRedirects,
+    timeout,
+    timeoutMs,
+    url: _url,
+    ...requestOptions
+  } = options
+
   const response = await axios.request<T>(
     applyProxyToAxios({
-      timeout: options.timeoutMs ?? options.timeout ?? 30000,
-      ...options,
+      ...requestOptions,
+      url: url.toString(),
+      maxRedirects: 0,
+      timeout: timeoutMs ?? timeout ?? 30000,
     }),
   )
 
@@ -227,8 +317,9 @@ export async function streamRequest(
   input: RequestInfo | URL,
   init: RequestInit = {},
 ): Promise<ReadableStream<Uint8Array> | null> {
-  const fetchInput = input instanceof URL ? input.toString() : input
-  const response = await net.fetch(fetchInput, init)
+  const url = await assertAllowedProviderRequestUrl(resolveFetchRequestUrl(input))
+  const { redirect: _redirect, ...requestInit } = init
+  const response = await net.fetch(url.toString(), { ...requestInit, redirect: 'manual' })
   if (!response.ok) {
     throw new Error(`SERVICE_HTTP_ERROR:${response.status}`)
   }

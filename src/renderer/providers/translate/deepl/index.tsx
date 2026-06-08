@@ -1,6 +1,7 @@
 import { fetch, Body } from '@/renderer/lib/electron/http'
 import { normalizeRequiredString } from './normalize'
 import { createDeepLXAuthHeaders, normalizeDeepLConfig } from '@/shared/deeplConfig'
+import { normalizeDeepLXEndpointUrl } from '@/shared/providerUrl'
 
 export async function translate(text: string, from: string, to: string, options: any = {}) {
   const config = normalizeDeepLConfig(options.config)
@@ -20,7 +21,7 @@ export async function translate(text: string, from: string, to: string, options:
       text,
       from,
       to,
-      normalizeRequiredString(config.deeplx.customUrl, 'DeepLX URL'),
+      normalizeRequiredString(normalizeDeepLXEndpointUrl(config.deeplx.customUrl), 'DeepLX URL'),
       config.deeplx.authKey,
     )
   } else {

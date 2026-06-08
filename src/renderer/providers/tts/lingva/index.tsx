@@ -1,8 +1,9 @@
 import { fetch } from '@/renderer/lib/electron/http'
+import { normalizeLingvaBaseUrl } from '@/shared/providerUrl'
 
 import { Language } from './info'
 
-export const DEFAULT_LINGVA_URL = 'https://lingva.ml'
+export { DEFAULT_LINGVA_URL } from '@/shared/providerUrl'
 
 interface LingvaConfig {
   custom_url?: string
@@ -10,17 +11,6 @@ interface LingvaConfig {
 
 interface LingvaTtsOptions {
   config?: LingvaConfig
-}
-
-function normalizeBaseUrl(value: unknown): string {
-  const rawValue = typeof value === 'string' ? value.trim() : ''
-  let baseUrl = rawValue || DEFAULT_LINGVA_URL
-
-  if (!/^https?:\/\//i.test(baseUrl)) {
-    baseUrl = `https://${baseUrl}`
-  }
-
-  return baseUrl.replace(/\/+$/, '')
 }
 
 function isAudioArray(value: unknown): value is number[] {
@@ -37,7 +27,7 @@ export async function tts(text: string, lang: Language, options: LingvaTtsOption
     throw new Error('Cannot synthesize empty text.')
   }
 
-  const baseUrl = normalizeBaseUrl(options.config?.custom_url)
+  const baseUrl = normalizeLingvaBaseUrl(options.config?.custom_url)
   const res = await fetch(
     `${baseUrl}/api/v1/audio/${encodeURIComponent(lang)}/${encodeURIComponent(query)}`,
     {

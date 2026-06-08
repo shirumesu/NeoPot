@@ -41,11 +41,6 @@ const languageMap: Record<string, string> = {
   khm: 'km',
 }
 
-type ScriptMatch = {
-  language: string
-  count: number
-}
-
 const supportedTinyldLanguages = Object.keys(languageMap)
 
 const traditionalChineseCharacters = new Set(
@@ -71,14 +66,14 @@ const traditionalChineseCharacters = new Set(
 )
 
 const scriptDetectors: Array<{ language: string; pattern: RegExp }> = [
-  { language: 'ja', pattern: /[\u3040-\u30ff]/gu },
-  { language: 'ko', pattern: /[\uac00-\ud7af]/gu },
-  { language: 'ar', pattern: /[\u0600-\u06ff]/gu },
-  { language: 'he', pattern: /[\u0590-\u05ff]/gu },
-  { language: 'hi', pattern: /[\u0900-\u097f]/gu },
-  { language: 'th', pattern: /[\u0e00-\u0e7f]/gu },
-  { language: 'km', pattern: /[\u1780-\u17ff]/gu },
-  { language: 'zh_cn', pattern: /[\u4e00-\u9fff]/gu },
+  { language: 'ja', pattern: /[\u3040-\u30ff]/u },
+  { language: 'ko', pattern: /[\uac00-\ud7af]/u },
+  { language: 'ar', pattern: /[\u0600-\u06ff]/u },
+  { language: 'he', pattern: /[\u0590-\u05ff]/u },
+  { language: 'hi', pattern: /[\u0900-\u097f]/u },
+  { language: 'th', pattern: /[\u0e00-\u0e7f]/u },
+  { language: 'km', pattern: /[\u1780-\u17ff]/u },
+  { language: 'zh_cn', pattern: /[\u4e00-\u9fff]/u },
 ]
 
 const cyrillicLanguagePatterns: Array<{ language: string; pattern: RegExp }> = [
@@ -116,10 +111,6 @@ const latinFeaturePatterns: Array<{ language: string; pattern: RegExp }> = [
   },
 ]
 
-function countMatches(value: string, pattern: RegExp) {
-  return [...value.matchAll(pattern)].length
-}
-
 function hasTraditionalChineseSignal(value: string) {
   for (const character of value) {
     if (traditionalChineseCharacters.has(character)) {
@@ -131,21 +122,19 @@ function hasTraditionalChineseSignal(value: string) {
 }
 
 function detectByScript(value: string): string | null {
-  const matches: ScriptMatch[] = scriptDetectors
-    .map(({ language, pattern }) => ({ language, count: countMatches(value, pattern) }))
-    .filter(({ count }) => count > 0)
+  for (const { language, pattern } of scriptDetectors) {
+    if (!pattern.test(value)) {
+      continue
+    }
 
-  if (matches.length === 0) {
-    return null
+    if (language === 'zh_cn') {
+      return hasTraditionalChineseSignal(value) ? 'zh_tw' : 'zh_cn'
+    }
+
+    return language
   }
 
-  matches.sort((a, b) => b.count - a.count)
-  const [best] = matches
-  if (best.language === 'zh_cn') {
-    return hasTraditionalChineseSignal(value) ? 'zh_tw' : 'zh_cn'
-  }
-
-  return best.language
+  return null
 }
 
 function detectCyrillic(value: string): string | null {

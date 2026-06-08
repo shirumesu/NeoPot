@@ -1,19 +1,13 @@
 import { fetch } from '@/renderer/lib/electron/http'
+import { normalizeGoogleTranslateBaseUrl } from '@/shared/providerUrl'
 
 export async function translate(text: string, from: string, to: string, options: any = {}) {
   const { config } = options
 
-  let { custom_url } = config
-
-  if (custom_url === undefined || custom_url === '') {
-    custom_url = 'https://translate.google.com'
-  }
-  if (!custom_url.startsWith('http')) {
-    custom_url = 'https://' + custom_url
-  }
+  const customUrl = normalizeGoogleTranslateBaseUrl(config?.custom_url)
 
   const res = await fetch(
-    `${custom_url}/translate_a/single?dt=at&dt=bd&dt=ex&dt=ld&dt=md&dt=qca&dt=rw&dt=rm&dt=ss&dt=t`,
+    `${customUrl}/translate_a/single?dt=at&dt=bd&dt=ex&dt=ld&dt=md&dt=qca&dt=rw&dt=rm&dt=ss&dt=t`,
     {
       method: 'GET',
       headers: { 'content-type': 'application/json' },

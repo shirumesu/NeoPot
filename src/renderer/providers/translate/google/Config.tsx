@@ -9,6 +9,7 @@ import { useToastStyle } from '../../../hooks'
 import { translate } from './index'
 import { Language } from './index'
 import { useConfigSave } from '@/renderer/windows/Config/hooks/useConfigSave'
+import { DEFAULT_GOOGLE_TRANSLATE_URL } from '@/shared/providerUrl'
 
 export function Config(props: any) {
   const { instanceKey, updateServiceList, onClose } = props
@@ -17,7 +18,7 @@ export function Config(props: any) {
     instanceKey,
     {
       [INSTANCE_NAME_CONFIG_KEY]: t('services.translate.google.title'),
-      custom_url: 'https://translate.google.com',
+      custom_url: DEFAULT_GOOGLE_TRANSLATE_URL,
     },
     { sync: false },
   )

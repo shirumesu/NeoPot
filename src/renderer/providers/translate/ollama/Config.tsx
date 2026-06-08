@@ -24,6 +24,7 @@ import { useToastStyle } from '../../../hooks'
 import { getModels as getOllamaModels, pullModel as pullOllamaModel, translate } from './index'
 import { Language } from './index'
 import { useConfigSave } from '@/renderer/windows/Config/hooks/useConfigSave'
+import { DEFAULT_OLLAMA_URL, normalizeOllamaBaseUrl } from '@/shared/providerUrl'
 
 const THINKING_MODE_DEFAULT = 'default'
 const THINKING_MODE_ON = 'on'
@@ -61,16 +62,6 @@ type OllamaModelList = {
   models?: { name: string }[]
 }
 
-function normalizeHost(requestPath?: string) {
-  let normalized = requestPath?.trim() || 'http://localhost:11434'
-
-  if (!/^https?:\/\/.+/i.test(normalized)) {
-    normalized = `http://${normalized}`
-  }
-
-  return normalized.replace(/\/+$/, '')
-}
-
 export function Config(props: any) {
   const { instanceKey, updateServiceList, onClose } = props
   const { t } = useTranslation()
@@ -80,7 +71,7 @@ export function Config(props: any) {
       [INSTANCE_NAME_CONFIG_KEY]: t('services.translate.ollama.title'),
       stream: true,
       model: DEFAULT_MODEL,
-      requestPath: 'http://localhost:11434',
+      requestPath: DEFAULT_OLLAMA_URL,
       temperature: '',
       topP: '',
       topK: '',
@@ -135,7 +126,7 @@ export function Config(props: any) {
 
     try {
       const currentConfig = serviceConfig
-      const list = await getOllamaModels(normalizeHost(currentConfig.requestPath))
+      const list = await getOllamaModels(normalizeOllamaBaseUrl(currentConfig.requestPath))
       setInstalledModels(list)
       const models = list.models?.map((model: { name: string }) => model.name) ?? []
       if (
@@ -163,7 +154,7 @@ export function Config(props: any) {
     setProgress(0)
     setPullingStatus(currentConfig.model)
     try {
-      await pullOllamaModel(normalizeHost(currentConfig.requestPath), currentConfig.model)
+      await pullOllamaModel(normalizeOllamaBaseUrl(currentConfig.requestPath), currentConfig.model)
       await getModels()
     } catch (e) {
       toast.error(String(e), { style: toastStyle })

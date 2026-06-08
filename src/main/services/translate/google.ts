@@ -1,4 +1,5 @@
 import { createProviderClient } from '../../modules/http'
+import { normalizeGoogleTranslateBaseUrl } from '../../../shared/providerUrl'
 
 export interface GoogleTranslateRequest {
   text: string
@@ -10,8 +11,7 @@ export interface GoogleTranslateRequest {
 }
 
 export async function translateGoogle(request: GoogleTranslateRequest): Promise<string> {
-  const customUrl = request.config?.custom_url?.trim() || 'https://translate.google.com'
-  const baseURL = customUrl.startsWith('http') ? customUrl : `https://${customUrl}`
+  const baseURL = normalizeGoogleTranslateBaseUrl(request.config?.custom_url)
   const client = createProviderClient(baseURL)
 
   const result = await client.request<unknown[]>({

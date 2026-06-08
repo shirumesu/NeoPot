@@ -1,4 +1,5 @@
 import { fetch, Body } from '@/renderer/lib/electron/http'
+import { normalizeOllamaBaseUrl } from '@/shared/providerUrl'
 import { Language } from './info'
 
 const OLLAMA_HEADERS = { Origin: 'http://localhost' }
@@ -25,16 +26,6 @@ type StreamState = {
 }
 
 type SetResult = ((value: string) => void) | undefined
-
-function normalizeHost(requestPath?: string) {
-  let normalized = requestPath?.trim() || 'http://localhost:11434'
-
-  if (!/^https?:\/\/.+/i.test(normalized)) {
-    normalized = `http://${normalized}`
-  }
-
-  return normalized.replace(/\/+$/, '')
-}
 
 function parseOptionalFloat(value: unknown, fieldName: string) {
   if (value === undefined || value === null || String(value).trim() === '') {
@@ -135,7 +126,7 @@ function resolveModel(model?: string) {
 }
 
 export async function getModels(requestPath?: string) {
-  const host = normalizeHost(requestPath)
+  const host = normalizeOllamaBaseUrl(requestPath)
   const res = await fetch(`${host}/api/tags`, { headers: OLLAMA_HEADERS })
 
   if (res.ok) {
@@ -146,7 +137,7 @@ export async function getModels(requestPath?: string) {
 }
 
 export async function pullModel(requestPath: string | undefined, model: string) {
-  const host = normalizeHost(requestPath)
+  const host = normalizeOllamaBaseUrl(requestPath)
   const res = await fetch(`${host}/api/pull`, {
     method: 'POST',
     headers: OLLAMA_HEADERS,
@@ -280,7 +271,7 @@ export async function translate(text: string, from: string, to: string, options:
   requestBody.options = modelOptions
   requestBody.think = think
 
-  const host = normalizeHost(requestPath)
+  const host = normalizeOllamaBaseUrl(requestPath)
   const res = await fetch(`${host}/api/chat`, {
     method: 'POST',
     headers: OLLAMA_HEADERS,
