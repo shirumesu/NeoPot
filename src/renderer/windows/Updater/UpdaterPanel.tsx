@@ -12,7 +12,6 @@ import { formatBytes, formatBytesPerSecond, getProgressPercent } from './formatP
 interface UpdaterPanelProps {
   controller: UpdaterController
   onCancel: () => void
-  variant?: 'window' | 'modal'
 }
 
 function phaseLabelKey(phase: UpdaterPhase): string | null {
@@ -104,11 +103,9 @@ function MarkdownPreview({ value }: { value: string }) {
 function ReleaseNotesPreview({
   isChecking,
   value,
-  compact,
 }: {
   isChecking: boolean
   value: string
-  compact: boolean
 }) {
   if (isChecking && !value) {
     return (
@@ -127,52 +124,77 @@ function ReleaseNotesPreview({
   }
 
   return (
-    <div
-      className={`overflow-y-auto rounded-lg border border-default-200 bg-content1 p-4 ${
-        compact ? 'max-h-[34vh]' : 'min-h-0 flex-1'
-      }`}
-    >
+    <div className="min-h-0 flex-1 overflow-y-auto rounded-lg border border-default-200 bg-content1 p-4">
       <MarkdownPreview value={value} />
     </div>
   )
 }
 
-function ProgressDetails({ controller }: { controller: UpdaterController }) {
-  const { t } = useTranslation()
+function formatProgressSummary(controller: UpdaterController) {
   const progress = controller.progress
-  const percent = getProgressPercent(progress)
   const transferred = formatBytes(progress?.transferred)
   const total = formatBytes(progress?.total)
   const speed = formatBytesPerSecond(progress?.bytesPerSecond)
+  const amount = transferred && total ? `${transferred} / ${total}` : transferred || total
 
-  if (!progress && !controller.isWorking) {
-    return null
-  }
+  return [amount, speed].filter(Boolean).join('  |  ')
+}
+
+function UpdateSummary({
+  controller,
+  title,
+  description,
+}: {
+  controller: UpdaterController
+  title: string
+  description: string
+}) {
+  const { t } = useTranslation()
+  const progress = controller.progress
+  const percent = getProgressPercent(progress)
+  const progressSummary = formatProgressSummary(controller)
+  const showProgress = Boolean(progress) || controller.isChecking || controller.isWorking
+  const currentVersion = t('updater.current_version', { version: appVersion })
 
   return (
-    <div className="space-y-2 rounded-lg border border-default-200 bg-content1 px-4 py-3">
-      <Progress
-        aria-label={t('updater.progress')}
-        value={percent}
-        isIndeterminate={percent === undefined}
-        showValueLabel={percent !== undefined}
-        size="sm"
-      />
-      <div className="grid grid-cols-1 gap-2 text-xs text-default-600 sm:grid-cols-3">
-        <div>
-          <div className="font-medium text-foreground">{t('updater.downloaded')}</div>
-          <div>{transferred && total ? `${transferred} / ${total}` : transferred || '-'}</div>
+    <section className="shrink-0 rounded-lg border border-default-200 bg-content1 px-4 py-3">
+      <div className="grid min-w-0 gap-3 md:grid-cols-[minmax(0,1fr)_minmax(180px,260px)]">
+        <div className="min-w-0">
+          <div className="mb-2 flex flex-wrap items-center gap-2">
+            <Chip
+              size="sm"
+              color={statusColor(controller.result?.status, controller.phase)}
+              variant="flat"
+              className="max-w-full"
+            >
+              <span className="truncate">{title}</span>
+            </Chip>
+            <span className="min-w-0 truncate text-xs text-default-500">{currentVersion}</span>
+          </div>
+          <h1 className="break-words text-xl font-semibold leading-7">{title}</h1>
+          <p className="mt-1 line-clamp-2 break-words text-sm leading-5 text-default-600">
+            {description}
+          </p>
         </div>
-        <div>
-          <div className="font-medium text-foreground">{t('updater.package_size')}</div>
-          <div>{total || '-'}</div>
-        </div>
-        <div>
-          <div className="font-medium text-foreground">{t('updater.download_speed')}</div>
-          <div>{speed || '-'}</div>
+        <div className="flex min-w-0 flex-col items-start justify-start gap-1 md:items-end md:text-right">
+          <span className="text-xs font-medium text-default-500">{t('updater.progress')}</span>
+          <span className="max-w-full truncate text-sm font-medium text-primary">
+            {progressSummary || currentVersion}
+          </span>
         </div>
       </div>
-    </div>
+
+      {showProgress && (
+        <Progress
+          aria-label={t('updater.progress')}
+          className="mt-3"
+          value={percent}
+          isIndeterminate={percent === undefined}
+          showValueLabel={percent !== undefined}
+          size="sm"
+        />
+      )}
+    </section>
   )
 }
 
@@ -292,43 +314,21 @@ function primaryLabel(
   }
 }
 
-export function UpdaterPanel({ controller, onCancel, variant = 'window' }: UpdaterPanelProps) {
+export function UpdaterPanel({ controller, onCancel }: UpdaterPanelProps) {
   const { t } = useTranslation()
-  const compact = variant === 'modal'
   const releaseNotes = getReleaseNotes(controller, t)
   const title = getStatusTitle(controller, t)
   const description = getStatusDescription(controller, t)
 
   return (
-    <div className={`flex min-h-0 flex-col gap-4 ${compact ? '' : 'h-full'}`}>
-      <section className="rounded-lg border border-default-200 bg-content1 px-4 py-3">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <div className="mb-2 flex flex-wrap items-center gap-2">
-              <Chip
-                size="sm"
-                color={statusColor(controller.result?.status, controller.phase)}
-                variant="flat"
-              >
-                {title}
-              </Chip>
-              <span className="text-xs text-default-500">
-                {t('updater.current_version', { version: appVersion })}
-              </span>
-            </div>
-            <h1 className="text-xl font-semibold leading-7">{title}</h1>
-            <p className="mt-1 text-sm leading-5 text-default-600">{description}</p>
-          </div>
-        </div>
-      </section>
+    <div className="flex h-full min-h-0 flex-col gap-4">
+      <UpdateSummary controller={controller} title={title} description={description} />
 
-      <ProgressDetails controller={controller} />
-
-      <section className={`flex min-h-0 flex-col gap-2 ${compact ? '' : 'flex-1'}`}>
+      <section className="flex min-h-0 flex-1 flex-col gap-2">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold">{t('updater.release_notes')}</h2>
           {controller.result?.releaseName && (
-            <span className="truncate text-xs text-default-500">
+            <span className="ml-3 min-w-0 truncate text-xs text-default-500">
               {controller.result.releaseName}
             </span>
           )}
@@ -336,7 +336,6 @@ export function UpdaterPanel({ controller, onCancel, variant = 'window' }: Updat
         <ReleaseNotesPreview
           isChecking={controller.isChecking}
           value={releaseNotes}
-          compact={compact}
         />
       </section>
 

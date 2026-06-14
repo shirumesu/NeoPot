@@ -34,8 +34,8 @@ export default function AboutUpdateModal({ isOpen, onOpenChange }: AboutUpdateMo
   })
 
   return (
-    <Modal isOpen={isOpen} onOpenChange={onOpenChange} scrollBehavior="inside" size="3xl">
-      <ModalContent className="max-h-[86vh]">
+    <Modal isOpen={isOpen} onOpenChange={onOpenChange} scrollBehavior="inside" size="4xl">
+      <ModalContent className="h-[min(760px,86vh)]">
         {(onClose) => (
           <>
             <ModalHeader className="flex flex-col gap-1 pr-10">
@@ -44,8 +44,8 @@ export default function AboutUpdateModal({ isOpen, onOpenChange }: AboutUpdateMo
                 {t('updater.about_description')}
               </span>
             </ModalHeader>
-            <ModalBody className="pb-5">
-              <UpdaterPanel controller={controller} onCancel={onClose} variant="modal" />
+            <ModalBody className="min-h-0 pb-5">
+              <UpdaterPanel controller={controller} onCancel={onClose} />
             </ModalBody>
           </>
         )}

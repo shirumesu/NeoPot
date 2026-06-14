@@ -71,10 +71,10 @@ const windowDefinitions: Record<WindowLabel, WindowDefinition> = {
     resizable: false,
   },
   updater: {
-    width: 600,
-    height: 400,
-    minWidth: 600,
-    minHeight: 400,
+    width: 720,
+    height: 520,
+    minWidth: 640,
+    minHeight: 440,
     resizable: true,
   },
 }
