@@ -1,7 +1,7 @@
 import { Button, Card, CardBody, Divider, Switch, Tooltip } from '@heroui/react'
 import { open } from '@/renderer/lib/electron/compat/dialog'
 import { emit } from '@/renderer/lib/electron/compat/event'
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import {
   MdClose,
   MdCreateNewFolder,
@@ -42,18 +42,47 @@ export default function Plugin() {
   const { t } = useTranslation()
   const { saveConfig } = useConfigSave()
 
-  const refreshPlugins = async () => {
+  const refreshPlugins = useCallback(async () => {
     const installed = await loadInstalledPlugins()
     setPlugins(installed)
     logger.debug('Plugin list refreshed.', {
       count: installed.length,
     })
     return installed
-  }
+  }, [])
+
+  const checkUpdates = useCallback(
+    async (options: { silent?: boolean } = {}, installedPlugins: InstalledPlugin[] = plugins) => {
+      logger.debug('Plugin update check requested.', {
+        count: installedPlugins.length,
+      })
+      const allUpdates = await checkPluginUpdates(installedPlugins)
+
+      const ignoredUpdates = ((await configApi.get('plugin_ignored_updates')) || {}) as Record<
+        string,
+        string
+      >
+      const nextUpdates = allUpdates.filter((update) => {
+        const ignoredVersion = ignoredUpdates[update.id]
+        return !ignoredVersion || ignoredVersion !== update.version
+      })
+
+      setUpdates(nextUpdates)
+      await configApi.set('plugin_last_check_update_at', Date.now())
+      if (!options.silent) {
+        toast.success(
+          nextUpdates.length > 0
+            ? t('config.plugin.update.available_count', { count: nextUpdates.length })
+            : t('config.plugin.update.none'),
+        )
+      }
+    },
+    [plugins, t],
+  )
 
   useEffect(() => {
     void refreshPlugins()
-  }, [])
+  }, [refreshPlugins])
 
   useEffect(() => {
     if (autoUpdate !== true || plugins.length === 0) {
@@ -68,7 +97,7 @@ export default function Plugin() {
 
       void checkUpdates({ silent: true })
     })
-  }, [autoUpdate, plugins])
+  }, [autoUpdate, checkUpdates, plugins])
 
   async function installSources(sources: string[]) {
     if (sources.length === 0) {
@@ -149,35 +178,6 @@ export default function Plugin() {
     })
     setPlugins((current) => current.filter((item) => item.id !== plugin.id))
     await emit('reload_plugin_list')
-  }
-
-  async function checkUpdates(
-    options: { silent?: boolean } = {},
-    installedPlugins: InstalledPlugin[] = plugins,
-  ) {
-    logger.debug('Plugin update check requested.', {
-      count: installedPlugins.length,
-    })
-    const allUpdates = await checkPluginUpdates(installedPlugins)
-
-    const ignoredUpdates = ((await configApi.get('plugin_ignored_updates')) || {}) as Record<
-      string,
-      string
-    >
-    const nextUpdates = allUpdates.filter((update) => {
-      const ignoredVersion = ignoredUpdates[update.id]
-      return !ignoredVersion || ignoredVersion !== update.version
-    })
-
-    setUpdates(nextUpdates)
-    await configApi.set('plugin_last_check_update_at', Date.now())
-    if (!options.silent) {
-      toast.success(
-        nextUpdates.length > 0
-          ? t('config.plugin.update.available_count', { count: nextUpdates.length })
-          : t('config.plugin.update.none'),
-      )
-    }
   }
 
   async function ignoreUpdate(plugin: PluginUpdate) {

@@ -14,7 +14,7 @@ import {
 import { BiCollapseVertical, BiExpandVertical } from 'react-icons/bi'
 import { BaseDirectory, readTextFile } from '@/renderer/lib/electron/compat/fs'
 import { sendNotification } from '@/renderer/lib/electron/compat/notification'
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useCallback, useEffect, useState, useRef } from 'react'
 import { writeText } from '@/renderer/lib/electron/compat/clipboard'
 import { PulseLoader } from 'react-spinners'
 import { TbTransformFilled } from 'react-icons/tb'
@@ -53,6 +53,8 @@ import {
 const AnimatedDiv = animated.div as any
 
 const translateID: string[] = []
+const builtinServiceMap = builtinServices as Record<string, any>
+const builtinTtsServiceMap = builtinTtsServices as Record<string, any>
 
 const MARKDOWN_PATTERNS = [
   /^#{1,6}\s+\S/m,
@@ -151,6 +153,19 @@ function MarkdownResult({ value, appFontSize }: { value: string; appFontSize: nu
   )
 }
 
+function invokeOnce(fn: (...args: any[]) => void) {
+  let isInvoke = false
+
+  return (...args: any[]) => {
+    if (isInvoke) {
+      return
+    } else {
+      fn(...args)
+      isInvoke = true
+    }
+  }
+}
+
 export default function TargetArea(props: any) {
   const { index, name, translateServiceInstanceList, pluginList, serviceInstanceConfigMap } = props
 
@@ -163,8 +178,6 @@ export default function TargetArea(props: any) {
   const [appFontSize] = useConfig('app_font_size', 16)
   const resolvedAppFontSize = appFontSize ?? 16
   const [ttsServiceList] = useConfig<string[]>('tts_service_list', ['lingva'])
-  const builtinServiceMap = builtinServices as Record<string, any>
-  const builtinTtsServiceMap = builtinTtsServices as Record<string, any>
   const ttsServiceInstanceKey = Array.isArray(ttsServiceList)
     ? ttsServiceList.find((key) => {
         if (!isValidServiceInstanceKey(key)) {
@@ -208,75 +221,7 @@ export default function TargetArea(props: any) {
     }
   }, [currentTranslateServiceInstanceKey, error])
 
-  // listen to translation
-  useEffect(() => {
-    setResult('')
-    setError('')
-    setResultViewMode(null)
-    const canTranslate =
-      sourceText.trim() !== '' &&
-      sourceLanguage &&
-      targetLanguage &&
-      autoCopy !== null &&
-      hideWindow !== null &&
-      clipboardMonitor !== null
-
-    if (!canTranslate) {
-      translateID[index] = ''
-      setIsLoading(false)
-      setHide(true)
-      return
-    }
-
-    if (autoCopy === 'source' && !clipboardMonitor) {
-      writeText(sourceText).then(() => {
-        if (hideWindow) {
-          sendNotification({
-            title: t('common.write_clipboard'),
-            body: sourceText,
-          })
-        }
-      })
-    }
-    void translate().catch((error) => {
-      reportRuntimeError(error, {
-        source: 'translate.request',
-        logMessage: 'Translation request failed.',
-        toastId: `translate.request:${currentTranslateServiceInstanceKey}`,
-        context: {
-          service: currentTranslateServiceInstanceKey,
-        },
-      })
-      setError(error instanceof Error ? error.toString() : String(error))
-      setIsLoading(false)
-    })
-  }, [
-    sourceText,
-    sourceLanguage,
-    targetLanguage,
-    autoCopy,
-    hideWindow,
-    currentTranslateServiceInstanceKey,
-    clipboardMonitor,
-    manualTranslateFlag,
-    serviceInstanceConfigMap,
-    index,
-  ])
-
-  function invokeOnce(fn: (...args: any[]) => void) {
-    let isInvoke = false
-
-    return (...args: any[]) => {
-      if (isInvoke) {
-        return
-      } else {
-        fn(...args)
-        isInvoke = true
-      }
-    }
-  }
-
-  const translate = async () => {
+  const translate = useCallback(async () => {
     const id = nanoid()
     const startedAt = Date.now()
     translateID[index] = id
@@ -489,7 +434,77 @@ export default function TargetArea(props: any) {
         setError(t('errors.language_not_supported'))
       }
     }
-  }
+  }, [
+    autoCopy,
+    clipboardMonitor,
+    currentTranslateServiceInstanceKey,
+    detectLanguage,
+    hideWindow,
+    index,
+    pluginList,
+    serviceInstanceConfigMap,
+    sourceLanguage,
+    sourceText,
+    t,
+    targetLanguage,
+    translateSecondLanguage,
+  ])
+
+  // listen to translation
+  useEffect(() => {
+    setResult('')
+    setError('')
+    setResultViewMode(null)
+    const canTranslate =
+      sourceText.trim() !== '' &&
+      sourceLanguage &&
+      targetLanguage &&
+      autoCopy !== null &&
+      hideWindow !== null &&
+      clipboardMonitor !== null
+
+    if (!canTranslate) {
+      translateID[index] = ''
+      setIsLoading(false)
+      setHide(true)
+      return
+    }
+
+    if (autoCopy === 'source' && !clipboardMonitor) {
+      writeText(sourceText).then(() => {
+        if (hideWindow) {
+          sendNotification({
+            title: t('common.write_clipboard'),
+            body: sourceText,
+          })
+        }
+      })
+    }
+    void translate().catch((error) => {
+      reportRuntimeError(error, {
+        source: 'translate.request',
+        logMessage: 'Translation request failed.',
+        toastId: `translate.request:${currentTranslateServiceInstanceKey}`,
+        context: {
+          service: currentTranslateServiceInstanceKey,
+        },
+      })
+      setError(error instanceof Error ? error.toString() : String(error))
+      setIsLoading(false)
+    })
+  }, [
+    autoCopy,
+    clipboardMonitor,
+    currentTranslateServiceInstanceKey,
+    hideWindow,
+    index,
+    manualTranslateFlag,
+    sourceLanguage,
+    sourceText,
+    t,
+    targetLanguage,
+    translate,
+  ])
 
   // hide empty textarea
   useEffect(() => {

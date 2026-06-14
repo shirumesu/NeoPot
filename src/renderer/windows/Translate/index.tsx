@@ -1,6 +1,6 @@
 import { getCurrentWebviewWindow } from '@/renderer/lib/electron/compat/webviewWindow'
 import { Spacer, Button } from '@heroui/react'
-import React, { useState, useEffect } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { listen } from '@/renderer/lib/electron/compat/event'
 import { BsPinFill } from 'react-icons/bs'
 import { useTranslation } from 'react-i18next'
@@ -31,6 +31,7 @@ import {
 import * as builtinTranslateServices from '@/renderer/providers/translate'
 import { logger } from '@/renderer/lib/logger'
 const appWindow = getCurrentWebviewWindow()
+const builtinTranslateServiceMap = builtinTranslateServices as Record<string, any>
 
 let blurTimeout: ReturnType<typeof setTimeout> | null = null
 let resizeTimeout: ReturnType<typeof setTimeout> | null = null
@@ -92,24 +93,38 @@ export default function Translate() {
   const [pluginLoadError, setPluginLoadError] = useState<string | null>(null)
   const [serviceConfigError, setServiceConfigError] = useState<string | null>(null)
   const [serviceInstanceConfigMap, setServiceInstanceConfigMap] = useState<Record<string, any>>({})
-  const builtinTranslateServiceMap = builtinTranslateServices as Record<string, any>
-  const availableTranslateServices = {
-    [ServiceSourceType.BUILDIN]: builtinTranslateServiceMap,
-    [ServiceSourceType.PLUGIN]: pluginList.translate,
-  }
-  const validTranslateServiceInstanceList = Array.isArray(translateServiceInstanceList)
-    ? translateServiceInstanceList.filter(
-        (key) =>
-          isValidServiceInstanceKey(key) &&
-          whetherAvailableService(key, availableTranslateServices),
-      )
-    : []
-  const validRecognizeServiceInstanceList = Array.isArray(recognizeServiceInstanceList)
-    ? recognizeServiceInstanceList.filter(isValidServiceInstanceKey)
-    : []
-  const validTtsServiceInstanceList = Array.isArray(ttsServiceInstanceList)
-    ? ttsServiceInstanceList.filter(isValidServiceInstanceKey)
-    : []
+  const availableTranslateServices = useMemo(
+    () => ({
+      [ServiceSourceType.BUILDIN]: builtinTranslateServiceMap,
+      [ServiceSourceType.PLUGIN]: pluginList.translate,
+    }),
+    [pluginList.translate],
+  )
+  const validTranslateServiceInstanceList = useMemo(
+    () =>
+      Array.isArray(translateServiceInstanceList)
+        ? translateServiceInstanceList.filter(
+            (key) =>
+              isValidServiceInstanceKey(key) &&
+              whetherAvailableService(key, availableTranslateServices),
+          )
+        : [],
+    [availableTranslateServices, translateServiceInstanceList],
+  )
+  const validRecognizeServiceInstanceList = useMemo(
+    () =>
+      Array.isArray(recognizeServiceInstanceList)
+        ? recognizeServiceInstanceList.filter(isValidServiceInstanceKey)
+        : [],
+    [recognizeServiceInstanceList],
+  )
+  const validTtsServiceInstanceList = useMemo(
+    () =>
+      Array.isArray(ttsServiceInstanceList)
+        ? ttsServiceInstanceList.filter(isValidServiceInstanceKey)
+        : [],
+    [ttsServiceInstanceList],
+  )
   useEffect(() => {
     if (closeOnBlur !== null && !closeOnBlur) {
       unlistenBlur()
@@ -171,7 +186,7 @@ export default function Translate() {
     }
   }, [rememberWindowSize])
 
-  const loadPluginList = async () => {
+  const loadPluginList = useCallback(async () => {
     try {
       const temp = await loadEnabledServicePlugins()
       setPluginLoadError(null)
@@ -180,16 +195,16 @@ export default function Translate() {
       logger.error('Failed to load translate plugin list.', error)
       setPluginLoadError(error instanceof Error ? error.message : String(error))
     }
-  }
+  }, [])
 
   useEffect(() => {
     loadPluginList()
     if (!unlisten) {
       unlisten = listen('reload_plugin_list', loadPluginList)
     }
-  }, [])
+  }, [loadPluginList])
 
-  const loadServiceInstanceConfigMap = async () => {
+  const loadServiceInstanceConfigMap = useCallback(async () => {
     try {
       const config: Record<string, any> = {}
       for (const serviceInstanceKey of validTranslateServiceInstanceList) {
@@ -207,7 +222,12 @@ export default function Translate() {
       logger.error('Failed to load translate service config map.', error)
       setServiceConfigError(error instanceof Error ? error.message : String(error))
     }
-  }
+  }, [
+    validRecognizeServiceInstanceList,
+    validTranslateServiceInstanceList,
+    validTtsServiceInstanceList,
+  ])
+
   useEffect(() => {
     if (
       translateServiceInstanceList !== null &&
@@ -217,10 +237,10 @@ export default function Translate() {
       loadServiceInstanceConfigMap()
     }
   }, [
+    loadServiceInstanceConfigMap,
     translateServiceInstanceList,
     recognizeServiceInstanceList,
     ttsServiceInstanceList,
-    pluginList,
   ])
 
   const isServiceConfigReady =

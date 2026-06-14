@@ -100,13 +100,7 @@ function MarkdownPreview({ value }: { value: string }) {
   )
 }
 
-function ReleaseNotesPreview({
-  isChecking,
-  value,
-}: {
-  isChecking: boolean
-  value: string
-}) {
+function ReleaseNotesPreview({ isChecking, value }: { isChecking: boolean; value: string }) {
   if (isChecking && !value) {
     return (
       <div className="space-y-3">
@@ -333,10 +327,7 @@ export function UpdaterPanel({ controller, onCancel }: UpdaterPanelProps) {
             </span>
           )}
         </div>
-        <ReleaseNotesPreview
-          isChecking={controller.isChecking}
-          value={releaseNotes}
-        />
+        <ReleaseNotesPreview isChecking={controller.isChecking} value={releaseNotes} />
       </section>
 
       <Divider />

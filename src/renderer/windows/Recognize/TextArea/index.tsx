@@ -25,6 +25,7 @@ import { reportRuntimeError } from '@/renderer/lib/runtimeError'
 export const textAtom = atom('')
 let recognizeId = ''
 const RECOGNIZE_TIMEOUT_MS = 30000
+const builtinServiceMap = builtinServices as Record<string, any>
 
 function withTimeout<T>(promise: Promise<T>, timeoutMessage: string) {
   let timeout: ReturnType<typeof setTimeout> | null = null
@@ -52,7 +53,6 @@ export default function TextArea(props: any) {
   const [text, setText] = useAtom(textAtom)
   const [error, setError] = useState('')
   const pluginList = useAtomValue(pluginListAtom)
-  const builtinServiceMap = builtinServices as Record<string, any>
   const { t } = useTranslation()
 
   useEffect(() => {

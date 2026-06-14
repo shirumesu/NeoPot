@@ -150,7 +150,7 @@ export const useConfig = <T = unknown>(
       syncToStore(v)
       return Promise.resolve()
     },
-    [getProperty, persistStoreValue, setPropertyState, sync, syncToStore],
+    [getProperty, key, persistStoreValue, setPropertyState, sync, syncToStore],
   )
 
   const syncToState = useCallback(

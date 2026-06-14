@@ -17,7 +17,7 @@ import { INSTANCE_NAME_CONFIG_KEY } from '@/renderer/lib/service/service_instanc
 import { MdDeleteOutline } from 'react-icons/md'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 
 import { useConfig } from '../../../hooks/useConfig'
 import { useToastStyle } from '../../../hooks'
@@ -85,9 +85,14 @@ export function Config(props: any) {
   const [progress, setProgress] = useState(0)
   const [pullingStatus, setPullingStatus] = useState('')
   const [installedModels, setInstalledModels] = useState<OllamaModelList | null>(null)
+  const serviceConfigRef = useRef(serviceConfig)
 
   const toastStyle = useToastStyle()
   const { saveConfig } = useConfigSave()
+
+  useEffect(() => {
+    serviceConfigRef.current = serviceConfig
+  }, [serviceConfig])
 
   if (serviceConfig) {
     let changed = false
@@ -119,30 +124,32 @@ export function Config(props: any) {
     }
   }
 
-  async function getModels() {
-    if (serviceConfig === null) {
-      return
-    }
-
-    try {
-      const currentConfig = serviceConfig
-      const list = await getOllamaModels(normalizeOllamaBaseUrl(currentConfig.requestPath))
-      setInstalledModels(list)
-      const models = list.models?.map((model: { name: string }) => model.name) ?? []
-      if (
-        currentConfig.model === LEGACY_DEFAULT_MODEL &&
-        models.length > 0 &&
-        !models.includes(LEGACY_DEFAULT_MODEL)
-      ) {
-        setServiceConfig({
-          ...currentConfig,
-          model: models.includes(DEFAULT_MODEL) ? DEFAULT_MODEL : models[0],
-        })
+  const getModels = useCallback(
+    async (currentConfig: OllamaServiceConfig | null = serviceConfigRef.current) => {
+      if (currentConfig === null) {
+        return
       }
-    } catch {
-      setInstalledModels(null)
-    }
-  }
+
+      try {
+        const list = await getOllamaModels(normalizeOllamaBaseUrl(currentConfig.requestPath))
+        setInstalledModels(list)
+        const models = list.models?.map((model: { name: string }) => model.name) ?? []
+        if (
+          currentConfig.model === LEGACY_DEFAULT_MODEL &&
+          models.length > 0 &&
+          !models.includes(LEGACY_DEFAULT_MODEL)
+        ) {
+          setServiceConfig({
+            ...currentConfig,
+            model: models.includes(DEFAULT_MODEL) ? DEFAULT_MODEL : models[0],
+          })
+        }
+      } catch {
+        setInstalledModels(null)
+      }
+    },
+    [setServiceConfig],
+  )
 
   async function pullModel() {
     if (serviceConfig === null) {
@@ -155,7 +162,7 @@ export function Config(props: any) {
     setPullingStatus(currentConfig.model)
     try {
       await pullOllamaModel(normalizeOllamaBaseUrl(currentConfig.requestPath), currentConfig.model)
-      await getModels()
+      await getModels(currentConfig)
     } catch (e) {
       toast.error(String(e), { style: toastStyle })
     } finally {
@@ -166,10 +173,10 @@ export function Config(props: any) {
   }
 
   useEffect(() => {
-    if (serviceConfig !== null) {
-      getModels()
+    if (serviceConfigRef.current !== null) {
+      void getModels()
     }
-  }, [serviceConfig?.requestPath])
+  }, [getModels, serviceConfig?.requestPath])
 
   return (
     serviceConfig !== null && (

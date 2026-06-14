@@ -15,7 +15,7 @@
     "build": "electron-vite build",
     "make": "node .scripts/clean-release-output.mjs && electron-vite build && electron-builder --win --publish never",
     "release": "node .scripts/check-release-version.mjs && node .scripts/clean-release-output.mjs && electron-vite build && electron-builder --publish always",
-    "lint": "eslint . --quiet",
+    "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "node --experimental-transform-types --disable-warning=ExperimentalWarning --test \"spec/tests/*/*.test.mjs\""

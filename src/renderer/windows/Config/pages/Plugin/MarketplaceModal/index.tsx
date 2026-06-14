@@ -11,7 +11,7 @@ import {
 } from '@heroui/react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { MdAdd, MdClose, MdFolderOpen, MdInsertDriveFile, MdRefresh } from 'react-icons/md'
 
 import {
@@ -37,23 +37,26 @@ export default function MarketplaceModal(props: any) {
   const [loading, setLoading] = useState(false)
   const [installingId, setInstallingId] = useState<string | null>(null)
 
-  async function refreshMarketplace(sources = customSources) {
-    setLoading(true)
-    try {
-      const result = await loadMarketplacePlugins(sources)
-      setPlugins(result.plugins)
-      setSourceStatuses(result.sources)
-      logger.info('Plugin marketplace refreshed.', {
-        pluginCount: result.plugins.length,
-        sourceCount: result.sources.length,
-      })
-    } catch (error) {
-      logger.error('Plugin marketplace refresh failed.', error)
-      toast.error(t('config.plugin.market.refresh_failed'))
-    } finally {
-      setLoading(false)
-    }
-  }
+  const refreshMarketplace = useCallback(
+    async (sources: string[]) => {
+      setLoading(true)
+      try {
+        const result = await loadMarketplacePlugins(sources)
+        setPlugins(result.plugins)
+        setSourceStatuses(result.sources)
+        logger.info('Plugin marketplace refreshed.', {
+          pluginCount: result.plugins.length,
+          sourceCount: result.sources.length,
+        })
+      } catch (error) {
+        logger.error('Plugin marketplace refresh failed.', error)
+        toast.error(t('config.plugin.market.refresh_failed'))
+      } finally {
+        setLoading(false)
+      }
+    },
+    [t],
+  )
 
   useEffect(() => {
     if (!isOpen) {
@@ -64,7 +67,7 @@ export default function MarketplaceModal(props: any) {
       setCustomSources(sources)
       await refreshMarketplace(sources)
     })
-  }, [isOpen])
+  }, [isOpen, refreshMarketplace])
 
   async function persistSources(nextSources: string[]) {
     const saved = await saveCustomMarketplaceSources(nextSources)
@@ -272,7 +275,7 @@ export default function MarketplaceModal(props: any) {
                       startContent={<MdRefresh className="text-lg" />}
                       isLoading={loading}
                       onPress={() => {
-                        void refreshMarketplace()
+                        void refreshMarketplace(customSources)
                       }}
                     >
                       {t('config.plugin.market.refresh_list')}

@@ -42,9 +42,91 @@ export const manualTranslateFlagAtom = atom('')
 
 const DEFAULT_RECOGNIZE_SERVICE_LIST = ['local_model']
 const DEFAULT_TTS_SERVICE_LIST = ['lingva']
+const recognizeServiceMap = recognizeServices as Record<string, any>
+const builtinTtsServiceMap = builtinTtsServices as Record<string, any>
 
 function toWorkflowText(value: unknown): string {
   return typeof value === 'string' ? value : ''
+}
+
+function transformVarName(str: string) {
+  let str2 = str
+
+  // snake_case to SNAKE_CASE
+  if (/_[a-z]/.test(str2)) {
+    str2 = str2
+      .split('_')
+      .map((it: string) => it.toLocaleUpperCase())
+      .join('_')
+  }
+  if (str2 !== str) {
+    return str2
+  }
+
+  // SNAKE_CASE to kebab-case
+  if (/^[A-Z]+(_[A-Z]+)*$/.test(str2)) {
+    str2 = str2
+      .split('_')
+      .map((it: string) => it.toLocaleLowerCase())
+      .join('-')
+  }
+  if (str2 !== str) {
+    return str2
+  }
+
+  // kebab-case to dot.notation
+  if (/-/.test(str2)) {
+    str2 = str2
+      .split('-')
+      .map((it: string) => it.toLocaleLowerCase())
+      .join('.')
+  }
+  if (str2 !== str) {
+    return str2
+  }
+
+  // dot.notation to space separated
+  if (/\.[a-z]/.test(str2)) {
+    str2 = str2.replaceAll(/(\.)([a-z])/g, (_: string, _2: string, it: string) => ' ' + it)
+  }
+  if (str2 !== str) {
+    return str2
+  }
+
+  // space separated to Title Case
+  if (/\s[a-z]/.test(str2)) {
+    str2 = str2.replaceAll(/\s([a-z])/g, (_: string, it: string) => ' ' + it.toLocaleUpperCase())
+    str2 = str2.substring(0, 1).toLocaleUpperCase() + str2.substring(1)
+  }
+  if (str2 !== str) {
+    return str2
+  }
+
+  // Title Case to CamelCase
+  if (/\s[A-Z]/.test(str2)) {
+    str2 = str2.replaceAll(/\s([A-Z])/g, (_: string, it: string) => it)
+    str2 = str2.substring(0, 1).toLocaleLowerCase() + str2.substring(1)
+  }
+  if (str2 !== str) {
+    return str2
+  }
+
+  // CamelCase to PascalCase
+  if (/^[a-z]+[A-Z]+/.test(str2)) {
+    str2 = str2.substring(0, 1).toLocaleUpperCase() + str2.substring(1)
+  }
+  if (str2 !== str) {
+    return str2
+  }
+
+  // PascalCase to snake_case
+  if (/[^\s][A-Z]/.test(str2)) {
+    str2 = str2.replaceAll(/[A-Z]/g, (it: string, offset: number) => {
+      return (offset == 0 ? '' : '_') + it.toLocaleLowerCase()
+    })
+  }
+
+  return str2
 }
 
 export default function SourceArea(props: any) {
@@ -62,8 +144,6 @@ export default function SourceArea(props: any) {
     DEFAULT_RECOGNIZE_SERVICE_LIST,
   )
   const [ttsServiceList] = useConfig<string[]>('tts_service_list', DEFAULT_TTS_SERVICE_LIST)
-  const recognizeServiceMap = recognizeServices as Record<string, any>
-  const builtinTtsServiceMap = builtinTtsServices as Record<string, any>
   const ttsServiceInstanceKey = Array.isArray(ttsServiceList)
     ? ttsServiceList.find((key) => {
         if (!isValidServiceInstanceKey(key)) {
@@ -237,7 +317,6 @@ export default function SourceArea(props: any) {
     },
     [
       commitSourceText,
-      detect_language,
       hideWindow,
       normalizeInputText,
       pluginList,
@@ -247,6 +326,7 @@ export default function SourceArea(props: any) {
       setDetectLanguage,
       setSourceText,
       syncSourceText,
+      t,
     ],
   )
 
@@ -337,7 +417,7 @@ export default function SourceArea(props: any) {
         })
       }
     }
-  }, [])
+  }, [reportSourceAreaError])
 
   useEffect(() => {
     if (
@@ -386,6 +466,7 @@ export default function SourceArea(props: any) {
     recognizeServiceList,
     hideWindow,
     handleNewText,
+    reportSourceAreaError,
   ])
 
   useEffect(() => {
@@ -396,100 +477,24 @@ export default function SourceArea(props: any) {
     textAreaRef.current.style.height = textAreaRef.current.scrollHeight + 'px'
   }, [sourceText])
 
-  const changeSourceText = async (text: string) => {
-    setDetectLanguage('')
-    await setSourceText(text)
-    if (dynamicTranslate) {
-      if (sourceTextChangeTimerRef.current) {
-        clearTimeout(sourceTextChangeTimerRef.current)
+  const changeSourceText = useCallback(
+    async (text: string) => {
+      setDetectLanguage('')
+      await setSourceText(text)
+      if (dynamicTranslate) {
+        if (sourceTextChangeTimerRef.current) {
+          clearTimeout(sourceTextChangeTimerRef.current)
+        }
+        sourceTextChangeTimerRef.current = setTimeout(() => {
+          detect_language(text).then(() => {
+            syncSourceText()
+          })
+        }, 1000)
       }
-      sourceTextChangeTimerRef.current = setTimeout(() => {
-        detect_language(text).then(() => {
-          syncSourceText()
-        })
-      }, 1000)
-    }
-  }
+    },
+    [detect_language, dynamicTranslate, setDetectLanguage, setSourceText, syncSourceText],
+  )
 
-  const transformVarName = function (str: string) {
-    let str2 = str
-
-    // snake_case to SNAKE_CASE
-    if (/_[a-z]/.test(str2)) {
-      str2 = str2
-        .split('_')
-        .map((it: string) => it.toLocaleUpperCase())
-        .join('_')
-    }
-    if (str2 !== str) {
-      return str2
-    }
-
-    // SNAKE_CASE to kebab-case
-    if (/^[A-Z]+(_[A-Z]+)*$/.test(str2)) {
-      str2 = str2
-        .split('_')
-        .map((it: string) => it.toLocaleLowerCase())
-        .join('-')
-    }
-    if (str2 !== str) {
-      return str2
-    }
-
-    // kebab-case to dot.notation
-    if (/-/.test(str2)) {
-      str2 = str2
-        .split('-')
-        .map((it: string) => it.toLocaleLowerCase())
-        .join('.')
-    }
-    if (str2 !== str) {
-      return str2
-    }
-
-    // dot.notation to space separated
-    if (/\.[a-z]/.test(str2)) {
-      str2 = str2.replaceAll(/(\.)([a-z])/g, (_: string, _2: string, it: string) => ' ' + it)
-    }
-    if (str2 !== str) {
-      return str2
-    }
-
-    // space separated to Title Case
-    if (/\s[a-z]/.test(str2)) {
-      str2 = str2.replaceAll(/\s([a-z])/g, (_: string, it: string) => ' ' + it.toLocaleUpperCase())
-      str2 = str2.substring(0, 1).toLocaleUpperCase() + str2.substring(1)
-    }
-    if (str2 !== str) {
-      return str2
-    }
-
-    // Title Case to CamelCase
-    if (/\s[A-Z]/.test(str2)) {
-      str2 = str2.replaceAll(/\s([A-Z])/g, (_: string, it: string) => it)
-      str2 = str2.substring(0, 1).toLocaleLowerCase() + str2.substring(1)
-    }
-    if (str2 !== str) {
-      return str2
-    }
-
-    // CamelCase to PascalCase
-    if (/^[a-z]+[A-Z]+/.test(str2)) {
-      str2 = str2.substring(0, 1).toLocaleUpperCase() + str2.substring(1)
-    }
-    if (str2 !== str) {
-      return str2
-    }
-
-    // PascalCase to snake_case
-    if (/[^\s][A-Z]/.test(str2)) {
-      str2 = str2.replaceAll(/[A-Z]/g, (it: string, offset: number) => {
-        return (offset == 0 ? '' : '_') + it.toLocaleLowerCase()
-      })
-    }
-
-    return str2
-  }
   useEffect(() => {
     const element = textAreaRef.current
     if (!element) {
@@ -517,7 +522,7 @@ export default function SourceArea(props: any) {
 
     element.addEventListener('keydown', onKeyDown)
     return () => element.removeEventListener('keydown', onKeyDown)
-  }, [])
+  }, [changeSourceText])
 
   return (
     <div className={hideSource && windowType !== '[INPUT_TRANSLATE]' ? 'hidden' : undefined}>
