@@ -1,5 +1,6 @@
 import type { AxiosRequestConfig } from 'axios'
 import { session } from 'electron'
+import { normalizeProxyHost } from '../../shared/proxyConfig'
 import { getConfig } from './config'
 
 export interface ProxyConfig {
@@ -23,7 +24,7 @@ export function getProxyConfig(): ProxyConfig {
   const enabled = getConfig('proxy_enable') ?? getConfig('proxy_enabled')
   return {
     enabled: Boolean(enabled),
-    host: (getConfig('proxy_host') as string | undefined) ?? undefined,
+    host: normalizeProxyHost(getConfig('proxy_host')),
     port: readProxyPort(),
     protocol: (getConfig('proxy_protocol') as 'http' | 'https' | undefined) ?? 'http',
     username: (getConfig('proxy_username') as string | undefined) ?? undefined,

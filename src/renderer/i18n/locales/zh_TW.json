@@ -92,6 +92,7 @@
       "recognize_window_initialization_failed": "辨識視窗初始化失敗",
       "language_not_supported": "不支援此語言",
       "recognize_service_not_configured": "尚未設定辨識服務",
+      "translate_service_not_configured": "尚未設定翻譯服務",
       "recognize_timeout": "辨識請求逾時"
     },
     "status": {

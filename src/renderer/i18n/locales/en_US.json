@@ -94,6 +94,7 @@
       "runtime_details_hint": "Check logs for more details.",
       "language_not_supported": "Language not supported",
       "recognize_service_not_configured": "Recognition service is not configured",
+      "translate_service_not_configured": "Translation service is not configured",
       "recognize_timeout": "Recognition request timed out"
     },
     "status": {

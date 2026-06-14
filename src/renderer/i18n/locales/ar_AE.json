@@ -92,6 +92,7 @@
       "recognize_window_initialization_failed": "فشل تهيئة نافذة التعرف",
       "language_not_supported": "اللغة غير مدعومة",
       "recognize_service_not_configured": "خدمة التعرف غير مهيأة",
+      "translate_service_not_configured": "خدمة الترجمة غير مهيأة",
       "recognize_timeout": "انتهت مهلة طلب التعرف"
     },
     "status": {

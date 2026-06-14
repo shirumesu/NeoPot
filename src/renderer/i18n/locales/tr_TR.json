@@ -92,6 +92,7 @@
       "recognize_window_initialization_failed": "Tanıma penceresi başlatılamadı",
       "language_not_supported": "Dil desteklenmiyor",
       "recognize_service_not_configured": "Tanıma hizmeti yapılandırılmamış",
+      "translate_service_not_configured": "Çeviri hizmeti yapılandırılmamış",
       "recognize_timeout": "Tanıma isteği zaman aşımına uğradı"
     },
     "status": {

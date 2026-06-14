@@ -92,6 +92,7 @@
       "recognize_window_initialization_failed": "Не удалось открыть окно распознавания",
       "language_not_supported": "Язык не поддерживается",
       "recognize_service_not_configured": "Сервис распознавания не настроен",
+      "translate_service_not_configured": "Сервис перевода не настроен",
       "recognize_timeout": "Время ожидания распознавания истекло"
     },
     "status": {

@@ -92,6 +92,7 @@
       "recognize_window_initialization_failed": "Error al iniciar la ventana de reconocimiento",
       "language_not_supported": "Idioma no compatible",
       "recognize_service_not_configured": "El servicio de reconocimiento no está configurado",
+      "translate_service_not_configured": "El servicio de traducción no está configurado",
       "recognize_timeout": "La solicitud de reconocimiento ha expirado"
     },
     "status": {

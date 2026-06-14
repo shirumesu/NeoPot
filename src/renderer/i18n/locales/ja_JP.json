@@ -92,6 +92,7 @@
       "recognize_window_initialization_failed": "認識ウィンドウの初期化に失敗しました",
       "language_not_supported": "対応していない言語です",
       "recognize_service_not_configured": "認識サービスが設定されていません",
+      "translate_service_not_configured": "翻訳サービスが設定されていません",
       "recognize_timeout": "認識リクエストがタイムアウトしました"
     },
     "status": {

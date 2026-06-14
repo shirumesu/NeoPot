@@ -142,6 +142,17 @@ const MARKDOWN_PATTERNS = [
 ]
 
 const MARKDOWN_TABLE_SEPARATOR_PATTERN = /^\s*\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)+\|?\s*$/m
+const SAFE_RICH_TEXT_TAGS = new Set(['b', 'strong', 'i', 'em', 'u', 'br'])
+const DROPPED_RICH_TEXT_TAGS = new Set([
+  'script',
+  'style',
+  'template',
+  'iframe',
+  'object',
+  'embed',
+  'svg',
+  'math',
+])
 
 function isMarkdownLike(value: unknown) {
   if (typeof value !== 'string') return false
@@ -219,6 +230,56 @@ function MarkdownResult({ value, appFontSize }: { value: string; appFontSize: nu
         {value}
       </ReactMarkdown>
     </div>
+  )
+}
+
+function renderSafeRichTextNode(node: ChildNode, key: string): React.ReactNode {
+  if (node.nodeType === 3) {
+    return node.textContent ?? ''
+  }
+
+  if (node.nodeType !== 1) {
+    return null
+  }
+
+  const element = node as Element
+  const tagName = element.tagName.toLowerCase()
+  if (DROPPED_RICH_TEXT_TAGS.has(tagName)) {
+    return null
+  }
+
+  const children = Array.from(element.childNodes).map((child, childIndex) =>
+    renderSafeRichTextNode(child, `${key}-${childIndex}`),
+  )
+
+  if (!SAFE_RICH_TEXT_TAGS.has(tagName)) {
+    return <React.Fragment key={key}>{children}</React.Fragment>
+  }
+
+  switch (tagName) {
+    case 'b':
+    case 'strong':
+      return <strong key={key}>{children}</strong>
+    case 'i':
+    case 'em':
+      return <em key={key}>{children}</em>
+    case 'u':
+      return <u key={key}>{children}</u>
+    case 'br':
+      return <br key={key} />
+    default:
+      return <React.Fragment key={key}>{children}</React.Fragment>
+  }
+}
+
+function renderSafeRichText(value: string): React.ReactNode[] {
+  if (typeof DOMParser === 'undefined') {
+    return [value]
+  }
+
+  const doc = new DOMParser().parseFromString(value, 'text/html')
+  return Array.from(doc.body.childNodes).map((node, index) =>
+    renderSafeRichTextNode(node, String(index)),
   )
 }
 
@@ -373,6 +434,10 @@ export default function TargetArea(props: TargetAreaProps) {
   const detectLanguage = useAtomValue(detectLanguageAtom)
   const [ttsPluginInfo, setTtsPluginInfo] = useState<PluginLanguageInfo>()
   const { t } = useTranslation()
+  const getTranslateServiceNotConfiguredMessage = useCallback(
+    () => t('errors.translate_service_not_configured'),
+    [t],
+  )
   const textAreaRef = useRef<HTMLTextAreaElement>(null)
   const speak = useVoice()
   const { theme } = useTheme()
@@ -416,6 +481,10 @@ export default function TargetArea(props: TargetAreaProps) {
 
     if (whetherPluginService(currentTranslateServiceInstanceKey)) {
       const pluginInfo = pluginList['translate'][translateServiceName]
+      if (!pluginInfo?.language) {
+        setError(getTranslateServiceNotConfiguredMessage())
+        return
+      }
       if (
         resolvedSourceLanguage in pluginInfo.language &&
         resolvedTargetLanguage in pluginInfo.language
@@ -425,6 +494,7 @@ export default function TargetArea(props: TargetAreaProps) {
         const instanceConfig = serviceInstanceConfigMap[currentTranslateServiceInstanceKey]
         if (instanceConfig === undefined) {
           setIsLoading(false)
+          setError(getTranslateServiceNotConfiguredMessage())
           return
         }
         instanceConfig['enable'] = 'true'
@@ -510,17 +580,23 @@ export default function TargetArea(props: TargetAreaProps) {
         setError(t('errors.language_not_supported'))
       }
     } else {
-      const LanguageEnum = builtinServiceMap[translateServiceName].Language
+      const builtinService = builtinServiceMap[translateServiceName]
+      if (!builtinService) {
+        setError(getTranslateServiceNotConfiguredMessage())
+        return
+      }
+      const LanguageEnum = builtinService.Language
       if (resolvedSourceLanguage in LanguageEnum && resolvedTargetLanguage in LanguageEnum) {
         setIsLoading(true)
         setHide(true)
         const instanceConfig = serviceInstanceConfigMap[currentTranslateServiceInstanceKey]
         if (instanceConfig === undefined) {
           setIsLoading(false)
+          setError(getTranslateServiceNotConfiguredMessage())
           return
         }
         const setHideOnce = invokeOnce(setHide)
-        builtinServiceMap[translateServiceName]
+        builtinService
           .translate(
             sourceText.trim(),
             LanguageEnum[resolvedSourceLanguage],
@@ -608,6 +684,7 @@ export default function TargetArea(props: TargetAreaProps) {
     detectLanguage,
     hideWindow,
     index,
+    getTranslateServiceNotConfiguredMessage,
     pluginList,
     serviceInstanceConfigMap,
     sourceLanguage,
@@ -974,22 +1051,18 @@ export default function TargetArea(props: TargetAreaProps) {
                         </span>
                         <>
                           {sentence.source && (
-                            <span
-                              className={`text-[${resolvedAppFontSize}px] select-text`}
-                              dangerouslySetInnerHTML={{
-                                __html: sentence.source,
-                              }}
-                            />
+                            <span className={`text-[${resolvedAppFontSize}px] select-text`}>
+                              {renderSafeRichText(sentence.source)}
+                            </span>
                           )}
                         </>
                         <>
                           {sentence.target && (
                             <div
                               className={`text-[${resolvedAppFontSize}px] select-text text-default-500`}
-                              dangerouslySetInnerHTML={{
-                                __html: sentence.target,
-                              }}
-                            />
+                            >
+                              {renderSafeRichText(sentence.target)}
+                            </div>
                           )}
                         </>
                       </div>
@@ -1102,6 +1175,10 @@ export default function TargetArea(props: TargetAreaProps) {
                     if (whetherPluginService(currentTranslateServiceInstanceKey)) {
                       const pluginInfo =
                         pluginList['translate'][getServiceName(currentTranslateServiceInstanceKey)]
+                      if (!pluginInfo?.language) {
+                        setError(getTranslateServiceNotConfiguredMessage())
+                        return
+                      }
                       if (
                         newSourceLanguage in pluginInfo.language &&
                         newTargetLanguage in pluginInfo.language
@@ -1110,6 +1187,11 @@ export default function TargetArea(props: TargetAreaProps) {
                         setHide(true)
                         const instanceConfig =
                           serviceInstanceConfigMap[currentTranslateServiceInstanceKey]
+                        if (instanceConfig === undefined) {
+                          setIsLoading(false)
+                          setError(getTranslateServiceNotConfiguredMessage())
+                          return
+                        }
                         instanceConfig['enable'] = 'true'
                         const setHideOnce = invokeOnce(setHide)
                         const [func, utils] = await invoke_plugin(
@@ -1161,16 +1243,25 @@ export default function TargetArea(props: TargetAreaProps) {
                         setError(t('errors.language_not_supported'))
                       }
                     } else {
-                      const LanguageEnum =
+                      const builtinService =
                         builtinServiceMap[getServiceName(currentTranslateServiceInstanceKey)]
-                          .Language
+                      if (!builtinService) {
+                        setError(getTranslateServiceNotConfiguredMessage())
+                        return
+                      }
+                      const LanguageEnum = builtinService.Language
                       if (newSourceLanguage in LanguageEnum && newTargetLanguage in LanguageEnum) {
                         setIsLoading(true)
                         setHide(true)
                         const instanceConfig =
                           serviceInstanceConfigMap[currentTranslateServiceInstanceKey]
+                        if (instanceConfig === undefined) {
+                          setIsLoading(false)
+                          setError(getTranslateServiceNotConfiguredMessage())
+                          return
+                        }
                         const setHideOnce = invokeOnce(setHide)
-                        builtinServiceMap[getServiceName(currentTranslateServiceInstanceKey)]
+                        builtinService
                           .translate(
                             result.trim(),
                             LanguageEnum[newSourceLanguage],

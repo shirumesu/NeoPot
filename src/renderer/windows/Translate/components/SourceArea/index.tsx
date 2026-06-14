@@ -303,33 +303,35 @@ export default function SourceArea(props: SourceAreaProps) {
         setSourceText('', true)
       } else if (text === '[IMAGE_TRANSLATE]') {
         setWindowType('[IMAGE_TRANSLATE]')
-        if (recognizeServiceList === null || recognizeLanguage === null) {
+        if (
+          recognizeServiceList === null ||
+          recognizeLanguage === null ||
+          recognizeServiceList.length === 0
+        ) {
           setSourceText(t('errors.recognize_service_not_configured'))
           return
         }
         const base64 = String(await electronCommand('get_base64'))
         const serviceInstanceKey = recognizeServiceList[0]
+        if (!isValidServiceInstanceKey(serviceInstanceKey)) {
+          setSourceText(t('errors.recognize_service_not_configured'))
+          return
+        }
+        const serviceName = getServiceName(serviceInstanceKey)
         if (getServiceSouceType(serviceInstanceKey) === ServiceSourceType.PLUGIN) {
-          if (
-            recognizeLanguage in
-            pluginList['recognize'][getServiceName(serviceInstanceKey)].language
-          ) {
+          const pluginInfo = pluginList['recognize'][serviceName]
+          if (!pluginInfo?.language) {
+            setSourceText(t('errors.recognize_service_not_configured'))
+            return
+          }
+          if (recognizeLanguage in pluginInfo.language) {
             const pluginConfig = serviceInstanceConfigMap[serviceInstanceKey]
 
-            const [func, utils] = await invoke_plugin(
-              'recognize',
-              getServiceName(serviceInstanceKey),
-            )
-            func(
-              base64,
-              pluginList['recognize'][getServiceName(serviceInstanceKey)].language[
-                recognizeLanguage
-              ],
-              {
-                config: pluginConfig,
-                utils,
-              },
-            ).then(
+            const [func, utils] = await invoke_plugin('recognize', serviceName)
+            func(base64, pluginInfo.language[recognizeLanguage], {
+              config: pluginConfig,
+              utils,
+            }).then(
               (value) => {
                 void commitSourceText(normalizeInputText(toResultText(value)))
               },
@@ -337,7 +339,7 @@ export default function SourceArea(props: SourceAreaProps) {
                 reportRuntimeError(e, {
                   source: 'translate.image_recognize.plugin',
                   logMessage: 'Image translation OCR plugin failed.',
-                  toastId: `translate.image_recognize.plugin:${getServiceName(serviceInstanceKey)}`,
+                  toastId: `translate.image_recognize.plugin:${serviceName}`,
                   context: {
                     service: serviceInstanceKey,
                     language: recognizeLanguage,
@@ -350,18 +352,17 @@ export default function SourceArea(props: SourceAreaProps) {
             setSourceText(t('errors.language_not_supported'))
           }
         } else {
-          if (
-            recognizeLanguage in recognizeServiceMap[getServiceName(serviceInstanceKey)].Language
-          ) {
+          const recognizeService = recognizeServiceMap[serviceName]
+          if (!recognizeService) {
+            setSourceText(t('errors.recognize_service_not_configured'))
+            return
+          }
+          if (recognizeLanguage in recognizeService.Language) {
             const instanceConfig = serviceInstanceConfigMap[serviceInstanceKey]
-            recognizeServiceMap[getServiceName(serviceInstanceKey)]
-              .recognize(
-                base64,
-                recognizeServiceMap[getServiceName(serviceInstanceKey)].Language[recognizeLanguage],
-                {
-                  config: instanceConfig,
-                },
-              )
+            recognizeService
+              .recognize(base64, recognizeService.Language[recognizeLanguage], {
+                config: instanceConfig,
+              })
               .then(
                 (value) => {
                   void commitSourceText(normalizeInputText(toResultText(value)))
@@ -370,7 +371,7 @@ export default function SourceArea(props: SourceAreaProps) {
                   reportRuntimeError(e, {
                     source: 'translate.image_recognize.builtin',
                     logMessage: 'Image translation OCR provider failed.',
-                    toastId: `translate.image_recognize.builtin:${getServiceName(serviceInstanceKey)}`,
+                    toastId: `translate.image_recognize.builtin:${serviceName}`,
                     context: {
                       service: serviceInstanceKey,
                       language: recognizeLanguage,
@@ -471,26 +472,43 @@ export default function SourceArea(props: SourceAreaProps) {
         reportSourceAreaError(error, 'translate.new_text')
       })
     })
-    unlistenPromise.then((unlisten) => {
-      if (disposed) {
-        unlisten()
-      } else {
+    unlistenPromise.then(
+      (unlisten) => {
         removeListener = unlisten
         void window.neoPot?.app.rendererReady()
-      }
-    })
+        if (disposed) {
+          removeListener = null
+          unlisten()
+        }
+      },
+      (error: unknown) => {
+        reportSourceAreaError(error, 'translate.new_text_listener')
+      },
+    )
 
     return () => {
       disposed = true
       if (removeListener) {
         removeListener()
       } else {
-        unlistenPromise.then((unlisten) => {
-          unlisten()
-        })
+        unlistenPromise.then(
+          (unlisten) => {
+            unlisten()
+          },
+          () => undefined,
+        )
       }
     }
   }, [reportSourceAreaError])
+
+  useEffect(() => {
+    return () => {
+      if (sourceTextChangeTimerRef.current) {
+        clearTimeout(sourceTextChangeTimerRef.current)
+        sourceTextChangeTimerRef.current = null
+      }
+    }
+  }, [])
 
   useEffect(() => {
     if (
@@ -562,6 +580,7 @@ export default function SourceArea(props: SourceAreaProps) {
           detect_language(text).then(() => {
             syncSourceText()
           })
+          sourceTextChangeTimerRef.current = null
         }, 1000)
       }
     },

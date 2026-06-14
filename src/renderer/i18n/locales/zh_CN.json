@@ -94,6 +94,7 @@
       "runtime_details_hint": "查看日志获取更多信息。",
       "language_not_supported": "不支持该语言",
       "recognize_service_not_configured": "未配置识别服务",
+      "translate_service_not_configured": "未配置翻译服务",
       "recognize_timeout": "识别请求超时"
     },
     "status": {

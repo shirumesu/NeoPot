@@ -92,6 +92,7 @@
       "recognize_window_initialization_failed": "Texterkennungsfenster konnte nicht initialisiert werden",
       "language_not_supported": "Sprache wird nicht unterstützt",
       "recognize_service_not_configured": "Der Texterkennungsdienst ist nicht konfiguriert",
+      "translate_service_not_configured": "Der Übersetzungsdienst ist nicht konfiguriert",
       "recognize_timeout": "Zeitüberschreitung bei der Texterkennung"
     },
     "status": {
