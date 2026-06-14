@@ -12,7 +12,14 @@ function hasPluginHotkeyHandler(hotkeys: unknown): boolean {
   )
 }
 
-export function getCardActions(plugin: any = {}) {
+export function getCardActions(
+  plugin: {
+    enabled?: boolean
+    homepage?: string
+    options?: unknown[]
+    hotkeys?: unknown[]
+  } = {},
+) {
   const enabled = plugin.enabled !== false
 
   return {
@@ -24,6 +31,6 @@ export function getCardActions(plugin: any = {}) {
   }
 }
 
-export function hotkeysForPlugin(rows: any[] = [], pluginId: string) {
+export function hotkeysForPlugin<T extends { pluginId: string }>(rows: T[] = [], pluginId: string) {
   return rows.filter((row) => row.pluginId === pluginId)
 }

@@ -2,7 +2,7 @@ import { INSTANCE_NAME_CONFIG_KEY } from '@/renderer/lib/service/service_instanc
 import { Input, Button } from '@heroui/react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
-import React, { useState } from 'react'
+import { useState } from 'react'
 
 import { useConfig } from '../../../hooks/useConfig'
 import { useToastStyle } from '../../../hooks'
@@ -10,8 +10,9 @@ import { translate } from './index'
 import { Language } from './index'
 import { useConfigSave } from '@/renderer/windows/Config/hooks/useConfigSave'
 import { DEFAULT_GOOGLE_TRANSLATE_URL } from '@/shared/providerUrl'
+import type { ServiceConfigComponentProps } from '@/renderer/windows/Config/pages/Service/types'
 
-export function Config(props: any) {
+export function Config(props: ServiceConfigComponentProps) {
   const { instanceKey, updateServiceList, onClose } = props
   const { t } = useTranslation()
   const [config, setConfig] = useConfig(

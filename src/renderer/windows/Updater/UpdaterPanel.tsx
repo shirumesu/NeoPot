@@ -1,5 +1,5 @@
 import { Button, Chip, Code, Divider, Progress, Skeleton } from '@heroui/react'
-import React, { useMemo } from 'react'
+import { useMemo } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { useTranslation } from 'react-i18next'
 import remarkGfm from 'remark-gfm'

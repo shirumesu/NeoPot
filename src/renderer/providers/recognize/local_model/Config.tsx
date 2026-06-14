@@ -1,12 +1,12 @@
 import { INSTANCE_NAME_CONFIG_KEY } from '@/renderer/lib/service/service_instance'
 import { Button, Input } from '@heroui/react'
-import React from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { useConfig } from '../../../hooks/useConfig'
 import { useConfigSave } from '@/renderer/windows/Config/hooks/useConfigSave'
+import type { ServiceConfigComponentProps } from '@/renderer/windows/Config/pages/Service/types'
 
-export function Config(props: any) {
+export function Config(props: ServiceConfigComponentProps) {
   const { instanceKey, updateServiceList, onClose } = props
   const { t } = useTranslation()
   const [config, setConfig] = useConfig(

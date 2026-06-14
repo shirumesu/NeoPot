@@ -25,10 +25,23 @@ export const currentServiceInstanceKeyAtom = atom('')
 export const languageAtom = atom('auto')
 export const recognizeFlagAtom = atom('')
 
-export default function ControlArea(props: any) {
+type ServiceInstanceConfigMap = Record<string, Record<string, unknown>>
+
+interface BuiltinRecognizeService {
+  info: {
+    icon: string
+  }
+}
+
+interface ControlAreaProps {
+  serviceInstanceConfigMap: ServiceInstanceConfigMap
+  serviceInstanceList: string[]
+}
+
+export default function ControlArea(props: ControlAreaProps) {
   const { serviceInstanceConfigMap, serviceInstanceList } = props
   const pluginList = useAtomValue(pluginListAtom)
-  const builtinServiceMap = builtinService as Record<string, any>
+  const builtinServiceMap = builtinService as Record<string, BuiltinRecognizeService>
   const [recognizeLanguage] = useConfig('recognize_language', 'auto')
   const setRecognizeFlag = useSetAtom(recognizeFlagAtom)
   const [currentServiceInstanceKey, setCurrentServiceInstanceKey] = useAtom(
@@ -40,7 +53,11 @@ export default function ControlArea(props: any) {
 
   function getInstanceName(instanceKey: string, serviceNameSupplier: () => string) {
     const instanceConfig = serviceInstanceConfigMap[instanceKey] ?? {}
-    return getDisplayInstanceName(instanceConfig[INSTANCE_NAME_CONFIG_KEY], serviceNameSupplier)
+    const instanceName = instanceConfig[INSTANCE_NAME_CONFIG_KEY]
+    return getDisplayInstanceName(
+      typeof instanceName === 'string' ? instanceName : '',
+      serviceNameSupplier,
+    )
   }
 
   useEffect(() => {

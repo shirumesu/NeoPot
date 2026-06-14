@@ -1,5 +1,5 @@
 import { useLocation, useRoutes } from 'react-router-dom'
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import { getCurrentWebviewWindow } from '@/renderer/lib/electron/compat/webviewWindow'
 import { Card, Divider } from '@heroui/react'
 import { useTranslation } from 'react-i18next'

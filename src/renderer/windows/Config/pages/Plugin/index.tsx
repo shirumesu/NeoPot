@@ -1,7 +1,7 @@
 import { Button, Card, CardBody, Divider, Switch, Tooltip } from '@heroui/react'
 import { open } from '@/renderer/lib/electron/compat/dialog'
 import { emit } from '@/renderer/lib/electron/compat/event'
-import React, { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
   MdClose,
   MdCreateNewFolder,

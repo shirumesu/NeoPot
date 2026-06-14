@@ -3,7 +3,16 @@ import { normalizeRequiredString } from './normalize'
 import { createDeepLXAuthHeaders, normalizeDeepLConfig } from '@/shared/deeplConfig'
 import { normalizeDeepLXEndpointUrl } from '@/shared/providerUrl'
 
-export async function translate(text: string, from: string, to: string, options: any = {}) {
+interface DeepLTranslateOptions {
+  config?: unknown
+}
+
+export async function translate(
+  text: string,
+  from: string,
+  to: string,
+  options: DeepLTranslateOptions = {},
+) {
   const config = normalizeDeepLConfig(options.config)
 
   const serviceType = config.type
@@ -110,7 +119,7 @@ async function translate_by_key(text: string, from: string, to: string, key: str
     'Content-Type': 'application/json',
     Authorization: `DeepL-Auth-Key ${key}`,
   }
-  const body: Record<string, any> = {
+  const body: Record<string, unknown> = {
     text: [text],
     target_lang: to,
   }

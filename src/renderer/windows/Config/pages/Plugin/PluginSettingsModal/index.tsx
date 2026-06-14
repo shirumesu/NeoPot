@@ -22,6 +22,33 @@ function pluginOptionsConfigKey(plugin: InstalledPlugin): string {
   return `plugin_options:${plugin.type}:${plugin.name}`
 }
 
+interface PluginOption {
+  key: string
+  display: string
+  type?: string
+  default?: string
+  options?: Record<string, string>
+}
+
+function isPluginOption(value: unknown): value is PluginOption {
+  if (typeof value !== 'object' || value === null) {
+    return false
+  }
+
+  const option = value as Record<string, unknown>
+  const options = option.options
+  return (
+    typeof option.key === 'string' &&
+    typeof option.display === 'string' &&
+    (option.type === undefined || typeof option.type === 'string') &&
+    (option.default === undefined || typeof option.default === 'string') &&
+    (options === undefined ||
+      (typeof options === 'object' &&
+        options !== null &&
+        Object.values(options).every((label) => typeof label === 'string')))
+  )
+}
+
 export default function PluginSettingsModal(props: {
   isOpen: boolean
   onOpenChange: (open: boolean) => void
@@ -45,8 +72,9 @@ export default function PluginSettingsModal(props: {
             <ModalBody>
               {plugin &&
                 pluginOptions &&
-                plugin.options.map((option: any) => {
+                plugin.options.filter(isPluginOption).map((option) => {
                   const value = pluginOptions[option.key]
+                  const optionChoices = option.options ?? {}
                   const currentValue =
                     typeof value === 'string'
                       ? value
@@ -61,7 +89,7 @@ export default function PluginSettingsModal(props: {
                         <Dropdown>
                           <DropdownTrigger>
                             <Button variant="bordered" className="max-w-[60%]">
-                              {option.options[currentValue] ?? currentValue}
+                              {optionChoices[currentValue] ?? currentValue}
                             </Button>
                           </DropdownTrigger>
                           <SafeDropdownMenu
@@ -74,8 +102,8 @@ export default function PluginSettingsModal(props: {
                               })
                             }}
                           >
-                            {Object.keys(option.options).map((key) => (
-                              <DropdownItem key={key}>{option.options[key]}</DropdownItem>
+                            {Object.keys(optionChoices).map((key) => (
+                              <DropdownItem key={key}>{optionChoices[key]}</DropdownItem>
                             ))}
                           </SafeDropdownMenu>
                         </Dropdown>

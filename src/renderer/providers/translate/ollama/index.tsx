@@ -14,11 +14,12 @@ type PromptItem = {
   content: string
 }
 
-type OllamaConfig = Record<string, any> & {
+type OllamaConfig = Record<string, unknown> & {
   promptList: PromptItem[]
   model?: string
   requestPath?: string
   thinkingMode?: string
+  stream?: boolean
 }
 
 type StreamState = {
@@ -26,6 +27,31 @@ type StreamState = {
 }
 
 type SetResult = ((value: string) => void) | undefined
+
+interface OllamaTranslateOptions {
+  config?: Partial<OllamaConfig>
+  setResult?: SetResult
+  detect?: string
+}
+
+interface OllamaChatRequestBody {
+  model: string
+  messages: PromptItem[]
+  stream: boolean
+  options?: Record<string, number>
+  think?: boolean
+}
+
+interface StreamResponse {
+  body?: {
+    getReader?: () => ReadableStreamDefaultReader<Uint8Array>
+  }
+  text: () => Promise<string>
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
 
 function parseOptionalFloat(value: unknown, fieldName: string) {
   if (value === undefined || value === null || String(value).trim() === '') {
@@ -53,8 +79,8 @@ function parseOptionalInteger(value: unknown, fieldName: string) {
   return parsed
 }
 
-function buildOptions(config: OllamaConfig) {
-  const options: any = {}
+function buildOptions(config: Partial<OllamaConfig>) {
+  const options: Record<string, number> = {}
   const temperature = parseOptionalFloat(config.temperature, 'temperature')
   const topP = parseOptionalFloat(config.topP, 'top_p')
   const topK = parseOptionalInteger(config.topK, 'top_k')
@@ -151,7 +177,7 @@ export async function pullModel(requestPath: string | undefined, model: string) 
   throw `Failed to pull model: HTTP ${res.status}`
 }
 
-function parseNdjson(text: string): any[] {
+function parseNdjson(text: string): unknown[] {
   return text
     .split('\n')
     .filter((line: string) => line.trim() !== '')
@@ -165,8 +191,9 @@ function parseNdjson(text: string): any[] {
     .filter(Boolean)
 }
 
-function handleStreamPart(part: any, state: StreamState, setResult: SetResult) {
-  const content = part.message?.content || ''
+function handleStreamPart(part: unknown, state: StreamState, setResult: SetResult) {
+  const message = isRecord(part) && isRecord(part.message) ? part.message : {}
+  const content = typeof message.content === 'string' ? message.content : ''
   if (!content) {
     return null
   }
@@ -180,7 +207,7 @@ function handleStreamPart(part: any, state: StreamState, setResult: SetResult) {
   return '[STREAM]'
 }
 
-async function readStreamResponse(res: any, setResult: SetResult) {
+async function readStreamResponse(res: StreamResponse, setResult: SetResult) {
   const state = { target: '' }
 
   if (!res.body?.getReader) {
@@ -240,11 +267,16 @@ async function readStreamResponse(res: any, setResult: SetResult) {
   return state.target.trim()
 }
 
-export async function translate(text: string, from: string, to: string, options: any = {}) {
-  const { config, setResult, detect } = options
+export async function translate(
+  text: string,
+  from: string,
+  to: string,
+  options: OllamaTranslateOptions = {},
+) {
+  const { config = { promptList: [] }, setResult, detect } = options
 
   const { stream, requestPath, thinkingMode } = config
-  let { promptList, model } = config
+  let { promptList = [], model } = config
   model = resolveModel(model)
 
   promptList = promptList.map((item: PromptItem) => {
@@ -254,13 +286,16 @@ export async function translate(text: string, from: string, to: string, options:
         .replaceAll('$text', text)
         .replaceAll('$from', from)
         .replaceAll('$to', to)
-        .replaceAll('$detect', (Language as Record<string, string>)[detect] ?? String(detect)),
+        .replaceAll(
+          '$detect',
+          detect ? ((Language as Record<string, string>)[detect] ?? detect) : '',
+        ),
     }
   })
 
   promptList = applyThinkingMode(promptList, model, thinkingMode)
 
-  const requestBody: any = {
+  const requestBody: OllamaChatRequestBody = {
     model,
     messages: promptList,
     stream: !!stream,

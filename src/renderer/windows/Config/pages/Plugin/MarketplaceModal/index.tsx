@@ -11,7 +11,7 @@ import {
 } from '@heroui/react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
-import React, { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { MdAdd, MdClose, MdFolderOpen, MdInsertDriveFile, MdRefresh } from 'react-icons/md'
 
 import {
@@ -27,7 +27,13 @@ import { emit } from '@/renderer/lib/electron/compat/event'
 import { open } from '@/renderer/lib/electron/compat/dialog'
 import { logger } from '@/renderer/lib/logger'
 
-export default function MarketplaceModal(props: any) {
+interface MarketplaceModalProps {
+  isOpen: boolean
+  onOpenChange: (open: boolean) => void
+  onInstalled?: () => unknown | Promise<unknown>
+}
+
+export default function MarketplaceModal(props: MarketplaceModalProps) {
   const { isOpen, onOpenChange, onInstalled } = props
   const { t } = useTranslation()
   const [plugins, setPlugins] = useState<MarketplacePlugin[]>([])

@@ -34,6 +34,7 @@ import * as recognizeServices from '@/renderer/providers/recognize'
 import * as builtinTtsServices from '@/renderer/providers/tts'
 import detect from '@/renderer/lib/language/lang_detect'
 import { reportRuntimeError } from '@/renderer/lib/runtimeError'
+import type { EnabledServicePluginList } from '@/renderer/windows/Config/pages/Plugin/installedPlugins'
 const appWindow = getCurrentWebviewWindow()
 
 export const sourceTextAtom = atom('')
@@ -42,11 +43,83 @@ export const manualTranslateFlagAtom = atom('')
 
 const DEFAULT_RECOGNIZE_SERVICE_LIST = ['local_model']
 const DEFAULT_TTS_SERVICE_LIST = ['lingva']
-const recognizeServiceMap = recognizeServices as Record<string, any>
-const builtinTtsServiceMap = builtinTtsServices as Record<string, any>
+
+type ServiceInstanceConfigMap = Record<string, Record<string, unknown>>
+
+interface BuiltinRecognizeService {
+  Language: Record<string, string>
+  recognize(
+    base64: string,
+    language: string,
+    options: { config: Record<string, unknown> | undefined },
+  ): Promise<unknown>
+}
+
+interface BuiltinTtsService {
+  Language: Record<string, string>
+  tts(
+    text: string,
+    language: string,
+    options: { config: Record<string, unknown> | undefined },
+  ): Promise<unknown>
+}
+
+interface PluginLanguageInfo {
+  language: Record<string, string>
+}
+
+interface SourceAreaProps {
+  pluginList: EnabledServicePluginList
+  serviceInstanceConfigMap: ServiceInstanceConfigMap
+}
+
+const recognizeServiceMap = recognizeServices as Record<string, BuiltinRecognizeService>
+const builtinTtsServiceMap = builtinTtsServices as Record<string, BuiltinTtsService>
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
 
 function toWorkflowText(value: unknown): string {
   return typeof value === 'string' ? value : ''
+}
+
+function toResultText(value: unknown): string {
+  return typeof value === 'string' ? value : String(value ?? '')
+}
+
+function toErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.toString() : String(error)
+}
+
+function isAudioData(value: unknown): value is ArrayBuffer | ArrayLike<number> {
+  return (
+    value instanceof ArrayBuffer ||
+    value instanceof Uint8Array ||
+    (Array.isArray(value) && value.every((item) => typeof item === 'number'))
+  )
+}
+
+function assertAudioData(value: unknown): ArrayBuffer | ArrayLike<number> {
+  if (!isAudioData(value)) {
+    throw new Error('TTS provider returned invalid audio data.')
+  }
+  return value
+}
+
+function readPluginLanguageInfo(infoStr: string): PluginLanguageInfo | undefined {
+  const parsed: unknown = JSON.parse(infoStr)
+  if (!isRecord(parsed) || !isRecord(parsed.language)) {
+    return undefined
+  }
+
+  return {
+    language: Object.fromEntries(
+      Object.entries(parsed.language).filter(
+        (entry): entry is [string, string] => typeof entry[1] === 'string',
+      ),
+    ),
+  }
 }
 
 function transformVarName(str: string) {
@@ -129,7 +202,7 @@ function transformVarName(str: string) {
   return str2
 }
 
-export default function SourceArea(props: any) {
+export default function SourceArea(props: SourceAreaProps) {
   const { pluginList, serviceInstanceConfigMap } = props
   const [appFontSize] = useConfig('app_font_size', 16)
   const [sourceText, setSourceText, syncSourceText] = useSyncAtom(sourceTextAtom)
@@ -157,7 +230,7 @@ export default function SourceArea(props: any) {
     : null
   const [hideWindow] = useConfig('translate_hide_window', false)
   const [hideSource] = useConfig('hide_source', false)
-  const [ttsPluginInfo, setTtsPluginInfo] = useState<any>()
+  const [ttsPluginInfo, setTtsPluginInfo] = useState<PluginLanguageInfo>()
   const [windowType, setWindowType] = useState('[SELECTION_TRANSLATE]')
   const { t } = useTranslation()
   const textAreaRef = useRef<HTMLTextAreaElement>(null)
@@ -257,10 +330,10 @@ export default function SourceArea(props: any) {
                 utils,
               },
             ).then(
-              (v: string) => {
-                void commitSourceText(normalizeInputText(v))
+              (value) => {
+                void commitSourceText(normalizeInputText(toResultText(value)))
               },
-              (e: any) => {
+              (e: unknown) => {
                 reportRuntimeError(e, {
                   source: 'translate.image_recognize.plugin',
                   logMessage: 'Image translation OCR plugin failed.',
@@ -270,7 +343,7 @@ export default function SourceArea(props: any) {
                     language: recognizeLanguage,
                   },
                 })
-                setSourceText(e.toString())
+                setSourceText(toErrorMessage(e))
               },
             )
           } else {
@@ -290,10 +363,10 @@ export default function SourceArea(props: any) {
                 },
               )
               .then(
-                (v: string) => {
-                  void commitSourceText(normalizeInputText(v))
+                (value) => {
+                  void commitSourceText(normalizeInputText(toResultText(value)))
                 },
-                (e: any) => {
+                (e: unknown) => {
                   reportRuntimeError(e, {
                     source: 'translate.image_recognize.builtin',
                     logMessage: 'Image translation OCR provider failed.',
@@ -303,7 +376,7 @@ export default function SourceArea(props: any) {
                       language: recognizeLanguage,
                     },
                   })
-                  setSourceText(e.toString())
+                  setSourceText(toErrorMessage(e))
                 },
               )
           } else {
@@ -371,7 +444,7 @@ export default function SourceArea(props: any) {
         config: pluginConfig,
         utils,
       })
-      await speak(data)
+      await speak(assertAudioData(data))
     } else {
       if (!(detected in builtinTtsServiceMap[getServiceName(instanceKey)].Language)) {
         throw new Error(t('errors.language_not_supported'))
@@ -384,14 +457,14 @@ export default function SourceArea(props: any) {
           config: instanceConfig,
         },
       )
-      await speak(data)
+      await speak(assertAudioData(data))
     }
   }
 
   useEffect(() => {
     let disposed = false
     let removeListener: (() => void) | null = null
-    const unlistenPromise = listen('new_text', (event: any) => {
+    const unlistenPromise = listen('new_text', (event) => {
       appWindow.setFocus()
       workflowTextVersionRef.current += 1
       void handleNewTextRef.current(event.payload).catch((error) => {
@@ -428,7 +501,7 @@ export default function SourceArea(props: any) {
         baseDir: BaseDirectory.AppConfig,
       }).then(
         (infoStr) => {
-          setTtsPluginInfo(JSON.parse(infoStr))
+          setTtsPluginInfo(readPluginLanguageInfo(infoStr))
         },
         () => {
           setTtsPluginInfo(undefined)

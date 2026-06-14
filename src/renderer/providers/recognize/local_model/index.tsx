@@ -12,7 +12,15 @@ const paddleLangMap = {
   [Language.ja]: 'japan',
 }
 
-const ocrCache = new Map<string, any>()
+interface LocalOcrResult {
+  items?: Array<{ text?: string }>
+}
+
+interface LocalOcr {
+  predict(blob: Blob, options: { textRecScoreThresh: number }): Promise<LocalOcrResult[]>
+}
+
+const ocrCache = new Map<string, Promise<LocalOcr>>()
 
 // PaddleOCR.js forwards this to onnxruntime-web, whose runtime supports a file map
 // even though PaddleOCR.js 0.3.2 declares `wasmPaths` as a string-only option.
@@ -46,11 +54,11 @@ async function getOcr(language: Language) {
           url: textRecognitionModelUrl,
         },
         ortOptions,
-      }),
+      }) as Promise<LocalOcr>,
     )
   }
 
-  return ocrCache.get(paddleLang)
+  return ocrCache.get(paddleLang)!
 }
 
 function base64ToBlob(base64: string) {
@@ -67,7 +75,7 @@ export async function recognize(base64: string, language: Language) {
   const [result] = await ocr.predict(base64ToBlob(base64), {
     textRecScoreThresh: 0.3,
   })
-  const text = (result?.items ?? []).map((item: any) => item.text).join('\n')
+  const text = (result?.items ?? []).map((item) => item.text ?? '').join('\n')
   if (language === Language.zh_cn || language === Language.zh_tw || language === Language.ja) {
     return text.replaceAll(' ', '').trim()
   }

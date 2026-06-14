@@ -228,21 +228,18 @@ function normalizeRendererBody(body: unknown, headers: Record<string, string>): 
 
 export async function request<T = unknown>(options: ProviderRequest): Promise<T> {
   const url = await assertAllowedProviderRequestUrl(resolveAxiosRequestUrl(options))
-  const {
-    baseURL: _baseURL,
-    maxRedirects: _maxRedirects,
-    timeout,
-    timeoutMs,
-    url: _url,
-    ...requestOptions
-  } = options
+  const requestOptions: ProviderRequest = { ...options }
+  delete requestOptions.baseURL
+  delete requestOptions.maxRedirects
+  delete requestOptions.timeoutMs
+  delete requestOptions.url
 
   const response = await axios.request<T>(
     applyProxyToAxios({
       ...requestOptions,
       url: url.toString(),
       maxRedirects: 0,
-      timeout: timeoutMs ?? timeout ?? 30000,
+      timeout: options.timeoutMs ?? options.timeout ?? 30000,
     }),
   )
 
@@ -318,8 +315,7 @@ export async function streamRequest(
   init: RequestInit = {},
 ): Promise<ReadableStream<Uint8Array> | null> {
   const url = await assertAllowedProviderRequestUrl(resolveFetchRequestUrl(input))
-  const { redirect: _redirect, ...requestInit } = init
-  const response = await net.fetch(url.toString(), { ...requestInit, redirect: 'manual' })
+  const response = await net.fetch(url.toString(), { ...init, redirect: 'manual' })
   if (!response.ok) {
     throw new Error(`SERVICE_HTTP_ERROR:${response.status}`)
   }

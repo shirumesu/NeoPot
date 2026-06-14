@@ -31,6 +31,15 @@ interface PluginSandbox {
   ready: Promise<void>
 }
 
+interface SerializableHttpResponse {
+  ok: boolean
+  status: number
+  statusText: string
+  headers?: Headers | Record<string, unknown>
+  data?: unknown
+  json?: () => Promise<unknown>
+}
+
 const sandboxMap = new Map<string, PluginSandbox>()
 const pendingCalls = new Map<
   string,
@@ -76,7 +85,7 @@ function logContext(value: unknown): { valueType: string; value?: string; keys?:
   }
 }
 
-async function serializeHttpResponse(response: any, responseType?: number) {
+async function serializeHttpResponse(response: SerializableHttpResponse, responseType?: number) {
   const headers =
     response.headers instanceof Headers
       ? Object.fromEntries(response.headers.entries())
@@ -523,8 +532,7 @@ async function getPluginRuntime(pluginType: string, pluginName: string) {
 export async function invoke_plugin(pluginType: string, pluginName: string) {
   const { sandbox, utils } = await getPluginRuntime(pluginType, pluginName)
   const activeSandbox = sandbox
-  const func = (...args: unknown[]): Promise<any> =>
-    callSandbox(activeSandbox, args) as Promise<any>
+  const func = (...args: unknown[]): Promise<unknown> => callSandbox(activeSandbox, args)
   return [func, utils] as const
 }
 

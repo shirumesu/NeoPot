@@ -26,5 +26,7 @@ export async function remove(path: string, options?: Record<string, unknown>) {
 }
 
 export async function watch(_path?: string, _handler?: (...args: unknown[]) => void) {
-  return () => {}
+  return () => {
+    // Browser compatibility mode does not expose filesystem watch events.
+  }
 }

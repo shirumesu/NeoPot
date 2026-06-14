@@ -6,7 +6,7 @@ import { DropdownItem } from '@heroui/react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { Dropdown } from '@heroui/react'
-import React, { useState } from 'react'
+import { useState } from 'react'
 
 import { useConfig } from '../../../hooks/useConfig'
 import { useToastStyle } from '../../../hooks'
@@ -20,8 +20,9 @@ import {
   normalizeDeepLConfig,
   type DeepLConfig,
 } from '@/shared/deeplConfig'
+import type { ServiceConfigComponentProps } from '@/renderer/windows/Config/pages/Service/types'
 
-export function Config(props: any) {
+export function Config(props: ServiceConfigComponentProps) {
   const { instanceKey, updateServiceList, onClose } = props
   const { t } = useTranslation()
   const defaultInstanceName = t('services.translate.deepl.title')

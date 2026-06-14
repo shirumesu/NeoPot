@@ -23,6 +23,7 @@ import {
   EnabledServicePluginList,
   loadEnabledServicePlugins,
 } from '@/renderer/windows/Config/pages/Plugin/installedPlugins'
+import type { BuiltinServices } from '@/renderer/windows/Config/pages/Service/types'
 import {
   ServiceSourceType,
   isValidServiceInstanceKey,
@@ -31,7 +32,13 @@ import {
 import * as builtinTranslateServices from '@/renderer/providers/translate'
 import { logger } from '@/renderer/lib/logger'
 const appWindow = getCurrentWebviewWindow()
-const builtinTranslateServiceMap = builtinTranslateServices as Record<string, any>
+const builtinTranslateServiceMap = builtinTranslateServices as BuiltinServices
+
+type ServiceInstanceConfigMap = Record<string, Record<string, unknown>>
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
 
 let blurTimeout: ReturnType<typeof setTimeout> | null = null
 let resizeTimeout: ReturnType<typeof setTimeout> | null = null
@@ -92,7 +99,8 @@ export default function Translate() {
   })
   const [pluginLoadError, setPluginLoadError] = useState<string | null>(null)
   const [serviceConfigError, setServiceConfigError] = useState<string | null>(null)
-  const [serviceInstanceConfigMap, setServiceInstanceConfigMap] = useState<Record<string, any>>({})
+  const [serviceInstanceConfigMap, setServiceInstanceConfigMap] =
+    useState<ServiceInstanceConfigMap>({})
   const availableTranslateServices = useMemo(
     () => ({
       [ServiceSourceType.BUILDIN]: builtinTranslateServiceMap,
@@ -206,15 +214,18 @@ export default function Translate() {
 
   const loadServiceInstanceConfigMap = useCallback(async () => {
     try {
-      const config: Record<string, any> = {}
+      const config: ServiceInstanceConfigMap = {}
       for (const serviceInstanceKey of validTranslateServiceInstanceList) {
-        config[serviceInstanceKey] = (await getStoreValue(serviceInstanceKey)) ?? {}
+        const value = await getStoreValue(serviceInstanceKey)
+        config[serviceInstanceKey] = isRecord(value) ? value : {}
       }
       for (const serviceInstanceKey of validRecognizeServiceInstanceList) {
-        config[serviceInstanceKey] = (await getStoreValue(serviceInstanceKey)) ?? {}
+        const value = await getStoreValue(serviceInstanceKey)
+        config[serviceInstanceKey] = isRecord(value) ? value : {}
       }
       for (const serviceInstanceKey of validTtsServiceInstanceList) {
-        config[serviceInstanceKey] = (await getStoreValue(serviceInstanceKey)) ?? {}
+        const value = await getStoreValue(serviceInstanceKey)
+        config[serviceInstanceKey] = isRecord(value) ? value : {}
       }
       setServiceConfigError(null)
       setServiceInstanceConfigMap({ ...config })

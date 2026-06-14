@@ -6,7 +6,6 @@ import { DropdownItem } from '@heroui/react'
 import { Dropdown } from '@heroui/react'
 import { useTranslation } from 'react-i18next'
 import { openUrl as open } from '@/renderer/lib/electron/compat/opener'
-import React from 'react'
 
 import { useConfig } from '../../../../../hooks'
 import { useConfigSave } from '../../../hooks/useConfigSave'
@@ -39,7 +38,7 @@ function isPluginNeed(value: unknown): value is PluginNeed {
 
 export function PluginConfig(props: ServiceConfigComponentProps) {
   const { instanceKey, updateServiceList, onClose, name, pluginList } = props
-  const [pluginConfig, setPluginConfig] = useConfig<Record<string, any>>(
+  const [pluginConfig, setPluginConfig] = useConfig<Record<string, unknown>>(
     instanceKey,
     {},
     { sync: false },
@@ -47,6 +46,7 @@ export function PluginConfig(props: ServiceConfigComponentProps) {
   const { t } = useTranslation()
   const { saveConfig } = useConfigSave()
   const pluginNeeds = (pluginList[name].needs as unknown[]).filter(isPluginNeed)
+  const configuredInstanceName = pluginConfig?.[INSTANCE_NAME_CONFIG_KEY]
 
   return (
     <>
@@ -65,7 +65,11 @@ export function PluginConfig(props: ServiceConfigComponentProps) {
           <Input
             label={t('services.instance_name')}
             labelPlacement="outside-left"
-            value={pluginConfig[INSTANCE_NAME_CONFIG_KEY] ?? pluginList[name].display}
+            value={
+              typeof configuredInstanceName === 'string'
+                ? configuredInstanceName
+                : pluginList[name].display
+            }
             variant="bordered"
             classNames={{
               base: 'justify-between',

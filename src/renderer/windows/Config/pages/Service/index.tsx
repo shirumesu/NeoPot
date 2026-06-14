@@ -1,7 +1,7 @@
 import { listen } from '@/renderer/lib/electron/compat/event'
 import { useTranslation } from 'react-i18next'
 import { Tabs, Tab } from '@heroui/react'
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Translate from './Translate'
 import Recognize from './Recognize'
 import Tts from './Tts'

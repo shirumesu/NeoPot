@@ -38,6 +38,7 @@ import { invoke_plugin } from '@/renderer/lib/plugin/invoke_plugin'
 import * as builtinServices from '@/renderer/providers/translate'
 import * as builtinTtsServices from '@/renderer/providers/tts'
 import { reportRuntimeError } from '@/renderer/lib/runtimeError'
+import type { EnabledServicePluginList } from '@/renderer/windows/Config/pages/Plugin/installedPlugins'
 
 import { logger } from '@/renderer/lib/logger'
 import {
@@ -50,11 +51,79 @@ import {
   whetherPluginService,
 } from '@/renderer/lib/service/service_instance'
 
-const AnimatedDiv = animated.div as any
+const AnimatedDiv = animated.div as unknown as React.ComponentType<
+  React.PropsWithChildren<{ style?: unknown }>
+>
 
 const translateID: string[] = []
-const builtinServiceMap = builtinServices as Record<string, any>
-const builtinTtsServiceMap = builtinTtsServices as Record<string, any>
+
+type ServiceInstanceConfigMap = Record<string, Record<string, unknown>>
+
+interface BuiltinTranslateService {
+  info: {
+    icon: string
+  }
+  Language: Record<string, string>
+  translate(
+    text: string,
+    from: string,
+    to: string,
+    options: {
+      config: Record<string, unknown>
+      detect?: string
+      setResult?: (value: unknown) => void
+    },
+  ): Promise<unknown>
+}
+
+interface BuiltinTtsService {
+  Language: Record<string, string>
+  tts(
+    text: string,
+    language: string,
+    options: { config: Record<string, unknown> | undefined },
+  ): Promise<unknown>
+}
+
+interface PluginLanguageInfo {
+  language: Record<string, string>
+}
+
+interface TargetAreaProps {
+  index: number
+  name: string
+  translateServiceInstanceList: string[]
+  pluginList: EnabledServicePluginList
+  serviceInstanceConfigMap: ServiceInstanceConfigMap
+}
+
+interface PronunciationResult {
+  region?: string
+  symbol?: string
+  voice?: unknown
+}
+
+interface ExplanationResult {
+  trait?: string
+  explains: string[]
+}
+
+interface SentenceResult {
+  source?: string
+  target?: string
+}
+
+interface RichTranslationResult {
+  pronunciations: PronunciationResult[]
+  explanations: ExplanationResult[]
+  associations: string[]
+  sentence: SentenceResult[]
+}
+
+type TranslationResult = string | RichTranslationResult
+
+const builtinServiceMap = builtinServices as Record<string, BuiltinTranslateService>
+const builtinTtsServiceMap = builtinTtsServices as Record<string, BuiltinTtsService>
 
 const MARKDOWN_PATTERNS = [
   /^#{1,6}\s+\S/m,
@@ -153,10 +222,102 @@ function MarkdownResult({ value, appFontSize }: { value: string; appFontSize: nu
   )
 }
 
-function invokeOnce(fn: (...args: any[]) => void) {
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function toText(value: unknown): string {
+  return typeof value === 'string' ? value : String(value ?? '')
+}
+
+function toOptionalText(value: unknown): string | undefined {
+  return typeof value === 'string' && value.length > 0 ? value : undefined
+}
+
+function toArray(value: unknown): unknown[] {
+  return Array.isArray(value) ? value : []
+}
+
+function toRichTranslationResult(value: Record<string, unknown>): RichTranslationResult {
+  return {
+    pronunciations: toArray(value.pronunciations).map((item) => {
+      const pronunciation = isRecord(item) ? item : {}
+      return {
+        region: toOptionalText(pronunciation.region),
+        symbol: toOptionalText(pronunciation.symbol),
+        voice: pronunciation.voice,
+      }
+    }),
+    explanations: toArray(value.explanations).map((item) => {
+      const explanation = isRecord(item) ? item : {}
+      return {
+        trait: toOptionalText(explanation.trait),
+        explains: toArray(explanation.explains).map(toText),
+      }
+    }),
+    associations: toArray(value.associations).map(toText),
+    sentence: toArray(value.sentence).map((item) => {
+      const sentence = isRecord(item) ? item : {}
+      return {
+        source: toOptionalText(sentence.source),
+        target: toOptionalText(sentence.target),
+      }
+    }),
+  }
+}
+
+function toTranslationResult(value: unknown): TranslationResult {
+  if (typeof value === 'string') {
+    return value
+  }
+  if (isRecord(value)) {
+    return toRichTranslationResult(value)
+  }
+  return toText(value)
+}
+
+function hasVisibleResult(value: unknown): boolean {
+  return typeof value === 'string' ? value !== '' : value !== undefined && value !== null
+}
+
+function toErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.toString() : String(error)
+}
+
+function isAudioData(value: unknown): value is ArrayBuffer | ArrayLike<number> {
+  return (
+    value instanceof ArrayBuffer ||
+    value instanceof Uint8Array ||
+    (Array.isArray(value) && value.every((item) => typeof item === 'number'))
+  )
+}
+
+function assertAudioData(value: unknown): ArrayBuffer | ArrayLike<number> {
+  if (!isAudioData(value)) {
+    throw new Error('TTS provider returned invalid audio data.')
+  }
+  return value
+}
+
+function readPluginLanguageInfo(infoStr: string): PluginLanguageInfo | undefined {
+  const parsed: unknown = JSON.parse(infoStr)
+  if (!isRecord(parsed) || !isRecord(parsed.language)) {
+    return undefined
+  }
+
+  return {
+    language: Object.fromEntries(
+      Object.entries(parsed.language).filter(
+        (entry): entry is [string, string] => typeof entry[1] === 'string',
+      ),
+    ),
+  }
+}
+
+function invokeOnce<TArgs extends unknown[]>(fn: (...args: TArgs) => void) {
   let isInvoke = false
 
-  return (...args: any[]) => {
+  return (...args: TArgs) => {
     if (isInvoke) {
       return
     } else {
@@ -166,13 +327,17 @@ function invokeOnce(fn: (...args: any[]) => void) {
   }
 }
 
-export default function TargetArea(props: any) {
+export default function TargetArea(props: TargetAreaProps) {
   const { index, name, translateServiceInstanceList, pluginList, serviceInstanceConfigMap } = props
 
   const [currentTranslateServiceInstanceKey, setCurrentTranslateServiceInstanceKey] = useState(name)
   function getInstanceName(instanceKey: string, serviceNameSupplier: () => string) {
     const instanceConfig = serviceInstanceConfigMap[instanceKey] ?? {}
-    return getDisplayInstanceName(instanceConfig[INSTANCE_NAME_CONFIG_KEY], serviceNameSupplier)
+    const instanceName = instanceConfig[INSTANCE_NAME_CONFIG_KEY]
+    return getDisplayInstanceName(
+      typeof instanceName === 'string' ? instanceName : '',
+      serviceNameSupplier,
+    )
   }
 
   const [appFontSize] = useConfig('app_font_size', 16)
@@ -193,7 +358,7 @@ export default function TargetArea(props: any) {
   const [isLoading, setIsLoading] = useState(false)
   const [hide, setHide] = useState(true)
 
-  const [result, setResult] = useState<any>('')
+  const [result, setResult] = useState<TranslationResult>('')
   const [error, setError] = useState('')
   const [resultViewMode, setResultViewMode] = useState<'markdown' | 'source' | null>(null)
 
@@ -206,7 +371,7 @@ export default function TargetArea(props: any) {
   const [clipboardMonitor] = useConfig('clipboard_monitor', false)
 
   const detectLanguage = useAtomValue(detectLanguageAtom)
-  const [ttsPluginInfo, setTtsPluginInfo] = useState<any>()
+  const [ttsPluginInfo, setTtsPluginInfo] = useState<PluginLanguageInfo>()
   const { t } = useTranslation()
   const textAreaRef = useRef<HTMLTextAreaElement>(null)
   const speak = useVoice()
@@ -272,15 +437,15 @@ export default function TargetArea(props: any) {
           {
             config: instanceConfig,
             detect: providerDetectLanguage,
-            setResult: (v: any) => {
+            setResult: (v: unknown) => {
               if (translateID[index] !== id) return
-              setResult(v)
+              setResult(toTranslationResult(v))
               setHideOnce(false)
             },
             utils,
           },
         ).then(
-          (v: any) => {
+          (v) => {
             if (translateID[index] !== id) return
             logger.debug('Translation completed.', {
               service: currentTranslateServiceInstanceKey,
@@ -290,29 +455,30 @@ export default function TargetArea(props: any) {
               outputLength: typeof v === 'string' ? v.length : 0,
               durationMs: Date.now() - startedAt,
             })
-            setResult(typeof v === 'string' ? v.trim() : v)
+            const clipboardText = typeof v === 'string' ? v : null
+            setResult(toTranslationResult(typeof v === 'string' ? v.trim() : v))
             setIsLoading(false)
-            if (v !== '') {
+            if (hasVisibleResult(v)) {
               setHideOnce(false)
             }
-            if (index === 0 && !clipboardMonitor) {
+            if (clipboardText !== null && index === 0 && !clipboardMonitor) {
               switch (autoCopy) {
                 case 'target':
-                  writeText(v).then(() => {
+                  writeText(clipboardText).then(() => {
                     if (hideWindow) {
                       sendNotification({
                         title: t('common.write_clipboard'),
-                        body: v,
+                        body: clipboardText,
                       })
                     }
                   })
                   break
                 case 'source_target':
-                  writeText(sourceText.trim() + '\n\n' + v).then(() => {
+                  writeText(sourceText.trim() + '\n\n' + clipboardText).then(() => {
                     if (hideWindow) {
                       sendNotification({
                         title: t('common.write_clipboard'),
-                        body: sourceText.trim() + '\n\n' + v,
+                        body: sourceText.trim() + '\n\n' + clipboardText,
                       })
                     }
                   })
@@ -322,7 +488,7 @@ export default function TargetArea(props: any) {
               }
             }
           },
-          (e: any) => {
+          (e: unknown) => {
             if (translateID[index] !== id) return
             reportRuntimeError(e, {
               source: 'translate.plugin',
@@ -336,7 +502,7 @@ export default function TargetArea(props: any) {
                 durationMs: Date.now() - startedAt,
               },
             })
-            setError(e.toString())
+            setError(toErrorMessage(e))
             setIsLoading(false)
           },
         )
@@ -362,15 +528,15 @@ export default function TargetArea(props: any) {
             {
               config: instanceConfig,
               detect: providerDetectLanguage,
-              setResult: (v: any) => {
+              setResult: (v: unknown) => {
                 if (translateID[index] !== id) return
-                setResult(v)
+                setResult(toTranslationResult(v))
                 setHideOnce(false)
               },
             },
           )
           .then(
-            (v: any) => {
+            (v) => {
               if (translateID[index] !== id) return
               logger.debug('Translation completed.', {
                 service: currentTranslateServiceInstanceKey,
@@ -380,29 +546,30 @@ export default function TargetArea(props: any) {
                 outputLength: typeof v === 'string' ? v.length : 0,
                 durationMs: Date.now() - startedAt,
               })
-              setResult(typeof v === 'string' ? v.trim() : v)
+              const clipboardText = typeof v === 'string' ? v : null
+              setResult(toTranslationResult(typeof v === 'string' ? v.trim() : v))
               setIsLoading(false)
-              if (v !== '') {
+              if (hasVisibleResult(v)) {
                 setHideOnce(false)
               }
-              if (index === 0 && !clipboardMonitor) {
+              if (clipboardText !== null && index === 0 && !clipboardMonitor) {
                 switch (autoCopy) {
                   case 'target':
-                    writeText(v).then(() => {
+                    writeText(clipboardText).then(() => {
                       if (hideWindow) {
                         sendNotification({
                           title: t('common.write_clipboard'),
-                          body: v,
+                          body: clipboardText,
                         })
                       }
                     })
                     break
                   case 'source_target':
-                    writeText(sourceText.trim() + '\n\n' + v).then(() => {
+                    writeText(sourceText.trim() + '\n\n' + clipboardText).then(() => {
                       if (hideWindow) {
                         sendNotification({
                           title: t('common.write_clipboard'),
-                          body: sourceText.trim() + '\n\n' + v,
+                          body: sourceText.trim() + '\n\n' + clipboardText,
                         })
                       }
                     })
@@ -412,7 +579,7 @@ export default function TargetArea(props: any) {
                 }
               }
             },
-            (e: any) => {
+            (e: unknown) => {
               if (translateID[index] !== id) return
               reportRuntimeError(e, {
                 source: 'translate.builtin',
@@ -426,7 +593,7 @@ export default function TargetArea(props: any) {
                   durationMs: Date.now() - startedAt,
                 },
               })
-              setError(e.toString())
+              setError(toErrorMessage(e))
               setIsLoading(false)
             },
           )
@@ -526,7 +693,7 @@ export default function TargetArea(props: any) {
         baseDir: BaseDirectory.AppConfig,
       }).then(
         (infoStr) => {
-          setTtsPluginInfo(JSON.parse(infoStr))
+          setTtsPluginInfo(readPluginLanguageInfo(infoStr))
         },
         () => {
           setTtsPluginInfo(undefined)
@@ -541,6 +708,9 @@ export default function TargetArea(props: any) {
     if (!instanceKey) {
       throw new Error(t('translate.tts_not_configured'))
     }
+    if (typeof result !== 'string') {
+      throw new Error(t('errors.language_not_supported'))
+    }
     if (getServiceSouceType(instanceKey) === ServiceSourceType.PLUGIN) {
       const pluginConfig = serviceInstanceConfigMap[instanceKey]
       if (!ttsPluginInfo?.language) {
@@ -554,7 +724,7 @@ export default function TargetArea(props: any) {
         config: pluginConfig,
         utils,
       })
-      await speak(data)
+      await speak(assertAudioData(data))
     } else {
       if (!(targetLanguage in builtinTtsServiceMap[getServiceName(instanceKey)].Language)) {
         throw new Error(t('errors.language_not_supported'))
@@ -567,7 +737,7 @@ export default function TargetArea(props: any) {
           config: instanceConfig,
         },
       )
-      await speak(data)
+      await speak(assertAudioData(data))
     }
   }
 
@@ -713,25 +883,26 @@ export default function TargetArea(props: any) {
               )
             ) : (
               <div>
-                {result['pronunciations'] &&
-                  result['pronunciations'].map((pronunciation: any) => {
+                {result.pronunciations.length > 0 &&
+                  result.pronunciations.map((pronunciation) => {
+                    const voice = pronunciation.voice
                     return (
                       <div key={nanoid()}>
-                        {pronunciation['region'] && (
+                        {pronunciation.region && (
                           <span className={`text-[${resolvedAppFontSize}px] mr-3 text-default-500`}>
-                            {pronunciation['region']}
+                            {pronunciation.region}
                           </span>
                         )}
-                        {pronunciation['symbol'] && (
+                        {pronunciation.symbol && (
                           <span className={`text-[${resolvedAppFontSize}px] mr-3 text-default-500`}>
-                            {pronunciation['symbol']}
+                            {pronunciation.symbol}
                           </span>
                         )}
-                        {pronunciation['voice'] && pronunciation['voice'] !== '' && (
+                        {isAudioData(voice) && (
                           <HiOutlineVolumeUp
                             className={`text-[${resolvedAppFontSize}px] inline-block my-auto cursor-pointer`}
                             onClick={() => {
-                              void speak(pronunciation['voice']).catch((error) => {
+                              void speak(voice).catch((error) => {
                                 reportRuntimeError(error, {
                                   source: 'translate.pronunciation.tts',
                                   logMessage: 'Pronunciation audio playback failed.',
@@ -747,12 +918,12 @@ export default function TargetArea(props: any) {
                       </div>
                     )
                   })}
-                {result['explanations'] &&
-                  result['explanations'].map((explanations: any) => {
+                {result.explanations.length > 0 &&
+                  result.explanations.map((explanations) => {
                     return (
                       <div key={nanoid()}>
-                        {explanations['explains'] &&
-                          explanations['explains'].map((explain: any, index: number) => {
+                        {explanations.explains.length > 0 &&
+                          explanations.explains.map((explain, index) => {
                             return (
                               <span key={nanoid()}>
                                 {index === 0 ? (
@@ -760,7 +931,7 @@ export default function TargetArea(props: any) {
                                     <span
                                       className={`text-[${resolvedAppFontSize - 2}px] text-default-500 mr-3`}
                                     >
-                                      {explanations['trait']}
+                                      {explanations.trait}
                                     </span>
                                     <span
                                       className={`font-bold text-[${resolvedAppFontSize}px] select-text`}
@@ -784,8 +955,8 @@ export default function TargetArea(props: any) {
                     )
                   })}
                 <br />
-                {result['associations'] &&
-                  result['associations'].map((association: any) => {
+                {result.associations.length > 0 &&
+                  result.associations.map((association) => {
                     return (
                       <div key={nanoid()}>
                         <span className={`text-[${resolvedAppFontSize}px] text-default-500`}>
@@ -794,29 +965,29 @@ export default function TargetArea(props: any) {
                       </div>
                     )
                   })}
-                {result['sentence'] &&
-                  result['sentence'].map((sentence: any, index: number) => {
+                {result.sentence.length > 0 &&
+                  result.sentence.map((sentence, index) => {
                     return (
                       <div key={nanoid()}>
                         <span className={`text-[${resolvedAppFontSize - 2}px] mr-3`}>
                           {index + 1}.
                         </span>
                         <>
-                          {sentence['source'] && (
+                          {sentence.source && (
                             <span
                               className={`text-[${resolvedAppFontSize}px] select-text`}
                               dangerouslySetInnerHTML={{
-                                __html: sentence['source'],
+                                __html: sentence.source,
                               }}
                             />
                           )}
                         </>
                         <>
-                          {sentence['target'] && (
+                          {sentence.target && (
                             <div
                               className={`text-[${resolvedAppFontSize}px] select-text text-default-500`}
                               dangerouslySetInnerHTML={{
-                                __html: sentence['target'],
+                                __html: sentence.target,
                               }}
                             />
                           )}
@@ -899,7 +1070,9 @@ export default function TargetArea(props: any) {
                   size="sm"
                   isDisabled={typeof result !== 'string' || result === ''}
                   onPress={() => {
-                    writeText(result)
+                    if (typeof result === 'string') {
+                      writeText(result)
+                    }
                   }}
                 >
                   <MdContentCopy className="text-[16px]" />
@@ -913,6 +1086,9 @@ export default function TargetArea(props: any) {
                   size="sm"
                   isDisabled={typeof result !== 'string' || result === ''}
                   onPress={async () => {
+                    if (typeof result !== 'string') {
+                      return
+                    }
                     setError('')
                     setResultViewMode(null)
                     let newTargetLanguage = sourceLanguage
@@ -947,25 +1123,26 @@ export default function TargetArea(props: any) {
                           {
                             config: instanceConfig,
                             detect: detectLanguage,
-                            setResult: (v: any) => {
-                              setResult(v)
+                            setResult: (v: unknown) => {
+                              setResult(toTranslationResult(v))
                               setHideOnce(false)
                             },
                             utils,
                           },
                         ).then(
-                          (v: any) => {
+                          (v) => {
+                            const translatedText = toText(v).trim()
                             if (v === result) {
-                              setResult(v + ' ')
+                              setResult(`${translatedText} `)
                             } else {
-                              setResult(v.trim())
+                              setResult(translatedText)
                             }
                             setIsLoading(false)
-                            if (v !== '') {
+                            if (hasVisibleResult(v)) {
                               setHideOnce(false)
                             }
                           },
-                          (e: any) => {
+                          (e: unknown) => {
                             reportRuntimeError(e, {
                               source: 'translate_back.plugin',
                               logMessage: 'Translate-back plugin rejected.',
@@ -976,7 +1153,7 @@ export default function TargetArea(props: any) {
                                 to: newTargetLanguage ?? 'unknown',
                               },
                             })
-                            setError(e.toString())
+                            setError(toErrorMessage(e))
                             setIsLoading(false)
                           },
                         )
@@ -1001,25 +1178,26 @@ export default function TargetArea(props: any) {
                             {
                               config: instanceConfig,
                               detect: newSourceLanguage,
-                              setResult: (v: any) => {
-                                setResult(v)
+                              setResult: (v: unknown) => {
+                                setResult(toTranslationResult(v))
                                 setHideOnce(false)
                               },
                             },
                           )
                           .then(
-                            (v: any) => {
+                            (v) => {
+                              const translatedText = toText(v).trim()
                               if (v === result) {
-                                setResult(v + ' ')
+                                setResult(`${translatedText} `)
                               } else {
-                                setResult(v.trim())
+                                setResult(translatedText)
                               }
                               setIsLoading(false)
-                              if (v !== '') {
+                              if (hasVisibleResult(v)) {
                                 setHideOnce(false)
                               }
                             },
-                            (e: any) => {
+                            (e: unknown) => {
                               reportRuntimeError(e, {
                                 source: 'translate_back.builtin',
                                 logMessage: 'Translate-back provider rejected.',
@@ -1030,7 +1208,7 @@ export default function TargetArea(props: any) {
                                   to: newTargetLanguage ?? 'unknown',
                                 },
                               })
-                              setError(e.toString())
+                              setError(toErrorMessage(e))
                               setIsLoading(false)
                             },
                           )

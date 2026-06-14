@@ -1,7 +1,8 @@
 import { configApi, pluginApi } from '@/renderer/lib/electron/adapter'
 import { logger } from '@/renderer/lib/logger'
-import type { PluginMarketplaceEntry } from '@/shared/types/electron-api'
+import type { PluginInfo, PluginMarketplaceEntry } from '@/shared/types/electron-api'
 import { describeMarketplaceSourceError, type MarketplaceSourceErrorKind } from './marketplaceError'
+import type { InstalledPlugin } from './installedPlugins'
 
 export const DEFAULT_MARKETPLACE_SOURCE =
   'https://raw.githubusercontent.com/shirumesu/Neopot-releases/main/marketplace-plugins.json'
@@ -135,7 +136,10 @@ export async function loadMarketplacePlugins(
   }
 }
 
-export function findPluginUpdates(installedPlugins: any[], marketplaceIndex: MarketplacePlugin[]) {
+export function findPluginUpdates(
+  installedPlugins: InstalledPlugin[],
+  marketplaceIndex: MarketplacePlugin[],
+) {
   const installedById = new Map(installedPlugins.map((plugin) => [plugin.id, plugin]))
 
   return marketplaceIndex
@@ -176,7 +180,7 @@ export async function installMarketplacePluginSource(plugin: MarketplacePlugin):
   throw lastError ?? new Error('Marketplace plugin has no installable source.')
 }
 
-export async function checkPluginUpdates(installedPlugins: any[]) {
+export async function checkPluginUpdates(installedPlugins: InstalledPlugin[]) {
   const marketplaceResult = await loadMarketplacePlugins()
   const marketplacePlugins = marketplaceResult.plugins
   const marketplaceById = new Map(marketplacePlugins.map((plugin) => [plugin.id, plugin]))
@@ -201,7 +205,7 @@ export async function checkPluginUpdates(installedPlugins: any[]) {
     }
 
     let highestVersion = installed.version
-    let highestManifest: any = null
+    let highestManifest: PluginInfo | null = null
     let highestSource = ''
 
     for (const source of sources) {

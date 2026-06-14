@@ -1,7 +1,25 @@
 import { fetch } from '@/renderer/lib/electron/http'
 import { normalizeGoogleTranslateBaseUrl } from '@/shared/providerUrl'
 
-export async function translate(text: string, from: string, to: string, options: any = {}) {
+interface GoogleTranslateOptions {
+  config?: {
+    custom_url?: string
+  }
+}
+
+interface GoogleRichTranslationResult {
+  pronunciations: Array<{ symbol: unknown; voice: string }>
+  explanations: Array<{ trait: unknown; explains: unknown[] }>
+  associations: unknown[]
+  sentence: Array<{ source: unknown }>
+}
+
+export async function translate(
+  text: string,
+  from: string,
+  to: string,
+  options: GoogleTranslateOptions = {},
+) {
   const { config } = options
 
   const customUrl = normalizeGoogleTranslateBaseUrl(config?.custom_url)
@@ -29,14 +47,19 @@ export async function translate(text: string, from: string, to: string, options:
   if (res.ok) {
     const result = res.data
     if (result[1]) {
-      const target: any = { pronunciations: [], explanations: [], associations: [], sentence: [] }
+      const target: GoogleRichTranslationResult = {
+        pronunciations: [],
+        explanations: [],
+        associations: [],
+        sentence: [],
+      }
       if (result[0][1][3]) {
         target.pronunciations.push({ symbol: result[0][1][3], voice: '' })
       }
       for (const i of result[1]) {
         target.explanations.push({
           trait: i[0],
-          explains: i[2].map((x: any) => {
+          explains: i[2].map((x: unknown[]) => {
             return x[0]
           }),
         })

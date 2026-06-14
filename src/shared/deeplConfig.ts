@@ -30,6 +30,8 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 const hasOwn = (record: Record<string, unknown>, key: string): boolean =>
   Object.prototype.hasOwnProperty.call(record, key)
 
+const legacyDeepLConfigKeys = new Set(['type', 'authKey', 'customUrl', 'authApi', 'deeplx'])
+
 const readString = (record: Record<string, unknown>, key: string, fallback = ''): string => {
   if (!hasOwn(record, key)) {
     return fallback
@@ -69,15 +71,9 @@ export function normalizeDeepLConfig(value: unknown, defaultInstanceName = 'Deep
   const record = isRecord(value) ? value : {}
   const authApiRecord = isRecord(record.authApi) ? record.authApi : {}
   const deeplxRecord = isRecord(record.deeplx) ? record.deeplx : {}
-
-  const {
-    type: _type,
-    authKey: _legacyAuthKey,
-    customUrl: _legacyCustomUrl,
-    authApi: _authApi,
-    deeplx: _deeplx,
-    ...sharedConfig
-  } = record
+  const sharedConfig = Object.fromEntries(
+    Object.entries(record).filter(([key]) => !legacyDeepLConfigKeys.has(key)),
+  )
 
   return {
     ...sharedConfig,

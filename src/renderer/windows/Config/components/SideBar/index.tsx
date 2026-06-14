@@ -7,7 +7,6 @@ import { PiTextboxFill } from 'react-icons/pi'
 import { MdExtension, MdKeyboardAlt, MdMiscellaneousServices } from 'react-icons/md'
 import { Button } from '@heroui/react'
 import type { IconType } from 'react-icons'
-import React from 'react'
 
 const sideBarItems: Array<{
   path: string

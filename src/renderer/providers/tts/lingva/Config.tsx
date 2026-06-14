@@ -3,19 +3,20 @@ import { useConfig } from '@/renderer/hooks/useConfig'
 import { useToastStyle } from '@/renderer/hooks'
 import { useConfigSave } from '@/renderer/windows/Config/hooks/useConfigSave'
 import { Button, Input } from '@heroui/react'
-import React, { useState } from 'react'
+import { useState } from 'react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 
 import { DEFAULT_LINGVA_URL, tts } from './index'
 import { Language } from './info'
+import type { ServiceConfigComponentProps } from '@/renderer/windows/Config/pages/Service/types'
 
 interface LingvaConfig {
   [INSTANCE_NAME_CONFIG_KEY]: string
   custom_url: string
 }
 
-export function Config(props: any) {
+export function Config(props: ServiceConfigComponentProps) {
   const { instanceKey, updateServiceList, onClose } = props
   const { t } = useTranslation()
   const [config, setConfig] = useConfig<LingvaConfig>(

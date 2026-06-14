@@ -8,7 +8,6 @@ import {
 } from '@heroui/react'
 import { useTranslation } from 'react-i18next'
 import { invoke } from '@/renderer/lib/electron/compat/core'
-import React from 'react'
 
 import { appVersion } from '@/renderer/lib/config/env'
 import AboutUpdateModal from './AboutUpdateModal'

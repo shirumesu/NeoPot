@@ -1,16 +1,24 @@
 import { Button, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from '@heroui/react'
 import { useTranslation } from 'react-i18next'
-import React from 'react'
 
 import PluginHotkeyEditor from '../../../components/PluginHotkeyEditor'
 import { hotkeysForPlugin } from '../logic'
+import type { InstalledPlugin } from '../installedPlugins'
 
-function isPluginManifestHotkey(value: unknown): value is {
+interface PluginManifestHotkey {
   key: string
   display: string
   default: string
   handler: string
-} {
+}
+
+interface PluginHotkeyModalProps {
+  isOpen: boolean
+  onOpenChange: (open: boolean) => void
+  plugin: InstalledPlugin | null
+}
+
+function isPluginManifestHotkey(value: unknown): value is PluginManifestHotkey {
   if (typeof value !== 'object' || value === null) {
     return false
   }
@@ -25,21 +33,23 @@ function isPluginManifestHotkey(value: unknown): value is {
   )
 }
 
-export default function PluginHotkeyModal(props: any) {
+export default function PluginHotkeyModal(props: PluginHotkeyModalProps) {
   const { isOpen, onOpenChange, plugin } = props
   const { t } = useTranslation()
-  const rows = hotkeysForPlugin(
-    (plugin?.hotkeys ?? []).filter(isPluginManifestHotkey).map((hotkey: any) => ({
-      pluginId: plugin.id,
-      pluginType: plugin.type,
-      pluginName: plugin.name,
-      pluginDisplay: plugin.display,
-      key: hotkey.key,
-      display: hotkey.display,
-      hotkey: hotkey.default,
-    })),
-    plugin?.id,
-  )
+  const rows = plugin
+    ? hotkeysForPlugin(
+        plugin.hotkeys.filter(isPluginManifestHotkey).map((hotkey) => ({
+          pluginId: plugin.id,
+          pluginType: plugin.type,
+          pluginName: plugin.name,
+          pluginDisplay: plugin.display,
+          key: hotkey.key,
+          display: hotkey.display,
+          hotkey: hotkey.default,
+        })),
+        plugin.id,
+      )
+    : []
 
   return (
     <Modal isOpen={isOpen} onOpenChange={onOpenChange} scrollBehavior="inside">

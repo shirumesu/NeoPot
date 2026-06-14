@@ -1,5 +1,5 @@
 import { getCurrentWebviewWindow } from '@/renderer/lib/electron/compat/webviewWindow'
-import React, { useCallback, useState, useEffect } from 'react'
+import { useCallback, useState, useEffect } from 'react'
 import { listen } from '@/renderer/lib/electron/compat/event'
 import { Button } from '@heroui/react'
 import { BsPinFill } from 'react-icons/bs'
@@ -21,10 +21,16 @@ import ControlArea from './ControlArea'
 import ImageArea from './ImageArea'
 import TextArea from './TextArea'
 import { logger } from '@/renderer/lib/logger'
-import { loadInstalledPlugins } from '../Config/pages/Plugin/installedPlugins'
+import { loadInstalledPlugins, type InstalledPlugin } from '../Config/pages/Plugin/installedPlugins'
 const appWindow = getCurrentWebviewWindow()
 
-export const pluginListAtom = atom<Record<string, any>>({})
+type ServiceInstanceConfigMap = Record<string, Record<string, unknown>>
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+export const pluginListAtom = atom<Record<string, InstalledPlugin>>({})
 
 let blurTimeout: ReturnType<typeof setTimeout> | null = null
 
@@ -63,11 +69,12 @@ export default function Recognize() {
   const [serviceInstanceList] = useConfig<string[]>('recognize_service_list', ['local_model'])
   const [pluginLoadError, setPluginLoadError] = useState<string | null>(null)
   const [serviceConfigError, setServiceConfigError] = useState<string | null>(null)
-  const [serviceInstanceConfigMap, setServiceInstanceConfigMap] = useState<Record<string, any>>({})
+  const [serviceInstanceConfigMap, setServiceInstanceConfigMap] =
+    useState<ServiceInstanceConfigMap>({})
 
   const loadPluginList = useCallback(async () => {
     try {
-      const temp: Record<string, any> = {}
+      const temp: Record<string, InstalledPlugin> = {}
       const plugins = (await loadInstalledPlugins('recognize')).filter((plugin) => plugin.enabled)
       for (const plugin of plugins) {
         temp[plugin.name] = plugin
@@ -85,9 +92,10 @@ export default function Recognize() {
         return
       }
 
-      const config: Record<string, any> = {}
+      const config: ServiceInstanceConfigMap = {}
       for (const serviceInstanceKey of serviceInstanceList) {
-        config[serviceInstanceKey] = (await getStoreValue(serviceInstanceKey)) ?? {}
+        const value = await getStoreValue(serviceInstanceKey)
+        config[serviceInstanceKey] = isRecord(value) ? value : {}
       }
       setServiceConfigError(null)
       setServiceInstanceConfigMap({ ...config })

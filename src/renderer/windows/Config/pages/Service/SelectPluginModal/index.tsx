@@ -1,6 +1,5 @@
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from '@heroui/react'
 import { useTranslation } from 'react-i18next'
-import React from 'react'
 
 import {
   ServiceSourceType,

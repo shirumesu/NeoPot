@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { appCacheDir, join } from '@/renderer/lib/electron/compat/path'
 import { currentMonitor } from '@/renderer/lib/electron/compat/window'
 import { convertFileSrc } from '@/renderer/lib/electron/compat/core'

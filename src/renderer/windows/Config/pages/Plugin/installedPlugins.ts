@@ -1,4 +1,5 @@
 import { pluginApi } from '@/renderer/lib/electron/adapter'
+import type { PluginInfo } from '@/shared/types/electron-api'
 
 const servicePluginTypes = ['translate', 'recognize', 'tts']
 const defaultPluginIcon = 'logo/plugin.svg'
@@ -36,6 +37,32 @@ function fileUrlToPath(icon: string) {
   return /^[a-zA-Z]:/.test(pathname.slice(1)) ? pathname.slice(1) : pathname
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function readString(record: Record<string, unknown>, key: string, fallback = '') {
+  const value = record[key]
+  return typeof value === 'string' ? value : fallback
+}
+
+function readArray(record: Record<string, unknown>, key: string): unknown[] {
+  const value = record[key]
+  return Array.isArray(value) ? value : []
+}
+
+function readLanguageMap(value: unknown): Record<string, string> {
+  if (!isRecord(value)) {
+    return {}
+  }
+
+  return Object.fromEntries(
+    Object.entries(value).filter(
+      (entry): entry is [string, string] => typeof entry[1] === 'string',
+    ),
+  )
+}
+
 async function normalizePluginIcon(icon: unknown) {
   const iconSource = typeof icon === 'string' && icon.trim() ? icon.trim() : defaultPluginIcon
   if (!isLocalIconPath(iconSource)) {
@@ -55,27 +82,31 @@ async function normalizePluginIcon(icon: unknown) {
   }
 }
 
-async function normalizePlugin(plugin: any) {
+async function normalizePlugin(plugin: PluginInfo) {
+  const record = isRecord(plugin) ? plugin : {}
+  const type = readString(record, 'type', readString(record, 'plugin_type'))
+  const name = readString(record, 'name')
+
   return {
-    id: plugin.id ?? `${plugin.type}:${plugin.name}`,
-    type: plugin.type ?? plugin.plugin_type,
-    name: plugin.name,
-    display: plugin.display ?? plugin.name,
-    version: plugin.version ?? '',
-    author: plugin.author ?? '',
-    description: plugin.description ?? '',
-    icon: await normalizePluginIcon(plugin.icon),
-    enabled: plugin.enabled ?? true,
-    installSource: typeof plugin.installSource === 'string' ? plugin.installSource : '',
+    id: readString(record, 'id', `${type}:${name}`),
+    type,
+    name,
+    display: readString(record, 'display', name),
+    version: readString(record, 'version'),
+    author: readString(record, 'author'),
+    description: readString(record, 'description'),
+    icon: await normalizePluginIcon(record.icon),
+    enabled: record.enabled !== false,
+    installSource: readString(record, 'installSource'),
     installSourceType:
-      plugin.installSourceType === 'local' || plugin.installSourceType === 'url'
-        ? plugin.installSourceType
+      record.installSourceType === 'local' || record.installSourceType === 'url'
+        ? record.installSourceType
         : '',
-    needs: Array.isArray(plugin.needs) ? plugin.needs : [],
-    hotkeys: Array.isArray(plugin.hotkeys) ? plugin.hotkeys : [],
-    options: Array.isArray(plugin.options) ? plugin.options : [],
-    homepage: plugin.homepage ?? '',
-    language: plugin.language ?? {},
+    needs: readArray(record, 'needs'),
+    hotkeys: readArray(record, 'hotkeys'),
+    options: readArray(record, 'options'),
+    homepage: readString(record, 'homepage'),
+    language: readLanguageMap(record.language),
   }
 }
 

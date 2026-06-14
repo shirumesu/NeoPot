@@ -1,6 +1,6 @@
 import { Card, CardBody, CardFooter, Button, Tooltip } from '@heroui/react'
 import { getCurrentWebviewWindow } from '@/renderer/lib/electron/compat/webviewWindow'
-import React, { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { listen } from '@/renderer/lib/electron/compat/event'
 import { MdContentCopy } from 'react-icons/md'
 import { useTranslation } from 'react-i18next'

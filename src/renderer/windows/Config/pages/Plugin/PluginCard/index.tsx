@@ -1,7 +1,6 @@
 import { Button, Switch, Tooltip } from '@heroui/react'
 import { MdDeleteOutline, MdHome, MdKeyboardAlt, MdSettings } from 'react-icons/md'
 import { useTranslation } from 'react-i18next'
-import React from 'react'
 
 import { getCardActions } from '../logic'
 import { openUrl } from '@/renderer/lib/electron/compat/opener'

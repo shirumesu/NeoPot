@@ -4,7 +4,7 @@ import {
   VscChromeMaximize,
   VscChromeRestore,
 } from 'react-icons/vsc'
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { getCurrentWebviewWindow } from '@/renderer/lib/electron/compat/webviewWindow'
 import { listen } from '@/renderer/lib/electron/compat/event'
 import { Button } from '@heroui/react'

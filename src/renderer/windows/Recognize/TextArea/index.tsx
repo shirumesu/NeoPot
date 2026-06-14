@@ -2,7 +2,7 @@ import { Card, CardBody, CardFooter, Button, Skeleton, ButtonGroup, Tooltip } fr
 import { sendNotification } from '@/renderer/lib/electron/compat/notification'
 import { writeText } from '@/renderer/lib/electron/compat/clipboard'
 import { atom, useAtom, useAtomValue } from 'jotai'
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { CgSpaceBetween } from 'react-icons/cg'
 import { MdContentCopy } from 'react-icons/md'
 import { MdSmartButton } from 'react-icons/md'
@@ -25,7 +25,23 @@ import { reportRuntimeError } from '@/renderer/lib/runtimeError'
 export const textAtom = atom('')
 let recognizeId = ''
 const RECOGNIZE_TIMEOUT_MS = 30000
-const builtinServiceMap = builtinServices as Record<string, any>
+
+type ServiceInstanceConfigMap = Record<string, Record<string, unknown>>
+
+interface BuiltinRecognizeService {
+  Language: Record<string, string>
+  recognize(
+    base64: string,
+    language: string,
+    options: { config: Record<string, unknown> },
+  ): Promise<unknown>
+}
+
+interface TextAreaProps {
+  serviceInstanceConfigMap: ServiceInstanceConfigMap
+}
+
+const builtinServiceMap = builtinServices as Record<string, BuiltinRecognizeService>
 
 function withTimeout<T>(promise: Promise<T>, timeoutMessage: string) {
   let timeout: ReturnType<typeof setTimeout> | null = null
@@ -40,7 +56,19 @@ function withTimeout<T>(promise: Promise<T>, timeoutMessage: string) {
   })
 }
 
-export default function TextArea(props: any) {
+function normalizeRecognizedText(value: unknown, deleteNewline: boolean) {
+  let text = typeof value === 'string' ? value.trim() : String(value ?? '').trim()
+  if (deleteNewline) {
+    text = text.replace(/-\s+/g, '').replace(/\s+/g, ' ')
+  }
+  return text
+}
+
+function toErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.toString() : String(error)
+}
+
+export default function TextArea(props: TextAreaProps) {
   const { serviceInstanceConfigMap } = props
   const [autoCopy] = useConfig('recognize_auto_copy', false)
   const [deleteNewline] = useConfig('recognize_delete_newline', false)
@@ -85,12 +113,9 @@ export default function TextArea(props: any) {
                 ),
                 t('errors.recognize_timeout'),
               ).then(
-                (v: any) => {
+                (value) => {
                   if (recognizeId !== id) return
-                  v = v.trim()
-                  if (deleteNewline) {
-                    v = v.replace(/-\s+/g, '').replace(/\s+/g, ' ')
-                  }
+                  const v = normalizeRecognizedText(value, deleteNewline)
                   setText(v)
                   setLoading(false)
                   if (autoCopy) {
@@ -104,7 +129,7 @@ export default function TextArea(props: any) {
                     })
                   }
                 },
-                (e: any) => {
+                (e: unknown) => {
                   if (recognizeId !== id) return
                   reportRuntimeError(e, {
                     source: 'recognize.plugin',
@@ -115,12 +140,12 @@ export default function TextArea(props: any) {
                       language,
                     },
                   })
-                  setError(e.toString())
+                  setError(toErrorMessage(e))
                   setLoading(false)
                 },
               )
             },
-            (e: any) => {
+            (e: unknown) => {
               if (recognizeId !== id) return
               reportRuntimeError(e, {
                 source: 'recognize.plugin.load',
@@ -131,7 +156,7 @@ export default function TextArea(props: any) {
                   language,
                 },
               })
-              setError(e.toString())
+              setError(toErrorMessage(e))
               setLoading(false)
             },
           )
@@ -154,12 +179,9 @@ export default function TextArea(props: any) {
             ),
             t('errors.recognize_timeout'),
           ).then(
-            (v: any) => {
+            (value) => {
               if (recognizeId !== id) return
-              v = v.trim()
-              if (deleteNewline) {
-                v = v.replace(/-\s+/g, '').replace(/\s+/g, ' ')
-              }
+              const v = normalizeRecognizedText(value, deleteNewline)
               setText(v)
               setLoading(false)
               if (autoCopy) {
@@ -173,7 +195,7 @@ export default function TextArea(props: any) {
                 })
               }
             },
-            (e: any) => {
+            (e: unknown) => {
               if (recognizeId !== id) return
               reportRuntimeError(e, {
                 source: 'recognize.builtin',
@@ -184,7 +206,7 @@ export default function TextArea(props: any) {
                   language,
                 },
               })
-              setError(e.toString())
+              setError(toErrorMessage(e))
               setLoading(false)
             },
           )

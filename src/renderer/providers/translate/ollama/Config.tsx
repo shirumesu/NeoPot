@@ -17,7 +17,7 @@ import { INSTANCE_NAME_CONFIG_KEY } from '@/renderer/lib/service/service_instanc
 import { MdDeleteOutline } from 'react-icons/md'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { useConfig } from '../../../hooks/useConfig'
 import { useToastStyle } from '../../../hooks'
@@ -25,6 +25,7 @@ import { getModels as getOllamaModels, pullModel as pullOllamaModel, translate }
 import { Language } from './index'
 import { useConfigSave } from '@/renderer/windows/Config/hooks/useConfigSave'
 import { DEFAULT_OLLAMA_URL, normalizeOllamaBaseUrl } from '@/shared/providerUrl'
+import type { ServiceConfigComponentProps } from '@/renderer/windows/Config/pages/Service/types'
 
 const THINKING_MODE_DEFAULT = 'default'
 const THINKING_MODE_ON = 'on'
@@ -62,7 +63,7 @@ type OllamaModelList = {
   models?: { name: string }[]
 }
 
-export function Config(props: any) {
+export function Config(props: ServiceConfigComponentProps) {
   const { instanceKey, updateServiceList, onClose } = props
   const { t } = useTranslation()
   const [serviceConfig, setServiceConfig] = useConfig<OllamaServiceConfig>(
@@ -436,7 +437,7 @@ export function Config(props: any) {
           {serviceConfig.promptList &&
             serviceConfig.promptList.map((prompt, index) => {
               return (
-                <div className="config-item">
+                <div key={`${prompt.role}-${index}`} className="config-item">
                   <Textarea
                     label={prompt.role}
                     labelPlacement="outside"
