@@ -9,7 +9,18 @@ import { CardBody } from '@heroui/react'
 import { Dropdown } from '@heroui/react'
 import { Button } from '@heroui/react'
 import { Switch } from '@heroui/react'
-import 'flag-icons/css/flag-icons.min.css'
+import flagAeUrl from 'flag-icons/flags/4x3/ae.svg?url'
+import flagBrUrl from 'flag-icons/flags/4x3/br.svg?url'
+import flagCnUrl from 'flag-icons/flags/4x3/cn.svg?url'
+import flagDeUrl from 'flag-icons/flags/4x3/de.svg?url'
+import flagEsUrl from 'flag-icons/flags/4x3/es.svg?url'
+import flagFrUrl from 'flag-icons/flags/4x3/fr.svg?url'
+import flagGbUrl from 'flag-icons/flags/4x3/gb.svg?url'
+import flagJpUrl from 'flag-icons/flags/4x3/jp.svg?url'
+import flagKrUrl from 'flag-icons/flags/4x3/kr.svg?url'
+import flagRuUrl from 'flag-icons/flags/4x3/ru.svg?url'
+import flagTrUrl from 'flag-icons/flags/4x3/tr.svg?url'
+import flagUnUrl from 'flag-icons/flags/4x3/un.svg?url'
 import { Input } from '@heroui/react'
 import { Card } from '@heroui/react'
 import { invoke } from '@/renderer/lib/electron/compat/core'
@@ -56,8 +67,38 @@ const isValidProxyPort = (value: string) => {
 const SERVER_PORT_MIN = 1
 const SERVER_PORT_MAX = 65535
 
+const languageFlagUrls = {
+  ae: flagAeUrl,
+  br: flagBrUrl,
+  cn: flagCnUrl,
+  de: flagDeUrl,
+  es: flagEsUrl,
+  fr: flagFrUrl,
+  gb: flagGbUrl,
+  jp: flagJpUrl,
+  kr: flagKrUrl,
+  ru: flagRuUrl,
+  tr: flagTrUrl,
+  un: flagUnUrl,
+} as const
+
 function getLanguageFlag(language: string) {
   return (LanguageFlag as Record<string, string>)[language] ?? 'un'
+}
+
+function getLanguageFlagUrl(language: string) {
+  const flag = getLanguageFlag(language)
+  return languageFlagUrls[flag as keyof typeof languageFlagUrls] ?? flagUnUrl
+}
+
+function LanguageFlagIcon({ language }: { language: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      className="inline-block h-3 w-4 shrink-0 bg-cover bg-center bg-no-repeat shadow-[0_0_0_1px_rgba(0,0,0,0.08)]"
+      style={{ backgroundImage: `url(${getLanguageFlagUrl(language)})` }}
+    />
+  )
 }
 
 const parseServerPortInput = (value: string) => {
@@ -251,7 +292,7 @@ export default function General() {
                 <DropdownTrigger>
                   <Button
                     variant="bordered"
-                    startContent={<span className={`fi fi-${getLanguageFlag(appLanguage)}`} />}
+                    startContent={<LanguageFlagIcon language={appLanguage} />}
                   >
                     {appLanguageName(appLanguage)}
                   </Button>
@@ -269,7 +310,7 @@ export default function General() {
                   {selectableAppLanguages.map((language) => (
                     <DropdownItem
                       key={language}
-                      startContent={<span className={`fi fi-${getLanguageFlag(language)}`} />}
+                      startContent={<LanguageFlagIcon language={language} />}
                     >
                       {appLanguageName(language)}
                     </DropdownItem>

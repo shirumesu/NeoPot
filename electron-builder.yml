@@ -12,6 +12,9 @@ files:
   - '!out/package/**'
   - '!dist/**'
 asar: true
+electronLanguages:
+  - en-US
+  - zh-CN
 asarUnpack:
   - '**/*.node'
 artifactName: NeoPot-${version}-${os}-${arch}.${ext}
