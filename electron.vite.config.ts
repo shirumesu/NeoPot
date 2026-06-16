@@ -1,6 +1,7 @@
 import { builtinModules } from 'node:module'
 import { resolve } from 'node:path'
 import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'electron-vite'
 
 const external = [
@@ -60,11 +61,14 @@ export default defineConfig({
   },
   renderer: {
     root: '.',
-    plugins: [react()],
+    plugins: [tailwindcss(), react()],
     resolve: {
       alias: {
         '@': resolve(__dirname, 'src'),
         '@assets': resolve(__dirname, 'assets'),
+        fs: resolve(__dirname, 'src/renderer/lib/nodeBuiltinUnavailable.ts'),
+        path: resolve(__dirname, 'src/renderer/lib/nodeBuiltinUnavailable.ts'),
+        crypto: resolve(__dirname, 'src/renderer/lib/nodeBuiltinUnavailable.ts'),
       },
     },
     clearScreen: false,

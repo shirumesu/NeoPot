@@ -30,11 +30,6 @@ import {
 } from '../plugins/installer'
 import { getRedactedConfig, setConfig } from './config'
 import { setClipboardMonitorEnabled } from './clipboard'
-import {
-  isGlobalShortcutRegistered,
-  registerGlobalShortcutByName,
-  unregisterGlobalShortcut,
-} from './hotkey'
 import { rendererHttpRequest } from './http'
 import { detectLanguage } from './lang-detect'
 import { applyProxyToSession } from './proxy'
@@ -716,28 +711,40 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
     },
     'hotkey:register': (_event, payload) => {
       const { name, shortcut } = assertShortcutPayload(payload)
-      return name ? registerGlobalShortcutByName(name, shortcut) : false
+      return name
+        ? import('./hotkey').then(({ registerGlobalShortcutByName }) =>
+            registerGlobalShortcutByName(name, shortcut),
+          )
+        : false
     },
     'hotkey:unregister': (_event, payload) => {
       const { shortcut } = assertShortcutPayload(payload)
-      unregisterGlobalShortcut(shortcut)
+      return import('./hotkey').then(({ unregisterGlobalShortcut }) =>
+        unregisterGlobalShortcut(shortcut),
+      )
     },
     'hotkey:is-registered': (_event, payload) => {
       const { shortcut } = assertShortcutPayload(payload)
-      return isGlobalShortcutRegistered(shortcut)
+      return import('./hotkey').then(({ isGlobalShortcutRegistered }) =>
+        isGlobalShortcutRegistered(shortcut),
+      )
     },
     'command:invoke': async (_event, payload) => {
       const { command, payload: args } = assertCommandPayload(payload)
 
       switch (command) {
-        case 'register_shortcut_by_frontend':
+        case 'register_shortcut_by_frontend': {
           if (!args || typeof args.name !== 'string' || typeof args.shortcut !== 'string') {
             throw new NeoPotError({
               code: 'IPC_INVALID_PAYLOAD',
               message: 'Expected name and shortcut.',
             })
           }
-          return registerGlobalShortcutByName(args.name, args.shortcut)
+          const { name, shortcut } = args
+          return import('./hotkey').then(({ registerGlobalShortcutByName }) =>
+            registerGlobalShortcutByName(name, shortcut),
+          )
+        }
         case 'screenshot':
           await captureDisplayForPoint({
             x: Number(args?.x ?? 0),
