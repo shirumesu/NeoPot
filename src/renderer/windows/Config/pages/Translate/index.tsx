@@ -29,6 +29,10 @@ export default function Translate() {
   const [rememberLanguage, setRememberLanguage] = useConfig('translate_remember_language', false)
   // const [translateFontSize, setTranslateFontSize] = useConfig('translate_font_size', 16);
   const [windowPosition, setWindowPosition] = useConfig('translate_window_position', 'mouse')
+  const [adaptiveWindowSize, setAdaptiveWindowSize] = useConfig(
+    'translate_adaptive_window_size',
+    false,
+  )
   const [rememberWindowSize, setRememberWindowSize] = useConfig(
     'translate_remember_window_size',
     false,
@@ -351,12 +355,52 @@ export default function Translate() {
             )}
           </div>
           <div className="config-item">
+            <h3>{t('config.translate.adaptive_window_size')}</h3>
+            {adaptiveWindowSize !== null && (
+              <Switch
+                isSelected={adaptiveWindowSize}
+                onValueChange={async (v) => {
+                  if (v && rememberWindowSize) {
+                    const disabledRememberWindowSize = await saveConfig(
+                      'translate_remember_window_size',
+                      rememberWindowSize,
+                      setRememberWindowSize,
+                      false,
+                      { notify: false },
+                    )
+                    if (!disabledRememberWindowSize) {
+                      return
+                    }
+                  }
+                  await saveConfig(
+                    'translate_adaptive_window_size',
+                    adaptiveWindowSize,
+                    setAdaptiveWindowSize,
+                    v,
+                  )
+                }}
+              />
+            )}
+          </div>
+          <div className="config-item">
             <h3>{t('config.translate.remember_window_size')}</h3>
             {rememberWindowSize !== null && (
               <Switch
                 isSelected={rememberWindowSize}
-                onValueChange={(v) => {
-                  saveConfig(
+                onValueChange={async (v) => {
+                  if (v && adaptiveWindowSize) {
+                    const disabledAdaptiveWindowSize = await saveConfig(
+                      'translate_adaptive_window_size',
+                      adaptiveWindowSize,
+                      setAdaptiveWindowSize,
+                      false,
+                      { notify: false },
+                    )
+                    if (!disabledAdaptiveWindowSize) {
+                      return
+                    }
+                  }
+                  await saveConfig(
                     'translate_remember_window_size',
                     rememberWindowSize,
                     setRememberWindowSize,

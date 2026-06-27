@@ -199,6 +199,7 @@
         "window_position": "Window Position",
         "mouse": "Follow the Mouse",
         "pre_state": "Remember Position",
+        "adaptive_window_size": "Adaptive Size",
         "remember_window_size": "Remember Window Size",
         "close_on_blur": "Close window when focus lost",
         "always_on_top": "Always on Top",

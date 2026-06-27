@@ -15,6 +15,7 @@ import {
 import { getConfig, setConfig } from './config'
 import { RENDERER_HOST, RENDERER_SCHEME, resolveRendererFile } from './rendererProtocol'
 import { logger } from '../logger'
+import { calculateAdaptiveTranslateWindowSize } from '../../shared/translateWindowSizing'
 
 export type WindowLabel = 'config' | 'translate' | 'recognize' | 'screenshot' | 'updater'
 type UpdaterPresentation = 'full' | 'notification'
@@ -150,14 +151,42 @@ async function loadRenderer(window: BrowserWindow, label: WindowLabel) {
 }
 
 function positionTranslateWindow(window: BrowserWindow) {
+  const [width, height] = window.getSize()
+  const rememberedPosition = getRememberedTranslateWindowPosition(width, height)
+  if (rememberedPosition) {
+    window.setPosition(rememberedPosition.x, rememberedPosition.y)
+    return
+  }
+
   const cursor = screen.getCursorScreenPoint()
   const display = screen.getDisplayNearestPoint(cursor) ?? screen.getPrimaryDisplay()
   const bounds = display.workArea
-  const [width, height] = window.getSize()
 
   const x = Math.max(bounds.x, Math.min(cursor.x, bounds.x + bounds.width - width))
   const y = Math.max(bounds.y, Math.min(cursor.y, bounds.y + bounds.height - height))
   window.setPosition(x, y)
+}
+
+function getRememberedTranslateWindowPosition(
+  width: number,
+  height: number,
+): { x: number; y: number } | null {
+  if (getConfig('translate_window_position') !== 'pre_state') {
+    return null
+  }
+
+  const storedX = Number(getConfig('translate_window_position_x'))
+  const storedY = Number(getConfig('translate_window_position_y'))
+  if (!Number.isFinite(storedX) || !Number.isFinite(storedY)) {
+    return null
+  }
+
+  const display = screen.getDisplayNearestPoint({ x: storedX, y: storedY })
+  const bounds = display.workArea
+  return {
+    x: Math.max(bounds.x, Math.min(storedX, bounds.x + bounds.width - width)),
+    y: Math.max(bounds.y, Math.min(storedY, bounds.y + bounds.height - height)),
+  }
 }
 
 function positionUpdaterNotification(window: BrowserWindow) {
@@ -474,6 +503,34 @@ export function focusWindow(label: WindowLabel): void {
     positionTranslateWindow(window)
   }
   showWindowInForeground(window, label)
+}
+
+export function resizeTranslateWindowForText(text: string): void {
+  const window = windows.get('translate')
+  const trimmedText = text.trim()
+  if (
+    !window ||
+    window.isDestroyed() ||
+    trimmedText === '' ||
+    getConfig('translate_adaptive_window_size') !== true ||
+    getConfig('translate_remember_window_size') === true
+  ) {
+    return
+  }
+
+  const display = screen.getDisplayMatching(window.getBounds())
+  const appFontSize = Number(getConfig('app_font_size'))
+  const size = calculateAdaptiveTranslateWindowSize({
+    text: trimmedText,
+    workArea: {
+      width: display.workArea.width,
+      height: display.workArea.height,
+    },
+    fontSize: appFontSize,
+  })
+
+  window.setSize(size.width, size.height)
+  positionTranslateWindow(window)
 }
 
 export function sendToWindow(label: WindowLabel, event: string, payload: unknown): void {

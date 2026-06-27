@@ -1,4 +1,4 @@
-import { openWindow, sendToWindow } from './window'
+import { openWindow, resizeTranslateWindowForText, sendToWindow } from './window'
 import { readSelectedText } from './selection'
 import { logger } from '../logger'
 import type { TranslateWorkflowPayload } from '../../shared/translateWorkflow'
@@ -44,6 +44,7 @@ async function sendTranslateWorkflow(payload: TranslateWorkflowPayload): Promise
   })
   currentWorkflowText = text
   await openWindow('translate')
+  resizeTranslateWindowForText(text)
   sendToWindow('translate', 'new_text', payload)
 }
 
