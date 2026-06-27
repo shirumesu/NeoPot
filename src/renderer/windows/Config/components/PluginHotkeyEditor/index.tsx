@@ -1,45 +1,13 @@
 import { Button, Input } from '@heroui/react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
-import React, { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { configApi } from '@/renderer/lib/electron/adapter'
 import { isRegistered, unregister } from '@/renderer/lib/electron/compat/globalShortcut'
 import { invoke } from '@/renderer/lib/electron/compat/core'
 import { osType } from '@/renderer/lib/config/env'
-
-const keyMap: Record<string, string> = {
-  Backquote: '`',
-  Backslash: '\\',
-  BracketLeft: '[',
-  BracketRight: ']',
-  Comma: ',',
-  Equal: '=',
-  Minus: '-',
-  Plus: 'PLUS',
-  Period: '.',
-  Quote: "'",
-  Semicolon: ';',
-  Slash: '/',
-  Backspace: 'Backspace',
-  CapsLock: 'Capslock',
-  ContextMenu: 'Contextmenu',
-  Space: 'Space',
-  Tab: 'Tab',
-  Convert: 'Convert',
-  Delete: 'Delete',
-  End: 'End',
-  Help: 'Help',
-  Home: 'Home',
-  PageDown: 'Pagedown',
-  PageUp: 'Pageup',
-  Escape: 'Esc',
-  PrintScreen: 'Printscreen',
-  ScrollLock: 'Scrolllock',
-  Pause: 'Pause',
-  Insert: 'Insert',
-  Suspend: 'Suspend',
-}
+import { shortcutFromKeyboardEvent } from '@/shared/hotkeyAccelerator'
 
 type PluginHotkeyRow = {
   pluginId: string
@@ -53,39 +21,6 @@ type PluginHotkeyRow = {
 
 function pluginHotkeyConfigKey(row: PluginHotkeyRow): string {
   return `plugin_hotkey:${row.pluginType}:${row.pluginName}:${row.key}`
-}
-
-function shortcutFromKeyboardEvent(event: React.KeyboardEvent): string {
-  let newValue = ''
-  if (event.ctrlKey) {
-    newValue = 'Ctrl'
-  }
-  if (event.shiftKey) {
-    newValue = `${newValue}${newValue.length > 0 ? '+' : ''}Shift`
-  }
-  if (event.metaKey) {
-    newValue = `${newValue}${newValue.length > 0 ? '+' : ''}${osType === 'Darwin' ? 'Command' : 'Super'}`
-  }
-  if (event.altKey) {
-    newValue = `${newValue}${newValue.length > 0 ? '+' : ''}Alt`
-  }
-
-  let code = event.code
-  if (code.startsWith('Key')) {
-    code = code.substring(3)
-  } else if (code.startsWith('Digit')) {
-    code = code.substring(5)
-  } else if (code.startsWith('Numpad')) {
-    code = `Num${code.substring(6)}`
-  } else if (code.startsWith('Arrow')) {
-    code = code.substring(5)
-  } else if (code.startsWith('Intl')) {
-    code = code.substring(4)
-  } else if (!/F\d+/.test(code)) {
-    code = keyMap[code] ?? ''
-  }
-
-  return `${newValue}${newValue.length > 0 && code.length > 0 ? '+' : ''}${code}`
 }
 
 export default function PluginHotkeyEditor(props: { rows: PluginHotkeyRow[] }) {
@@ -172,7 +107,7 @@ export default function PluginHotkeyEditor(props: { rows: PluginHotkeyRow[] }) {
                 event.preventDefault()
                 setValues((current) => ({
                   ...current,
-                  [configKey]: event.keyCode === 8 ? '' : shortcutFromKeyboardEvent(event),
+                  [configKey]: event.keyCode === 8 ? '' : shortcutFromKeyboardEvent(event, osType),
                 }))
               }}
               endContent={

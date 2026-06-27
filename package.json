@@ -13,6 +13,7 @@
   "scripts": {
     "dev": "electron-vite dev",
     "build": "electron-vite build",
+    "preview": "electron-vite preview",
     "make": "node .scripts/clean-release-output.mjs && electron-vite build && electron-builder --win --publish never",
     "release": "node .scripts/check-release-version.mjs && node .scripts/clean-release-output.mjs && electron-vite build && electron-builder --publish always",
     "lint": "eslint .",
