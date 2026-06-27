@@ -40,6 +40,7 @@ const configRoutes = new Set([
   '/recognize',
   '/hotkey',
   '/service',
+  '/plugin',
   '/about',
 ])
 
