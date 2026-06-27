@@ -3,6 +3,11 @@ import { randomUUID } from 'node:crypto'
 import { promisify } from 'node:util'
 import { clipboard } from 'electron'
 import { logger } from '../logger'
+import type {
+  SelectionCaptureFailureReason,
+  SelectionCaptureMethod,
+  SelectionCaptureResult,
+} from '../../shared/translateWorkflow'
 
 const execFileAsync = promisify(execFile)
 
@@ -40,6 +45,15 @@ async function tryExecFile(file: string, args: string[]): Promise<string | null>
   }
 }
 
+type CopyCommandResult =
+  | {
+      ok: true
+    }
+  | {
+      ok: false
+      reason: SelectionCaptureFailureReason
+    }
+
 async function readLinuxPrimarySelection(): Promise<string | null> {
   return (
     (await tryExecFile('wl-paste', ['--primary', '--no-newline'])) ??
@@ -48,7 +62,7 @@ async function readLinuxPrimarySelection(): Promise<string | null> {
   )
 }
 
-async function sendLinuxCopyKeystroke(): Promise<void> {
+async function sendLinuxCopyKeystroke(): Promise<CopyCommandResult> {
   for (const [command, args] of [
     ['xdotool', ['key', 'ctrl+c']],
     ['wtype', ['-M', 'ctrl', 'c', '-m', 'ctrl']],
@@ -58,53 +72,56 @@ async function sendLinuxCopyKeystroke(): Promise<void> {
         windowsHide: true,
         timeout: 1000,
       })
-      return
+      return { ok: true }
     } catch {
       // Try the next common desktop helper.
     }
   }
 
   logger.warn('No supported Linux selection copy helper was available.')
+  return { ok: false, reason: 'copy-helper-unavailable' }
 }
 
-async function sendMacCopyKeystroke(): Promise<void> {
-  await execFileAsync(
-    'osascript',
-    ['-e', 'tell application "System Events" to keystroke "c" using command down'],
-    {
-      windowsHide: true,
-      timeout: 2000,
-    },
-  )
+async function sendMacCopyKeystroke(): Promise<CopyCommandResult> {
+  try {
+    await execFileAsync(
+      'osascript',
+      ['-e', 'tell application "System Events" to keystroke "c" using command down'],
+      {
+        windowsHide: true,
+        timeout: 2000,
+      },
+    )
+    return { ok: true }
+  } catch (error) {
+    logger.warn('macOS selection copy command failed.', {
+      error: error instanceof Error ? error.message : String(error),
+    })
+    return { ok: false, reason: 'copy-command-failed' }
+  }
 }
 
-async function sendCopyKeystroke(): Promise<void> {
-  if (process.platform === 'linux') {
-    await sendLinuxCopyKeystroke()
-    return
+async function sendWindowsCopyKeystroke(): Promise<CopyCommandResult> {
+  try {
+    await execFileAsync(
+      'powershell.exe',
+      [
+        '-NoProfile',
+        '-Command',
+        "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.SendKeys]::SendWait('^c')",
+      ],
+      {
+        windowsHide: true,
+        timeout: 2000,
+      },
+    )
+    return { ok: true }
+  } catch (error) {
+    logger.warn('Windows selection copy command failed.', {
+      error: error instanceof Error ? error.message : String(error),
+    })
+    return { ok: false, reason: 'copy-command-failed' }
   }
-
-  if (process.platform === 'darwin') {
-    await sendMacCopyKeystroke()
-    return
-  }
-
-  if (process.platform !== 'win32') {
-    return
-  }
-
-  await execFileAsync(
-    'powershell.exe',
-    [
-      '-NoProfile',
-      '-Command',
-      "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.SendKeys]::SendWait('^c')",
-    ],
-    {
-      windowsHide: true,
-      timeout: 2000,
-    },
-  )
 }
 
 async function waitForCopiedClipboardValue(marker: string): Promise<string | null> {
@@ -121,24 +138,53 @@ async function waitForCopiedClipboardValue(marker: string): Promise<string | nul
   return null
 }
 
-export async function readSelectedText(): Promise<string> {
-  if (process.platform === 'linux') {
-    const primarySelection = await readLinuxPrimarySelection()
-    if (primarySelection) {
-      return primarySelection
-    }
-  }
-
+async function readClipboardFallbackSelection(
+  method: SelectionCaptureMethod,
+  copySelection: () => Promise<CopyCommandResult>,
+): Promise<SelectionCaptureResult> {
   const previousText = clipboard.readText()
   const marker = `__NEOPOT_SELECTION_${randomUUID()}__`
   let copiedClipboardValue: string | null = null
+  let result: SelectionCaptureResult | null = null
 
   selectionClipboardCaptureDepth += 1
   try {
     clipboard.writeText(marker)
-    await sendCopyKeystroke()
+    const copyResult = await copySelection()
+    if (!copyResult.ok) {
+      result = {
+        ok: false,
+        reason: copyResult.reason,
+        method,
+      }
+      return result
+    }
+
     copiedClipboardValue = await waitForCopiedClipboardValue(marker)
-    return copiedClipboardValue ?? ''
+    if (copiedClipboardValue === null) {
+      result = {
+        ok: false,
+        reason: 'copy-timeout',
+        method,
+      }
+      return result
+    }
+
+    if (copiedClipboardValue.trim() === '') {
+      result = {
+        ok: false,
+        reason: 'empty',
+        method,
+      }
+      return result
+    }
+
+    result = {
+      ok: true,
+      text: copiedClipboardValue,
+      method,
+    }
+    return result
   } finally {
     try {
       const currentText = clipboard.readText()
@@ -153,5 +199,43 @@ export async function readSelectedText(): Promise<string> {
     } finally {
       selectionClipboardCaptureDepth -= 1
     }
+  }
+}
+
+async function readLinuxSelectedText(): Promise<SelectionCaptureResult> {
+  const primarySelection = await readLinuxPrimarySelection()
+  if (primarySelection && primarySelection.trim() !== '') {
+    return {
+      ok: true,
+      text: primarySelection,
+      method: 'linux-primary-selection',
+    }
+  }
+
+  return readClipboardFallbackSelection('linux-clipboard-fallback', sendLinuxCopyKeystroke)
+}
+
+async function readWindowsSelectedText(): Promise<SelectionCaptureResult> {
+  return readClipboardFallbackSelection('windows-clipboard-fallback', sendWindowsCopyKeystroke)
+}
+
+async function readMacSelectedText(): Promise<SelectionCaptureResult> {
+  return readClipboardFallbackSelection('macos-clipboard-fallback', sendMacCopyKeystroke)
+}
+
+export async function readSelectedText(): Promise<SelectionCaptureResult> {
+  switch (process.platform) {
+    case 'linux':
+      return readLinuxSelectedText()
+    case 'win32':
+      return readWindowsSelectedText()
+    case 'darwin':
+      return readMacSelectedText()
+    default:
+      return {
+        ok: false,
+        reason: 'unsupported-platform',
+        method: 'unsupported-clipboard-fallback',
+      }
   }
 }

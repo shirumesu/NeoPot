@@ -35,6 +35,11 @@ import * as builtinTtsServices from '@/renderer/providers/tts'
 import detect from '@/renderer/lib/language/lang_detect'
 import { reportRuntimeError } from '@/renderer/lib/runtimeError'
 import type { EnabledServicePluginList } from '@/renderer/windows/Config/pages/Plugin/installedPlugins'
+import {
+  toTranslateWorkflowPayload,
+  type SelectionCaptureFailureReason,
+  type SelectionCaptureResult,
+} from '@/shared/translateWorkflow'
 const appWindow = getCurrentWebviewWindow()
 
 export const sourceTextAtom = atom('')
@@ -73,15 +78,24 @@ interface SourceAreaProps {
   serviceInstanceConfigMap: ServiceInstanceConfigMap
 }
 
+interface SourceNotice {
+  tone: 'warning' | 'danger'
+  message: string
+}
+
+const selectionCaptureFailureKeys: Record<SelectionCaptureFailureReason, string> = {
+  empty: 'translate.selection_capture.empty',
+  'copy-helper-unavailable': 'translate.selection_capture.copy_helper_unavailable',
+  'copy-command-failed': 'translate.selection_capture.copy_command_failed',
+  'copy-timeout': 'translate.selection_capture.copy_timeout',
+  'unsupported-platform': 'translate.selection_capture.unsupported_platform',
+}
+
 const recognizeServiceMap = recognizeServices as Record<string, BuiltinRecognizeService>
 const builtinTtsServiceMap = builtinTtsServices as Record<string, BuiltinTtsService>
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
-}
-
-function toWorkflowText(value: unknown): string {
-  return typeof value === 'string' ? value : ''
 }
 
 function toResultText(value: unknown): string {
@@ -231,6 +245,7 @@ export default function SourceArea(props: SourceAreaProps) {
   const [hideWindow] = useConfig('translate_hide_window', false)
   const [hideSource] = useConfig('hide_source', false)
   const [ttsPluginInfo, setTtsPluginInfo] = useState<PluginLanguageInfo>()
+  const [sourceNotice, setSourceNotice] = useState<SourceNotice | null>(null)
   const [windowType, setWindowType] = useState('[SELECTION_TRANSLATE]')
   const { t } = useTranslation()
   const textAreaRef = useRef<HTMLTextAreaElement>(null)
@@ -275,6 +290,7 @@ export default function SourceArea(props: SourceAreaProps) {
         ? [sourceText.trim(), newText].filter(Boolean).join('\n')
         : newText
 
+      setSourceNotice(null)
       setSourceText(nextText)
       await detect_language(nextText)
       syncSourceText(nextText)
@@ -282,27 +298,71 @@ export default function SourceArea(props: SourceAreaProps) {
     [detect_language, incrementalTranslate, setSourceText, sourceText, syncSourceText],
   )
 
+  const showWorkflowWindow = useCallback(
+    (forceShow: boolean) => {
+      if (hideWindow && !forceShow) {
+        appWindow.hide()
+        return
+      }
+
+      appWindow.show()
+      appWindow.setFocus()
+    },
+    [hideWindow],
+  )
+
+  const showSelectionCaptureNotice = useCallback(
+    (capture: SelectionCaptureResult) => {
+      if (capture.ok) {
+        return
+      }
+
+      showWorkflowWindow(true)
+      setWindowType('[SELECTION_TRANSLATE]')
+      setDetectLanguage('')
+      setSourceNotice({
+        tone: capture.reason === 'empty' ? 'warning' : 'danger',
+        message: t(selectionCaptureFailureKeys[capture.reason]),
+      })
+      setSourceText('', true)
+      syncSourceText('')
+    },
+    [setDetectLanguage, setSourceText, showWorkflowWindow, syncSourceText, t],
+  )
+
   const handleNewText = useCallback(
     async (payload: unknown) => {
-      const text = toWorkflowText(payload).trim()
-      if (hideWindow) {
-        appWindow.hide()
-      } else {
-        appWindow.show()
-        appWindow.setFocus()
-      }
+      const workflow = toTranslateWorkflowPayload(payload)
       setDetectLanguage('')
-      if (text === '') {
+      if (workflow.kind === 'selection') {
         setWindowType('[SELECTION_TRANSLATE]')
-        setSourceText('', true)
-        syncSourceText('')
-      } else if (text === '[INPUT_TRANSLATE]') {
+        if (!workflow.capture.ok) {
+          showSelectionCaptureNotice(workflow.capture)
+          return
+        }
+        showWorkflowWindow(false)
+        await commitSourceText(normalizeInputText(workflow.capture.text))
+      } else if (workflow.kind === 'text') {
+        const text = workflow.text.trim()
+        showWorkflowWindow(false)
+        if (text === '') {
+          setWindowType('[SELECTION_TRANSLATE]')
+          setSourceNotice(null)
+          setSourceText('', true)
+          syncSourceText('')
+          return
+        }
+        setWindowType('[SELECTION_TRANSLATE]')
+        await commitSourceText(normalizeInputText(text))
+      } else if (workflow.kind === 'input') {
+        showWorkflowWindow(true)
         setWindowType('[INPUT_TRANSLATE]')
-        appWindow.show()
-        appWindow.setFocus()
+        setSourceNotice(null)
         setSourceText('', true)
-      } else if (text === '[IMAGE_TRANSLATE]') {
+      } else if (workflow.kind === 'image') {
+        showWorkflowWindow(false)
         setWindowType('[IMAGE_TRANSLATE]')
+        setSourceNotice(null)
         if (
           recognizeServiceList === null ||
           recognizeLanguage === null ||
@@ -384,14 +444,10 @@ export default function SourceArea(props: SourceAreaProps) {
             setSourceText(t('errors.language_not_supported'))
           }
         }
-      } else {
-        setWindowType('[SELECTION_TRANSLATE]')
-        await commitSourceText(normalizeInputText(text))
       }
     },
     [
       commitSourceText,
-      hideWindow,
       normalizeInputText,
       pluginList,
       recognizeLanguage,
@@ -399,6 +455,8 @@ export default function SourceArea(props: SourceAreaProps) {
       serviceInstanceConfigMap,
       setDetectLanguage,
       setSourceText,
+      showSelectionCaptureNotice,
+      showWorkflowWindow,
       syncSourceText,
       t,
     ],
@@ -571,6 +629,7 @@ export default function SourceArea(props: SourceAreaProps) {
   const changeSourceText = useCallback(
     async (text: string) => {
       setDetectLanguage('')
+      setSourceNotice(null)
       await setSourceText(text)
       if (dynamicTranslate) {
         if (sourceTextChangeTimerRef.current) {
@@ -617,9 +676,24 @@ export default function SourceArea(props: SourceAreaProps) {
   }, [changeSourceText])
 
   return (
-    <div className={hideSource && windowType !== '[INPUT_TRANSLATE]' ? 'hidden' : undefined}>
+    <div
+      className={
+        hideSource && windowType !== '[INPUT_TRANSLATE]' && !sourceNotice ? 'hidden' : undefined
+      }
+    >
       <Card shadow="none" className="bg-content1 rounded-[10px] mt-px pb-0">
         <CardBody className="bg-content1 p-3 pb-0 max-h-[40vh] overflow-y-auto">
+          {sourceNotice && (
+            <div
+              className={`mb-2 rounded-small border px-3 py-2 text-sm ${
+                sourceNotice.tone === 'danger'
+                  ? 'border-danger/30 bg-danger/10 text-danger'
+                  : 'border-warning/30 bg-warning/10 text-warning-700'
+              }`}
+            >
+              {sourceNotice.message}
+            </div>
+          )}
           <textarea
             autoFocus
             ref={textAreaRef}
@@ -694,6 +768,7 @@ export default function SourceArea(props: SourceAreaProps) {
                   isDisabled={sourceText === ''}
                   onPress={() => {
                     setDetectLanguage('')
+                    setSourceNotice(null)
                     setSourceText('', true)
                   }}
                 >

@@ -454,7 +454,14 @@
       "show_source": "显示原文",
       "delete_newline": "删除换行",
       "translate_back": "回译到原文",
-      "tts_not_configured": "未配置 TTS 服务"
+      "tts_not_configured": "未配置 TTS 服务",
+      "selection_capture": {
+        "empty": "未检测到选中文本。",
+        "copy_helper_unavailable": "当前桌面环境没有可用的划词复制辅助工具。",
+        "copy_command_failed": "无法从当前应用请求复制选中文本。",
+        "copy_timeout": "当前应用未将选中文本写入剪贴板。",
+        "unsupported_platform": "当前平台不支持划词翻译。"
+      }
     },
     "recognize": {
       "recognize": "识别",

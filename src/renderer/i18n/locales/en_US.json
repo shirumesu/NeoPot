@@ -454,7 +454,14 @@
       "show_source": "Show source",
       "delete_newline": "Delete Newline",
       "translate_back": "Translate back to original",
-      "tts_not_configured": "No TTS service configured"
+      "tts_not_configured": "No TTS service configured",
+      "selection_capture": {
+        "empty": "No selected text detected.",
+        "copy_helper_unavailable": "No supported selection copy helper is available on this desktop.",
+        "copy_command_failed": "Failed to request a copy from the active application.",
+        "copy_timeout": "The active application did not put selected text on the clipboard.",
+        "unsupported_platform": "Selection translation is not supported on this platform."
+      }
     },
     "recognize": {
       "recognize": "Recognize",

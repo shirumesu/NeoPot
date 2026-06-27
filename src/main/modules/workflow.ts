@@ -1,6 +1,7 @@
 import { openWindow, sendToWindow } from './window'
 import { readSelectedText } from './selection'
 import { logger } from '../logger'
+import type { TranslateWorkflowPayload } from '../../shared/translateWorkflow'
 
 let currentWorkflowText = ''
 let currentScreenshotAction: 'recognize' | 'translate' = 'recognize'
@@ -29,25 +30,44 @@ export async function openUpdater(): Promise<void> {
   await openWindow('updater')
 }
 
-export async function textTranslate(text: string): Promise<void> {
+async function sendTranslateWorkflow(payload: TranslateWorkflowPayload): Promise<void> {
+  const text =
+    payload.kind === 'text'
+      ? payload.text
+      : payload.kind === 'selection' && payload.capture.ok
+        ? payload.capture.text
+        : ''
+
   logger.debug('Opening text translation workflow.', {
     textLength: text.length,
+    kind: payload.kind,
   })
   currentWorkflowText = text
   await openWindow('translate')
-  sendToWindow('translate', 'new_text', text)
+  sendToWindow('translate', 'new_text', payload)
+}
+
+export async function textTranslate(text: string): Promise<void> {
+  await sendTranslateWorkflow({
+    kind: 'text',
+    text,
+  })
 }
 
 async function runSelectionTranslate(): Promise<void> {
   logger.debug('Selection translation workflow requested.')
-  const text = await readSelectedText()
-  if (text.trim() === '') {
-    logger.debug('Selection translation captured empty input.')
-    await textTranslate('')
-    return
+  const capture = await readSelectedText()
+  if (!capture.ok) {
+    logger.debug('Selection translation did not capture text.', {
+      reason: capture.reason,
+      method: capture.method,
+    })
   }
 
-  await textTranslate(text)
+  await sendTranslateWorkflow({
+    kind: 'selection',
+    capture,
+  })
 }
 
 export function selectionTranslate(): Promise<void> {
@@ -67,12 +87,16 @@ export function selectionTranslate(): Promise<void> {
 
 export async function inputTranslate(): Promise<void> {
   logger.debug('Input translation workflow requested.')
-  await textTranslate('[INPUT_TRANSLATE]')
+  await sendTranslateWorkflow({
+    kind: 'input',
+  })
 }
 
 export async function imageTranslate(): Promise<void> {
   logger.debug('Image translation workflow requested.')
-  await textTranslate('[IMAGE_TRANSLATE]')
+  await sendTranslateWorkflow({
+    kind: 'image',
+  })
 }
 
 export async function recognizeWindow(): Promise<void> {
