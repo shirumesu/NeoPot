@@ -1,6 +1,7 @@
 export type SelectionCaptureMethod =
   | 'linux-primary-selection'
   | 'linux-clipboard-fallback'
+  | 'windows-uia-selection'
   | 'windows-clipboard-fallback'
   | 'macos-clipboard-fallback'
   | 'unsupported-clipboard-fallback'
@@ -43,6 +44,7 @@ export type TranslateWorkflowPayload =
 const selectionCaptureMethods = new Set<SelectionCaptureMethod>([
   'linux-primary-selection',
   'linux-clipboard-fallback',
+  'windows-uia-selection',
   'windows-clipboard-fallback',
   'macos-clipboard-fallback',
   'unsupported-clipboard-fallback',

@@ -13,7 +13,95 @@ const execFileAsync = promisify(execFile)
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 const COPY_POLL_INTERVAL_MS = 30
-const COPY_TIMEOUT_MS = 1000
+const COPY_TIMEOUT_MS = 700
+const COPY_SETTLE_DELAY_MS = 180
+const COPY_RETRY_DELAY_MS = 120
+const COPY_ATTEMPT_COUNT = 2
+const WINDOWS_UIA_SELECTION_TIMEOUT_MS = 1200
+const WINDOWS_UIA_SELECTION_COMMAND = `
+$ErrorActionPreference = 'SilentlyContinue'
+[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+Add-Type -AssemblyName UIAutomationClient
+Add-Type -AssemblyName UIAutomationTypes
+Add-Type @"
+using System;
+using System.Runtime.InteropServices;
+public static class NeoPotForegroundWindow {
+  [DllImport("user32.dll")]
+  public static extern IntPtr GetForegroundWindow();
+}
+"@
+
+function Get-TextPatternSelection($element) {
+  if ($null -eq $element) {
+    return $null
+  }
+
+  $pattern = $null
+  if (-not $element.TryGetCurrentPattern([System.Windows.Automation.TextPattern]::Pattern, [ref]$pattern)) {
+    return $null
+  }
+
+  try {
+    $ranges = $pattern.GetSelection()
+  } catch {
+    return $null
+  }
+
+  if ($null -eq $ranges) {
+    return $null
+  }
+
+  $parts = New-Object 'System.Collections.Generic.List[string]'
+  foreach ($range in $ranges) {
+    try {
+      $text = $range.GetText(-1)
+    } catch {
+      $text = $null
+    }
+
+    if (-not [string]::IsNullOrWhiteSpace($text)) {
+      [void]$parts.Add($text.Trim())
+    }
+  }
+
+  if ($parts.Count -eq 0) {
+    return $null
+  }
+
+  return [string]::Join("\`n", $parts.ToArray())
+}
+
+function Write-SelectionAndExit($text) {
+  if (-not [string]::IsNullOrWhiteSpace($text)) {
+    [Console]::Write($text)
+    exit 0
+  }
+}
+
+$element = [System.Windows.Automation.AutomationElement]::FocusedElement
+for ($i = 0; $i -lt 8 -and $null -ne $element; $i += 1) {
+  Write-SelectionAndExit (Get-TextPatternSelection $element)
+  $element = [System.Windows.Automation.TreeWalker]::ControlViewWalker.GetParent($element)
+}
+
+$foregroundWindow = [NeoPotForegroundWindow]::GetForegroundWindow()
+if ($foregroundWindow -ne [IntPtr]::Zero) {
+  $root = [System.Windows.Automation.AutomationElement]::FromHandle($foregroundWindow)
+  if ($null -ne $root) {
+    $condition = [System.Windows.Automation.PropertyCondition]::new(
+      [System.Windows.Automation.AutomationElement]::IsTextPatternAvailableProperty,
+      $true
+    )
+    $elements = $root.FindAll([System.Windows.Automation.TreeScope]::Subtree, $condition)
+    foreach ($candidate in $elements) {
+      Write-SelectionAndExit (Get-TextPatternSelection $candidate)
+    }
+  }
+}
+
+exit 1
+`
 let selectionClipboardCaptureDepth = 0
 let selectionClipboardBaselineVersion = 0
 let selectionClipboardBaselineText: string | null = null
@@ -32,11 +120,11 @@ export function getSelectionClipboardCaptureBaseline(): {
   }
 }
 
-async function tryExecFile(file: string, args: string[]): Promise<string | null> {
+async function tryExecFile(file: string, args: string[], timeout = 1000): Promise<string | null> {
   try {
     const { stdout } = await execFileAsync(file, args, {
       windowsHide: true,
-      timeout: 1000,
+      timeout,
     })
     const text = stdout.trim()
     return text === '' ? null : text
@@ -124,6 +212,14 @@ async function sendWindowsCopyKeystroke(): Promise<CopyCommandResult> {
   }
 }
 
+async function readWindowsUiaSelectedText(): Promise<string | null> {
+  return tryExecFile(
+    'powershell.exe',
+    ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', WINDOWS_UIA_SELECTION_COMMAND],
+    WINDOWS_UIA_SELECTION_TIMEOUT_MS,
+  )
+}
+
 async function waitForCopiedClipboardValue(marker: string): Promise<string | null> {
   const deadline = Date.now() + COPY_TIMEOUT_MS
 
@@ -150,17 +246,29 @@ async function readClipboardFallbackSelection(
   selectionClipboardCaptureDepth += 1
   try {
     clipboard.writeText(marker)
-    const copyResult = await copySelection()
-    if (!copyResult.ok) {
-      result = {
-        ok: false,
-        reason: copyResult.reason,
-        method,
+
+    for (let attempt = 0; attempt < COPY_ATTEMPT_COUNT; attempt += 1) {
+      if (attempt > 0) {
+        await delay(COPY_RETRY_DELAY_MS)
       }
-      return result
+      await delay(COPY_SETTLE_DELAY_MS)
+
+      const copyResult = await copySelection()
+      if (!copyResult.ok) {
+        result = {
+          ok: false,
+          reason: copyResult.reason,
+          method,
+        }
+        return result
+      }
+
+      copiedClipboardValue = await waitForCopiedClipboardValue(marker)
+      if (copiedClipboardValue !== null) {
+        break
+      }
     }
 
-    copiedClipboardValue = await waitForCopiedClipboardValue(marker)
     if (copiedClipboardValue === null) {
       result = {
         ok: false,
@@ -216,6 +324,15 @@ async function readLinuxSelectedText(): Promise<SelectionCaptureResult> {
 }
 
 async function readWindowsSelectedText(): Promise<SelectionCaptureResult> {
+  const text = await readWindowsUiaSelectedText()
+  if (text && text.trim() !== '') {
+    return {
+      ok: true,
+      text,
+      method: 'windows-uia-selection',
+    }
+  }
+
   return readClipboardFallbackSelection('windows-clipboard-fallback', sendWindowsCopyKeystroke)
 }
 
