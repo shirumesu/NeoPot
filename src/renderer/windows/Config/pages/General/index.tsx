@@ -93,10 +93,12 @@ function getLanguageFlagUrl(language: string) {
 
 function LanguageFlagIcon({ language }: { language: string }) {
   return (
-    <span
+    <img
+      alt=""
       aria-hidden="true"
-      className="inline-block h-3 w-4 shrink-0 bg-cover bg-center bg-no-repeat shadow-[0_0_0_1px_rgba(0,0,0,0.08)]"
-      style={{ backgroundImage: `url(${getLanguageFlagUrl(language)})` }}
+      className="h-3 w-4 shrink-0 object-cover shadow-[0_0_0_1px_rgba(0,0,0,0.08)]"
+      draggable={false}
+      src={getLanguageFlagUrl(language)}
     />
   )
 }
