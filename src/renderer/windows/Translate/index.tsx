@@ -1,6 +1,6 @@
 import { getCurrentWebviewWindow } from '@/renderer/lib/electron/compat/webviewWindow'
 import { Spacer, Button } from '@heroui/react'
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { listen } from '@/renderer/lib/electron/compat/event'
 import { BsPinFill } from 'react-icons/bs'
 import { useTranslation } from 'react-i18next'
@@ -43,10 +43,15 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 let blurTimeout: ReturnType<typeof setTimeout> | null = null
 let resizeTimeout: ReturnType<typeof setTimeout> | null = null
 let moveTimeout: ReturnType<typeof setTimeout> | null = null
+let skipNextBlurClose = false
 
 const listenBlur = () => {
   return listen('neopot://blur', () => {
     if (appWindow.label === 'translate') {
+      if (skipNextBlurClose) {
+        skipNextBlurClose = false
+        return
+      }
       if (blurTimeout) {
         clearTimeout(blurTimeout)
       }
@@ -66,9 +71,13 @@ const unlistenBlur = () => {
 }
 
 void listen('neopot://focus', () => {
+  skipNextBlurClose = false
   if (blurTimeout) {
     clearTimeout(blurTimeout)
   }
+})
+void listen('neopot://minimize', () => {
+  skipNextBlurClose = true
 })
 void listen('neopot://move', () => {
   if (blurTimeout) {
@@ -132,6 +141,14 @@ export default function Translate() {
         ? ttsServiceInstanceList.filter(isValidServiceInstanceKey)
         : [],
     [ttsServiceInstanceList],
+  )
+  const enabledTranslateServiceInstanceList = useMemo(
+    () =>
+      validTranslateServiceInstanceList.filter((serviceInstanceKey) => {
+        const config = serviceInstanceConfigMap[serviceInstanceKey] ?? {}
+        return config.enable !== false
+      }),
+    [serviceInstanceConfigMap, validTranslateServiceInstanceList],
   )
   useEffect(() => {
     if (closeOnBlur !== null && !closeOnBlur) {
@@ -298,15 +315,15 @@ export default function Translate() {
                 )}
               </div>
               <div className={`${hideLanguage && 'hidden'}`}>
-                <LanguageArea />
+                <LanguageArea
+                  translateServiceInstanceList={enabledTranslateServiceInstanceList}
+                  pluginList={pluginList}
+                />
                 <Spacer y={2} />
               </div>
               {isServiceConfigReady
-                ? validTranslateServiceInstanceList.map((serviceInstanceKey, index) => {
-                    const config = serviceInstanceConfigMap[serviceInstanceKey] ?? {}
-                    const enable = config['enable'] ?? true
-
-                    return enable ? (
+                ? enabledTranslateServiceInstanceList.map((serviceInstanceKey, index) => {
+                    return (
                       <div key={serviceInstanceKey}>
                         <TargetArea
                           index={index}
@@ -317,8 +334,6 @@ export default function Translate() {
                         />
                         <Spacer y={2} />
                       </div>
-                    ) : (
-                      <React.Fragment key={serviceInstanceKey} />
                     )
                   })
                 : null}

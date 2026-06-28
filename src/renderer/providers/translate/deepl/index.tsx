@@ -47,8 +47,8 @@ async function translate_by_free(text: string, from: string, to: string) {
     params: {
       splitting: 'newlines',
       lang: {
-        source_lang_user_selected: from !== 'auto' ? from.slice(0, 2) : 'auto',
-        target_lang: to.slice(0, 2),
+        source_lang_user_selected: normalizeDeepLSourceLanguage(from),
+        target_lang: normalizeDeepLTargetLanguage(to),
       },
       texts: [{ text, requestAlternatives: 3 }],
       timestamp: getTimeStamp(getICount(text)),
@@ -95,8 +95,8 @@ async function translate_by_deeplx(
   const res = await fetch(url, {
     method: 'POST',
     body: Body.json({
-      source_lang: from,
-      target_lang: to,
+      source_lang: normalizeDeepLSourceLanguage(from),
+      target_lang: normalizeDeepLTargetLanguage(to),
       text: text,
     }),
     headers: createDeepLXAuthHeaders(authKey),
@@ -121,10 +121,10 @@ async function translate_by_key(text: string, from: string, to: string, key: str
   }
   const body: Record<string, unknown> = {
     text: [text],
-    target_lang: to,
+    target_lang: normalizeDeepLTargetLanguage(to),
   }
   if (from !== 'auto') {
-    body['source_lang'] = from
+    body['source_lang'] = normalizeDeepLSourceLanguage(from)
   }
   let url
   if (key.endsWith(':fx')) {
@@ -173,6 +173,18 @@ function getICount(translate_text: string) {
 function getRandomNumber() {
   const rand = Math.floor(Math.random() * 99999) + 100000
   return rand * 1000
+}
+
+function normalizeDeepLSourceLanguage(language: string) {
+  if (language === 'auto') {
+    return 'auto'
+  }
+
+  return language.split('-')[0]
+}
+
+function normalizeDeepLTargetLanguage(language: string) {
+  return language
 }
 
 export * from './Config'

@@ -76,6 +76,17 @@ const scriptDetectors: Array<{ language: string; pattern: RegExp }> = [
   { language: 'zh_cn', pattern: /[\u4e00-\u9fff]/u },
 ]
 
+const scriptCharacterPatterns: Record<string, RegExp> = {
+  ja: /[\u3040-\u30ff]/gu,
+  ko: /[\uac00-\ud7af]/gu,
+  ar: /[\u0600-\u06ff]/gu,
+  he: /[\u0590-\u05ff]/gu,
+  hi: /[\u0900-\u097f]/gu,
+  th: /[\u0e00-\u0e7f]/gu,
+  km: /[\u1780-\u17ff]/gu,
+  zh_cn: /[\u4e00-\u9fff]/gu,
+}
+
 const cyrillicLanguagePatterns: Array<{ language: string; pattern: RegExp }> = [
   { language: 'uk', pattern: /[іїєґІЇЄҐ]/u },
   { language: 'mn_cy', pattern: /[өӨүҮ]/u },
@@ -121,9 +132,35 @@ function hasTraditionalChineseSignal(value: string) {
   return false
 }
 
+function countMatches(value: string, pattern: RegExp) {
+  return value.match(pattern)?.length ?? 0
+}
+
+function hasEnoughScriptSignal(scriptCharacterCount: number, latinLetterCount: number) {
+  if (scriptCharacterCount === 0) {
+    return false
+  }
+  if (latinLetterCount < 20) {
+    return true
+  }
+
+  return scriptCharacterCount >= 4 && scriptCharacterCount / latinLetterCount >= 0.05
+}
+
 function detectByScript(value: string): string | null {
+  const latinLetterCount = countMatches(value, /[A-Za-z]/g)
+
   for (const { language, pattern } of scriptDetectors) {
     if (!pattern.test(value)) {
+      continue
+    }
+
+    if (
+      !hasEnoughScriptSignal(
+        countMatches(value, scriptCharacterPatterns[language] ?? pattern),
+        latinLetterCount,
+      )
+    ) {
       continue
     }
 

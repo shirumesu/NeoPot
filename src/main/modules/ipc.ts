@@ -593,9 +593,13 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
       BrowserWindow.fromWebContents(event.sender)?.focus()
     },
     'app:set-current-window-always-on-top': (event, payload) => {
-      BrowserWindow.fromWebContents(event.sender)?.setAlwaysOnTop(
-        assertBooleanPayload(payload, 'alwaysOnTop'),
-      )
+      const window = BrowserWindow.fromWebContents(event.sender)
+      const alwaysOnTop = assertBooleanPayload(payload, 'alwaysOnTop')
+      if (alwaysOnTop) {
+        window?.setAlwaysOnTop(true, 'screen-saver')
+      } else {
+        window?.setAlwaysOnTop(false)
+      }
     },
     'app:set-current-window-resizable': (event, payload) => {
       BrowserWindow.fromWebContents(event.sender)?.setResizable(
@@ -636,6 +640,7 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
     },
     'app:minimize-current-window': (event, payload) => {
       assertNoPayload(payload)
+      event.sender.send('app:event', { event: 'neopot://minimize' })
       BrowserWindow.fromWebContents(event.sender)?.minimize()
     },
     'app:maximize-current-window': (event, payload) => {

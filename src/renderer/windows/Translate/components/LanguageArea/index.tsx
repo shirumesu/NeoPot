@@ -4,16 +4,24 @@ import { BiTransferAlt } from 'react-icons/bi'
 import React, { useEffect } from 'react'
 import { atom, useAtom, useAtomValue } from 'jotai'
 
-import { languageList } from '@/renderer/lib/language/language'
 import { detectLanguageAtom } from '../SourceArea'
 import { useConfig } from '../../../../hooks'
 import SafeDropdownMenu from '@/renderer/components/SafeDropdownMenu'
 import { ACTION_ICON_CLASS } from '@/renderer/components/uiSize'
+import * as builtinTranslateServices from '@/renderer/providers/translate'
+import type { EnabledServicePluginList } from '@/renderer/windows/Config/pages/Plugin/installedPlugins'
+import { getSupportedTranslateLanguageList } from '@/renderer/lib/language/translateServiceLanguages'
 
 export const sourceLanguageAtom = atom('auto')
 export const targetLanguageAtom = atom('zh_cn')
 
-export default function LanguageArea() {
+interface LanguageAreaProps {
+  translateServiceInstanceList: string[]
+  pluginList: EnabledServicePluginList
+}
+
+export default function LanguageArea(props: LanguageAreaProps) {
+  const { translateServiceInstanceList, pluginList } = props
   const [rememberLanguage] = useConfig('translate_remember_language', false)
   const [translateSourceLanguage, setTranslateSourceLanguage] = useConfig(
     'translate_source_language',
@@ -29,18 +37,67 @@ export default function LanguageArea() {
   const [targetLanguage, setTargetLanguage] = useAtom(targetLanguageAtom)
   const detectLanguage = useAtomValue(detectLanguageAtom)
   const { t } = useTranslation()
+  const supportedLanguageList = React.useMemo(
+    () =>
+      getSupportedTranslateLanguageList(translateServiceInstanceList, {
+        builtinServices: builtinTranslateServices,
+        pluginServices: pluginList.translate,
+      }),
+    [pluginList.translate, translateServiceInstanceList],
+  )
+  const fallbackTargetLanguage = React.useMemo(
+    () =>
+      supportedLanguageList.includes('zh_cn') ? 'zh_cn' : (supportedLanguageList[0] ?? ''),
+    [supportedLanguageList],
+  )
+  const hasSupportedTargetLanguages = supportedLanguageList.length > 0
+
+  const setSupportedTargetLanguage = React.useCallback(
+    (language: string | null | undefined) => {
+      setTargetLanguage(
+        language && supportedLanguageList.includes(language) ? language : fallbackTargetLanguage,
+      )
+    },
+    [fallbackTargetLanguage, setTargetLanguage, supportedLanguageList],
+  )
 
   useEffect(() => {
-    if (translateSourceLanguage) {
+    if (
+      translateSourceLanguage &&
+      (translateSourceLanguage === 'auto' ||
+        supportedLanguageList.includes(translateSourceLanguage))
+    ) {
       setSourceLanguage(translateSourceLanguage)
     }
     if (translateTargetLanguage) {
-      setTargetLanguage(translateTargetLanguage)
+      setSupportedTargetLanguage(translateTargetLanguage)
     }
-  }, [translateSourceLanguage, translateTargetLanguage, setSourceLanguage, setTargetLanguage])
+  }, [
+    translateSourceLanguage,
+    translateTargetLanguage,
+    setSourceLanguage,
+    setSupportedTargetLanguage,
+    supportedLanguageList,
+  ])
 
   useEffect(() => {
-    if (rememberLanguage !== null && rememberLanguage) {
+    if (sourceLanguage !== 'auto' && !supportedLanguageList.includes(sourceLanguage)) {
+      setSourceLanguage('auto')
+    }
+    if (!supportedLanguageList.includes(targetLanguage)) {
+      setTargetLanguage(fallbackTargetLanguage)
+    }
+  }, [
+    fallbackTargetLanguage,
+    setSourceLanguage,
+    setTargetLanguage,
+    sourceLanguage,
+    supportedLanguageList,
+    targetLanguage,
+  ])
+
+  useEffect(() => {
+    if (rememberLanguage !== null && rememberLanguage && targetLanguage) {
       setTranslateSourceLanguage(sourceLanguage)
       setTranslateTargetLanguage(targetLanguage)
     }
@@ -70,7 +127,7 @@ export default function LanguageArea() {
               }}
             >
               <DropdownItem key="auto">{t('languages.auto')}</DropdownItem>
-              {languageList.map((x) => {
+              {supportedLanguageList.map((x) => {
                 return <DropdownItem key={x}>{t(`languages.${x}`)}</DropdownItem>
               })}
             </SafeDropdownMenu>
@@ -82,6 +139,7 @@ export default function LanguageArea() {
             size="sm"
             variant="light"
             className={ACTION_ICON_CLASS}
+            isDisabled={!hasSupportedTargetLanguages}
             onPress={async () => {
               if (sourceLanguage !== 'auto') {
                 const oldSourceLanguage = sourceLanguage
@@ -90,15 +148,15 @@ export default function LanguageArea() {
               } else {
                 if (detectLanguage !== '') {
                   if (targetLanguage === translateTargetLanguage) {
-                    setTargetLanguage(detectLanguage)
+                    setSupportedTargetLanguage(detectLanguage)
                   } else {
-                    setTargetLanguage(translateTargetLanguage ?? targetLanguage)
+                    setSupportedTargetLanguage(translateTargetLanguage ?? targetLanguage)
                   }
                 } else {
                   if (targetLanguage === translateSecondLanguage) {
-                    setTargetLanguage(translateTargetLanguage ?? targetLanguage)
+                    setSupportedTargetLanguage(translateTargetLanguage ?? targetLanguage)
                   } else {
-                    setTargetLanguage(translateSecondLanguage ?? targetLanguage)
+                    setSupportedTargetLanguage(translateSecondLanguage ?? targetLanguage)
                   }
                 }
               }
@@ -110,8 +168,10 @@ export default function LanguageArea() {
         <div className="flex">
           <Dropdown>
             <DropdownTrigger>
-              <Button radius="sm" variant="light">
-                {t(`languages.${targetLanguage}`)}
+              <Button radius="sm" variant="light" isDisabled={!hasSupportedTargetLanguages}>
+                {targetLanguage
+                  ? t(`languages.${targetLanguage}`)
+                  : t('errors.language_not_supported')}
               </Button>
             </DropdownTrigger>
             <SafeDropdownMenu
@@ -121,7 +181,7 @@ export default function LanguageArea() {
                 setTargetLanguage(String(key))
               }}
             >
-              {languageList.map((x) => {
+              {supportedLanguageList.map((x) => {
                 return <DropdownItem key={x}>{t(`languages.${x}`)}</DropdownItem>
               })}
             </SafeDropdownMenu>

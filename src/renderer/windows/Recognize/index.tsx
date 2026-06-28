@@ -33,10 +33,15 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 export const pluginListAtom = atom<Record<string, InstalledPlugin>>({})
 
 let blurTimeout: ReturnType<typeof setTimeout> | null = null
+let skipNextBlurClose = false
 
 const listenBlur = () => {
   return listen('neopot://blur', () => {
     if (appWindow.label === 'recognize') {
+      if (skipNextBlurClose) {
+        skipNextBlurClose = false
+        return
+      }
       if (blurTimeout) {
         clearTimeout(blurTimeout)
       }
@@ -56,9 +61,13 @@ const unlistenBlur = () => {
 }
 
 void listen('neopot://focus', () => {
+  skipNextBlurClose = false
   if (blurTimeout) {
     clearTimeout(blurTimeout)
   }
+})
+void listen('neopot://minimize', () => {
+  skipNextBlurClose = true
 })
 
 export default function Recognize() {

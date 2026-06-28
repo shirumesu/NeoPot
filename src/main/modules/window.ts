@@ -52,7 +52,6 @@ const windowDefinitions: Record<WindowLabel, WindowDefinition> = {
   translate: {
     width: 350,
     height: 420,
-    skipTaskbar: true,
     transparent: true,
     resizable: true,
   },
@@ -386,6 +385,9 @@ function createBrowserWindow(label: WindowLabel): BrowserWindow {
   }
 
   const window = new BrowserWindow(options)
+  if (definition.alwaysOnTop === true) {
+    window.setAlwaysOnTop(true, 'screen-saver')
+  }
   const webContentsId = window.webContents.id
   windows.set(label, window)
   windowLabelsByWebContentsId.set(webContentsId, label)
