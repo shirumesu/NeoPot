@@ -46,8 +46,7 @@ export default function LanguageArea(props: LanguageAreaProps) {
     [pluginList.translate, translateServiceInstanceList],
   )
   const fallbackTargetLanguage = React.useMemo(
-    () =>
-      supportedLanguageList.includes('zh_cn') ? 'zh_cn' : (supportedLanguageList[0] ?? ''),
+    () => (supportedLanguageList.includes('zh_cn') ? 'zh_cn' : (supportedLanguageList[0] ?? '')),
     [supportedLanguageList],
   )
   const hasSupportedTargetLanguages = supportedLanguageList.length > 0

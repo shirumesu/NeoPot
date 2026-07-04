@@ -220,6 +220,23 @@ async function readWindowsUiaSelectedText(): Promise<string | null> {
   )
 }
 
+async function readWindowsUiaSelection(): Promise<SelectionCaptureResult> {
+  const text = await readWindowsUiaSelectedText()
+  if (text && text.trim() !== '') {
+    return {
+      ok: true,
+      text,
+      method: 'windows-uia-selection',
+    }
+  }
+
+  return {
+    ok: false,
+    reason: 'empty',
+    method: 'windows-uia-selection',
+  }
+}
+
 async function waitForCopiedClipboardValue(marker: string): Promise<string | null> {
   const deadline = Date.now() + COPY_TIMEOUT_MS
 
@@ -324,16 +341,23 @@ async function readLinuxSelectedText(): Promise<SelectionCaptureResult> {
 }
 
 async function readWindowsSelectedText(): Promise<SelectionCaptureResult> {
-  const text = await readWindowsUiaSelectedText()
-  if (text && text.trim() !== '') {
-    return {
-      ok: true,
-      text,
-      method: 'windows-uia-selection',
-    }
+  const uiaSelection = readWindowsUiaSelection()
+  const clipboardFallback = readClipboardFallbackSelection(
+    'windows-clipboard-fallback',
+    sendWindowsCopyKeystroke,
+  )
+
+  const first = await Promise.race([uiaSelection, clipboardFallback])
+  if (first.ok) {
+    return first
   }
 
-  return readClipboardFallbackSelection('windows-clipboard-fallback', sendWindowsCopyKeystroke)
+  if (first.method === 'windows-uia-selection') {
+    return clipboardFallback
+  }
+
+  const uiaResult = await uiaSelection
+  return uiaResult.ok ? uiaResult : first
 }
 
 async function readMacSelectedText(): Promise<SelectionCaptureResult> {
