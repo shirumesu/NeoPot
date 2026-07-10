@@ -7,6 +7,8 @@ import type { InstalledPlugin } from './installedPlugins'
 export const DEFAULT_MARKETPLACE_SOURCE =
   'https://raw.githubusercontent.com/shirumesu/Neopot-releases/main/marketplace-plugins.json'
 const MARKETPLACE_SOURCES_CONFIG_KEY = 'plugin_marketplace_sources'
+const MARKETPLACE_SOURCE_CONCURRENCY = 4
+const PLUGIN_UPDATE_SOURCE_CONCURRENCY = 4
 
 export interface MarketplacePlugin extends PluginMarketplaceEntry {
   source: string
@@ -29,6 +31,30 @@ export interface MarketplaceLoadResult {
 
 export interface PluginUpdate extends MarketplacePlugin {
   installedVersion: string
+}
+
+async function mapWithConcurrency<T, R>(
+  values: T[],
+  concurrency: number,
+  mapper: (value: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  if (values.length === 0) {
+    return []
+  }
+
+  const results = new Array<R>(values.length)
+  let nextIndex = 0
+  const workerCount = Math.min(concurrency, values.length)
+  await Promise.all(
+    Array.from({ length: workerCount }, async () => {
+      while (nextIndex < values.length) {
+        const index = nextIndex
+        nextIndex += 1
+        results[index] = await mapper(values[index], index)
+      }
+    }),
+  )
+  return results
 }
 
 function normalizeSourceList(value: unknown): string[] {
@@ -96,35 +122,48 @@ export async function loadMarketplacePlugins(
 ): Promise<MarketplaceLoadResult> {
   const sources = marketplaceSourceValues(customSources ?? (await loadCustomMarketplaceSources()))
   const pluginsById = new Map<string, MarketplacePlugin>()
-  const sourceStatuses: MarketplaceSourceStatus[] = []
-
-  for (const [index, source] of sources.entries()) {
-    try {
-      const plugins = await pluginApi.inspectMarketplace(source)
-      for (const plugin of plugins) {
-        mergeMarketplacePlugin(pluginsById, plugin, source)
+  const sourceResults = await mapWithConcurrency(
+    sources,
+    MARKETPLACE_SOURCE_CONCURRENCY,
+    async (source, index) => {
+      try {
+        const plugins = await pluginApi.inspectMarketplace(source)
+        return {
+          plugins,
+          status: {
+            source,
+            isDefault: index === 0,
+            ok: true,
+            count: plugins.length,
+          } satisfies MarketplaceSourceStatus,
+        }
+      } catch (error) {
+        const sourceError = describeMarketplaceSourceError(error)
+        logger.warn('Plugin marketplace source unavailable.', {
+          source,
+          reason: sourceError.message,
+        })
+        return {
+          plugins: [] as PluginMarketplaceEntry[],
+          status: {
+            source,
+            isDefault: index === 0,
+            ok: false,
+            count: 0,
+            errorKind: sourceError.kind,
+            errorStatus: sourceError.status,
+            error: sourceError.message,
+          } satisfies MarketplaceSourceStatus,
+        }
       }
-      sourceStatuses.push({
-        source,
-        isDefault: index === 0,
-        ok: true,
-        count: plugins.length,
-      })
-    } catch (error) {
-      const sourceError = describeMarketplaceSourceError(error)
-      logger.warn('Plugin marketplace source unavailable.', {
-        source,
-        reason: sourceError.message,
-      })
-      sourceStatuses.push({
-        source,
-        isDefault: index === 0,
-        ok: false,
-        count: 0,
-        errorKind: sourceError.kind,
-        errorStatus: sourceError.status,
-        error: sourceError.message,
-      })
+    },
+  )
+
+  for (const { plugins, status } of sourceResults) {
+    if (status.ok) {
+      for (const plugin of plugins) {
+        mergeMarketplacePlugin(pluginsById, plugin, status.source)
+      }
     }
   }
 
@@ -132,7 +171,7 @@ export async function loadMarketplacePlugins(
     plugins: [...pluginsById.values()].sort((left, right) =>
       left.display.localeCompare(right.display),
     ),
-    sources: sourceStatuses,
+    sources: sourceResults.map(({ status }) => status),
   }
 }
 
@@ -184,9 +223,7 @@ export async function checkPluginUpdates(installedPlugins: InstalledPlugin[]) {
   const marketplaceResult = await loadMarketplacePlugins()
   const marketplacePlugins = marketplaceResult.plugins
   const marketplaceById = new Map(marketplacePlugins.map((plugin) => [plugin.id, plugin]))
-  const updates: PluginUpdate[] = []
-
-  for (const installed of installedPlugins) {
+  const candidates = installedPlugins.map((installed) => {
     const marketplacePlugin = marketplaceById.get(installed.id)
     const sources: string[] = []
     const addSource = (source: string | undefined) => {
@@ -200,7 +237,41 @@ export async function checkPluginUpdates(installedPlugins: InstalledPlugin[]) {
       addSource(source)
     }
 
-    if (sources.length === 0 || !pluginApi?.inspectSource) {
+    return { installed, marketplacePlugin, sources }
+  })
+
+  if (!pluginApi?.inspectSource) {
+    return []
+  }
+
+  const sourceJobs = candidates.flatMap((candidate, candidateIndex) =>
+    candidate.sources.map((source) => ({ candidateIndex, source })),
+  )
+  const inspections = await mapWithConcurrency(
+    sourceJobs,
+    PLUGIN_UPDATE_SOURCE_CONCURRENCY,
+    async ({ candidateIndex, source }) => {
+      try {
+        const sourceManifest = await pluginApi.inspectSource(source)
+        return { candidateIndex, source, sourceManifest }
+      } catch {
+        return { candidateIndex, source, sourceManifest: null }
+      }
+    },
+  )
+
+  const inspectionsByCandidate = new Map<number, Array<(typeof inspections)[number]>>()
+  for (const inspection of inspections) {
+    const candidateInspections = inspectionsByCandidate.get(inspection.candidateIndex) ?? []
+    candidateInspections.push(inspection)
+    inspectionsByCandidate.set(inspection.candidateIndex, candidateInspections)
+  }
+
+  const updates: PluginUpdate[] = []
+  for (const [candidateIndex, candidate] of candidates.entries()) {
+    const { installed, marketplacePlugin, sources } = candidate
+
+    if (sources.length === 0) {
       continue
     }
 
@@ -208,25 +279,20 @@ export async function checkPluginUpdates(installedPlugins: InstalledPlugin[]) {
     let highestManifest: PluginInfo | null = null
     let highestSource = ''
 
-    for (const source of sources) {
-      try {
-        const sourceManifest = await pluginApi.inspectSource(source)
-        if (
-          sourceManifest.plugin_type !== installed.type ||
-          sourceManifest.name !== installed.name
-        ) {
-          continue
-        }
+    for (const { source, sourceManifest } of inspectionsByCandidate.get(candidateIndex) ?? []) {
+      if (
+        !sourceManifest ||
+        sourceManifest.plugin_type !== installed.type ||
+        sourceManifest.name !== installed.name
+      ) {
+        continue
+      }
 
-        const sourceVersion =
-          typeof sourceManifest.version === 'string' ? sourceManifest.version : ''
-        if (compareVersion(sourceVersion, highestVersion) > 0) {
-          highestVersion = sourceVersion
-          highestManifest = sourceManifest
-          highestSource = source
-        }
-      } catch {
-        // Failure of one source should not prevent examination of other sources.
+      const sourceVersion = typeof sourceManifest.version === 'string' ? sourceManifest.version : ''
+      if (compareVersion(sourceVersion, highestVersion) > 0) {
+        highestVersion = sourceVersion
+        highestManifest = sourceManifest
+        highestSource = source
       }
     }
 

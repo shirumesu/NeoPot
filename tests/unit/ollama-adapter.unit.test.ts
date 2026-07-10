@@ -159,7 +159,7 @@ describe('Ollama adapter', () => {
     },
   )
 
-  it('parses NDJSON across chunks, skips bad lines, consumes a tail block, and publishes increments', async () => {
+  it('parses NDJSON across chunks, skips bad lines, consumes a tail block, and throttles increments', async () => {
     const setResult = vi.fn()
     const response = streamResponse([
       '{"message":{"content":"Hel',
@@ -176,12 +176,7 @@ describe('Ollama adapter', () => {
         { request: requestReturning(response) },
       ),
     ).resolves.toBe('Hello world')
-    expect(setResult.mock.calls.map(([value]) => value)).toEqual([
-      'Hello_',
-      'Hello _',
-      'Hello world_',
-      'Hello world',
-    ])
+    expect(setResult.mock.calls.map(([value]) => value)).toEqual(['Hello_', 'Hello world'])
   })
 
   it('consumes the complete text stream and returns the result when setResult is absent', async () => {
@@ -201,6 +196,48 @@ describe('Ollama adapter', () => {
         { request: requestReturning(response) },
       ),
     ).resolves.toBe('complete result')
+  })
+
+  it('cancels a pending throttled update when stream reading fails', async () => {
+    vi.useFakeTimers()
+    try {
+      const setResult = vi.fn()
+      const encoded = new TextEncoder().encode(
+        '{"message":{"content":"first"}}\n{"message":{"content":" second"}}\n',
+      )
+      let readCount = 0
+      const response: OllamaResponse = {
+        ok: true,
+        status: 200,
+        text: async () => '',
+        body: {
+          getReader: () => ({
+            read: async () => {
+              readCount += 1
+              if (readCount === 1) {
+                return { done: false as const, value: encoded }
+              }
+              throw new Error('stream failed')
+            },
+          }),
+        },
+      }
+
+      await expect(
+        translateOllama(
+          'text',
+          'English',
+          'French',
+          { config: { promptList: [], stream: true }, setResult },
+          { request: requestReturning(response) },
+        ),
+      ).rejects.toThrow('stream failed')
+
+      await vi.advanceTimersByTimeAsync(100)
+      expect(setResult.mock.calls.map(([value]) => value)).toEqual(['first_'])
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('wraps request failures with an actionable message', async () => {

@@ -824,7 +824,8 @@ export default function TargetArea(props: TargetAreaProps) {
     from: { height: 0 },
     to: { height: hide ? 0 : bounds.height },
   })
-  const canPreviewMarkdown = typeof result === 'string' && result !== '' && isMarkdownLike(result)
+  const canPreviewMarkdown =
+    !isLoading && typeof result === 'string' && result !== '' && isMarkdownLike(result)
   const activeResultViewMode = resultViewMode ?? (canPreviewMarkdown ? 'markdown' : 'source')
 
   return (
@@ -962,10 +963,10 @@ export default function TargetArea(props: TargetAreaProps) {
             ) : (
               <div>
                 {result.pronunciations.length > 0 &&
-                  result.pronunciations.map((pronunciation) => {
+                  result.pronunciations.map((pronunciation, pronunciationIndex) => {
                     const voice = pronunciation.voice
                     return (
-                      <div key={nanoid()}>
+                      <div key={`pronunciation-${pronunciationIndex}`}>
                         {pronunciation.region && (
                           <span className={`text-[${resolvedAppFontSize}px] mr-3 text-default-500`}>
                             {pronunciation.region}
@@ -997,13 +998,13 @@ export default function TargetArea(props: TargetAreaProps) {
                     )
                   })}
                 {result.explanations.length > 0 &&
-                  result.explanations.map((explanations) => {
+                  result.explanations.map((explanations, explanationIndex) => {
                     return (
-                      <div key={nanoid()}>
+                      <div key={`explanation-${explanationIndex}`}>
                         {explanations.explains.length > 0 &&
                           explanations.explains.map((explain, index) => {
                             return (
-                              <span key={nanoid()}>
+                              <span key={`explain-${explanationIndex}-${index}`}>
                                 {index === 0 ? (
                                   <>
                                     <span
@@ -1021,7 +1022,6 @@ export default function TargetArea(props: TargetAreaProps) {
                                 ) : (
                                   <span
                                     className={`text-[${resolvedAppFontSize - 2}px] text-default-500 select-text mr-1`}
-                                    key={nanoid()}
                                   >
                                     {explain}
                                   </span>
@@ -1034,9 +1034,9 @@ export default function TargetArea(props: TargetAreaProps) {
                   })}
                 <br />
                 {result.associations.length > 0 &&
-                  result.associations.map((association) => {
+                  result.associations.map((association, associationIndex) => {
                     return (
-                      <div key={nanoid()}>
+                      <div key={`association-${associationIndex}`}>
                         <span className={`text-[${resolvedAppFontSize}px] text-default-500`}>
                           {association}
                         </span>
@@ -1046,7 +1046,7 @@ export default function TargetArea(props: TargetAreaProps) {
                 {result.sentence.length > 0 &&
                   result.sentence.map((sentence, index) => {
                     return (
-                      <div key={nanoid()}>
+                      <div key={`sentence-${index}`}>
                         <span className={`text-[${resolvedAppFontSize - 2}px] mr-3`}>
                           {index + 1}.
                         </span>

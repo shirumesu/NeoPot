@@ -1,6 +1,6 @@
 import { app, globalShortcut } from 'electron'
-import AdmZip from 'adm-zip'
-import { mkdir, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises'
+import { randomUUID } from 'node:crypto'
+import { mkdir, readFile, readdir, rm, stat } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { getConfig, setConfig } from '../modules/config'
@@ -13,8 +13,17 @@ import {
   createPluginInstallerCore,
   isValidPluginIdentityPart as isValidPluginIdentityPartCore,
   parsePluginManifest,
+  readPluginManifestFromZip,
   resolveInstalledPluginDir,
 } from './pluginInstallerCore'
+import {
+  REMOTE_PLUGIN_MAX_COMPRESSED_BYTES,
+  REMOTE_PLUGIN_MAX_MANIFEST_BYTES,
+  downloadRemotePluginFile,
+  fetchRemotePluginResource,
+  readRemotePluginResponse,
+  streamRemotePluginResponseToFile,
+} from './remoteDownload'
 
 const SERVICE_PLUGIN_TYPES = ['translate', 'recognize', 'tts']
 const DEFAULT_PLUGIN_ICON = 'logo/plugin.svg'
@@ -274,20 +283,12 @@ export async function installPluginFromUrl(source: string): Promise<PluginInstal
     return installPlugin(localSource)
   }
 
-  const response = await fetch(source)
-  if (!response.ok) {
-    throw new PluginInstallError(
-      'PLUGIN_INVALID_PACKAGE',
-      `Plugin download failed with HTTP ${response.status}.`,
-    )
-  }
-
   const tempDir = path.join(app.getPath('temp'), 'neopot-plugin-downloads')
   await mkdir(tempDir, { recursive: true })
-  const tempFile = path.join(tempDir, `${Date.now()}-${path.basename(new URL(source).pathname)}`)
-  await writeFile(tempFile, Buffer.from(await response.arrayBuffer()))
+  const tempFile = temporaryRemotePluginFile(tempDir, source)
 
   try {
+    await downloadRemotePluginFile(source, tempFile)
     const installer = createPluginInstallerCore({ pluginRoot: pluginRoot() })
     const result = await installer.installFromZip(tempFile, {
       installSource: source,
@@ -305,6 +306,12 @@ export async function installPluginFromUrl(source: string): Promise<PluginInstal
   }
 }
 
+function temporaryRemotePluginFile(tempDir: string, source: string): string {
+  const sourceName = path.basename(new URL(source).pathname) || 'plugin.zip'
+  const safeName = sourceName.replace(/[^a-z0-9._-]/gi, '_').slice(-120)
+  return path.join(tempDir, `${randomUUID()}-${safeName}`)
+}
+
 async function readManifestFromLocalSource(source: string): Promise<PluginSourceManifest> {
   const localSource = resolveLocalInstallSource(source)
   if (!localSource) {
@@ -320,39 +327,40 @@ async function readManifestFromLocalSource(source: string): Promise<PluginSource
     return parseManifest(await readFile(localSource, 'utf8')) as PluginSourceManifest
   }
 
-  const zip = new AdmZip(localSource)
-  const manifestEntry = zip.getEntries().find((entry) => entry.entryName === 'info.json')
-  if (!manifestEntry) {
-    throw new PluginInstallError('PLUGIN_INVALID_PACKAGE', 'Plugin package must contain info.json.')
-  }
-
-  return parseManifest(manifestEntry.getData().toString('utf8')) as PluginSourceManifest
+  return readPluginManifestFromZip(localSource) as PluginSourceManifest
 }
 
 async function readManifestFromHttpSource(source: string): Promise<PluginSourceManifest> {
-  const response = await fetch(source)
-  if (!response.ok) {
-    throw new PluginInstallError(
-      'PLUGIN_INVALID_PACKAGE',
-      `Plugin manifest check failed with HTTP ${response.status}.`,
-    )
-  }
+  return fetchRemotePluginResource(
+    source,
+    async (response) => {
+      const contentType = response.headers.get('content-type') ?? ''
+      if (/json/i.test(contentType) || /\.json(?:[?#]|$)/i.test(source)) {
+        const manifest = await readRemotePluginResponse(
+          response,
+          REMOTE_PLUGIN_MAX_MANIFEST_BYTES,
+          'Plugin manifest check',
+        )
+        return parseManifest(manifest.toString('utf8')) as PluginSourceManifest
+      }
 
-  const contentType = response.headers.get('content-type') ?? ''
-  if (/json/i.test(contentType) || /\.json(?:[?#]|$)/i.test(source)) {
-    return parseManifest(await response.text()) as PluginSourceManifest
-  }
-
-  const tempDir = path.join(app.getPath('temp'), 'neopot-plugin-update-checks')
-  await mkdir(tempDir, { recursive: true })
-  const tempFile = path.join(tempDir, `${Date.now()}-${path.basename(new URL(source).pathname)}`)
-  await writeFile(tempFile, Buffer.from(await response.arrayBuffer()))
-
-  try {
-    return readManifestFromLocalSource(tempFile)
-  } finally {
-    await rm(tempFile, { force: true })
-  }
+      const tempDir = path.join(app.getPath('temp'), 'neopot-plugin-update-checks')
+      await mkdir(tempDir, { recursive: true })
+      const tempFile = temporaryRemotePluginFile(tempDir, source)
+      try {
+        await streamRemotePluginResponseToFile(
+          response,
+          tempFile,
+          REMOTE_PLUGIN_MAX_COMPRESSED_BYTES,
+          'Plugin manifest archive download',
+        )
+        return readManifestFromLocalSource(tempFile)
+      } finally {
+        await rm(tempFile, { force: true })
+      }
+    },
+    { operation: 'Plugin manifest check' },
+  )
 }
 
 export async function readPluginManifestFromSource(source: string): Promise<PluginSourceManifest> {

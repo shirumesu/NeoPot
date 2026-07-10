@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 import {
   PluginInstallError,
   createPluginInstallerCore,
+  readPluginManifestFromZip,
 } from '../../src/main/plugins/pluginInstallerCore'
 
 let tempDir: string
@@ -136,6 +137,26 @@ describe('plugin installer core', () => {
     })
   })
 
+  test('reads a zip manifest through the same archive limits used for installation', () => {
+    const zipPath = createZip('inspect.zip', {
+      'info.json': JSON.stringify({
+        plugin_type: 'recognize',
+        name: 'inspect_zip',
+        version: '3.0.0',
+      }),
+      'main.js': 'export default 1',
+    })
+
+    expect(readPluginManifestFromZip(zipPath)).toMatchObject({
+      plugin_type: 'recognize',
+      name: 'inspect_zip',
+      version: '3.0.0',
+    })
+    expect(() => readPluginManifestFromZip(zipPath, { maxEntries: 1 })).toThrow(
+      /2 entries; the limit is 1/,
+    )
+  })
+
   test('rejects directory and zip packages missing required root files', async () => {
     const missingInfo = path.join(tempDir, 'missing-info')
     await mkdir(missingInfo)
@@ -203,6 +224,86 @@ describe('plugin installer core', () => {
     await expect(
       readFile(path.join(pluginRoot, 'translate', 'safe_name', 'main.js'), 'utf8'),
     ).rejects.toMatchObject({ code: 'ENOENT' })
+  })
+
+  test('rejects zip packages that exceed entry-count limits', async () => {
+    const zipPath = createZip('too-many-entries.zip', {
+      'info.json': JSON.stringify({ plugin_type: 'translate', name: 'too_many' }),
+      'main.js': 'export default 1',
+      'extra.txt': 'extra',
+    })
+    const installer = createPluginInstallerCore({
+      pluginRoot,
+      archiveLimits: {
+        maxEntries: 2,
+      },
+    })
+
+    await expect(
+      installer.installFromZip(zipPath, {
+        installSource: zipPath,
+        installSourceType: 'local',
+      }),
+    ).rejects.toMatchObject({
+      name: 'PluginInstallError',
+      code: 'PLUGIN_INVALID_PACKAGE',
+      message: expect.stringContaining('3 entries; the limit is 2'),
+    })
+    await expect(
+      readFile(path.join(pluginRoot, 'translate', 'too_many', 'main.js'), 'utf8'),
+    ).rejects.toMatchObject({ code: 'ENOENT' })
+  })
+
+  test('rejects zip packages with an oversized individual entry', async () => {
+    const zipPath = createZip('oversized-entry.zip', {
+      'info.json': JSON.stringify({ plugin_type: 'translate', name: 'large_entry' }),
+      'main.js': 'x'.repeat(129),
+    })
+    const installer = createPluginInstallerCore({
+      pluginRoot,
+      archiveLimits: {
+        maxEntryUncompressedBytes: 128,
+        maxTotalUncompressedBytes: 1024,
+      },
+    })
+
+    await expect(
+      installer.installFromZip(zipPath, {
+        installSource: zipPath,
+        installSourceType: 'local',
+      }),
+    ).rejects.toMatchObject({
+      name: 'PluginInstallError',
+      code: 'PLUGIN_INVALID_PACKAGE',
+      message: expect.stringContaining('main.js'),
+    })
+  })
+
+  test('rejects zip packages whose combined uncompressed size exceeds the total limit', async () => {
+    const zipPath = createZip('oversized-total.zip', {
+      'info.json': JSON.stringify({ plugin_type: 'translate', name: 'large_total' }),
+      'main.js': 'export default 1',
+      'assets/one.txt': '1234567890',
+      'assets/two.txt': '1234567890',
+    })
+    const installer = createPluginInstallerCore({
+      pluginRoot,
+      archiveLimits: {
+        maxEntryUncompressedBytes: 1024,
+        maxTotalUncompressedBytes: 80,
+      },
+    })
+
+    await expect(
+      installer.installFromZip(zipPath, {
+        installSource: zipPath,
+        installSourceType: 'local',
+      }),
+    ).rejects.toMatchObject({
+      name: 'PluginInstallError',
+      code: 'PLUGIN_INVALID_PACKAGE',
+      message: expect.stringContaining('total limit of 80 bytes'),
+    })
   })
 
   test('reinstall replaces stale files and records the new install source', async () => {

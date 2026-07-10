@@ -1,12 +1,30 @@
+import { lazy } from 'react'
 import { Navigate } from 'react-router-dom'
 
-import Translate from '../pages/Translate'
-import Recognize from '../pages/Recognize'
-import General from '../pages/General'
-import Service from '../pages/Service'
-import Hotkey from '../pages/Hotkey'
-import About from '../pages/About'
-import Plugin from '../pages/Plugin'
+const configPageLoaders = {
+  '/general': () => import('../pages/General'),
+  '/translate': () => import('../pages/Translate'),
+  '/recognize': () => import('../pages/Recognize'),
+  '/hotkey': () => import('../pages/Hotkey'),
+  '/service': () => import('../pages/Service'),
+  '/plugin': () => import('../pages/Plugin'),
+  '/about': () => import('../pages/About'),
+} as const
+
+export function preloadConfigRoute(path: string): void {
+  const loader = configPageLoaders[path as keyof typeof configPageLoaders]
+  if (loader) {
+    void loader()
+  }
+}
+
+const General = lazy(configPageLoaders['/general'])
+const Translate = lazy(configPageLoaders['/translate'])
+const Recognize = lazy(configPageLoaders['/recognize'])
+const Hotkey = lazy(configPageLoaders['/hotkey'])
+const Service = lazy(configPageLoaders['/service'])
+const Plugin = lazy(configPageLoaders['/plugin'])
+const About = lazy(configPageLoaders['/about'])
 
 const routes = [
   {

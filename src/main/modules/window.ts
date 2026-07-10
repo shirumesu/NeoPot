@@ -13,7 +13,12 @@ import {
   type WebContents,
 } from 'electron'
 import { getConfig, setConfig } from './config'
-import { RENDERER_HOST, RENDERER_SCHEME, resolveRendererFile } from './rendererProtocol'
+import {
+  RENDERER_HOST,
+  RENDERER_SCHEME,
+  resolveRendererFile,
+  SCREENSHOT_PATH,
+} from './rendererProtocol'
 import { logger } from '../logger'
 import { calculateAdaptiveTranslateWindowSize } from '../../shared/translateWindowSizing'
 
@@ -127,16 +132,31 @@ function rendererUrl(label: WindowLabel, presentation: UpdaterPresentation = 'fu
   return url.toString()
 }
 
-// Serves the packaged renderer bundle over the custom scheme. Must run after
-// the app is ready and before any window loads. Dev keeps using Vite's http
-// server, so the handler is only needed for packaged builds.
+// Serves the packaged renderer bundle and in-memory screenshot previews over
+// the custom scheme. Must run after the app is ready and before any window loads.
 export function registerRendererProtocol(): void {
-  if (shouldUseDevRendererUrl()) {
-    return
-  }
-
   const root = getRendererRoot()
   protocol.handle(RENDERER_SCHEME, async (request) => {
+    const requestUrl = new URL(request.url)
+    if (requestUrl.hostname === RENDERER_HOST && requestUrl.pathname === SCREENSHOT_PATH) {
+      const { getCapturePng } = await import('./screenshot')
+      const png = getCapturePng(Number(requestUrl.searchParams.get('v')))
+      if (png.length === 0) {
+        return new Response('Not found', { status: 404 })
+      }
+      return new Response(new Uint8Array(png), {
+        headers: {
+          'Cache-Control': 'no-store',
+          'Content-Type': 'image/png',
+          'X-Content-Type-Options': 'nosniff',
+        },
+      })
+    }
+
+    if (shouldUseDevRendererUrl()) {
+      return new Response('Not found', { status: 404 })
+    }
+
     const filePath = resolveRendererFile(request.url, root)
     if (!filePath) {
       return new Response('Not found', { status: 404 })

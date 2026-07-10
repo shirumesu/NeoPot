@@ -8,6 +8,12 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import SideBar from '../../src/renderer/windows/Config/components/SideBar'
 
+const routeMock = vi.hoisted(() => ({
+  preloadConfigRoute: vi.fn(),
+}))
+
+vi.mock('../../src/renderer/windows/Config/routes', () => routeMock)
+
 vi.mock('@heroui/react', () => ({
   Button: ({
     children,
@@ -121,5 +127,18 @@ describe('Config SideBar', () => {
       expect(button.getAttribute('data-variant')).toBe('flat')
       expect(navigation.querySelectorAll('[aria-current="page"]')).toHaveLength(1)
     }
+  })
+
+  it('preloads a destination when the user signals navigation intent', async () => {
+    const user = userEvent.setup()
+    renderSideBar()
+    const button = screen.getByRole('button', { name: 'Plugins' })
+
+    await user.hover(button)
+    expect(routeMock.preloadConfigRoute).toHaveBeenCalledWith('/plugin')
+
+    routeMock.preloadConfigRoute.mockClear()
+    button.focus()
+    expect(routeMock.preloadConfigRoute).toHaveBeenCalledWith('/plugin')
   })
 })

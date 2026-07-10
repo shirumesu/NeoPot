@@ -4,7 +4,6 @@ import {
   clipboard,
   dialog,
   ipcMain,
-  nativeImage,
   shell,
   type IpcMainInvokeEvent,
   type Rectangle,
@@ -16,30 +15,9 @@ import path from 'node:path'
 import { promisify } from 'node:util'
 import { isLogLevel, toLogTransportLevel } from '../../shared/logLevel'
 import { getMainLogTransportLevel, logger, setMainLogTransportLevel } from '../logger'
-import { translate as translateService } from '../services'
-import { runPluginBinary } from '../plugins/binary'
-import { readPluginMarketplaceFromSource } from '../plugins/marketplace'
-import {
-  installPluginFromUrl,
-  installPlugin,
-  listInstalledPlugins,
-  pluginRoot,
-  readPluginManifestFromSource,
-  setPluginEnabled,
-  uninstallPlugin,
-} from '../plugins/installer'
 import { getRedactedConfig, setConfig } from './config'
 import { setClipboardMonitorEnabled } from './clipboard'
-import { rendererHttpRequest } from './http'
-import { detectLanguage } from './lang-detect'
 import { applyProxyToSession } from './proxy'
-import {
-  captureDisplayForPoint,
-  getCaptureDataUrl,
-  getCroppedBase64,
-  getLastCroppedBase64,
-  getLastCroppedDataUrl,
-} from './screenshot'
 import { updateTrayMenu } from './tray'
 import { getCurrentWindowDisplayInfo, markWindowReady, type WindowLabel } from './window'
 import {
@@ -55,8 +33,6 @@ import {
   textTranslate,
 } from './workflow'
 import { APP_USER_MODEL_ID } from './appIdentity'
-import { check, download, install, openReleasePage } from './updater'
-import { safeOpenExternal } from './shellSafety'
 
 export interface NeoPotErrorPayload {
   code: 'IPC_UNKNOWN_CHANNEL' | 'IPC_INVALID_PAYLOAD' | 'IPC_HANDLER_FAILED'
@@ -750,19 +726,24 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
             registerGlobalShortcutByName(name, shortcut),
           )
         }
-        case 'screenshot':
+        case 'screenshot': {
+          const { captureDisplayForPoint, getCaptureUrl } = await import('./screenshot')
           await captureDisplayForPoint({
             x: Number(args?.x ?? 0),
             y: Number(args?.y ?? 0),
           })
-          return getCaptureDataUrl()
-        case 'cut_image':
-          return getCroppedBase64({
+          return getCaptureUrl()
+        }
+        case 'cut_image': {
+          const { cropCapture } = await import('./screenshot')
+          cropCapture({
             x: Number(args?.left ?? 0),
             y: Number(args?.top ?? 0),
             width: Number(args?.width ?? 0),
             height: Number(args?.height ?? 0),
           })
+          return ''
+        }
         case 'screenshot_complete':
           if (getCurrentScreenshotAction() === 'translate') {
             await imageTranslate()
@@ -770,12 +751,15 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
             await recognizeWindow()
           }
           return undefined
-        case 'get_base64':
+        case 'get_base64': {
+          const { getLastCroppedBase64 } = await import('./screenshot')
           return getLastCroppedBase64()
+        }
         case 'copy_img': {
-          const dataUrl = getLastCroppedDataUrl() || getCaptureDataUrl()
-          if (dataUrl) {
-            clipboard.writeImage(nativeImage.createFromDataURL(dataUrl))
+          const { getClipboardImage } = await import('./screenshot')
+          const image = getClipboardImage()
+          if (!image.isEmpty()) {
+            clipboard.writeImage(image)
           }
           return undefined
         }
@@ -783,10 +767,14 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
           return getCurrentWorkflowText()
         case 'translate_text':
           return textTranslate(assertTextPayload(args))
-        case 'lang_detect':
+        case 'lang_detect': {
+          const { detectLanguage } = await import('./lang-detect')
           return detectLanguage(assertTextPayload(args))
-        case 'http_request':
+        }
+        case 'http_request': {
+          const { rendererHttpRequest } = await import('./http')
           return rendererHttpRequest(args)
+        }
         case 'font_list':
           return listSystemFonts()
         case 'update_tray':
@@ -795,9 +783,11 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
         case 'updater_window':
           await openUpdater()
           return undefined
-        case 'open_url':
+        case 'open_url': {
+          const { safeOpenExternal } = await import('./shellSafety')
           await safeOpenExternal(assertUrlPayload(args))
           return undefined
+        }
         case 'open_log_dir':
           await shell.openPath(app.getPath('logs'))
           return undefined
@@ -813,7 +803,7 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
         case 'set_clipboard_monitor':
           setClipboardMonitorEnabled(assertBooleanPayload(args, 'enabled'))
           return true
-        case 'run_binary':
+        case 'run_binary': {
           if (
             !args ||
             typeof args.pluginType !== 'string' ||
@@ -825,12 +815,14 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
               message: 'Expected plugin type, plugin name, and command name.',
             })
           }
+          const { runPluginBinary } = await import('../plugins/binary')
           return runPluginBinary({
             pluginType: args.pluginType,
             pluginName: args.pluginName,
             cmdName: args.cmdName,
             args: args.args,
           })
+        }
         case 'open_devtools':
           BrowserWindow.getFocusedWindow()?.webContents.openDevTools({ mode: 'detach' })
           return undefined
@@ -906,23 +898,27 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
       assertNoPayload(payload)
       return ocrTranslate()
     },
-    'update:check': (_event, payload) => {
+    'update:check': async (_event, payload) => {
       assertNoPayload(payload)
+      const { check } = await import('./updater')
       return check()
     },
-    'update:download': (_event, payload) => {
+    'update:download': async (_event, payload) => {
       assertNoPayload(payload)
+      const { download } = await import('./updater')
       return download()
     },
-    'update:install': (_event, payload) => {
+    'update:install': async (_event, payload) => {
       assertNoPayload(payload)
+      const { install } = await import('./updater')
       install()
     },
-    'update:open-release-page': (_event, payload) => {
+    'update:open-release-page': async (_event, payload) => {
       assertNoPayload(payload)
+      const { openReleasePage } = await import('./updater')
       return openReleasePage()
     },
-    'services:translate': (_event, payload) => {
+    'services:translate': async (_event, payload) => {
       if (!isRecord(payload)) {
         throw new NeoPotError({
           code: 'IPC_INVALID_PAYLOAD',
@@ -930,42 +926,52 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
         })
       }
 
-      return translateService(payload)
+      const { translate } = await import('../services')
+      return translate(payload)
     },
-    'plugins:install': (_event, payload) => {
+    'plugins:install': async (_event, payload) => {
       const { file } = assertPluginInstallPayload(payload)
+      const { installPlugin } = await import('../plugins/installer')
       return installPlugin(file)
     },
-    'plugins:install-url': (_event, payload) => {
+    'plugins:install-url': async (_event, payload) => {
       const { url } = assertPluginInstallUrlPayload(payload)
+      const { installPluginFromUrl } = await import('../plugins/installer')
       return installPluginFromUrl(url)
     },
-    'plugins:inspect-source': (_event, payload) => {
+    'plugins:inspect-source': async (_event, payload) => {
       const { url } = assertPluginInstallUrlPayload(payload)
+      const { readPluginManifestFromSource } = await import('../plugins/installer')
       return readPluginManifestFromSource(url)
     },
-    'plugins:inspect-marketplace': (_event, payload) => {
+    'plugins:inspect-marketplace': async (_event, payload) => {
       const { url } = assertPluginInstallUrlPayload(payload)
+      const { readPluginMarketplaceFromSource } = await import('../plugins/marketplace')
       return readPluginMarketplaceFromSource(url)
     },
-    'plugins:list': (_event, payload) => {
+    'plugins:list': async (_event, payload) => {
       const { type } = assertPluginListPayload(payload)
+      const { listInstalledPlugins } = await import('../plugins/installer')
       return listInstalledPlugins(type)
     },
-    'plugins:list-installed': (_event, payload) => {
+    'plugins:list-installed': async (_event, payload) => {
       const { type } = assertOptionalPluginListPayload(payload)
+      const { listInstalledPlugins } = await import('../plugins/installer')
       return listInstalledPlugins(type)
     },
-    'plugins:uninstall': (_event, payload) => {
+    'plugins:uninstall': async (_event, payload) => {
       const { type, name } = assertPluginIdentityPayload(payload)
+      const { uninstallPlugin } = await import('../plugins/installer')
       return uninstallPlugin(type, name)
     },
-    'plugins:set-enabled': (_event, payload) => {
+    'plugins:set-enabled': async (_event, payload) => {
       const { type, name, enabled } = assertPluginEnabledPayload(payload)
+      const { setPluginEnabled } = await import('../plugins/installer')
       return setPluginEnabled(type, name, enabled)
     },
     'plugins:open-folder': async (_event, payload) => {
       assertNoPayload(payload)
+      const { pluginRoot } = await import('../plugins/installer')
       await mkdir(pluginRoot(), { recursive: true })
       return shell.openPath(pluginRoot())
     },

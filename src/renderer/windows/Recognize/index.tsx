@@ -101,13 +101,15 @@ export default function Recognize() {
         return
       }
 
-      const config: ServiceInstanceConfigMap = {}
-      for (const serviceInstanceKey of serviceInstanceList) {
-        const value = await getStoreValue(serviceInstanceKey)
-        config[serviceInstanceKey] = isRecord(value) ? value : {}
-      }
+      const configEntries = await Promise.all(
+        [...new Set(serviceInstanceList)].map(async (serviceInstanceKey) => {
+          const value = await getStoreValue(serviceInstanceKey)
+          return [serviceInstanceKey, isRecord(value) ? value : {}] as const
+        }),
+      )
+      const config = Object.fromEntries(configEntries) as ServiceInstanceConfigMap
       setServiceConfigError(null)
-      setServiceInstanceConfigMap({ ...config })
+      setServiceInstanceConfigMap(config)
     } catch (error) {
       logger.error('Failed to load recognize service config map.', error)
       setServiceConfigError(error instanceof Error ? error.message : String(error))

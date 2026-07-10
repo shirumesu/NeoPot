@@ -30,6 +30,19 @@ export interface PluginInstallSource {
 interface CreatePluginInstallerCoreOptions {
   pluginRoot: string
   now?: () => number
+  archiveLimits?: Partial<PluginArchiveLimits>
+}
+
+export interface PluginArchiveLimits {
+  maxEntries: number
+  maxEntryUncompressedBytes: number
+  maxTotalUncompressedBytes: number
+}
+
+export const DEFAULT_PLUGIN_ARCHIVE_LIMITS: PluginArchiveLimits = {
+  maxEntries: 4096,
+  maxEntryUncompressedBytes: 256 * 1024 * 1024,
+  maxTotalUncompressedBytes: 512 * 1024 * 1024,
 }
 
 export interface PluginInstallerCore {
@@ -138,11 +151,107 @@ async function writeInstallMetadata(
   )
 }
 
+type ZipEntry = ReturnType<AdmZip['getEntries']>[number]
+
+function zipEntryUncompressedBytes(entry: ZipEntry): number {
+  const header = (entry as ZipEntry & { header?: { size?: unknown } }).header
+  const size = header?.size
+  if (typeof size !== 'number' || !Number.isSafeInteger(size) || size < 0) {
+    throw new PluginInstallError(
+      'PLUGIN_INVALID_PACKAGE',
+      `Plugin package entry "${entry.entryName}" has invalid size metadata.`,
+    )
+  }
+  return size
+}
+
+function resolvedArchiveLimits(
+  overrides: Partial<PluginArchiveLimits> | undefined,
+): PluginArchiveLimits {
+  return {
+    ...DEFAULT_PLUGIN_ARCHIVE_LIMITS,
+    ...overrides,
+  }
+}
+
+function validateArchiveLimits(entries: ZipEntry[], limits: PluginArchiveLimits): void {
+  if (entries.length > limits.maxEntries) {
+    throw new PluginInstallError(
+      'PLUGIN_INVALID_PACKAGE',
+      `Plugin package contains ${entries.length} entries; the limit is ${limits.maxEntries}.`,
+    )
+  }
+
+  let totalBytes = 0
+  for (const entry of entries) {
+    const entryBytes = zipEntryUncompressedBytes(entry)
+    if (entryBytes > limits.maxEntryUncompressedBytes) {
+      throw new PluginInstallError(
+        'PLUGIN_INVALID_PACKAGE',
+        `Plugin package entry "${entry.entryName}" expands to ${entryBytes} bytes; the per-entry limit is ${limits.maxEntryUncompressedBytes} bytes.`,
+      )
+    }
+    totalBytes += entryBytes
+    if (totalBytes > limits.maxTotalUncompressedBytes) {
+      throw new PluginInstallError(
+        'PLUGIN_INVALID_PACKAGE',
+        `Plugin package expands beyond the total limit of ${limits.maxTotalUncompressedBytes} bytes.`,
+      )
+    }
+  }
+}
+
+function readZipEntryData(
+  entry: ZipEntry,
+  limits: PluginArchiveLimits,
+  extractedBytes: { value: number },
+): Buffer {
+  const data = entry.getData()
+  if (data.byteLength > limits.maxEntryUncompressedBytes) {
+    throw new PluginInstallError(
+      'PLUGIN_INVALID_PACKAGE',
+      `Plugin package entry "${entry.entryName}" exceeded the per-entry extraction limit of ${limits.maxEntryUncompressedBytes} bytes.`,
+    )
+  }
+  extractedBytes.value += data.byteLength
+  if (extractedBytes.value > limits.maxTotalUncompressedBytes) {
+    throw new PluginInstallError(
+      'PLUGIN_INVALID_PACKAGE',
+      `Plugin package exceeded the total extraction limit of ${limits.maxTotalUncompressedBytes} bytes.`,
+    )
+  }
+  return data
+}
+
+function openValidatedPluginArchive(zipFile: string, limits: PluginArchiveLimits) {
+  const zip = new AdmZip(zipFile)
+  const entries = zip.getEntries()
+  validateArchiveLimits(entries, limits)
+  const manifestEntry = entries.find((entry) => entry.entryName === 'info.json')
+  if (!manifestEntry || manifestEntry.isDirectory) {
+    throw new PluginInstallError('PLUGIN_INVALID_PACKAGE', 'Plugin package must contain info.json.')
+  }
+  const extractedBytes = { value: 0 }
+  const manifestData = readZipEntryData(manifestEntry, limits, extractedBytes)
+  return { entries, manifestEntry, manifestData }
+}
+
+export function readPluginManifestFromZip(
+  zipFile: string,
+  archiveLimits?: Partial<PluginArchiveLimits>,
+): Record<string, unknown> {
+  const limits = resolvedArchiveLimits(archiveLimits)
+  const { manifestData } = openValidatedPluginArchive(zipFile, limits)
+  return parsePluginManifest(manifestData.toString('utf8'))
+}
+
 export function createPluginInstallerCore({
   pluginRoot,
   now = Date.now,
+  archiveLimits,
 }: CreatePluginInstallerCoreOptions): PluginInstallerCore {
   const root = path.resolve(pluginRoot)
+  const limits = resolvedArchiveLimits(archiveLimits)
 
   async function replacePlugin(
     pluginType: string,
@@ -201,28 +310,21 @@ export function createPluginInstallerCore({
     zipFile: string,
     source: PluginInstallSource,
   ): Promise<PluginInstallResult> {
-    const zip = new AdmZip(zipFile)
-    const entries = zip.getEntries()
-    const manifestEntry = entries.find((entry) => entry.entryName === 'info.json')
+    const { entries, manifestEntry, manifestData } = openValidatedPluginArchive(zipFile, limits)
     const mainJsEntry = entries.find((entry) => entry.entryName === 'main.js')
-    if (!manifestEntry) {
-      throw new PluginInstallError(
-        'PLUGIN_INVALID_PACKAGE',
-        'Plugin package must contain info.json.',
-      )
-    }
     if (!mainJsEntry || mainJsEntry.isDirectory) {
       throw new PluginInstallError('PLUGIN_INVALID_PACKAGE', 'Plugin package must contain main.js.')
     }
 
     const { pluginType, pluginName } = manifestIdentity(
-      parsePluginManifest(manifestEntry.getData().toString('utf8')),
+      parsePluginManifest(manifestData.toString('utf8')),
     )
 
     return replacePlugin(
       pluginType,
       pluginName,
       async (temporaryDirectory) => {
+        const extractedBytes = { value: 0 }
         for (const entry of entries) {
           const targetPath = path.resolve(temporaryDirectory, entry.entryName)
           assertInside(temporaryDirectory, targetPath)
@@ -232,7 +334,20 @@ export function createPluginInstallerCore({
           }
 
           await mkdir(path.dirname(targetPath), { recursive: true })
-          await writeFile(targetPath, entry.getData())
+          const data =
+            entry === manifestEntry
+              ? (() => {
+                  extractedBytes.value += manifestData.byteLength
+                  return manifestData
+                })()
+              : readZipEntryData(entry, limits, extractedBytes)
+          if (extractedBytes.value > limits.maxTotalUncompressedBytes) {
+            throw new PluginInstallError(
+              'PLUGIN_INVALID_PACKAGE',
+              `Plugin package exceeded the total extraction limit of ${limits.maxTotalUncompressedBytes} bytes.`,
+            )
+          }
+          await writeFile(targetPath, data)
         }
       },
       source,

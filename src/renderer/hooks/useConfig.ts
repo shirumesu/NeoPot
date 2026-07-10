@@ -15,6 +15,68 @@ interface UseConfigOptions {
   sync?: boolean
 }
 
+interface ConfigStoreUpdate {
+  hasValue: boolean
+  value?: unknown
+}
+
+type ConfigStoreSubscriber = (update: ConfigStoreUpdate) => void
+
+const configStoreSubscribers = new Map<string, Set<ConfigStoreSubscriber>>()
+let configStoreSubscriberCount = 0
+
+const onStoreValueChanged = (event: Event) => {
+  const detail = (event as CustomEvent<{ key?: unknown; value?: unknown }>).detail
+  if (!detail || typeof detail.key !== 'string') {
+    return
+  }
+
+  const subscribers = configStoreSubscribers.get(detail.key)
+  if (!subscribers) {
+    return
+  }
+
+  const update: ConfigStoreUpdate = Object.prototype.hasOwnProperty.call(detail, 'value')
+    ? { hasValue: true, value: detail.value }
+    : { hasValue: false }
+  subscribers.forEach((subscriber) => subscriber(update))
+}
+
+const onStoreReloaded = () => {
+  configStoreSubscribers.forEach((subscribers) => {
+    subscribers.forEach((subscriber) => subscriber({ hasValue: false }))
+  })
+}
+
+function subscribeToConfigStore(key: string, subscriber: ConfigStoreSubscriber): () => void {
+  let subscribers = configStoreSubscribers.get(key)
+  if (!subscribers) {
+    subscribers = new Set()
+    configStoreSubscribers.set(key, subscribers)
+  }
+  subscribers.add(subscriber)
+
+  if (configStoreSubscriberCount === 0) {
+    window.addEventListener(STORE_CHANGED_EVENT, onStoreValueChanged)
+    window.addEventListener(STORE_RELOADED_EVENT, onStoreReloaded)
+  }
+  configStoreSubscriberCount += 1
+
+  return () => {
+    const activeSubscribers = configStoreSubscribers.get(key)
+    activeSubscribers?.delete(subscriber)
+    if (activeSubscribers?.size === 0) {
+      configStoreSubscribers.delete(key)
+    }
+
+    configStoreSubscriberCount -= 1
+    if (configStoreSubscriberCount === 0) {
+      window.removeEventListener(STORE_CHANGED_EVENT, onStoreValueChanged)
+      window.removeEventListener(STORE_RELOADED_EVENT, onStoreReloaded)
+    }
+  }
+}
+
 export const isSameConfigValue = (left: unknown, right: unknown): boolean => {
   if (Object.is(left, right)) {
     return true
@@ -86,6 +148,7 @@ export const useConfig = <T = unknown>(
   ]
   const { sync = true } = options
   const defaultValueRef = useRef(defaultValue)
+  const stateSyncRevisionRef = useRef(0)
 
   useEffect(() => {
     defaultValueRef.current = defaultValue
@@ -155,6 +218,8 @@ export const useConfig = <T = unknown>(
 
   const syncToState = useCallback(
     (v: T | null) => {
+      const syncRevision = stateSyncRevisionRef.current + 1
+      stateSyncRevisionRef.current = syncRevision
       if (v !== null) {
         if (!isSameConfigValue(getProperty(), v)) {
           setPropertyState(v)
@@ -162,6 +227,9 @@ export const useConfig = <T = unknown>(
       } else {
         void getStoreValue(key)
           .then((loadedValue) => {
+            if (stateSyncRevisionRef.current !== syncRevision) {
+              return
+            }
             const typedLoadedValue = loadedValue as T | null | undefined
             if (typedLoadedValue === undefined || typedLoadedValue === null) {
               setPropertyState(defaultValueRef.current)
@@ -170,6 +238,9 @@ export const useConfig = <T = unknown>(
             }
           })
           .catch((error: unknown) => {
+            if (stateSyncRevisionRef.current !== syncRevision) {
+              return
+            }
             logger.error('Failed to read config value.', error, {
               key,
             })
@@ -182,29 +253,9 @@ export const useConfig = <T = unknown>(
 
   useEffect(() => {
     syncToState(null)
-
-    const onStoreValueChanged = (event: Event) => {
-      const detail = (event as CustomEvent<{ key: string; value?: T }>).detail
-      if (detail.key === key) {
-        if (Object.prototype.hasOwnProperty.call(detail, 'value')) {
-          syncToState(detail.value as T)
-        } else {
-          syncToState(null)
-        }
-      }
-    }
-
-    const onStoreReloaded = () => {
-      syncToState(null)
-    }
-
-    window.addEventListener(STORE_CHANGED_EVENT, onStoreValueChanged as EventListener)
-    window.addEventListener(STORE_RELOADED_EVENT, onStoreReloaded)
-
-    return () => {
-      window.removeEventListener(STORE_CHANGED_EVENT, onStoreValueChanged as EventListener)
-      window.removeEventListener(STORE_RELOADED_EVENT, onStoreReloaded)
-    }
+    return subscribeToConfigStore(key, (update) => {
+      syncToState(update.hasValue ? (update.value as T) : null)
+    })
   }, [key, syncToState])
 
   return [property, setProperty, getProperty] as const

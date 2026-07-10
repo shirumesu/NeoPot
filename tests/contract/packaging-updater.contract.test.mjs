@@ -70,36 +70,41 @@ test('electron-vite output paths stay aligned with runtime main/preload/renderer
   assert.match(functionText(windowSource, 'rendererUrl'), /RENDERER_SCHEME/)
 })
 
-test('main process startup order registers core services before user workflows run', () => {
+test('main process startup starts independent services without waiting for the config renderer', () => {
   const startApp = functionText(mainIndex, 'startApp')
 
   assert.match(startApp, /Promise\.all\(\[/)
   assert.match(startApp, /ipc\.registerIpcHandlers/)
   assert.match(startApp, /windowModule\.registerRendererProtocol\(\)/)
   assert.match(startApp, /await config\.initializeConfig\(\)/)
-  assert.match(startApp, /await windowModule\.openWindow\('config'\)/)
+  assert.match(startApp, /const configWindowReady = windowModule\.openWindow\('config'\)/)
+  assert.match(startApp, /const proxyReady = proxy\.applyProxyToSession\(\)/)
   assert.match(startApp, /tray\.setupTray\(\)/)
   assert.match(startApp, /hotkey\.registerGlobalShortcuts\('all'\)/)
-  assert.match(startApp, /await proxy\.applyProxyToSession\(\)/)
-  assert.match(startApp, /clipboard\.startClipboardMonitor\(\)/)
+  assert.match(startApp, /clipboard\.setClipboardMonitorEnabled\(/)
   assert.match(startApp, /server\.startServer\(serverPort\)/)
+  assert.match(startApp, /await proxyReady/)
+  assert.match(startApp, /await import\('\.\/modules\/updater'\)/)
   assert.match(startApp, /updater\.runStartupUpdateCheck\(\)/)
   assert.match(startApp, /hotkey\.unregisterGlobalShortcuts\(\)/)
+  assert.match(startApp, /clipboard\.stopClipboardMonitor\(\)/)
   assert.match(startApp, /server\.stopServer\(\)/)
   assertTextOrder(
     startApp,
     [
       'windowModule.registerRendererProtocol()',
       'await config.initializeConfig()',
-      "await windowModule.openWindow('config')",
+      "const configWindowReady = windowModule.openWindow('config')",
+      'const proxyReady = proxy.applyProxyToSession()',
       'tray.setupTray()',
       "hotkey.registerGlobalShortcuts('all')",
-      'await proxy.applyProxyToSession()',
-      'clipboard.startClipboardMonitor()',
+      'clipboard.setClipboardMonitorEnabled(',
       'server.startServer(serverPort)',
+      'await proxyReady',
+      "await import('./modules/updater')",
       'void updater.runStartupUpdateCheck()',
     ],
-    'Main startup services must initialize in dependency order',
+    'Main startup must expose local services before waiting on proxy/update work',
   )
 })
 

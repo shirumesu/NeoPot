@@ -169,6 +169,35 @@ describe('renderer config store through Electron', () => {
     expect(loggerMock.warn).toHaveBeenCalledTimes(2)
   })
 
+  it('shares in-flight reads, caches resolved values, and invalidates a changed key', async () => {
+    const electron = installElectronConfig()
+    const configStore = await loadConfigStore()
+    let resolveInitialRead: ((value: unknown) => void) | undefined
+    electron.config.get.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveInitialRead = resolve
+        }),
+    )
+    await configStore.initStore()
+
+    const firstRead = configStore.getStoreValue('theme')
+    const secondRead = configStore.getStoreValue('theme')
+    expect(electron.config.get).toHaveBeenCalledOnce()
+
+    resolveInitialRead?.({ mode: 'light' })
+    const initialValues = await Promise.all([firstRead, secondRead])
+    expect(initialValues).toEqual([{ mode: 'light' }, { mode: 'light' }])
+    ;(initialValues[0] as { mode: string }).mode = 'mutated'
+    await expect(configStore.getStoreValue('theme')).resolves.toEqual({ mode: 'light' })
+    expect(electron.config.get).toHaveBeenCalledOnce()
+
+    electron.values.set('theme', { mode: 'dark' })
+    electron.emitConfigChange({ key: 'theme' })
+    await expect(configStore.getStoreValue('theme')).resolves.toEqual({ mode: 'dark' })
+    expect(electron.config.get).toHaveBeenCalledTimes(2)
+  })
+
   it('reloads observers without touching the legacy renderer store', async () => {
     installElectronConfig()
     const configStore = await loadConfigStore()

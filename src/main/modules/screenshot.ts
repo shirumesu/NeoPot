@@ -1,4 +1,5 @@
 import { desktopCapturer, nativeImage, screen } from 'electron'
+import { RENDERER_HOST, RENDERER_SCHEME, SCREENSHOT_PATH } from './rendererProtocol'
 
 export interface Point {
   x: number
@@ -11,7 +12,9 @@ export interface Rect extends Point {
 }
 
 let lastCapture = nativeImage.createEmpty()
+let lastCropped = nativeImage.createEmpty()
 let lastScaleFactor = 1
+let captureVersion = 0
 
 export async function captureDisplayForPoint(point: Point): Promise<void> {
   const display = screen.getDisplayNearestPoint(point) ?? screen.getPrimaryDisplay()
@@ -31,43 +34,47 @@ export async function captureDisplayForPoint(point: Point): Promise<void> {
   }
 
   lastCapture = source.thumbnail
+  lastCropped = nativeImage.createEmpty()
+  captureVersion += 1
 }
 
-export function cropCapture(rect: Rect): string {
+export function cropCapture(rect: Rect): void {
   if (lastCapture.isEmpty()) {
     throw new Error('No display capture is cached.')
   }
 
-  const cropped = lastCapture.crop({
+  lastCropped = lastCapture.crop({
     x: Math.round(rect.x * lastScaleFactor),
     y: Math.round(rect.y * lastScaleFactor),
     width: Math.round(rect.width * lastScaleFactor),
     height: Math.round(rect.height * lastScaleFactor),
   })
-
-  return cropped.toDataURL()
 }
 
-export function getCroppedBase64(rect: Rect): string {
-  const base64 = cropCapture(rect).replace(/^data:image\/png;base64,/, '')
-  lastCroppedBase64 = base64
-  return base64
-}
-
-let lastCroppedBase64 = ''
-
-export function getCaptureDataUrl(): string {
+export function getCaptureUrl(): string {
   if (lastCapture.isEmpty()) {
     return ''
   }
 
-  return lastCapture.toDataURL()
+  return `${RENDERER_SCHEME}://${RENDERER_HOST}${SCREENSHOT_PATH}?v=${captureVersion}`
+}
+
+export function getCapturePng(requestedVersion = captureVersion): Buffer {
+  if (lastCapture.isEmpty() || requestedVersion !== captureVersion) {
+    return Buffer.alloc(0)
+  }
+
+  return lastCapture.toPNG()
 }
 
 export function getLastCroppedBase64(): string {
-  return lastCroppedBase64
+  if (lastCropped.isEmpty()) {
+    return ''
+  }
+
+  return lastCropped.toPNG().toString('base64')
 }
 
-export function getLastCroppedDataUrl(): string {
-  return lastCroppedBase64 ? `data:image/png;base64,${lastCroppedBase64}` : ''
+export function getClipboardImage() {
+  return lastCropped.isEmpty() ? lastCapture : lastCropped
 }

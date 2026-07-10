@@ -46,18 +46,16 @@ if (!gotSingleInstanceLock) {
 }
 
 async function startApp(): Promise<void> {
-  const [clipboard, config, hotkey, ipc, proxy, server, tray, updater, windowModule] =
-    await Promise.all([
-      import('./modules/clipboard'),
-      import('./modules/config'),
-      import('./modules/hotkey'),
-      import('./modules/ipc'),
-      import('./modules/proxy'),
-      import('./modules/server'),
-      import('./modules/tray'),
-      import('./modules/updater'),
-      import('./modules/window'),
-    ])
+  const [clipboard, config, hotkey, ipc, proxy, server, tray, windowModule] = await Promise.all([
+    import('./modules/clipboard'),
+    import('./modules/config'),
+    import('./modules/hotkey'),
+    import('./modules/ipc'),
+    import('./modules/proxy'),
+    import('./modules/server'),
+    import('./modules/tray'),
+    import('./modules/window'),
+  ])
 
   ipc.registerIpcHandlers({
     getWindowLabel: (event) => windowModule.getCurrentWindowLabel(event.sender),
@@ -86,11 +84,11 @@ async function startApp(): Promise<void> {
       await config.setConfig('log_level', defaultLogLevel)
     }
 
-    await windowModule.openWindow('config')
+    const configWindowReady = windowModule.openWindow('config')
+    const proxyReady = proxy.applyProxyToSession()
+
     tray.setupTray()
     hotkey.registerGlobalShortcuts('all')
-    await proxy.applyProxyToSession()
-    clipboard.startClipboardMonitor()
     clipboard.setClipboardMonitorEnabled(config.getConfig('clipboard_monitor') === true)
 
     const configuredServerPort = config.getConfig('server_port')
@@ -103,15 +101,25 @@ async function startApp(): Promise<void> {
         : undefined
     server.startServer(serverPort)
 
-    if (config.getConfig('check_update') !== false) {
-      void updater.runStartupUpdateCheck()
-    }
+    void configWindowReady.catch((error) => {
+      log.error('Failed to open the config window during startup.', error)
+    })
 
     app.on('activate', async () => {
       if (BrowserWindow.getAllWindows().length === 0) {
         await windowModule.openWindow('config')
       }
     })
+
+    try {
+      await proxyReady
+      if (config.getConfig('check_update') !== false) {
+        const updater = await import('./modules/updater')
+        void updater.runStartupUpdateCheck()
+      }
+    } catch (error) {
+      log.error('Failed to apply the startup proxy; skipped the startup update check.', error)
+    }
   })
 
   app.on('window-all-closed', () => {
@@ -126,6 +134,7 @@ async function startApp(): Promise<void> {
 
   app.on('will-quit', () => {
     hotkey.unregisterGlobalShortcuts()
+    clipboard.stopClipboardMonitor()
     server.stopServer()
   })
 }

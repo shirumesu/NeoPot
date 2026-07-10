@@ -2,21 +2,18 @@ import { getCurrentWebviewWindow } from '@/renderer/lib/electron/compat/webviewW
 import { MemoryRouter } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
+  lazy,
+  Suspense,
   useEffect,
   useState,
   type ComponentType,
+  type LazyExoticComponent,
   type KeyboardEvent as ReactKeyboardEvent,
 } from 'react'
 import { useTheme } from 'next-themes'
 
-import Screenshot from './windows/Screenshot'
-import Translate from './windows/Translate'
-import Recognize from './windows/Recognize'
-import Updater from './windows/Updater'
-import { store } from '@/renderer/lib/config/store'
 import { electronCommand } from '@/renderer/lib/electron/command'
 import { attachPluginHotkeyListener } from '@/renderer/lib/plugin/plugin_hotkey'
-import Config from './windows/Config'
 import ErrorBoundary from './components/ErrorBoundary'
 import RuntimeToaster from './components/RuntimeToaster'
 import { useConfig } from './hooks'
@@ -26,12 +23,12 @@ import './i18n'
 
 const appWindow = getCurrentWebviewWindow()
 
-const windowMap: Record<string, ComponentType> = {
-  translate: Translate as ComponentType,
-  screenshot: Screenshot as ComponentType,
-  recognize: Recognize as ComponentType,
-  config: Config as ComponentType,
-  updater: Updater as ComponentType,
+const windowMap: Record<string, LazyExoticComponent<ComponentType>> = {
+  translate: lazy(() => import('./windows/Translate')),
+  screenshot: lazy(() => import('./windows/Screenshot')),
+  recognize: lazy(() => import('./windows/Recognize')),
+  config: lazy(() => import('./windows/Config')),
+  updater: lazy(() => import('./windows/Updater')),
 }
 
 const configRoutes = new Set([
@@ -71,12 +68,6 @@ export default function App() {
   const [appFontSize] = useConfig<number>('app_font_size', 16)
   const { setTheme } = useTheme()
   const { t, i18n } = useTranslation()
-
-  useEffect(() => {
-    if (store !== null) {
-      void store.reload({ ignoreDefaults: true })
-    }
-  }, [])
 
   useEffect(() => attachPluginHotkeyListener(), [])
 
@@ -179,7 +170,9 @@ export default function App() {
           <ErrorBoundary
             fallbackTitle={t('errors.window_render_failed', { window: t('windows.config') })}
           >
-            <CurrentWindow />
+            <Suspense fallback={null}>
+              <CurrentWindow />
+            </Suspense>
           </ErrorBoundary>
         </MemoryRouter>
       </>
@@ -194,7 +187,9 @@ export default function App() {
           window: t(`windows.${label}`, { defaultValue: label }),
         })}
       >
-        <CurrentWindow />
+        <Suspense fallback={null}>
+          <CurrentWindow />
+        </Suspense>
       </ErrorBoundary>
     </>
   )

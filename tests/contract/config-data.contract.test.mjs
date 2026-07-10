@@ -86,7 +86,12 @@ test('renderer store uses Electron config API when present and listens for key-o
     functionText(configStore, 'subscribeElectronConfigChanges'),
     /emitStoreValueReloaded\(payload\.key\)/,
   )
-  assert.match(functionText(configStore, 'getStoreValue'), /electronConfig\.get\(key\)/)
+  assert.match(functionText(configStore, 'readStoreValue'), /electronConfig\.get\(key\)/)
+  assert.match(functionText(configStore, 'getStoreValue'), /inFlightReads\.get\(key\)/)
+  assert.match(
+    functionText(configStore, 'getStoreValue'),
+    /valueCache\.set\(key, cloneStoreValue\(value\)\)/,
+  )
   assert.match(functionText(configStore, 'setStoreValue'), /electronConfig\.set\(key, value\)/)
   assert.match(
     functionText(configStore, 'deleteStoreValue'),

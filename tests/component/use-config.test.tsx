@@ -116,6 +116,32 @@ describe('useConfig initial and external state', () => {
     expect(storeMock.getStoreValue).toHaveBeenCalledTimes(2)
   })
 
+  it('does not let an older async read overwrite a newer config event', async () => {
+    let resolveInitialRead: ((value: unknown) => void) | undefined
+    storeMock.getStoreValue.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveInitialRead = resolve
+        }),
+    )
+    const { result } = renderHook(() => useConfig('theme', 'system'))
+
+    act(() => {
+      window.dispatchEvent(
+        new CustomEvent('neopot:store-changed', {
+          detail: { key: 'theme', value: 'dark' },
+        }),
+      )
+    })
+    expect(result.current[0]).toBe('dark')
+
+    await act(async () => {
+      resolveInitialRead?.('light')
+      await Promise.resolve()
+    })
+    expect(result.current[0]).toBe('dark')
+  })
+
   it('reloads the active key when the complete store is reloaded', async () => {
     storeMock.getStoreValue.mockResolvedValueOnce('first').mockResolvedValueOnce('second')
     const { result } = renderHook(() => useConfig('language', 'en'))

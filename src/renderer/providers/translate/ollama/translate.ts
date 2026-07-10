@@ -8,6 +8,7 @@ const THINKING_MODE_OFF = 'off'
 const DEFAULT_MODEL = 'gemma4:e2b'
 const LEGACY_DEFAULT_MODEL = 'gemma:2b'
 const INVALID_RESPONSE_MESSAGE = 'Ollama returned an empty or malformed translation response.'
+const STREAM_UPDATE_INTERVAL_MS = 40
 
 export interface PromptItem {
   role: string
@@ -224,34 +225,108 @@ async function performRequest(
 async function readStreamResponse(response: OllamaResponse, setResult: SetResult): Promise<string> {
   const state = { target: '' }
   const reader = response.body?.getReader?.()
+  const resultPublisher = createThrottledResultPublisher(setResult)
 
-  if (reader) {
-    const decoder = new TextDecoder()
-    let buffer = ''
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
-      buffer += decoder.decode(value, { stream: true })
-      const lines = buffer.split('\n')
-      buffer = lines.pop() ?? ''
-      for (const line of lines) {
-        consumeNdjsonLine(line, state, setResult)
+  try {
+    if (reader) {
+      const decoder = new TextDecoder()
+      let buffer = ''
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() ?? ''
+        for (const line of lines) {
+          consumeNdjsonLine(line, state, resultPublisher.publish)
+        }
+      }
+      buffer += decoder.decode()
+      consumeNdjsonLine(buffer, state, resultPublisher.publish)
+    } else {
+      for (const line of (await response.text()).split('\n')) {
+        consumeNdjsonLine(line, state, resultPublisher.publish)
       }
     }
-    buffer += decoder.decode()
-    consumeNdjsonLine(buffer, state, setResult)
-  } else {
-    for (const line of (await response.text()).split('\n')) {
-      consumeNdjsonLine(line, state, setResult)
-    }
-  }
 
-  const target = requireTranslation(state.target)
-  setResult?.(target)
-  return target
+    const target = requireTranslation(state.target)
+    resultPublisher.flush(target)
+    return target
+  } finally {
+    resultPublisher.cancel()
+  }
 }
 
-function consumeNdjsonLine(line: string, state: { target: string }, setResult: SetResult): void {
+function createThrottledResultPublisher(setResult: SetResult): {
+  publish: (value: string) => void
+  cancel: () => void
+  flush: (value: string) => void
+} {
+  let lastPublishedAt = Number.NEGATIVE_INFINITY
+  let lastPublishedValue: string | undefined
+  let pendingValue: string | undefined
+  let publishTimer: ReturnType<typeof setTimeout> | null = null
+
+  const publishPending = () => {
+    publishTimer = null
+    if (!setResult || pendingValue === undefined) {
+      return
+    }
+
+    const value = pendingValue
+    pendingValue = undefined
+    lastPublishedAt = Date.now()
+    lastPublishedValue = value
+    setResult(value)
+  }
+
+  return {
+    publish(value) {
+      if (!setResult) {
+        return
+      }
+
+      pendingValue = value
+      const remainingDelay = STREAM_UPDATE_INTERVAL_MS - (Date.now() - lastPublishedAt)
+      if (remainingDelay <= 0) {
+        if (publishTimer) {
+          clearTimeout(publishTimer)
+        }
+        publishPending()
+      } else if (!publishTimer) {
+        publishTimer = setTimeout(publishPending, remainingDelay)
+      }
+    },
+    cancel() {
+      if (publishTimer) {
+        clearTimeout(publishTimer)
+        publishTimer = null
+      }
+      pendingValue = undefined
+    },
+    flush(value) {
+      if (!setResult) {
+        return
+      }
+      if (publishTimer) {
+        clearTimeout(publishTimer)
+        publishTimer = null
+      }
+      pendingValue = undefined
+      if (lastPublishedValue !== value) {
+        lastPublishedAt = Date.now()
+        lastPublishedValue = value
+        setResult(value)
+      }
+    },
+  }
+}
+
+function consumeNdjsonLine(
+  line: string,
+  state: { target: string },
+  publishResult: (value: string) => void,
+): void {
   if (!line.trim()) return
 
   let part: unknown
@@ -266,7 +341,7 @@ function consumeNdjsonLine(line: string, state: { target: string }, setResult: S
   if (typeof content !== 'string' || content === '') return
 
   state.target += content
-  setResult?.(`${state.target}_`)
+  publishResult(`${state.target}_`)
 }
 
 function requireTranslation(value: unknown): string {

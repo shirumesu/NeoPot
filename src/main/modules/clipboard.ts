@@ -8,7 +8,6 @@ import {
 
 let timer: ReturnType<typeof setInterval> | null = null
 let lastText = ''
-let enabled = false
 let selectionClipboardBaselineVersion = 0
 
 function syncSelectionClipboardBaseline(): boolean {
@@ -29,13 +28,16 @@ export function startClipboardMonitor(): void {
     return
   }
 
-  enabled = true
-  lastText = clipboard.readText()
-  timer = setInterval(() => {
-    if (!enabled) {
-      return
-    }
+  try {
+    lastText = clipboard.readText()
+  } catch (error) {
+    logger.warn('Clipboard monitor could not start.', {
+      error: error instanceof Error ? error.message : String(error),
+    })
+    return
+  }
 
+  timer = setInterval(() => {
     try {
       if (isSelectionClipboardCaptureActive() || syncSelectionClipboardBaseline()) {
         return
@@ -47,7 +49,7 @@ export function startClipboardMonitor(): void {
         void selectionTranslate()
       }
     } catch (error) {
-      enabled = false
+      stopClipboardMonitor()
       logger.warn('Clipboard monitor paused after failure.', {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -60,9 +62,12 @@ export function stopClipboardMonitor(): void {
     clearInterval(timer)
     timer = null
   }
-  enabled = false
 }
 
 export function setClipboardMonitorEnabled(nextEnabled: boolean): void {
-  enabled = nextEnabled
+  if (nextEnabled) {
+    startClipboardMonitor()
+  } else {
+    stopClipboardMonitor()
+  }
 }

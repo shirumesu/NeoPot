@@ -41,7 +41,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 let blurTimeout: ReturnType<typeof setTimeout> | null = null
-let resizeTimeout: ReturnType<typeof setTimeout> | null = null
 let moveTimeout: ReturnType<typeof setTimeout> | null = null
 let skipNextBlurClose = false
 
@@ -90,7 +89,6 @@ export default function Translate() {
   const [closeOnBlur] = useConfig('translate_close_on_blur', true)
   const [alwaysOnTop] = useConfig('translate_always_on_top', false)
   const [windowPosition] = useConfig('translate_window_position', 'mouse')
-  const [rememberWindowSize] = useConfig('translate_remember_window_size', false)
   const [translateServiceInstanceList] = useConfig<string[]>('translate_service_list', [
     'deepl',
     'google',
@@ -188,29 +186,6 @@ export default function Translate() {
       }
     }
   }, [windowPosition])
-  useEffect(() => {
-    if (rememberWindowSize !== null && rememberWindowSize) {
-      const unlistenResize = listen('neopot://resize', async () => {
-        if (resizeTimeout) {
-          clearTimeout(resizeTimeout)
-        }
-        resizeTimeout = setTimeout(async () => {
-          if (appWindow.label === 'translate') {
-            const size = await appWindow.outerSize()
-            await setStoreValue('translate_window_height', Number(size.height), { save: false })
-            await setStoreValue('translate_window_width', Number(size.width), { save: false })
-            await saveStore()
-          }
-        }, 100)
-      })
-      return () => {
-        unlistenResize.then((f) => {
-          f()
-        })
-      }
-    }
-  }, [rememberWindowSize])
-
   const loadPluginList = useCallback(async () => {
     try {
       const temp = await loadEnabledServicePlugins()
@@ -231,21 +206,22 @@ export default function Translate() {
 
   const loadServiceInstanceConfigMap = useCallback(async () => {
     try {
-      const config: ServiceInstanceConfigMap = {}
-      for (const serviceInstanceKey of validTranslateServiceInstanceList) {
-        const value = await getStoreValue(serviceInstanceKey)
-        config[serviceInstanceKey] = isRecord(value) ? value : {}
-      }
-      for (const serviceInstanceKey of validRecognizeServiceInstanceList) {
-        const value = await getStoreValue(serviceInstanceKey)
-        config[serviceInstanceKey] = isRecord(value) ? value : {}
-      }
-      for (const serviceInstanceKey of validTtsServiceInstanceList) {
-        const value = await getStoreValue(serviceInstanceKey)
-        config[serviceInstanceKey] = isRecord(value) ? value : {}
-      }
+      const serviceInstanceKeys = [
+        ...new Set([
+          ...validTranslateServiceInstanceList,
+          ...validRecognizeServiceInstanceList,
+          ...validTtsServiceInstanceList,
+        ]),
+      ]
+      const configEntries = await Promise.all(
+        serviceInstanceKeys.map(async (serviceInstanceKey) => {
+          const value = await getStoreValue(serviceInstanceKey)
+          return [serviceInstanceKey, isRecord(value) ? value : {}] as const
+        }),
+      )
+      const config = Object.fromEntries(configEntries) as ServiceInstanceConfigMap
       setServiceConfigError(null)
-      setServiceInstanceConfigMap({ ...config })
+      setServiceInstanceConfigMap(config)
     } catch (error) {
       logger.error('Failed to load translate service config map.', error)
       setServiceConfigError(error instanceof Error ? error.message : String(error))

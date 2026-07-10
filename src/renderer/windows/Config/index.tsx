@@ -1,5 +1,5 @@
 import { useLocation, useRoutes } from 'react-router-dom'
-import { useEffect } from 'react'
+import { Suspense, useEffect } from 'react'
 import { getCurrentWebviewWindow } from '@/renderer/lib/electron/compat/webviewWindow'
 import { Card, Divider } from '@heroui/react'
 import { useTranslation } from 'react-i18next'
@@ -66,11 +66,13 @@ export default function Config() {
         <Divider />
         <div className="min-h-0 flex-1 overflow-y-auto p-2.5">
           <ErrorBoundary fallbackTitle={t('errors.config_page_render_failed')}>
-            {page ?? (
-              <div className="rounded-medium border border-warning/30 bg-warning/10 p-4 text-sm text-warning-700">
-                {t('errors.config_route_missing', { route: location.pathname })}
-              </div>
-            )}
+            <Suspense fallback={null}>
+              {page ?? (
+                <div className="rounded-medium border border-warning/30 bg-warning/10 p-4 text-sm text-warning-700">
+                  {t('errors.config_route_missing', { route: location.pathname })}
+                </div>
+              )}
+            </Suspense>
           </ErrorBoundary>
         </div>
       </div>

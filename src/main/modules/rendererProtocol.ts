@@ -6,6 +6,7 @@ import path from 'node:path'
 // still reading the bundled files from disk.
 export const RENDERER_SCHEME = 'neopot'
 export const RENDERER_HOST = 'main_window'
+export const SCREENSHOT_PATH = '/__runtime/screenshot.png'
 
 // Maps a `neopot://main_window/...` request URL onto an absolute file path
 // inside the packaged renderer root, or returns null when the request is

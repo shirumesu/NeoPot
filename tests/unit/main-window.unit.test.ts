@@ -159,6 +159,10 @@ const sizingMock = vi.hoisted(() => ({
   calculateAdaptiveTranslateWindowSize: vi.fn(() => ({ width: 640, height: 480 })),
 }))
 
+const screenshotMock = vi.hoisted(() => ({
+  getCapturePng: vi.fn(() => Buffer.from('png bytes')),
+}))
+
 vi.mock('electron', () => ({
   app: electronMock.app,
   BrowserWindow: electronMock.BrowserWindow,
@@ -174,10 +178,12 @@ vi.mock('../../src/main/modules/config', () => ({
 vi.mock('../../src/main/modules/rendererProtocol', () => ({
   RENDERER_HOST: 'main_window',
   RENDERER_SCHEME: 'neopot',
+  SCREENSHOT_PATH: '/__runtime/screenshot.png',
   resolveRendererFile: vi.fn(),
 }))
 vi.mock('../../src/main/logger', () => ({ logger: loggerMock }))
 vi.mock('../../src/shared/translateWindowSizing', () => sizingMock)
+vi.mock('../../src/main/modules/screenshot', () => screenshotMock)
 
 beforeEach(() => {
   vi.resetModules()
@@ -261,6 +267,24 @@ describe('Main window event delivery', () => {
       ['app:event', { event: 'neopot://move' }],
       ['app:event', { event: 'neopot://resize' }],
     ])
+  })
+})
+
+describe('Main renderer protocol', () => {
+  it('serves the current screenshot as uncached PNG bytes', async () => {
+    const windows = await loadWindowModule()
+    windows.registerRendererProtocol()
+
+    const handler = electronMock.protocol.handle.mock.calls[0]?.[1]
+    expect(handler).toBeTypeOf('function')
+
+    const response = await handler({
+      url: 'neopot://main_window/__runtime/screenshot.png?v=1',
+    })
+    expect(response.status).toBe(200)
+    expect(response.headers.get('content-type')).toBe('image/png')
+    expect(response.headers.get('cache-control')).toBe('no-store')
+    expect(Buffer.from(await response.arrayBuffer())).toEqual(Buffer.from('png bytes'))
   })
 })
 
