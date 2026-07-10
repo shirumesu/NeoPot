@@ -8,9 +8,9 @@ import {
   decryptSensitiveConfigValue,
   encryptSensitiveConfigValue,
   isEncryptedSecretValue,
-  secretKeyFragments,
   type SecretCipher,
 } from './configSecrets'
+import { createConfigRepository } from './configRepository'
 
 type ConfigValue = unknown
 
@@ -25,22 +25,31 @@ export interface SecretReadResult {
   code?: 'SECRET_ENCRYPTION_UNAVAILABLE' | 'SECRET_DECRYPT_FAILED'
 }
 
-const secretKeys = new Set<string>(secretKeyFragments)
-
 const store = new Store<Record<string, ConfigValue>>({
   name: 'config',
 })
 
 let migrationStarted = false
-let configWriteQueue: Promise<void> = Promise.resolve()
-
-const atomicWriteFallbackErrorCodes = new Set(['EPERM', 'EBUSY'])
 
 const secretCipher: SecretCipher = {
   isEncryptionAvailable: () => safeStorage.isEncryptionAvailable(),
   encryptString: (value) => safeStorage.encryptString(value),
   decryptString: (value) => safeStorage.decryptString(value),
 }
+
+const configRepository = createConfigRepository({
+  store: {
+    path: store.path,
+    get: (key) => store.get(key),
+    set: (key, value) => store.set(key, value),
+    delete: (key) => store.delete(key),
+    readAll: () => store.store,
+    dispatchChange: () => store.events.dispatchEvent(new Event('change')),
+  },
+  cipher: secretCipher,
+  logger,
+  writeFile: (file, data, options) => writeFileSync(file, data, options),
+})
 
 export async function initializeConfig(): Promise<void> {
   if (migrationStarted) {
@@ -51,98 +60,16 @@ export async function initializeConfig(): Promise<void> {
   await runDataMigration()
 }
 
-function isSecretKey(key: string): boolean {
-  const normalized = key.toLowerCase()
-  return [...secretKeys].some((secretKey) => normalized.includes(secretKey))
-}
-
 export function getConfig(key: string): ConfigValue {
-  return decryptSensitiveConfigValue(store.get(key), secretCipher)
-}
-
-function getErrorCode(error: unknown): string | undefined {
-  return error && typeof error === 'object' && 'code' in error
-    ? String((error as { code?: unknown }).code)
-    : undefined
-}
-
-function describeConfigValue(value: ConfigValue): Record<string, unknown> {
-  return {
-    valueType: value === null ? 'null' : Array.isArray(value) ? 'array' : typeof value,
-  }
-}
-
-function applyConfigValue(
-  targetStore: Record<string, ConfigValue>,
-  key: string,
-  value: ConfigValue,
-): void {
-  if (value === undefined) {
-    delete targetStore[key]
-    return
-  }
-
-  targetStore[key] = value
-}
-
-function writeConfigValueDirectly(key: string, value: ConfigValue): void {
-  const nextStore = store.store
-  applyConfigValue(nextStore, key, encryptSensitiveConfigValue(value, secretCipher, [key]))
-  writeFileSync(store.path, JSON.stringify(nextStore, undefined, '\t'), { mode: 0o600 })
-  store.events.dispatchEvent(new Event('change'))
-}
-
-function writeConfigValue(key: string, value: ConfigValue): void {
-  const persistedValue = encryptSensitiveConfigValue(value, secretCipher, [key])
-  try {
-    if (persistedValue === undefined) {
-      store.delete(key)
-    } else {
-      store.set(key, persistedValue)
-    }
-    logger.debug('Config value written in main process.', {
-      key,
-      ...describeConfigValue(value),
-    })
-  } catch (error) {
-    const code = getErrorCode(error)
-    if (!code || !atomicWriteFallbackErrorCodes.has(code)) {
-      throw error
-    }
-
-    logger.warn('Config atomic write failed; falling back to direct config write.', {
-      key,
-      code,
-    })
-    writeConfigValueDirectly(key, value)
-    logger.debug('Config value written in main process through direct fallback.', {
-      key,
-      ...describeConfigValue(value),
-    })
-  }
+  return configRepository.get(key)
 }
 
 export function setConfig(key: string, value: ConfigValue): Promise<void> {
-  const writeTask = configWriteQueue
-    .catch(() => {
-      // Keep later writes from being blocked by a previous failed write.
-    })
-    .then(() => writeConfigValue(key, value))
-
-  configWriteQueue = writeTask.catch(() => {
-    // The caller receives the failure from writeTask; the queue remains usable.
-  })
-
-  return writeTask
+  return configRepository.set(key, value)
 }
 
 export function getRedactedConfig(key: string): ConfigValue {
-  const value = getConfig(key)
-  if (!isSecretKey(key) || value === undefined || value === null || value === '') {
-    return value
-  }
-
-  return '********'
+  return configRepository.getRedacted(key)
 }
 
 export function setSecret(key: string, plaintext: string): SecretWriteResult {

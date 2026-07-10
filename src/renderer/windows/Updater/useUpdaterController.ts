@@ -66,6 +66,7 @@ export function useUpdaterController({
       return nextResult
     } catch (error) {
       const errorMessage = safeErrorMessage(error)
+      setResult(null)
       setPhase('idle')
       setMessage(errorMessage)
       onError?.(errorMessage)
@@ -103,10 +104,9 @@ export function useUpdaterController({
       }
 
       if (event.type === 'error') {
-        if (event.result) {
-          setResult(event.result)
-        }
+        setResult(event.result ?? null)
         setPhase('idle')
+        setProgress(null)
         setMessage(event.message)
         onError?.(event.message)
         return

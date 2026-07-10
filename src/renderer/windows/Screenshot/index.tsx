@@ -6,6 +6,7 @@ import { getCurrentWebviewWindow } from '@/renderer/lib/electron/compat/webviewW
 import { invoke } from '@/renderer/lib/electron/compat/core'
 import { listen } from '@/renderer/lib/electron/compat/event'
 import { logger } from '@/renderer/lib/logger'
+import { calculateCropRect } from './selection'
 const appWindow = getCurrentWebviewWindow()
 
 export default function Screenshot() {
@@ -110,7 +111,7 @@ export default function Screenshot() {
         }}
         onMouseUp={async (e) => {
           const monitor = await currentMonitor()
-          const dpi = monitor.size.width / window.innerWidth
+          const viewportScale = monitor.size.width / window.innerWidth
           logger.debug('Screenshot selection ended.', {
             clientX: e.clientX,
             clientY: e.clientY,
@@ -118,34 +119,36 @@ export default function Screenshot() {
             mouseDownY,
             monitorWidth: monitor.size.width,
             windowWidth: window.innerWidth,
-            dpi,
+            viewportScale,
             isMoved,
           })
           appWindow.hide()
           setIsDown(false)
           setIsMoved(false)
-          const left = Math.floor(Math.min(mouseDownX, e.clientX) * dpi)
-          const top = Math.floor(Math.min(mouseDownY, e.clientY) * dpi)
-          const right = Math.floor(Math.max(mouseDownX, e.clientX) * dpi)
-          const bottom = Math.floor(Math.max(mouseDownY, e.clientY) * dpi)
-          const width = right - left
-          const height = bottom - top
+          const cropRect = calculateCropRect(
+            { x: mouseDownX, y: mouseDownY },
+            { x: e.clientX, y: e.clientY },
+            window.innerWidth,
+            monitor.size.width,
+          )
           logger.debug('Screenshot crop selected.', {
-            left,
-            top,
-            width,
-            height,
+            ...cropRect,
             action,
           })
-          if (width <= 0 || height <= 0) {
+          if (!cropRect) {
             logger.warn('Screenshot area is too small.', {
-              width,
-              height,
+              viewportWidth: window.innerWidth,
+              monitorWidth: monitor.size.width,
             })
             await appWindow.close()
           } else {
             try {
-              await invoke('cut_image', { left, top, width, height })
+              await invoke('cut_image', {
+                left: cropRect.left,
+                top: cropRect.top,
+                width: cropRect.width,
+                height: cropRect.height,
+              })
               await invoke('screenshot_complete', { action })
               await appWindow.close()
             } catch (error) {

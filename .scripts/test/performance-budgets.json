@@ -1,0 +1,24 @@
+{
+  "commandsMs": {
+    "Format": 30000,
+    "Lint": 60000,
+    "Typecheck": 60000,
+    "Behavior coverage": 60000,
+    "Static contracts": 30000,
+    "Build": 120000,
+    "Electron journeys": 60000
+  },
+  "runtimeMs": {
+    "coldStartToInteractive": 3000,
+    "configNavigation": 1000,
+    "configRoundTrip": 500,
+    "inputTranslateWindowReady": 1000,
+    "firstTranslationReady": 3000
+  },
+  "artifactBytes": {
+    "out/main": 4194304,
+    "out/preload": 262144,
+    "out/renderer": 104857600,
+    "assets/models/ocr": 26214400
+  }
+}

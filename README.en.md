@@ -220,10 +220,13 @@ Common commands:
 ```bash
 pnpm run dev
 pnpm run lint
-pnpm run test
+npm run test
 pnpm run format
 pnpm run make
 ```
+
+`npm run test` is the complete local quality gate before committing. See
+[`tests/README.md`](tests/README.md) for the fast, coverage, Electron journey, and mutation layers.
 
 ## Acknowledgements
 

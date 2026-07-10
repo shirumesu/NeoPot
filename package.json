@@ -2,7 +2,7 @@
   "name": "neopot",
   "productName": "NeoPot",
   "private": true,
-  "version": "1.1.5",
+  "version": "1.1.6",
   "description": "NeoPot",
   "author": "NeoPot contributors",
   "type": "module",
@@ -17,9 +17,15 @@
     "make": "node .scripts/clean-release-output.mjs && electron-vite build && electron-builder --win --publish never",
     "release": "node .scripts/check-release-version.mjs && node .scripts/clean-release-output.mjs && electron-vite build && electron-builder --publish always",
     "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "node --experimental-transform-types --disable-warning=ExperimentalWarning --test \"spec/tests/*/*.test.mjs\""
+    "test": "node .scripts/test/run-all.mjs",
+    "test:fast": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:contracts": "node --experimental-transform-types --disable-warning=ExperimentalWarning --test \"tests/contract/*.test.mjs\"",
+    "test:e2e": "playwright test --config playwright.config.ts",
+    "test:mutation": "stryker run"
   },
   "dependencies": {
     "@heroui/react": "^2.8.10",
@@ -53,12 +59,19 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
+    "@playwright/test": "^1.61.1",
+    "@stryker-mutator/core": "^9.6.1",
+    "@stryker-mutator/vitest-runner": "^9.6.1",
     "@swc/core": "^1.15.3",
     "@tailwindcss/vite": "^4.3.1",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/node": "24.10.1",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "5.2.0",
+    "@vitest/coverage-v8": "^4.1.10",
     "electron": "41.7.1",
     "electron-builder": "26.15.3",
     "electron-vite": "5.0.0",
@@ -68,12 +81,14 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.6.0",
+    "jsdom": "^29.1.1",
     "lodash": "4.18.1",
     "prettier": "^3.8.3",
     "tailwindcss": "^4.2.4",
     "typescript": "^5.6.3",
     "typescript-eslint": "^8.60.0",
-    "vite": "7.3.6"
+    "vite": "7.3.6",
+    "vitest": "^4.1.10"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

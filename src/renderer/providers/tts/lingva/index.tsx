@@ -1,51 +1,17 @@
 import { fetch } from '@/renderer/lib/electron/http'
-import { normalizeLingvaBaseUrl } from '@/shared/providerUrl'
 
-import { Language } from './info'
+import type { Language } from './info'
+import { synthesizeLingva, type LingvaRequest } from './tts'
 
 export { DEFAULT_LINGVA_URL } from '@/shared/providerUrl'
 
-interface LingvaConfig {
-  custom_url?: string
-}
-
-interface LingvaTtsOptions {
-  config?: LingvaConfig
-}
-
-function isAudioArray(value: unknown): value is number[] {
-  return (
-    Array.isArray(value) &&
-    value.length > 0 &&
-    value.every((item) => Number.isInteger(item) && item >= 0 && item <= 255)
-  )
-}
-
-export async function tts(text: string, lang: Language, options: LingvaTtsOptions = {}) {
-  const query = text.trim()
-  if (query === '') {
-    throw new Error('Cannot synthesize empty text.')
-  }
-
-  const baseUrl = normalizeLingvaBaseUrl(options.config?.custom_url)
-  const res = await fetch(
-    `${baseUrl}/api/v1/audio/${encodeURIComponent(lang)}/${encodeURIComponent(query)}`,
-    {
-      method: 'GET',
-      headers: { 'content-type': 'application/json' },
-    },
-  )
-
-  if (!res.ok) {
-    throw new Error(`HTTP request failed: ${res.status} ${res.statusText}`)
-  }
-
-  const audio = res.data?.audio
-  if (!isAudioArray(audio)) {
-    throw new Error('Lingva did not return audio data.')
-  }
-
-  return audio
+export async function tts(
+  text: string,
+  lang: Language,
+  options: Parameters<typeof synthesizeLingva>[2] = {},
+) {
+  const request: LingvaRequest = (url, init) => fetch(url, init)
+  return synthesizeLingva(text, lang, options, { request })
 }
 
 export * from './Config'

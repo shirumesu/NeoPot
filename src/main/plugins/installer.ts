@@ -1,16 +1,23 @@
 import { app, globalShortcut } from 'electron'
 import AdmZip from 'adm-zip'
-import { cp, mkdir, readFile, readdir, rename, rm, stat, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { getConfig, setConfig } from '../modules/config'
 import { logger } from '../logger'
 import { isServiceInstanceForPlugin } from '../../shared/serviceInstance'
+import {
+  PLUGIN_METADATA_FILE,
+  PluginInstallError,
+  assertValidPluginIdentity as assertValidPluginIdentityCore,
+  createPluginInstallerCore,
+  isValidPluginIdentityPart as isValidPluginIdentityPartCore,
+  parsePluginManifest,
+  resolveInstalledPluginDir,
+} from './pluginInstallerCore'
 
 const SERVICE_PLUGIN_TYPES = ['translate', 'recognize', 'tts']
-const PLUGIN_METADATA_FILE = '.neopot-plugin.json'
 const DEFAULT_PLUGIN_ICON = 'logo/plugin.svg'
-const PLUGIN_ID_PATTERN = /^[a-z0-9_-]+$/
 
 export interface PluginInfo {
   id: string
@@ -53,16 +60,6 @@ interface PluginInstallMetadata {
   installedAt?: number
 }
 
-class PluginInstallError extends Error {
-  constructor(
-    readonly code: 'PLUGIN_INVALID_PACKAGE' | 'PLUGIN_ZIP_SLIP',
-    message: string,
-  ) {
-    super(message)
-    this.name = 'PluginInstallError'
-  }
-}
-
 export function pluginRoot(): string {
   return path.join(app.getPath('userData'), 'plugins')
 }
@@ -75,24 +72,8 @@ function pluginHotkeyConfigKey(type: string, name: string, key: string): string 
   return `plugin_hotkey:${type}:${name}:${key}`
 }
 
-function assertInside(parent: string, child: string): void {
-  const parentPath = path.resolve(parent)
-  const childPath = path.resolve(child)
-  const comparisonParent = process.platform === 'win32' ? parentPath.toLowerCase() : parentPath
-  const comparisonChild = process.platform === 'win32' ? childPath.toLowerCase() : childPath
-  if (
-    comparisonChild !== comparisonParent &&
-    !comparisonChild.startsWith(comparisonParent + path.sep)
-  ) {
-    throw new PluginInstallError(
-      'PLUGIN_ZIP_SLIP',
-      'Plugin package contains an unsafe extraction path.',
-    )
-  }
-}
-
 function isValidPluginIdentityPart(value: string): boolean {
-  return PLUGIN_ID_PATTERN.test(value)
+  return isValidPluginIdentityPartCore(value)
 }
 
 export function assertValidPluginIdentity(
@@ -102,29 +83,11 @@ export function assertValidPluginIdentity(
   type: string
   name: string
 } {
-  if (!isValidPluginIdentityPart(type) || !isValidPluginIdentityPart(name)) {
-    throw new PluginInstallError(
-      'PLUGIN_INVALID_PACKAGE',
-      'Plugin type and name may contain only lowercase letters, numbers, underscores, and hyphens.',
-    )
-  }
-
-  return { type, name }
+  return assertValidPluginIdentityCore(type, name)
 }
 
 export function installedPluginDir(type: string, name: string): string {
-  const identity = assertValidPluginIdentity(type, name)
-  const root = pluginRoot()
-  const pluginDir = path.resolve(root, identity.type, identity.name)
-  assertInside(root, pluginDir)
-  return pluginDir
-}
-
-function pluginTempDir(type: string, name: string): string {
-  const root = pluginRoot()
-  const tempDir = `${installedPluginDir(type, name)}.tmp`
-  assertInside(root, tempDir)
-  return tempDir
+  return resolveInstalledPluginDir(pluginRoot(), type, name)
 }
 
 function getPluginEnabled(type: string, name: string): boolean {
@@ -151,21 +114,8 @@ async function isDirectory(filePath: string): Promise<boolean> {
     .catch(() => false)
 }
 
-async function exists(filePath: string): Promise<boolean> {
-  return stat(filePath)
-    .then(() => true)
-    .catch(() => false)
-}
-
 function parseManifest(text: string): { plugin_type?: string; name?: string } {
-  try {
-    return JSON.parse(text) as { plugin_type?: string; name?: string }
-  } catch (error) {
-    throw new PluginInstallError(
-      'PLUGIN_INVALID_PACKAGE',
-      `Plugin manifest is invalid JSON: ${error instanceof Error ? error.message : String(error)}`,
-    )
-  }
+  return parsePluginManifest(text)
 }
 
 async function readInstallMetadata(pluginDir: string): Promise<PluginInstallMetadata> {
@@ -180,43 +130,6 @@ async function readInstallMetadata(pluginDir: string): Promise<PluginInstallMeta
   } catch {
     return {}
   }
-}
-
-async function writeInstallMetadata(
-  targetDir: string,
-  source: string,
-  sourceType: 'local' | 'url',
-): Promise<void> {
-  await writeFile(
-    path.join(targetDir, PLUGIN_METADATA_FILE),
-    JSON.stringify(
-      {
-        installSource: source,
-        installSourceType: sourceType,
-        installedAt: Date.now(),
-      } satisfies PluginInstallMetadata,
-      null,
-      2,
-    ),
-    'utf8',
-  )
-}
-
-function assertManifestIdentity(manifest: { plugin_type?: string; name?: string }): {
-  pluginType: string
-  pluginName: string
-} {
-  const pluginType = manifest.plugin_type
-  const pluginName = manifest.name
-  if (!pluginType || !pluginName) {
-    throw new PluginInstallError(
-      'PLUGIN_INVALID_PACKAGE',
-      'Plugin manifest is missing plugin_type or name.',
-    )
-  }
-
-  const identity = assertValidPluginIdentity(pluginType, pluginName)
-  return { pluginType: identity.type, pluginName: identity.name }
 }
 
 async function readPluginManifest(type: string, name: string): Promise<PluginInfo | null> {
@@ -323,123 +236,22 @@ async function removePluginServiceInstances(type: string, name: string): Promise
   }
 }
 
-async function installFromZip(file: string): Promise<PluginInstallResult> {
-  const zip = new AdmZip(file)
-  const entries = zip.getEntries()
-  const manifestEntry = entries.find((entry) => entry.entryName === 'info.json')
-  const mainJsEntry = entries.find((entry) => entry.entryName === 'main.js')
-
-  if (!manifestEntry) {
-    throw new PluginInstallError('PLUGIN_INVALID_PACKAGE', 'Plugin package must contain info.json.')
-  }
-
-  if (!mainJsEntry) {
-    throw new PluginInstallError('PLUGIN_INVALID_PACKAGE', 'Plugin package must contain main.js.')
-  }
-
-  const { pluginType, pluginName } = assertManifestIdentity(
-    parseManifest(manifestEntry.getData().toString('utf8')),
-  )
-  const targetDir = installedPluginDir(pluginType, pluginName)
-  const tempDir = pluginTempDir(pluginType, pluginName)
-  await rm(tempDir, { recursive: true, force: true })
-  await mkdir(tempDir, { recursive: true })
-
-  try {
-    for (const entry of entries) {
-      if (entry.isDirectory) {
-        continue
-      }
-
-      const targetPath = path.join(tempDir, entry.entryName)
-      assertInside(tempDir, targetPath)
-      await mkdir(path.dirname(targetPath), { recursive: true })
-      await writeFile(targetPath, entry.getData())
-    }
-
-    await rm(targetDir, { recursive: true, force: true })
-    await mkdir(path.dirname(targetDir), { recursive: true })
-    await rename(tempDir, targetDir)
-
-    logger.info('Plugin installed from archive.', {
-      type: pluginType,
-      name: pluginName,
-    })
-
-    return {
-      status: 'installed',
-      type: pluginType,
-      name: pluginName,
-    }
-  } catch (error) {
-    await rm(tempDir, { recursive: true, force: true })
-    logger.error('Plugin installation failed.', error, {
-      file,
-      type: pluginType,
-      name: pluginName,
-    })
-    throw error
-  }
-}
-
-async function installFromDirectory(dirPath: string): Promise<PluginInstallResult> {
-  const manifestText = await readFile(path.join(dirPath, 'info.json'), 'utf8').catch(() => null)
-  if (!manifestText) {
-    throw new PluginInstallError('PLUGIN_INVALID_PACKAGE', 'Directory must contain info.json.')
-  }
-
-  const { pluginType, pluginName } = assertManifestIdentity(parseManifest(manifestText))
-  const sourceMainJs = path.join(dirPath, 'main.js')
-  const hasMainJs = await exists(sourceMainJs)
-
-  if (!hasMainJs) {
-    throw new PluginInstallError('PLUGIN_INVALID_PACKAGE', 'Directory must contain main.js.')
-  }
-
-  const targetDir = installedPluginDir(pluginType, pluginName)
-  const tempDir = pluginTempDir(pluginType, pluginName)
-  await rm(tempDir, { recursive: true, force: true })
-  await mkdir(tempDir, { recursive: true })
-
-  try {
-    await cp(dirPath, tempDir, { recursive: true })
-
-    await rm(targetDir, { recursive: true, force: true })
-    await mkdir(path.dirname(targetDir), { recursive: true })
-    await rename(tempDir, targetDir)
-
-    logger.info('Plugin installed from directory.', {
-      type: pluginType,
-      name: pluginName,
-      source: dirPath,
-    })
-
-    return {
-      status: 'installed',
-      type: pluginType,
-      name: pluginName,
-    }
-  } catch (error) {
-    await rm(tempDir, { recursive: true, force: true })
-    logger.error('Plugin directory installation failed.', error, {
-      dirPath,
-      type: pluginType,
-      name: pluginName,
-    })
-    throw error
-  }
-}
-
 export async function installPlugin(file: string): Promise<PluginInstallResult> {
   const normalizedSource = path.resolve(file)
+  const installer = createPluginInstallerCore({ pluginRoot: pluginRoot() })
+  const installSource = {
+    installSource: normalizedSource,
+    installSourceType: 'local' as const,
+  }
   const result = (await isDirectory(normalizedSource))
-    ? await installFromDirectory(normalizedSource)
-    : await installFromZip(normalizedSource)
-  await writeInstallMetadata(
-    installedPluginDir(result.type, result.name),
-    normalizedSource,
-    'local',
-  )
+    ? await installer.installFromDirectory(normalizedSource, installSource)
+    : await installer.installFromZip(normalizedSource, installSource)
+
+  logger.info('Plugin installed from local source.', {
+    type: result.type,
+    name: result.name,
+    source: normalizedSource,
+  })
   await registerPluginDefaultHotkeys(result.type, result.name)
   return result
 }
@@ -476,8 +288,16 @@ export async function installPluginFromUrl(source: string): Promise<PluginInstal
   await writeFile(tempFile, Buffer.from(await response.arrayBuffer()))
 
   try {
-    const result = await installFromZip(tempFile)
-    await writeInstallMetadata(installedPluginDir(result.type, result.name), source, 'url')
+    const installer = createPluginInstallerCore({ pluginRoot: pluginRoot() })
+    const result = await installer.installFromZip(tempFile, {
+      installSource: source,
+      installSourceType: 'url',
+    })
+    logger.info('Plugin installed from URL.', {
+      type: result.type,
+      name: result.name,
+      source,
+    })
     await registerPluginDefaultHotkeys(result.type, result.name)
     return result
   } finally {

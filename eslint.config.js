@@ -120,6 +120,20 @@ export default tseslint.config(
     },
   },
 
+  // Automated tests execute in Node, with browser globals available to DOM and Electron journeys.
+  {
+    files: ['tests/**/*.{js,mjs,ts,tsx}'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+        ...globals.browser,
+      },
+    },
+    rules: {
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+    },
+  },
+
   // Disable rules that conflict with Prettier (must be last)
   prettierConfig,
 )

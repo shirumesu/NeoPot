@@ -12,6 +12,7 @@ dist
 dist-ssr
 .vite
 out
+test-results
 *.local
 
 # Editor directories and files

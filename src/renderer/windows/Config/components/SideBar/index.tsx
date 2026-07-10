@@ -27,31 +27,29 @@ export default function SideBar() {
   const navigate = useNavigate()
   const location = useLocation()
 
-  function setStyle(pathname: string): 'flat' | 'light' {
-    return location.pathname.includes(pathname) ? 'flat' : 'light'
-  }
-
   return (
-    <div className="mx-3 overflow-y-auto">
+    <nav aria-label={t('windows.config')} className="mx-3 overflow-y-auto">
       {sideBarItems.map((item) => {
         const Icon = item.icon
+        const isCurrent = location.pathname === item.path
 
         return (
           <Button
             key={item.path}
+            aria-current={isCurrent ? 'page' : undefined}
             fullWidth
             size="lg"
-            variant={setStyle(item.path)}
+            variant={isCurrent ? 'flat' : 'light'}
             className="mb-1.25"
             onPress={() => {
               navigate(item.path)
             }}
-            startContent={<Icon className="text-[24px]" />}
+            startContent={<Icon aria-hidden="true" className="text-[24px]" />}
           >
             <div className="w-full">{t(item.label)}</div>
           </Button>
         )
       })}
-    </div>
+    </nav>
   )
 }

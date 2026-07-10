@@ -432,6 +432,7 @@ export default function TargetArea(props: TargetAreaProps) {
   const [clipboardMonitor] = useConfig('clipboard_monitor', false)
 
   const detectLanguage = useAtomValue(detectLanguageAtom)
+  const effectiveDetectLanguage = sourceLanguage === 'auto' ? detectLanguage : ''
   const [ttsPluginInfo, setTtsPluginInfo] = useState<PluginLanguageInfo>()
   const { t } = useTranslation()
   const getTranslateServiceNotConfiguredMessage = useCallback(
@@ -459,7 +460,7 @@ export default function TargetArea(props: TargetAreaProps) {
     const translateServiceName = getServiceName(currentTranslateServiceInstanceKey)
     const resolvedSourceLanguage = sourceLanguage
     const resolveTargetLanguage = () => {
-      if (resolvedSourceLanguage === 'auto' && targetLanguage === detectLanguage) {
+      if (resolvedSourceLanguage === 'auto' && targetLanguage === effectiveDetectLanguage) {
         return translateSecondLanguage
       }
 
@@ -471,7 +472,7 @@ export default function TargetArea(props: TargetAreaProps) {
       return
     }
     const providerDetectLanguage =
-      resolvedSourceLanguage === 'auto' ? detectLanguage || 'auto' : resolvedSourceLanguage
+      resolvedSourceLanguage === 'auto' ? effectiveDetectLanguage || 'auto' : resolvedSourceLanguage
     logger.debug('Translation requested.', {
       service: currentTranslateServiceInstanceKey,
       from: resolvedSourceLanguage,
@@ -681,7 +682,7 @@ export default function TargetArea(props: TargetAreaProps) {
     autoCopy,
     clipboardMonitor,
     currentTranslateServiceInstanceKey,
-    detectLanguage,
+    effectiveDetectLanguage,
     hideWindow,
     index,
     getTranslateServiceNotConfiguredMessage,

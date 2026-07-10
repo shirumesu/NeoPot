@@ -220,10 +220,13 @@ sudo apt-get install -y rpm
 ```bash
 pnpm run dev
 pnpm run lint
-pnpm run test
+npm run test
 pnpm run format
 pnpm run make
 ```
+
+`npm run test` 是提交前的完整本地质量门禁；快速测试、覆盖率、Electron 旅程和
+mutation testing 等分层命令见 [`tests/README.md`](tests/README.md)。
 
 ## 致谢
 
