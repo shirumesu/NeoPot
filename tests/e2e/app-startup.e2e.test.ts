@@ -126,13 +126,14 @@ test('built application starts and completes a translation through the isolated 
     )
 
     await sourceTextArea.fill('force provider failure')
+    await sourceTextArea.press('Enter')
+    await expect.poll(() => ollama.requests.length).toBe(2)
     await expect(
       translateWindow.getByRole('paragraph').filter({
         hasText: 'Error: Ollama chat failed with HTTP 503: upstream unavailable',
       }),
     ).toBeVisible({ timeout: 10_000 })
     await expect(targetTextArea).toHaveValue('')
-    expect(ollama.requests).toHaveLength(2)
 
     const mainState = await electronApp.evaluate(({ app, BrowserWindow }) => ({
       userData: app.getPath('userData'),
