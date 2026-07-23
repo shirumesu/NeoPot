@@ -34,9 +34,9 @@ const required =
         /^latest\.yml$/,
       ]
     : [
-        new RegExp(`^NeoPot-${version}-linux-x64\\.AppImage$`),
-        new RegExp(`^NeoPot-${version}-linux-x64\\.deb$`),
-        new RegExp(`^NeoPot-${version}-linux-x64\\.rpm$`),
+        new RegExp(`^NeoPot-${version}-linux-x86_64\\.AppImage$`),
+        new RegExp(`^NeoPot-${version}-linux-amd64\\.deb$`),
+        new RegExp(`^NeoPot-${version}-linux-x86_64\\.rpm$`),
         /^latest-linux\.yml$/,
       ]
 
