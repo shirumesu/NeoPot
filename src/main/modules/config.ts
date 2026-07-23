@@ -3,27 +3,10 @@ import Store from 'electron-store'
 import { writeFileSync } from 'node:fs'
 import { runDataMigration } from './data-migration'
 import { logger } from '../logger'
-import {
-  SecretEncryptionUnavailableError,
-  decryptSensitiveConfigValue,
-  encryptSensitiveConfigValue,
-  isEncryptedSecretValue,
-  type SecretCipher,
-} from './configSecrets'
+import { type SecretCipher } from './configSecrets'
 import { createConfigRepository } from './configRepository'
 
 type ConfigValue = unknown
-
-export interface SecretWriteResult {
-  status: 'ok' | 'unsupported'
-  code?: 'SECRET_ENCRYPTION_UNAVAILABLE'
-}
-
-export interface SecretReadResult {
-  status: 'ok' | 'missing' | 'unsupported' | 'failed'
-  value?: string
-  code?: 'SECRET_ENCRYPTION_UNAVAILABLE' | 'SECRET_DECRYPT_FAILED'
-}
 
 const store = new Store<Record<string, ConfigValue>>({
   name: 'config',
@@ -70,59 +53,4 @@ export function setConfig(key: string, value: ConfigValue): Promise<void> {
 
 export function getRedactedConfig(key: string): ConfigValue {
   return configRepository.getRedacted(key)
-}
-
-export function setSecret(key: string, plaintext: string): SecretWriteResult {
-  try {
-    const encrypted = encryptSensitiveConfigValue(plaintext, secretCipher, [key])
-    store.set(key, encrypted)
-    return { status: 'ok' }
-  } catch (error) {
-    if (!(error instanceof SecretEncryptionUnavailableError)) {
-      throw error
-    }
-
-    store.set(`${key}.__secret_state`, {
-      code: 'SECRET_ENCRYPTION_UNAVAILABLE',
-    })
-    return {
-      status: 'unsupported',
-      code: 'SECRET_ENCRYPTION_UNAVAILABLE',
-    }
-  }
-}
-
-export function getSecret(key: string): SecretReadResult {
-  const state = store.get(`${key}.__secret_state`) as { code?: string } | undefined
-  if (state?.code === 'SECRET_ENCRYPTION_UNAVAILABLE') {
-    return {
-      status: 'unsupported',
-      code: 'SECRET_ENCRYPTION_UNAVAILABLE',
-    }
-  }
-
-  const stored = store.get(key) as { encrypted?: string; encoding?: string } | unknown | undefined
-  if (!stored) {
-    return { status: 'missing' }
-  }
-
-  try {
-    if (!isEncryptedSecretValue(stored) && !(stored as { encrypted?: string }).encrypted) {
-      return { status: 'missing' }
-    }
-    const value = isEncryptedSecretValue(stored)
-      ? String(decryptSensitiveConfigValue(stored, secretCipher))
-      : safeStorage.decryptString(
-          Buffer.from((stored as { encrypted?: string }).encrypted ?? '', 'base64'),
-        )
-    return {
-      status: 'ok',
-      value,
-    }
-  } catch {
-    return {
-      status: 'failed',
-      code: 'SECRET_DECRYPT_FAILED',
-    }
-  }
 }

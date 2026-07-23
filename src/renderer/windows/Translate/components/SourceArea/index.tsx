@@ -8,18 +8,16 @@ import {
   Tooltip,
   Spacer,
 } from '@heroui/react'
-import { BaseDirectory, readTextFile } from '@/renderer/lib/electron/compat/fs'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { writeText } from '@/renderer/lib/electron/compat/clipboard'
+import { writeClipboardText } from '@/renderer/lib/electron/clipboard'
 import { HiOutlineVolumeUp } from 'react-icons/hi'
-import { getCurrentWebviewWindow } from '@/renderer/lib/electron/compat/webviewWindow'
-import { listen } from '@/renderer/lib/electron/compat/event'
+import { getCurrentWindow } from '@/renderer/lib/electron/window'
+import { onAppEvent } from '@/renderer/lib/electron/events'
 import { MdContentCopy } from 'react-icons/md'
 import { MdSmartButton } from 'react-icons/md'
 import { useTranslation } from 'react-i18next'
 import { HiTranslate } from 'react-icons/hi'
 import { LuDelete } from 'react-icons/lu'
-import { nanoid } from 'nanoid'
 import { atom, useAtom, useSetAtom } from 'jotai'
 import {
   getServiceName,
@@ -27,11 +25,12 @@ import {
   isValidServiceInstanceKey,
   ServiceSourceType,
 } from '@/renderer/lib/service/service_instance'
-import { useConfig, useSyncAtom, useVoice } from '../../../../hooks'
+import { useConfig, useSyncAtom, useTtsSpeak } from '../../../../hooks'
+import type { ServiceInstanceConfigMap } from '@/renderer/lib/service/serviceConfig'
 import { invoke_plugin } from '@/renderer/lib/plugin/invoke_plugin'
-import { electronCommand } from '@/renderer/lib/electron/command'
+import { invokeCommand } from '@/renderer/lib/electron/command'
 import * as recognizeServices from '@/renderer/providers/recognize'
-import * as builtinTtsServices from '@/renderer/providers/tts'
+import type { RecognizeProvider } from '@/renderer/providers/recognize'
 import detect from '@/renderer/lib/language/lang_detect'
 import { reportRuntimeError } from '@/renderer/lib/runtimeError'
 import type { EnabledServicePluginList } from '@/renderer/windows/Config/pages/Plugin/installedPlugins'
@@ -40,39 +39,13 @@ import {
   type SelectionCaptureFailureReason,
   type SelectionCaptureResult,
 } from '@/shared/translateWorkflow'
-const appWindow = getCurrentWebviewWindow()
+const appWindow = getCurrentWindow()
 
 export const sourceTextAtom = atom('')
 export const detectLanguageAtom = atom('')
 export const manualTranslateFlagAtom = atom('')
 
 const DEFAULT_RECOGNIZE_SERVICE_LIST = ['local_model']
-const DEFAULT_TTS_SERVICE_LIST = ['lingva']
-
-type ServiceInstanceConfigMap = Record<string, Record<string, unknown>>
-
-interface BuiltinRecognizeService {
-  Language: Record<string, string>
-  recognize(
-    base64: string,
-    language: string,
-    options: { config: Record<string, unknown> | undefined },
-  ): Promise<unknown>
-}
-
-interface BuiltinTtsService {
-  Language: Record<string, string>
-  tts(
-    text: string,
-    language: string,
-    options: { config: Record<string, unknown> | undefined },
-  ): Promise<unknown>
-}
-
-interface PluginLanguageInfo {
-  language: Record<string, string>
-}
-
 interface SourceAreaProps {
   pluginList: EnabledServicePluginList
   serviceInstanceConfigMap: ServiceInstanceConfigMap
@@ -91,49 +64,13 @@ const selectionCaptureFailureKeys: Record<SelectionCaptureFailureReason, string>
   'unsupported-platform': 'translate.selection_capture.unsupported_platform',
 }
 
-const recognizeServiceMap = recognizeServices as Record<string, BuiltinRecognizeService>
-const builtinTtsServiceMap = builtinTtsServices as Record<string, BuiltinTtsService>
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value)
-}
-
+const recognizeServiceMap: Record<string, RecognizeProvider> = recognizeServices
 function toResultText(value: unknown): string {
   return typeof value === 'string' ? value : String(value ?? '')
 }
 
 function toErrorMessage(error: unknown): string {
   return error instanceof Error ? error.toString() : String(error)
-}
-
-function isAudioData(value: unknown): value is ArrayBuffer | ArrayLike<number> {
-  return (
-    value instanceof ArrayBuffer ||
-    value instanceof Uint8Array ||
-    (Array.isArray(value) && value.every((item) => typeof item === 'number'))
-  )
-}
-
-function assertAudioData(value: unknown): ArrayBuffer | ArrayLike<number> {
-  if (!isAudioData(value)) {
-    throw new Error('TTS provider returned invalid audio data.')
-  }
-  return value
-}
-
-function readPluginLanguageInfo(infoStr: string): PluginLanguageInfo | undefined {
-  const parsed: unknown = JSON.parse(infoStr)
-  if (!isRecord(parsed) || !isRecord(parsed.language)) {
-    return undefined
-  }
-
-  return {
-    language: Object.fromEntries(
-      Object.entries(parsed.language).filter(
-        (entry): entry is [string, string] => typeof entry[1] === 'string',
-      ),
-    ),
-  }
 }
 
 function transformVarName(str: string) {
@@ -230,21 +167,8 @@ export default function SourceArea(props: SourceAreaProps) {
     'recognize_service_list',
     DEFAULT_RECOGNIZE_SERVICE_LIST,
   )
-  const [ttsServiceList] = useConfig<string[]>('tts_service_list', DEFAULT_TTS_SERVICE_LIST)
-  const ttsServiceInstanceKey = Array.isArray(ttsServiceList)
-    ? ttsServiceList.find((key) => {
-        if (!isValidServiceInstanceKey(key)) {
-          return false
-        }
-        if (getServiceSouceType(key) === ServiceSourceType.PLUGIN) {
-          return pluginList['tts']?.[getServiceName(key)] !== undefined
-        }
-        return builtinTtsServiceMap[getServiceName(key)] !== undefined
-      })
-    : null
   const [hideWindow] = useConfig('translate_hide_window', false)
   const [hideSource] = useConfig('hide_source', false)
-  const [ttsPluginInfo, setTtsPluginInfo] = useState<PluginLanguageInfo>()
   const [sourceNotice, setSourceNotice] = useState<SourceNotice | null>(null)
   const [windowType, setWindowType] = useState('[SELECTION_TRANSLATE]')
   const { t } = useTranslation()
@@ -252,7 +176,10 @@ export default function SourceArea(props: SourceAreaProps) {
   const initialTextLoadedRef = useRef(false)
   const workflowTextVersionRef = useRef(0)
   const sourceTextChangeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const speak = useVoice()
+  const { serviceInstanceKey: ttsServiceInstanceKey, speak: speakText } = useTtsSpeak({
+    pluginList,
+    serviceInstanceConfigMap,
+  })
 
   const reportSourceAreaError = useCallback((error: unknown, source: string) => {
     reportRuntimeError(error, {
@@ -371,7 +298,7 @@ export default function SourceArea(props: SourceAreaProps) {
           setSourceText(t('errors.recognize_service_not_configured'))
           return
         }
-        const base64 = String(await electronCommand('get_base64'))
+        const base64 = String(await invokeCommand('get_base64'))
         const serviceInstanceKey = recognizeServiceList[0]
         if (!isValidServiceInstanceKey(serviceInstanceKey)) {
           setSourceText(t('errors.recognize_service_not_configured'))
@@ -418,28 +345,23 @@ export default function SourceArea(props: SourceAreaProps) {
             return
           }
           if (recognizeLanguage in recognizeService.Language) {
-            const instanceConfig = serviceInstanceConfigMap[serviceInstanceKey]
-            recognizeService
-              .recognize(base64, recognizeService.Language[recognizeLanguage], {
-                config: instanceConfig,
-              })
-              .then(
-                (value) => {
-                  void commitSourceText(normalizeInputText(toResultText(value)))
-                },
-                (e: unknown) => {
-                  reportRuntimeError(e, {
-                    source: 'translate.image_recognize.builtin',
-                    logMessage: 'Image translation OCR provider failed.',
-                    toastId: `translate.image_recognize.builtin:${serviceName}`,
-                    context: {
-                      service: serviceInstanceKey,
-                      language: recognizeLanguage,
-                    },
-                  })
-                  setSourceText(toErrorMessage(e))
-                },
-              )
+            recognizeService.recognize(base64, recognizeService.Language[recognizeLanguage]).then(
+              (value) => {
+                void commitSourceText(normalizeInputText(toResultText(value)))
+              },
+              (e: unknown) => {
+                reportRuntimeError(e, {
+                  source: 'translate.image_recognize.builtin',
+                  logMessage: 'Image translation OCR provider failed.',
+                  toastId: `translate.image_recognize.builtin:${serviceName}`,
+                  context: {
+                    service: serviceInstanceKey,
+                    language: recognizeLanguage,
+                  },
+                })
+                setSourceText(toErrorMessage(e))
+              },
+            )
           } else {
             setSourceText(t('errors.language_not_supported'))
           }
@@ -469,9 +391,6 @@ export default function SourceArea(props: SourceAreaProps) {
         syncSourceText()
       })
     }
-    if (event.key === 'Escape') {
-      appWindow.close()
-    }
   }
 
   const handleNewTextRef = useRef(handleNewText)
@@ -481,8 +400,7 @@ export default function SourceArea(props: SourceAreaProps) {
   }, [handleNewText])
 
   const handleSpeak = async () => {
-    const instanceKey = ttsServiceInstanceKey
-    if (!instanceKey) {
+    if (!ttsServiceInstanceKey) {
       throw new Error(t('translate.tts_not_configured'))
     }
     let detected = detectLanguage
@@ -490,73 +408,20 @@ export default function SourceArea(props: SourceAreaProps) {
       detected = String(await detect(sourceText))
       setDetectLanguage(detected)
     }
-    if (getServiceSouceType(instanceKey) === ServiceSourceType.PLUGIN) {
-      if (!ttsPluginInfo?.language) {
-        throw new Error(t('translate.tts_not_configured'))
-      }
-      if (!(detected in ttsPluginInfo.language)) {
-        throw new Error(t('errors.language_not_supported'))
-      }
-      const pluginConfig = serviceInstanceConfigMap[instanceKey]
-      const [func, utils] = await invoke_plugin('tts', getServiceName(instanceKey))
-      const data = await func(sourceText, ttsPluginInfo.language[detected], {
-        config: pluginConfig,
-        utils,
-      })
-      await speak(assertAudioData(data))
-    } else {
-      if (!(detected in builtinTtsServiceMap[getServiceName(instanceKey)].Language)) {
-        throw new Error(t('errors.language_not_supported'))
-      }
-      const instanceConfig = serviceInstanceConfigMap[instanceKey]
-      const data = await builtinTtsServiceMap[getServiceName(instanceKey)].tts(
-        sourceText,
-        builtinTtsServiceMap[getServiceName(instanceKey)].Language[detected],
-        {
-          config: instanceConfig,
-        },
-      )
-      await speak(assertAudioData(data))
-    }
+    await speakText(sourceText, detected)
   }
 
   useEffect(() => {
-    let disposed = false
-    let removeListener: (() => void) | null = null
-    const unlistenPromise = listen('new_text', (event) => {
+    const removeListener = onAppEvent('new_text', (payload) => {
       appWindow.setFocus()
       workflowTextVersionRef.current += 1
-      void handleNewTextRef.current(event.payload).catch((error) => {
+      void handleNewTextRef.current(payload).catch((error) => {
         reportSourceAreaError(error, 'translate.new_text')
       })
     })
-    unlistenPromise.then(
-      (unlisten) => {
-        removeListener = unlisten
-        void window.neoPot?.app.rendererReady()
-        if (disposed) {
-          removeListener = null
-          unlisten()
-        }
-      },
-      (error: unknown) => {
-        reportSourceAreaError(error, 'translate.new_text_listener')
-      },
-    )
+    void window.neoPot.app.rendererReady()
 
-    return () => {
-      disposed = true
-      if (removeListener) {
-        removeListener()
-      } else {
-        unlistenPromise.then(
-          (unlisten) => {
-            unlisten()
-          },
-          () => undefined,
-        )
-      }
-    }
+    return removeListener
   }, [reportSourceAreaError])
 
   useEffect(() => {
@@ -567,24 +432,6 @@ export default function SourceArea(props: SourceAreaProps) {
       }
     }
   }, [])
-
-  useEffect(() => {
-    if (
-      ttsServiceInstanceKey &&
-      getServiceSouceType(ttsServiceInstanceKey) === ServiceSourceType.PLUGIN
-    ) {
-      readTextFile(`plugins/tts/${getServiceName(ttsServiceInstanceKey)}/info.json`, {
-        baseDir: BaseDirectory.AppConfig,
-      }).then(
-        (infoStr) => {
-          setTtsPluginInfo(readPluginLanguageInfo(infoStr))
-        },
-        () => {
-          setTtsPluginInfo(undefined)
-        },
-      )
-    }
-  }, [ttsServiceInstanceKey])
 
   useEffect(() => {
     if (initialTextLoadedRef.current) {
@@ -599,7 +446,7 @@ export default function SourceArea(props: SourceAreaProps) {
     ) {
       initialTextLoadedRef.current = true
       const requestVersion = workflowTextVersionRef.current
-      electronCommand('get_text').then((v) => {
+      invokeCommand('get_text').then((v) => {
         if (workflowTextVersionRef.current !== requestVersion) {
           return
         }
@@ -697,7 +544,8 @@ export default function SourceArea(props: SourceAreaProps) {
           <textarea
             autoFocus
             ref={textAreaRef}
-            className={`text-[${appFontSize}px] bg-content1 h-full resize-none outline-none`}
+            className="h-full resize-none bg-content1 outline-none"
+            style={{ fontSize: appFontSize ?? 16 }}
             value={sourceText}
             onKeyDown={keyDown}
             onChange={(e) => {
@@ -738,7 +586,7 @@ export default function SourceArea(props: SourceAreaProps) {
                   variant="light"
                   size="sm"
                   onPress={() => {
-                    writeText(sourceText)
+                    writeClipboardText(sourceText)
                   }}
                 >
                   <MdContentCopy className="text-[16px]" />
@@ -793,7 +641,7 @@ export default function SourceArea(props: SourceAreaProps) {
               onPress={() => {
                 detect_language(sourceText).then(() => {
                   syncSourceText()
-                  setManualTranslateFlag(nanoid())
+                  setManualTranslateFlag(crypto.randomUUID())
                 })
               }}
             />

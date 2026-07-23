@@ -142,5 +142,3 @@ export function mergeLogContext(
     ...(extra ?? {}),
   }
 }
-
-// Test contract marker: key=value

@@ -3,16 +3,13 @@ import { DropdownTrigger } from '@heroui/react'
 import { Input, Button } from '@heroui/react'
 import { DropdownMenu } from '@heroui/react'
 import { DropdownItem } from '@heroui/react'
-import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { Dropdown } from '@heroui/react'
 import { useState } from 'react'
 
 import { useConfig } from '../../../hooks/useConfig'
-import { useToastStyle } from '../../../hooks'
 import { translate } from './index'
 import { Language } from './index'
-import { useConfigSave } from '@/renderer/windows/Config/hooks/useConfigSave'
 import {
   createDefaultDeepLConfig,
   getDeepLConfigFieldVisibility,
@@ -21,6 +18,10 @@ import {
   type DeepLConfig,
 } from '@/shared/deeplConfig'
 import type { ServiceConfigComponentProps } from '@/renderer/windows/Config/pages/Service/types'
+import ProviderConfigForm from '@/renderer/windows/Config/pages/Service/ProviderConfigForm'
+import TestButton from '@/renderer/windows/Config/pages/Service/TestButton'
+import InstanceNameInput from '@/renderer/windows/Config/pages/Service/InstanceNameInput'
+import ConfigItem from '@/renderer/windows/Config/components/ConfigItem'
 
 export function Config(props: ServiceConfigComponentProps) {
   const { instanceKey, updateServiceList, onClose } = props
@@ -35,8 +36,6 @@ export function Config(props: ServiceConfigComponentProps) {
     rawDeeplConfig === null ? null : normalizeDeepLConfig(rawDeeplConfig, defaultInstanceName)
   const [isLoading, setIsLoading] = useState(false)
 
-  const toastStyle = useToastStyle()
-  const { saveConfig } = useConfigSave()
   const updateDeeplConfig = (nextConfig: DeepLConfig) =>
     setRawDeeplConfig(normalizeDeepLConfig(nextConfig, defaultInstanceName))
   const fieldVisibility =
@@ -45,41 +44,38 @@ export function Config(props: ServiceConfigComponentProps) {
   return (
     deeplConfig !== null &&
     fieldVisibility !== null && (
-      <form
-        onSubmit={async (e) => {
-          e.preventDefault()
-          const normalizedConfig = normalizeDeepLConfig(deeplConfig, defaultInstanceName)
-          const saved = await saveConfig(instanceKey, null, setRawDeeplConfig, normalizedConfig, {
-            compareCurrent: false,
-            verify: true,
-          })
-          if (saved) {
-            await updateServiceList(instanceKey)
-            onClose()
-          }
-        }}
-      >
-        <div className="config-item">
-          <Input
-            label={t('services.instance_name')}
-            labelPlacement="outside-left"
-            value={deeplConfig[INSTANCE_NAME_CONFIG_KEY]}
-            variant="bordered"
-            classNames={{
-              base: 'justify-between',
-              label: 'text-(length:--heroui-font-size-medium)',
-              mainWrapper: 'max-w-[50%]',
-            }}
-            onValueChange={(value) => {
-              updateDeeplConfig({
-                ...deeplConfig,
-                [INSTANCE_NAME_CONFIG_KEY]: value,
+      <ProviderConfigForm
+        instanceKey={instanceKey}
+        config={normalizeDeepLConfig(deeplConfig, defaultInstanceName)}
+        setConfig={setRawDeeplConfig}
+        updateServiceList={updateServiceList}
+        onClose={onClose}
+        isLoading={isLoading}
+        verify
+        testButton={
+          <TestButton
+            isLoading={isLoading}
+            setIsLoading={setIsLoading}
+            onTest={() =>
+              translate('hello', Language.auto, Language.zh_cn, {
+                config: normalizeDeepLConfig(deeplConfig, defaultInstanceName),
               })
-            }}
+            }
           />
-        </div>
-        <div className="config-item">
-          <h3 className="my-auto pl-2">{t('services.translate.deepl.type')}</h3>
+        }
+      >
+        <InstanceNameInput
+          value={deeplConfig[INSTANCE_NAME_CONFIG_KEY]}
+          onValueChange={(value) => {
+            void updateDeeplConfig({
+              ...deeplConfig,
+              [INSTANCE_NAME_CONFIG_KEY]: value,
+            })
+          }}
+        />
+        <ConfigItem
+          title={<span className="my-auto pl-2">{t('services.translate.deepl.type')}</span>}
+        >
           <div className="w-full max-w-[50%] flex justify-end">
             <Dropdown>
               <DropdownTrigger>
@@ -108,9 +104,9 @@ export function Config(props: ServiceConfigComponentProps) {
               </DropdownMenu>
             </Dropdown>
           </div>
-        </div>
+        </ConfigItem>
         {fieldVisibility.authApiAuthKey && (
-          <div className="config-item">
+          <ConfigItem>
             <Input
               label={t('services.translate.deepl.auth_key')}
               labelPlacement="outside-left"
@@ -132,10 +128,10 @@ export function Config(props: ServiceConfigComponentProps) {
                 })
               }}
             />
-          </div>
+          </ConfigItem>
         )}
         {fieldVisibility.deeplxAuthKey && (
-          <div className="config-item">
+          <ConfigItem>
             <Input
               label={t('services.translate.deepl.auth_key')}
               labelPlacement="outside-left"
@@ -157,10 +153,10 @@ export function Config(props: ServiceConfigComponentProps) {
                 })
               }}
             />
-          </div>
+          </ConfigItem>
         )}
         {fieldVisibility.deeplxCustomUrl && (
-          <div className="config-item">
+          <ConfigItem>
             <Input
               label={t('services.translate.deepl.custom_url')}
               labelPlacement="outside-left"
@@ -181,36 +177,9 @@ export function Config(props: ServiceConfigComponentProps) {
                 })
               }}
             />
-          </div>
+          </ConfigItem>
         )}
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            onPress={() => {
-              setIsLoading(true)
-              translate('hello', Language.auto, Language.zh_cn, {
-                config: normalizeDeepLConfig(deeplConfig, defaultInstanceName),
-              }).then(
-                () => {
-                  setIsLoading(false)
-                  toast.success(t('config.service.test_success'), { style: toastStyle })
-                },
-                (e) => {
-                  setIsLoading(false)
-                  toast.error(t('config.service.test_failed') + e.toString(), { style: toastStyle })
-                },
-              )
-            }}
-            isLoading={isLoading}
-            fullWidth
-          >
-            {t('common.test')}
-          </Button>
-          <Button type="submit" isLoading={isLoading} color="primary" fullWidth>
-            {t('common.save')}
-          </Button>
-        </div>
-      </form>
+      </ProviderConfigForm>
     )
   )
 }

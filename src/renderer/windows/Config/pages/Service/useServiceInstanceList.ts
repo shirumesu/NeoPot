@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import toast from 'react-hot-toast'
 
-import { deleteKey, isSameConfigValue, useConfig, useToastStyle } from '../../../../hooks'
+import { deleteKey, isSameConfigValue, useConfig } from '../../../../hooks'
 import { useConfigSave } from '../../hooks/useConfigSave'
 
 interface UseServiceInstanceListOptions {
@@ -14,7 +14,6 @@ export function useServiceInstanceList(options: UseServiceInstanceListOptions) {
   const { configKey, defaultList, protectLastService = false } = options
   const [serviceInstanceList, setServiceInstanceList] = useConfig<string[]>(configKey, defaultList)
   const { t } = useTranslation()
-  const toastStyle = useToastStyle()
   const { saveConfig } = useConfigSave()
 
   const deleteServiceInstance = async (instanceKey: string) => {
@@ -22,7 +21,7 @@ export function useServiceInstanceList(options: UseServiceInstanceListOptions) {
       return
     }
     if (protectLastService && serviceInstanceList.length === 1) {
-      toast.error(t('config.service.least'), { style: toastStyle })
+      toast.error(t('config.service.least'))
       return
     }
 

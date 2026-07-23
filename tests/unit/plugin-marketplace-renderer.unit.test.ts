@@ -1,4 +1,7 @@
+// @vitest-environment jsdom
+
 import { beforeEach, describe, expect, test, vi } from 'vitest'
+import type { NeoPotElectronApi } from '../../src/shared/types/electron-api'
 
 const mocks = vi.hoisted(() => ({
   configGet: vi.fn(),
@@ -7,18 +10,6 @@ const mocks = vi.hoisted(() => ({
   inspectSource: vi.fn(),
   installFromUrl: vi.fn(),
   warn: vi.fn(),
-}))
-
-vi.mock('@/renderer/lib/electron/adapter', () => ({
-  configApi: {
-    get: mocks.configGet,
-    set: mocks.configSet,
-  },
-  pluginApi: {
-    inspectMarketplace: mocks.inspectMarketplace,
-    inspectSource: mocks.inspectSource,
-    installFromUrl: mocks.installFromUrl,
-  },
 }))
 
 vi.mock('@/renderer/lib/logger', () => ({
@@ -79,6 +70,20 @@ function installedPlugin(id: string): InstalledPlugin {
 beforeEach(() => {
   vi.clearAllMocks()
   mocks.configGet.mockResolvedValue([])
+  Object.defineProperty(window, 'neoPot', {
+    configurable: true,
+    value: {
+      config: {
+        get: mocks.configGet,
+        set: mocks.configSet,
+      },
+      plugins: {
+        inspectMarketplace: mocks.inspectMarketplace,
+        inspectSource: mocks.inspectSource,
+        installFromUrl: mocks.installFromUrl,
+      },
+    } as unknown as NeoPotElectronApi,
+  })
 })
 
 describe('renderer plugin marketplace concurrency', () => {

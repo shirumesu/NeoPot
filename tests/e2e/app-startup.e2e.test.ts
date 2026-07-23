@@ -81,8 +81,19 @@ test('built application starts and completes a translation through the isolated 
       await window.neoPot.workflow.inputTranslate()
     })
     const translateWindow = await waitForWindow(electronApp, 'translate')
+    translateWindow.on('console', (message) => {
+      rendererConsole.push(`${message.type()}: ${message.text()}`)
+    })
+    translateWindow.on('pageerror', (error) => {
+      pageErrors.push(error.stack ?? error.message)
+    })
     await translateWindow.waitForLoadState('domcontentloaded')
     await expect.poll(() => translateWindow.evaluate(() => Boolean(window.neoPot))).toBe(true)
+    await expect
+      .poll(() =>
+        mainConsole.some((message) => message.includes('Window renderer ready. window=translate')),
+      )
+      .toBe(true)
     const inputTranslateWindowReady = Math.round(performance.now() - inputTranslateStartedAt)
 
     const sourceTextArea = translateWindow.locator('textarea:not([readonly])').first()
@@ -91,6 +102,7 @@ test('built application starts and completes a translation through the isolated 
 
     const firstTranslationStartedAt = performance.now()
     await sourceTextArea.fill('hello from the Electron journey')
+    await expect(targetTextArea).toHaveValue('端到端_', { timeout: 10_000 })
     await expect(targetTextArea).toHaveValue('端到端翻译成功', { timeout: 10_000 })
     const firstTranslationReady = Math.round(performance.now() - firstTranslationStartedAt)
 
@@ -101,7 +113,7 @@ test('built application starts and completes a translation through the isolated 
         url: '/api/chat',
         body: expect.objectContaining({
           model: 'neopot-e2e',
-          stream: false,
+          stream: true,
           messages: [
             {
               role: 'user',
@@ -114,12 +126,12 @@ test('built application starts and completes a translation through the isolated 
     )
 
     await sourceTextArea.fill('force provider failure')
-    await expect(targetTextArea).toHaveValue('')
     await expect(
-      translateWindow.locator('p.text-red-500', {
+      translateWindow.getByRole('paragraph').filter({
         hasText: 'Error: Ollama chat failed with HTTP 503: upstream unavailable',
       }),
     ).toBeVisible({ timeout: 10_000 })
+    await expect(targetTextArea).toHaveValue('')
     expect(ollama.requests).toHaveLength(2)
 
     const mainState = await electronApp.evaluate(({ app, BrowserWindow }) => ({
@@ -224,7 +236,7 @@ async function prepareConfig(testRoot: string, port: number, ollamaOrigin: strin
           enable: true,
           model: 'neopot-e2e',
           requestPath: ollamaOrigin,
-          stream: false,
+          stream: true,
           promptList: [
             {
               role: 'user',
@@ -266,14 +278,17 @@ async function startOllamaMock(): Promise<{
 
       const failed = rawBody.includes('force provider failure')
       response.statusCode = failed ? 503 : 200
-      response.setHeader('Content-Type', 'application/json')
-      response.end(
-        JSON.stringify(
-          failed
-            ? { error: { message: 'upstream unavailable' } }
-            : { message: { content: '端到端翻译成功' } },
-        ),
-      )
+      if (failed) {
+        response.setHeader('Content-Type', 'application/json')
+        response.end(JSON.stringify({ error: { message: 'upstream unavailable' } }))
+        return
+      }
+
+      response.setHeader('Content-Type', 'application/x-ndjson')
+      response.write(`${JSON.stringify({ message: { content: '端到端' } })}\n`)
+      setTimeout(() => {
+        response.end(`${JSON.stringify({ message: { content: '翻译成功' } })}\n`)
+      }, 300)
     })
   })
 

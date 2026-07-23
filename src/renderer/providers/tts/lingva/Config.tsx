@@ -1,15 +1,16 @@
 import { INSTANCE_NAME_CONFIG_KEY } from '@/renderer/lib/service/service_instance'
 import { useConfig } from '@/renderer/hooks/useConfig'
-import { useToastStyle } from '@/renderer/hooks'
-import { useConfigSave } from '@/renderer/windows/Config/hooks/useConfigSave'
-import { Button, Input } from '@heroui/react'
+import { Input } from '@heroui/react'
 import { useState } from 'react'
-import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 
 import { DEFAULT_LINGVA_URL, tts } from './index'
 import { Language } from './info'
 import type { ServiceConfigComponentProps } from '@/renderer/windows/Config/pages/Service/types'
+import ProviderConfigForm from '@/renderer/windows/Config/pages/Service/ProviderConfigForm'
+import TestButton from '@/renderer/windows/Config/pages/Service/TestButton'
+import InstanceNameInput from '@/renderer/windows/Config/pages/Service/InstanceNameInput'
+import ConfigItem from '@/renderer/windows/Config/components/ConfigItem'
 
 interface LingvaConfig {
   [INSTANCE_NAME_CONFIG_KEY]: string
@@ -28,43 +29,38 @@ export function Config(props: ServiceConfigComponentProps) {
     { sync: false },
   )
   const [isLoading, setIsLoading] = useState(false)
-  const toastStyle = useToastStyle()
-  const { saveConfig } = useConfigSave()
 
   return (
     config !== null && (
-      <form
-        onSubmit={async (e) => {
-          e.preventDefault()
-          const saved = await saveConfig(instanceKey, null, setConfig, config, {
-            compareCurrent: false,
-          })
-          if (saved) {
-            await updateServiceList(instanceKey)
-            onClose()
-          }
-        }}
-      >
-        <div className="config-item">
-          <Input
-            label={t('services.instance_name')}
-            labelPlacement="outside-left"
-            value={config[INSTANCE_NAME_CONFIG_KEY]}
-            variant="bordered"
-            classNames={{
-              base: 'justify-between',
-              label: 'text-(length:--heroui-font-size-medium)',
-              mainWrapper: 'max-w-[50%]',
-            }}
-            onValueChange={(value) => {
-              setConfig({
-                ...config,
-                [INSTANCE_NAME_CONFIG_KEY]: value,
+      <ProviderConfigForm
+        instanceKey={instanceKey}
+        config={config}
+        setConfig={setConfig}
+        updateServiceList={updateServiceList}
+        onClose={onClose}
+        isLoading={isLoading}
+        testButton={
+          <TestButton
+            isLoading={isLoading}
+            setIsLoading={setIsLoading}
+            onTest={() =>
+              tts('Hello, this is a Lingva voice test.', Language.en, {
+                config,
               })
-            }}
+            }
           />
-        </div>
-        <div className="config-item">
+        }
+      >
+        <InstanceNameInput
+          value={config[INSTANCE_NAME_CONFIG_KEY]}
+          onValueChange={(value) => {
+            void setConfig({
+              ...config,
+              [INSTANCE_NAME_CONFIG_KEY]: value,
+            })
+          }}
+        />
+        <ConfigItem>
           <Input
             label={t('services.tts.lingva.custom_url')}
             labelPlacement="outside-left"
@@ -76,42 +72,17 @@ export function Config(props: ServiceConfigComponentProps) {
               mainWrapper: 'max-w-[50%]',
             }}
             onValueChange={(value) => {
-              setConfig({
+              void setConfig({
                 ...config,
                 custom_url: value,
               })
             }}
           />
-        </div>
+        </ConfigItem>
         <div className="mb-3 rounded-medium border border-default-200 bg-content2 px-3 py-2 text-sm text-default-600">
           {t('services.tts.lingva.description')}
         </div>
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            onPress={() => {
-              setIsLoading(true)
-              tts('Hello, this is a Lingva voice test.', Language.en, { config }).then(
-                () => {
-                  setIsLoading(false)
-                  toast.success(t('config.service.test_success'), { style: toastStyle })
-                },
-                (e) => {
-                  setIsLoading(false)
-                  toast.error(t('config.service.test_failed') + e.toString(), { style: toastStyle })
-                },
-              )
-            }}
-            isLoading={isLoading}
-            fullWidth
-          >
-            {t('common.test')}
-          </Button>
-          <Button type="submit" isLoading={isLoading} color="primary" fullWidth>
-            {t('common.save')}
-          </Button>
-        </div>
-      </form>
+      </ProviderConfigForm>
     )
   )
 }

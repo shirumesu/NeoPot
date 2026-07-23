@@ -3,7 +3,7 @@ import { useCallback } from 'react'
 const AudioContextConstructor =
   window.AudioContext ||
   (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
-const audioContext = new AudioContextConstructor()
+let audioContext: AudioContext | null = null
 let source: AudioBufferSourceNode | null = null
 
 export const useVoice = () => {
@@ -13,6 +13,7 @@ export const useVoice = () => {
       source.disconnect()
       source = null
     } else {
+      audioContext ??= new AudioContextConstructor()
       const audioData = data instanceof ArrayBuffer ? data : new Uint8Array(data).buffer
       const buffer = await audioContext.decodeAudioData(audioData.slice(0))
       const nextSource = audioContext.createBufferSource()

@@ -1,14 +1,13 @@
-import { type, arch as archFn, version } from '@/renderer/lib/electron/compat/os'
-import { getVersion } from '@/renderer/lib/electron/compat/app'
+import { getRuntimeArchitecture, getRuntimeVersion } from '@/renderer/lib/electron/runtimeInfo'
+import { getAppVersion } from '@/renderer/lib/electron/app'
 
-export let osType = ''
+export const osType = window.neoPot.app.platform
 export let arch = ''
 export let osVersion = ''
 export let appVersion = ''
 
 export async function initEnv() {
-  osType = await type()
-  arch = await archFn()
-  osVersion = await version()
-  appVersion = await getVersion()
+  arch = getRuntimeArchitecture()
+  osVersion = getRuntimeVersion()
+  appVersion = await getAppVersion()
 }

@@ -1,17 +1,21 @@
-import type { AxiosRequestConfig } from 'axios'
-import { session } from 'electron'
-import { normalizeProxyHost } from '../../shared/proxyConfig'
+import { app, session } from 'electron'
+import {
+  createProxyRules,
+  matchesProxyChallenge,
+  normalizeProxyHost,
+} from '../../shared/proxyConfig'
 import { getConfig } from './config'
 
 export interface ProxyConfig {
   enabled: boolean
   host?: string
   port?: number
-  protocol?: 'http' | 'https'
   username?: string
   password?: string
   noProxy?: string
 }
+
+let authenticationHandlerRegistered = false
 
 function readProxyPort(): number | undefined {
   const rawPort = getConfig('proxy_port')
@@ -21,75 +25,49 @@ function readProxyPort(): number | undefined {
 }
 
 export function getProxyConfig(): ProxyConfig {
-  const enabled = getConfig('proxy_enable') ?? getConfig('proxy_enabled')
   return {
-    enabled: Boolean(enabled),
+    enabled: Boolean(getConfig('proxy_enable')),
     host: normalizeProxyHost(getConfig('proxy_host')),
     port: readProxyPort(),
-    protocol: (getConfig('proxy_protocol') as 'http' | 'https' | undefined) ?? 'http',
-    username: (getConfig('proxy_username') as string | undefined) ?? undefined,
-    password: (getConfig('proxy_password') as string | undefined) ?? undefined,
-    noProxy: (getConfig('no_proxy') as string | undefined) ?? undefined,
+    username: (getConfig('proxy_username') as string | undefined) || undefined,
+    password: (getConfig('proxy_password') as string | undefined) || undefined,
+    noProxy: (getConfig('no_proxy') as string | undefined) || undefined,
   }
 }
 
-function normalizeHost(value: unknown): string {
-  return typeof value === 'string' ? value.trim().toLowerCase() : ''
+export function registerProxyAuthentication(): void {
+  if (authenticationHandlerRegistered) {
+    return
+  }
+  authenticationHandlerRegistered = true
+
+  app.on('login', (event, _webContents, _details, authInfo, callback) => {
+    const proxy = getProxyConfig()
+    if (
+      !matchesProxyChallenge(authInfo, proxy) ||
+      proxy.username === undefined ||
+      proxy.password === undefined
+    ) {
+      return
+    }
+
+    event.preventDefault()
+    callback(proxy.username, proxy.password)
+  })
 }
 
-function shouldBypassProxy(config: AxiosRequestConfig, noProxy: string | undefined): boolean {
-  if (!noProxy || !config.url) {
-    return false
-  }
-
-  let hostname = ''
-  try {
-    hostname = normalizeHost(new URL(config.url, config.baseURL).hostname)
-  } catch {
-    return false
-  }
-
-  return noProxy
-    .split(',')
-    .map((entry) => normalizeHost(entry))
-    .filter(Boolean)
-    .some((entry) => hostname === entry || hostname.endsWith(`.${entry}`))
-}
-
-export function applyProxyToAxios(config: AxiosRequestConfig): AxiosRequestConfig {
+export async function applyProxyToSession(enabled?: boolean): Promise<void> {
   const proxy = getProxyConfig()
-  if (!proxy.enabled || !proxy.host || !proxy.port || shouldBypassProxy(config, proxy.noProxy)) {
-    return config
-  }
-
-  return {
-    ...config,
-    proxy: {
-      host: proxy.host,
-      port: proxy.port,
-      protocol: proxy.protocol,
-      auth:
-        proxy.username && proxy.password
-          ? {
-              username: proxy.username,
-              password: proxy.password,
-            }
-          : undefined,
-    },
-  }
-}
-
-export async function applyProxyToSession(enabled = getProxyConfig().enabled): Promise<void> {
-  const proxy = getProxyConfig()
-  if (!enabled || !proxy.host || !proxy.port) {
+  if (!(enabled ?? proxy.enabled) || !proxy.host || !proxy.port) {
     await session.defaultSession.setProxy({ mode: 'direct' })
+    await session.defaultSession.closeAllConnections()
     return
   }
 
-  const proxyRules = `http=${proxy.host}:${proxy.port};https=${proxy.host}:${proxy.port}`
   await session.defaultSession.setProxy({
     mode: 'fixed_servers',
-    proxyRules,
+    proxyRules: createProxyRules(proxy.host, proxy.port),
     proxyBypassRules: proxy.noProxy,
   })
+  await session.defaultSession.closeAllConnections()
 }

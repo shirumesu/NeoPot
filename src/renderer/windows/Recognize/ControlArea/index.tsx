@@ -4,34 +4,21 @@ import { useTranslation } from 'react-i18next'
 import { HiTranslate } from 'react-icons/hi'
 import { GiCycle } from 'react-icons/gi'
 import React, { useEffect } from 'react'
-import { nanoid } from 'nanoid'
 import * as builtinService from '@/renderer/providers/recognize'
+import type { RecognizeProvider } from '@/renderer/providers/recognize'
 import { languageList } from '@/renderer/lib/language/language'
-import { electronCommand } from '@/renderer/lib/electron/command'
+import { invokeCommand } from '@/renderer/lib/electron/command'
 import { useConfig } from '../../../hooks'
 import { textAtom } from '../TextArea'
 import { pluginListAtom } from '..'
-import {
-  ServiceSourceType,
-  getServiceSouceType,
-  getServiceName,
-  INSTANCE_NAME_CONFIG_KEY,
-  getDisplayInstanceName,
-} from '@/renderer/lib/service/service_instance'
 import SafeDropdownMenu from '@/renderer/components/SafeDropdownMenu'
+import ServiceInstanceDropdown from '@/renderer/components/ServiceInstanceDropdown'
+import type { ServiceInstanceConfigMap } from '@/renderer/lib/service/serviceConfig'
 import { CONTROL_ICON_CLASS } from '@/renderer/components/uiSize'
 
 export const currentServiceInstanceKeyAtom = atom('')
 export const languageAtom = atom('auto')
 export const recognizeFlagAtom = atom('')
-
-type ServiceInstanceConfigMap = Record<string, Record<string, unknown>>
-
-interface BuiltinRecognizeService {
-  info: {
-    icon: string
-  }
-}
 
 interface ControlAreaProps {
   serviceInstanceConfigMap: ServiceInstanceConfigMap
@@ -41,7 +28,7 @@ interface ControlAreaProps {
 export default function ControlArea(props: ControlAreaProps) {
   const { serviceInstanceConfigMap, serviceInstanceList } = props
   const pluginList = useAtomValue(pluginListAtom)
-  const builtinServiceMap = builtinService as Record<string, BuiltinRecognizeService>
+  const builtinServiceMap: Record<string, RecognizeProvider> = builtinService
   const [recognizeLanguage] = useConfig('recognize_language', 'auto')
   const setRecognizeFlag = useSetAtom(recognizeFlagAtom)
   const [currentServiceInstanceKey, setCurrentServiceInstanceKey] = useAtom(
@@ -50,15 +37,6 @@ export default function ControlArea(props: ControlAreaProps) {
   const [language, setLanguage] = useAtom(languageAtom)
   const text = useAtomValue(textAtom)
   const { t } = useTranslation()
-
-  function getInstanceName(instanceKey: string, serviceNameSupplier: () => string) {
-    const instanceConfig = serviceInstanceConfigMap[instanceKey] ?? {}
-    const instanceName = instanceConfig[INSTANCE_NAME_CONFIG_KEY]
-    return getDisplayInstanceName(
-      typeof instanceName === 'string' ? instanceName : '',
-      serviceNameSupplier,
-    )
-  }
 
   useEffect(() => {
     if (serviceInstanceList) {
@@ -72,68 +50,18 @@ export default function ControlArea(props: ControlAreaProps) {
   return (
     <div className="flex justify-between px-3 h-full">
       {currentServiceInstanceKey && (
-        <Dropdown>
-          <DropdownTrigger>
-            <Button
-              className="my-auto"
-              variant="bordered"
-              size="sm"
-              startContent={
-                <img
-                  className={`${CONTROL_ICON_CLASS} my-auto`}
-                  src={
-                    getServiceSouceType(currentServiceInstanceKey) === ServiceSourceType.PLUGIN
-                      ? pluginList[getServiceName(currentServiceInstanceKey)].icon
-                      : builtinServiceMap[getServiceName(currentServiceInstanceKey)].info.icon
-                  }
-                />
-              }
-            >
-              {getServiceSouceType(currentServiceInstanceKey) === ServiceSourceType.PLUGIN
-                ? getInstanceName(
-                    currentServiceInstanceKey,
-                    () => pluginList[getServiceName(currentServiceInstanceKey)].display,
-                  )
-                : getInstanceName(currentServiceInstanceKey, () =>
-                    t(`services.recognize.${currentServiceInstanceKey}.title`),
-                  )}
-            </Button>
-          </DropdownTrigger>
-          <SafeDropdownMenu
-            aria-label={t('accessibility.recognize_service')}
-            className="max-h-[70vh] overflow-y-auto"
-            onAction={(key: React.Key) => {
-              setCurrentServiceInstanceKey(String(key))
-            }}
-          >
-            {serviceInstanceList.map((instanceKey: string) => {
-              return (
-                <DropdownItem
-                  key={instanceKey}
-                  startContent={
-                    <img
-                      className={`${CONTROL_ICON_CLASS} my-auto`}
-                      src={
-                        getServiceSouceType(instanceKey) === ServiceSourceType.PLUGIN
-                          ? pluginList[getServiceName(instanceKey)].icon
-                          : builtinServiceMap[getServiceName(instanceKey)].info.icon
-                      }
-                    />
-                  }
-                >
-                  {getServiceSouceType(instanceKey) === ServiceSourceType.PLUGIN
-                    ? getInstanceName(
-                        instanceKey,
-                        () => pluginList[getServiceName(instanceKey)].display,
-                      )
-                    : getInstanceName(instanceKey, () =>
-                        t(`services.recognize.${instanceKey}.title`),
-                      )}
-                </DropdownItem>
-              )
-            })}
-          </SafeDropdownMenu>
-        </Dropdown>
+        <ServiceInstanceDropdown
+          selectedKey={currentServiceInstanceKey}
+          instanceKeys={serviceInstanceList}
+          serviceInstanceConfigMap={serviceInstanceConfigMap}
+          pluginServices={pluginList}
+          builtinServices={builtinServiceMap}
+          getBuiltinLabel={(serviceName) => t(`services.recognize.${serviceName}.title`)}
+          ariaLabel={t('accessibility.recognize_service')}
+          onSelectionChange={setCurrentServiceInstanceKey}
+          buttonClassName="my-auto"
+          iconClassName={`${CONTROL_ICON_CLASS} my-auto`}
+        />
       )}
       {language && (
         <Dropdown>
@@ -163,7 +91,7 @@ export default function ControlArea(props: ControlAreaProps) {
         className="my-auto"
         startContent={<GiCycle className={CONTROL_ICON_CLASS} />}
         onPress={() => {
-          setRecognizeFlag(nanoid())
+          setRecognizeFlag(crypto.randomUUID())
         }}
       >
         {t('recognize.recognize')}
@@ -176,7 +104,7 @@ export default function ControlArea(props: ControlAreaProps) {
         startContent={<HiTranslate className={CONTROL_ICON_CLASS} />}
         onPress={async () => {
           if (text) {
-            await electronCommand('translate_text', { text })
+            await invokeCommand('translate_text', { text })
           }
         }}
       >

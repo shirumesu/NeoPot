@@ -31,6 +31,16 @@ const steps = [
   ['Build', 'build'],
   ['Electron journeys', 'test:e2e'],
 ]
+const runtimeMetricNames = [
+  'coldStartToInteractive',
+  'configNavigation',
+  'configRoundTrip',
+  'inputTranslateWindowReady',
+  'firstTranslationReady',
+]
+const artifactPaths = ['out/main', 'out/preload', 'out/renderer', 'assets/models/ocr']
+
+validateBudgetConfig()
 
 mkdirSync(resultsRoot, { recursive: true })
 const runtimeMetricsPath = path.join(resultsRoot, 'electron-metrics.json')
@@ -62,7 +72,7 @@ for (const [name, script] of steps) {
   }
 }
 
-const artifacts = Object.keys(budgets.artifactBytes).map((relativePath) => ({
+const artifacts = artifactPaths.map((relativePath) => ({
   path: relativePath,
   bytes: directorySize(path.join(repoRoot, relativePath)),
 }))
@@ -70,6 +80,10 @@ const artifacts = Object.keys(budgets.artifactBytes).map((relativePath) => ({
 const runtimeMetrics = existsSync(runtimeMetricsPath)
   ? JSON.parse(readFileSync(runtimeMetricsPath, 'utf8'))
   : {}
+
+if (exitCode === 0) {
+  assertExactKeys('runtime metrics', runtimeMetrics, runtimeMetricNames)
+}
 
 const report = {
   generatedAt: new Date().toISOString(),
@@ -153,9 +167,42 @@ function warnIfOverBudget(kind, name, actual, budget) {
   }
 
   const message = `${kind} ${name} exceeded its warning budget: ${actual} > ${budget}`
-  if (process.env.GITHUB_ACTIONS === 'true') {
-    console.warn(`::warning title=Performance budget exceeded::${message}`)
-  } else {
-    console.warn(`WARNING: ${message}`)
+  console.warn(`WARNING: ${message}`)
+}
+
+function validateBudgetConfig() {
+  assertExactKeys('performance budget groups', budgets, [
+    'commandsMs',
+    'runtimeMs',
+    'artifactBytes',
+  ])
+  assertExactKeys(
+    'command budgets',
+    budgets.commandsMs,
+    steps.map(([name]) => name),
+  )
+  assertExactKeys('runtime budgets', budgets.runtimeMs, runtimeMetricNames)
+  assertExactKeys('artifact budgets', budgets.artifactBytes, artifactPaths)
+
+  for (const [groupName, group] of Object.entries(budgets)) {
+    for (const [name, value] of Object.entries(group)) {
+      if (!Number.isFinite(value) || value <= 0) {
+        throw new Error(`Invalid ${groupName} budget for ${name}: ${String(value)}`)
+      }
+    }
+  }
+}
+
+function assertExactKeys(label, value, expectedKeys) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw new Error(`${label} must be an object.`)
+  }
+
+  const actual = Object.keys(value).sort()
+  const expected = [...expectedKeys].sort()
+  if (actual.length !== expected.length || actual.some((key, index) => key !== expected[index])) {
+    throw new Error(
+      `${label} mismatch: expected [${expected.join(', ')}], received [${actual.join(', ')}].`,
+    )
   }
 }

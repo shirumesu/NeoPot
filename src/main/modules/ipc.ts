@@ -19,7 +19,12 @@ import { getRedactedConfig, setConfig } from './config'
 import { setClipboardMonitorEnabled } from './clipboard'
 import { applyProxyToSession } from './proxy'
 import { updateTrayMenu } from './tray'
-import { getCurrentWindowDisplayInfo, markWindowReady, type WindowLabel } from './window'
+import {
+  broadcastToAllWindows,
+  getCurrentWindowDisplayInfo,
+  markWindowReady,
+  type WindowLabel,
+} from './window'
 import {
   getCurrentScreenshotAction,
   getCurrentWorkflowText,
@@ -138,18 +143,6 @@ const assertPluginInstallUrlPayload = (payload: unknown): { url: string } => {
   }
 
   return { url: payload.url }
-}
-
-const assertPluginListPayload = (payload: unknown): { type: string } => {
-  if (!isRecord(payload) || typeof payload.type !== 'string' || payload.type.length === 0) {
-    throw new NeoPotError({
-      code: 'IPC_INVALID_PAYLOAD',
-      message: 'Expected a plugin type.',
-      field: 'type',
-    })
-  }
-
-  return { type: payload.type }
 }
 
 const assertOptionalPluginListPayload = (payload: unknown): { type?: string } => {
@@ -499,15 +492,7 @@ const summarizePayloadForLog = (payload: unknown): Record<string, unknown> => {
 const execFileAsync = promisify(execFile)
 
 function broadcastAppEvent(event: string, payload?: unknown): void {
-  for (const window of BrowserWindow.getAllWindows()) {
-    if (window.isDestroyed() || window.webContents.isDestroyed()) {
-      continue
-    }
-    window.webContents.send('app:event', {
-      event,
-      payload,
-    })
-  }
+  broadcastToAllWindows('app:event', { event, payload })
 }
 
 async function listSystemFonts(): Promise<string[]> {
@@ -771,10 +756,6 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
           const { detectLanguage } = await import('./lang-detect')
           return detectLanguage(assertTextPayload(args))
         }
-        case 'http_request': {
-          const { rendererHttpRequest } = await import('./http')
-          return rendererHttpRequest(args)
-        }
         case 'font_list':
           return listSystemFonts()
         case 'update_tray':
@@ -826,8 +807,6 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
         case 'open_devtools':
           BrowserWindow.getFocusedWindow()?.webContents.openDevTools({ mode: 'detach' })
           return undefined
-        case 'reload_store':
-          return undefined
         case 'log:set-level': {
           const level =
             args && typeof args === 'object' && 'level' in args ? String(args.level) : ''
@@ -857,6 +836,10 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
       const { key } = assertKeyPayload(payload)
       return getRedactedConfig(key)
     },
+    'http:request': async (_event, payload) => {
+      const { rendererHttpRequest } = await import('./http')
+      return rendererHttpRequest(payload)
+    },
     'config:set': async (_event, payload) => {
       const { key, value } = assertKeyPayload(payload)
       await setConfig(key, value)
@@ -866,10 +849,8 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
       if (
         [
           'proxy_enable',
-          'proxy_enabled',
           'proxy_host',
           'proxy_port',
-          'proxy_protocol',
           'proxy_username',
           'proxy_password',
           'no_proxy',
@@ -949,11 +930,6 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
       const { readPluginMarketplaceFromSource } = await import('../plugins/marketplace')
       return readPluginMarketplaceFromSource(url)
     },
-    'plugins:list': async (_event, payload) => {
-      const { type } = assertPluginListPayload(payload)
-      const { listInstalledPlugins } = await import('../plugins/installer')
-      return listInstalledPlugins(type)
-    },
     'plugins:list-installed': async (_event, payload) => {
       const { type } = assertOptionalPluginListPayload(payload)
       const { listInstalledPlugins } = await import('../plugins/installer')
@@ -996,4 +972,68 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
       }
     })
   }
+
+  ipcMain.on('http:stream', (event, payload) => {
+    const port = event.ports[0]
+    if (!port) {
+      logger.error('HTTP stream request did not include a reply port.')
+      return
+    }
+
+    const controller = new AbortController()
+    let closed = false
+    const close = () => {
+      if (!closed) {
+        closed = true
+        port.close()
+      }
+    }
+    const post = (message: unknown) => {
+      if (!closed) {
+        port.postMessage(message)
+      }
+    }
+
+    port.on('message', (message) => {
+      if (isRecord(message.data) && message.data.type === 'cancel') {
+        controller.abort()
+        close()
+      }
+    })
+    port.on('close', () => {
+      controller.abort()
+    })
+    port.start()
+
+    void import('./http')
+      .then(({ streamRendererHttpRequest }) =>
+        streamRendererHttpRequest(
+          payload,
+          {
+            onResponse: (response) => {
+              post({ type: 'response', ...response })
+            },
+            onChunk: (data) => {
+              post({ type: 'chunk', data })
+            },
+          },
+          controller.signal,
+        ),
+      )
+      .then(() => {
+        post({ type: 'end' })
+      })
+      .catch((error: unknown) => {
+        if (!controller.signal.aborted) {
+          const normalizedError = normalizeError(error)
+          logger.error('HTTP stream request failed.', {
+            code: normalizedError.code,
+            message: normalizedError.message,
+            ...summarizePayloadForLog(payload),
+          })
+          post({ type: 'error', message: normalizedError.message })
+        }
+      })
+      .finally(close)
+  })
 }

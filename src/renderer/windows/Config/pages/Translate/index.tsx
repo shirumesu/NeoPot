@@ -10,11 +10,12 @@ import React, { useEffect, useState } from 'react'
 
 import { languageList } from '@/renderer/lib/language/language'
 import { useConfig } from '../../../../hooks/useConfig'
-import { invoke } from '@/renderer/lib/electron/compat/core'
+import { invokeCommand } from '@/renderer/lib/electron/command'
 import { useConfigSave } from '../../hooks/useConfigSave'
 import { loadInstalledPlugins, type InstalledPlugin } from '../Plugin/installedPlugins'
-import { listen } from '@/renderer/lib/electron/compat/event'
+import { onAppEvent } from '@/renderer/lib/electron/events'
 import SafeDropdownMenu from '@/renderer/components/SafeDropdownMenu'
+import ConfigItem from '../../components/ConfigItem'
 
 export default function Translate() {
   const [sourceLanguage, setSourceLanguage] = useConfig('translate_source_language', 'auto')
@@ -27,7 +28,6 @@ export default function Translate() {
   const [clipboardMonitor, setClipboardMonitor] = useConfig('clipboard_monitor', false)
   const [deleteNewline, setDeleteNewline] = useConfig('translate_delete_newline', false)
   const [rememberLanguage, setRememberLanguage] = useConfig('translate_remember_language', false)
-  // const [translateFontSize, setTranslateFontSize] = useConfig('translate_font_size', 16);
   const [windowPosition, setWindowPosition] = useConfig('translate_window_position', 'mouse')
   const [adaptiveWindowSize, setAdaptiveWindowSize] = useConfig(
     'translate_adaptive_window_size',
@@ -56,13 +56,11 @@ export default function Translate() {
     }
 
     void loadLangDetectPlugins()
-    const unlistenPromise = listen('reload_plugin_list', loadLangDetectPlugins)
+    const unlisten = onAppEvent('reload_plugin_list', loadLangDetectPlugins)
 
     return () => {
       disposed = true
-      unlistenPromise.then((unlisten) => {
-        unlisten()
-      })
+      unlisten()
     }
   }, [])
 
@@ -82,8 +80,7 @@ export default function Translate() {
     <>
       <Card className="mb-2.5">
         <CardBody>
-          <div className="config-item">
-            <h3>{t('config.translate.source_language')}</h3>
+          <ConfigItem title={t('config.translate.source_language')}>
             {sourceLanguage !== null && (
               <Dropdown>
                 <DropdownTrigger>
@@ -108,9 +105,8 @@ export default function Translate() {
                 </SafeDropdownMenu>
               </Dropdown>
             )}
-          </div>
-          <div className="config-item">
-            <h3>{t('config.translate.target_language')}</h3>
+          </ConfigItem>
+          <ConfigItem title={t('config.translate.target_language')}>
             {targetLanguage !== null && (
               <Dropdown>
                 <DropdownTrigger>
@@ -134,9 +130,8 @@ export default function Translate() {
                 </SafeDropdownMenu>
               </Dropdown>
             )}
-          </div>
-          <div className="config-item">
-            <h3>{t('config.translate.second_language')}</h3>
+          </ConfigItem>
+          <ConfigItem title={t('config.translate.second_language')}>
             {secondLanguage !== null && (
               <Dropdown>
                 <DropdownTrigger>
@@ -160,9 +155,8 @@ export default function Translate() {
                 </SafeDropdownMenu>
               </Dropdown>
             )}
-          </div>
-          <div className="config-item">
-            <h3>{t('config.translate.detect_engine')}</h3>
+          </ConfigItem>
+          <ConfigItem title={t('config.translate.detect_engine')}>
             {detectEngine !== null && (
               <Dropdown>
                 <DropdownTrigger>
@@ -189,13 +183,12 @@ export default function Translate() {
                 </SafeDropdownMenu>
               </Dropdown>
             )}
-          </div>
+          </ConfigItem>
         </CardBody>
       </Card>
       <Card className="mb-2.5">
         <CardBody>
-          <div className="config-item">
-            <h3>{t('config.translate.auto_copy')}</h3>
+          <ConfigItem title={t('config.translate.auto_copy')}>
             {autoCopy !== null && (
               <Dropdown>
                 <DropdownTrigger>
@@ -209,7 +202,7 @@ export default function Translate() {
                     saveConfig('translate_auto_copy', autoCopy, setAutoCopy, copyMode).then(
                       (saved) => {
                         if (saved) {
-                          invoke('update_tray', { language: '', copyMode })
+                          invokeCommand('update_tray', { language: '', copyMode })
                         }
                       },
                     )
@@ -224,9 +217,8 @@ export default function Translate() {
                 </SafeDropdownMenu>
               </Dropdown>
             )}
-          </div>
-          <div className="config-item">
-            <h3>{t('config.translate.incremental_translate')}</h3>
+          </ConfigItem>
+          <ConfigItem title={t('config.translate.incremental_translate')}>
             {incrementalTranslate !== null && (
               <Switch
                 isSelected={incrementalTranslate}
@@ -240,9 +232,8 @@ export default function Translate() {
                 }}
               />
             )}
-          </div>
-          <div className="config-item">
-            <h3>{t('config.translate.dynamic_translate')}</h3>
+          </ConfigItem>
+          <ConfigItem title={t('config.translate.dynamic_translate')}>
             {dynamicTranslate !== null && (
               <Switch
                 isSelected={dynamicTranslate}
@@ -251,9 +242,8 @@ export default function Translate() {
                 }}
               />
             )}
-          </div>
-          <div className="config-item">
-            <h3>{t('config.general.clipboard_monitor')}</h3>
+          </ConfigItem>
+          <ConfigItem title={t('config.general.clipboard_monitor')}>
             {clipboardMonitor !== null && (
               <Switch
                 isSelected={clipboardMonitor}
@@ -265,14 +255,13 @@ export default function Translate() {
                     v,
                   )
                   if (saved) {
-                    await invoke('set_clipboard_monitor', { enabled: v })
+                    await invokeCommand('set_clipboard_monitor', { enabled: v })
                   }
                 }}
               />
             )}
-          </div>
-          <div className="config-item">
-            <h3>{t('config.translate.delete_newline')}</h3>
+          </ConfigItem>
+          <ConfigItem title={t('config.translate.delete_newline')}>
             {deleteNewline !== null && (
               <Switch
                 isSelected={deleteNewline}
@@ -281,9 +270,8 @@ export default function Translate() {
                 }}
               />
             )}
-          </div>
-          <div className="config-item">
-            <h3>{t('config.translate.remember_language')}</h3>
+          </ConfigItem>
+          <ConfigItem title={t('config.translate.remember_language')}>
             {rememberLanguage !== null && (
               <Switch
                 isSelected={rememberLanguage}
@@ -297,40 +285,12 @@ export default function Translate() {
                 }}
               />
             )}
-          </div>
+          </ConfigItem>
         </CardBody>
       </Card>
       <Card>
         <CardBody>
-          {/* <div className='config-item'>
-                        <h3 className='my-auto mx-0'>{t('config.translate.font_size.title')}</h3>
-                        {translateFontSize !== null && (
-                            <Dropdown>
-                                <DropdownTrigger>
-                                    <Button variant='bordered'>
-                                        {t(`config.translate.font_size.${translateFontSize}`)}
-                                    </Button>
-                                </DropdownTrigger>
-                                <DropdownMenu
-                                    aria-label='window position'
-                                    className='max-h-[50vh] overflow-y-auto'
-                                    onAction={(key) => {
-                                        setTranslateFontSize(key);
-                                    }}
-                                >
-                                    <DropdownItem key={10}>{t(`config.translate.font_size.10`)}</DropdownItem>
-                                    <DropdownItem key={12}>{t(`config.translate.font_size.12`)}</DropdownItem>
-                                    <DropdownItem key={14}>{t(`config.translate.font_size.14`)}</DropdownItem>
-                                    <DropdownItem key={16}>{t(`config.translate.font_size.16`)}</DropdownItem>
-                                    <DropdownItem key={18}>{t(`config.translate.font_size.18`)}</DropdownItem>
-                                    <DropdownItem key={20}>{t(`config.translate.font_size.20`)}</DropdownItem>
-                                    <DropdownItem key={24}>{t(`config.translate.font_size.24`)}</DropdownItem>
-                                </DropdownMenu>
-                            </Dropdown>
-                        )}
-                    </div> */}
-          <div className="config-item">
-            <h3>{t('config.translate.window_position')}</h3>
+          <ConfigItem title={t('config.translate.window_position')}>
             {windowPosition !== null && (
               <Dropdown>
                 <DropdownTrigger>
@@ -353,9 +313,8 @@ export default function Translate() {
                 </SafeDropdownMenu>
               </Dropdown>
             )}
-          </div>
-          <div className="config-item">
-            <h3>{t('config.translate.adaptive_window_size')}</h3>
+          </ConfigItem>
+          <ConfigItem title={t('config.translate.adaptive_window_size')}>
             {adaptiveWindowSize !== null && (
               <Switch
                 isSelected={adaptiveWindowSize}
@@ -381,9 +340,8 @@ export default function Translate() {
                 }}
               />
             )}
-          </div>
-          <div className="config-item">
-            <h3>{t('config.translate.remember_window_size')}</h3>
+          </ConfigItem>
+          <ConfigItem title={t('config.translate.remember_window_size')}>
             {rememberWindowSize !== null && (
               <Switch
                 isSelected={rememberWindowSize}
@@ -409,9 +367,8 @@ export default function Translate() {
                 }}
               />
             )}
-          </div>
-          <div className="config-item">
-            <h3>{t('config.translate.close_on_blur')}</h3>
+          </ConfigItem>
+          <ConfigItem title={t('config.translate.close_on_blur')}>
             {closeOnBlur !== null && (
               <Switch
                 isSelected={closeOnBlur}
@@ -420,9 +377,8 @@ export default function Translate() {
                 }}
               />
             )}
-          </div>
-          <div className="config-item">
-            <h3>{t('config.translate.always_on_top')}</h3>
+          </ConfigItem>
+          <ConfigItem title={t('config.translate.always_on_top')}>
             {alwaysOnTop !== null && (
               <Switch
                 isSelected={alwaysOnTop}
@@ -431,9 +387,8 @@ export default function Translate() {
                 }}
               />
             )}
-          </div>
-          <div className="config-item">
-            <h3>{t('config.translate.hide_source')}</h3>
+          </ConfigItem>
+          <ConfigItem title={t('config.translate.hide_source')}>
             {hideSource !== null && (
               <Switch
                 isSelected={hideSource}
@@ -442,9 +397,8 @@ export default function Translate() {
                 }}
               />
             )}
-          </div>
-          <div className="config-item">
-            <h3>{t('config.translate.hide_language')}</h3>
+          </ConfigItem>
+          <ConfigItem title={t('config.translate.hide_language')}>
             {hideLanguage !== null && (
               <Switch
                 isSelected={hideLanguage}
@@ -453,9 +407,8 @@ export default function Translate() {
                 }}
               />
             )}
-          </div>
-          <div className="config-item">
-            <h3>{t('config.translate.hide_window')}</h3>
+          </ConfigItem>
+          <ConfigItem title={t('config.translate.hide_window')}>
             {hideWindow !== null && (
               <Switch
                 isSelected={hideWindow}
@@ -464,7 +417,7 @@ export default function Translate() {
                 }}
               />
             )}
-          </div>
+          </ConfigItem>
         </CardBody>
       </Card>
     </>

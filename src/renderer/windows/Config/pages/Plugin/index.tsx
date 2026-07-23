@@ -1,6 +1,6 @@
 import { Button, Card, CardBody, Divider, Switch, Tooltip } from '@heroui/react'
-import { open } from '@/renderer/lib/electron/compat/dialog'
-import { emit } from '@/renderer/lib/electron/compat/event'
+import { openDialog } from '@/renderer/lib/electron/dialog'
+import { emitAppEvent } from '@/renderer/lib/electron/events'
 import { useCallback, useEffect, useState } from 'react'
 import {
   MdClose,
@@ -17,7 +17,6 @@ import PluginCard from './PluginCard'
 import PluginHotkeyModal from './PluginHotkeyModal'
 import PluginSettingsModal from './PluginSettingsModal'
 import MarketplaceModal from './MarketplaceModal'
-import { configApi, pluginApi } from '@/renderer/lib/electron/adapter'
 import { useConfig } from '../../../../hooks'
 import {
   checkPluginUpdates,
@@ -58,17 +57,15 @@ export default function Plugin() {
       })
       const allUpdates = await checkPluginUpdates(installedPlugins)
 
-      const ignoredUpdates = ((await configApi.get('plugin_ignored_updates')) || {}) as Record<
-        string,
-        string
-      >
+      const ignoredUpdates = ((await window.neoPot.config.get('plugin_ignored_updates')) ||
+        {}) as Record<string, string>
       const nextUpdates = allUpdates.filter((update) => {
         const ignoredVersion = ignoredUpdates[update.id]
         return !ignoredVersion || ignoredVersion !== update.version
       })
 
       setUpdates(nextUpdates)
-      await configApi.set('plugin_last_check_update_at', Date.now())
+      await window.neoPot.config.set('plugin_last_check_update_at', Date.now())
       if (!options.silent) {
         toast.success(
           nextUpdates.length > 0
@@ -89,7 +86,7 @@ export default function Plugin() {
       return
     }
 
-    configApi.get('plugin_last_check_update_at').then((value) => {
+    window.neoPot.config.get('plugin_last_check_update_at').then((value) => {
       const lastCheckedAt = typeof value === 'number' ? value : 0
       if (Date.now() - lastCheckedAt < AUTO_UPDATE_INTERVAL_MS) {
         return
@@ -110,9 +107,9 @@ export default function Plugin() {
         count: sources.length,
       })
       for (const source of sources) {
-        await pluginApi.install(source)
+        await window.neoPot.plugins.install(source)
       }
-      await emit('reload_plugin_list')
+      await emitAppEvent('reload_plugin_list')
       await refreshPlugins()
       toast.success(t('config.plugin.install_success'))
     } catch (error) {
@@ -124,7 +121,7 @@ export default function Plugin() {
   }
 
   async function installFromFile() {
-    const selected = await open({
+    const selected = await openDialog({
       multiple: false,
       properties: ['openFile'],
       filters: [
@@ -143,7 +140,7 @@ export default function Plugin() {
   }
 
   async function installFromFolder() {
-    const selected = await open({
+    const selected = await openDialog({
       multiple: false,
       properties: ['openDirectory'],
     })
@@ -158,7 +155,7 @@ export default function Plugin() {
   }
 
   async function togglePlugin(plugin: InstalledPlugin, enabled: boolean) {
-    await pluginApi.setEnabled(plugin.type, plugin.name, enabled)
+    await window.neoPot.plugins.setEnabled(plugin.type, plugin.name, enabled)
     logger.info('Plugin enabled state changed from settings page.', {
       type: plugin.type,
       name: plugin.name,
@@ -167,26 +164,24 @@ export default function Plugin() {
     setPlugins((current) =>
       current.map((item) => (item.id === plugin.id ? { ...item, enabled } : item)),
     )
-    await emit('reload_plugin_list')
+    await emitAppEvent('reload_plugin_list')
   }
 
   async function deletePlugin(plugin: InstalledPlugin) {
-    await pluginApi.uninstall(plugin.type, plugin.name)
+    await window.neoPot.plugins.uninstall(plugin.type, plugin.name)
     logger.info('Plugin deleted from settings page.', {
       type: plugin.type,
       name: plugin.name,
     })
     setPlugins((current) => current.filter((item) => item.id !== plugin.id))
-    await emit('reload_plugin_list')
+    await emitAppEvent('reload_plugin_list')
   }
 
   async function ignoreUpdate(plugin: PluginUpdate) {
-    const ignoredUpdates = ((await configApi.get('plugin_ignored_updates')) || {}) as Record<
-      string,
-      string
-    >
+    const ignoredUpdates = ((await window.neoPot.config.get('plugin_ignored_updates')) ||
+      {}) as Record<string, string>
     ignoredUpdates[plugin.id] = plugin.version
-    await configApi.set('plugin_ignored_updates', ignoredUpdates)
+    await window.neoPot.config.set('plugin_ignored_updates', ignoredUpdates)
     setUpdates((current) => (current ?? []).filter((item) => item.id !== plugin.id))
     toast.success(t('config.plugin.update.ignored'))
   }
@@ -195,7 +190,7 @@ export default function Plugin() {
     setInstalling(true)
     try {
       const source = await installMarketplacePluginSource(plugin)
-      await emit('reload_plugin_list')
+      await emitAppEvent('reload_plugin_list')
       const installed = await refreshPlugins()
       await checkUpdates({ silent: true }, installed)
       toast.success(t('config.plugin.update.install_success'))
@@ -224,7 +219,7 @@ export default function Plugin() {
       for (const plugin of pendingUpdates) {
         await installMarketplacePluginSource(plugin)
       }
-      await emit('reload_plugin_list')
+      await emitAppEvent('reload_plugin_list')
       const installed = await refreshPlugins()
       await checkUpdates({ silent: true }, installed)
       toast.success(t('config.plugin.update.install_success'))
@@ -239,7 +234,7 @@ export default function Plugin() {
   }
 
   async function openPluginFolder() {
-    const errorMessage = await pluginApi.openFolder()
+    const errorMessage = await window.neoPot.plugins.openFolder()
     if (errorMessage) {
       toast.error(errorMessage)
     }

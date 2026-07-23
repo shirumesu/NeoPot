@@ -30,7 +30,3 @@ export function getCardActions(
     enable: true,
   }
 }
-
-export function hotkeysForPlugin<T extends { pluginId: string }>(rows: T[] = [], pluginId: string) {
-  return rows.filter((row) => row.pluginId === pluginId)
-}

@@ -1,13 +1,14 @@
 import { Button, Chip, Code, Divider, Progress, Skeleton } from '@heroui/react'
-import { useMemo } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { useTranslation } from 'react-i18next'
 import remarkGfm from 'remark-gfm'
 
 import { appVersion } from '@/renderer/lib/config/env'
-import { normalizeReleaseNotes } from './releaseNotes'
+import { SafeRichText } from '@/renderer/components/SafeRichText'
+import { looksLikeHtmlReleaseNotes } from './releaseNotes'
 import type { UpdaterController, UpdaterPhase } from './useUpdaterController'
 import { formatBytes, formatBytesPerSecond, getProgressPercent } from './formatProgress'
+import { getUpdatePrimaryLabel } from './updateActions'
 
 interface UpdaterPanelProps {
   controller: UpdaterController
@@ -58,7 +59,13 @@ function statusColor(resultStatus: string | undefined, phase: UpdaterPhase) {
 }
 
 function MarkdownPreview({ value }: { value: string }) {
-  const renderedReleaseNotes = useMemo(() => normalizeReleaseNotes(value), [value])
+  if (looksLikeHtmlReleaseNotes(value)) {
+    return (
+      <div className="markdown-body select-text text-sm leading-6 text-foreground/85">
+        <SafeRichText value={value} />
+      </div>
+    )
+  }
 
   return (
     <div className="markdown-body select-text text-sm leading-6 text-foreground/85">
@@ -94,7 +101,7 @@ function MarkdownPreview({ value }: { value: string }) {
           ),
         }}
       >
-        {renderedReleaseNotes}
+        {value}
       </ReactMarkdown>
     </div>
   )
@@ -290,24 +297,6 @@ function getReleaseNotes(controller: UpdaterController, t: ReturnType<typeof use
   return ''
 }
 
-function primaryLabel(
-  action: UpdaterController['primaryAction'],
-  t: ReturnType<typeof useTranslation>['t'],
-) {
-  switch (action) {
-    case 'check':
-      return t('updater.check')
-    case 'open-release-page':
-      return t('updater.go_to_download')
-    case 'install':
-      return t('updater.restart')
-    case 'download':
-      return t('updater.update')
-    case 'none':
-      return t('updater.update')
-  }
-}
-
 export function UpdaterPanel({ controller, onCancel }: UpdaterPanelProps) {
   const { t } = useTranslation()
   const releaseNotes = getReleaseNotes(controller, t)
@@ -339,7 +328,7 @@ export function UpdaterPanel({ controller, onCancel }: UpdaterPanelProps) {
           isDisabled={controller.primaryDisabled}
           onPress={() => void controller.runPrimaryAction()}
         >
-          {primaryLabel(controller.primaryAction, t)}
+          {getUpdatePrimaryLabel(controller.primaryAction, t)}
         </Button>
         <Button variant="flat" onPress={onCancel}>
           {t('updater.cancel')}

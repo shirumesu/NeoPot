@@ -9,32 +9,17 @@ import {
   LINUX_WINDOW_FRAME_CLASS,
   WINDOW_TOPBAR_HEIGHT_CLASS,
 } from '@/renderer/components/windowChrome'
-import { getCurrentWebviewWindow } from '@/renderer/lib/electron/compat/webviewWindow'
+import { getCurrentWindow } from '@/renderer/lib/electron/window'
 import { appVersion, osType } from '@/renderer/lib/config/env'
-import { useToastStyle } from '../../hooks'
 import { formatBytes, formatBytesPerSecond, getProgressPercent } from './formatProgress'
+import { getUpdatePrimaryLabel } from './updateActions'
 import { UpdaterPanel } from './UpdaterPanel'
 import { useUpdaterController, type UpdaterController } from './useUpdaterController'
 
-const appWindow = getCurrentWebviewWindow()
+const appWindow = getCurrentWindow()
 
 function isNotificationPresentation() {
   return new URLSearchParams(window.location.search).get('presentation') === 'notification'
-}
-
-function primaryLabel(controller: UpdaterController, t: ReturnType<typeof useTranslation>['t']) {
-  switch (controller.primaryAction) {
-    case 'check':
-      return t('updater.check')
-    case 'open-release-page':
-      return t('updater.go_to_download')
-    case 'install':
-      return t('updater.restart')
-    case 'download':
-      return t('updater.update')
-    case 'none':
-      return t('updater.update')
-  }
 }
 
 function notificationStatus(
@@ -139,7 +124,7 @@ function UpdaterNotification({ controller }: { controller: UpdaterController }) 
           isDisabled={controller.primaryDisabled}
           onPress={() => void controller.runPrimaryAction()}
         >
-          {primaryLabel(controller, t)}
+          {getUpdatePrimaryLabel(controller.primaryAction, t)}
         </Button>
         <Button size="sm" variant="flat" onPress={() => void appWindow.close()}>
           {t('updater.cancel')}
@@ -172,23 +157,17 @@ function UpdaterHeader() {
 
 export default function Updater() {
   const isNotification = useMemo(() => isNotificationPresentation(), [])
-  const toastStyle = useToastStyle()
-  const showError = useCallback(
-    (message: string) => {
-      toast.error(message, { style: toastStyle })
-    },
-    [toastStyle],
-  )
+  const showError = useCallback((message: string) => {
+    toast.error(message)
+  }, [])
   const controller = useUpdaterController({
     autoCheck: !isNotification,
     onError: showError,
   })
 
   useEffect(() => {
-    if (appWindow.label === 'updater') {
-      appWindow.show()
-      void window.neoPot?.app.rendererReady()
-    }
+    void appWindow.show()
+    void window.neoPot.app.rendererReady()
   }, [])
 
   if (isNotification) {

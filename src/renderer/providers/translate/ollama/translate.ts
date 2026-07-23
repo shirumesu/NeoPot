@@ -1,12 +1,18 @@
 import { normalizeOllamaBaseUrl } from '@/shared/providerUrl'
+import {
+  asRecord,
+  errorMessage,
+  responseMessage,
+  type ProviderResponse,
+} from '@/renderer/providers/shared'
 
 import { Language } from './info'
-
-const OLLAMA_HEADERS = { Origin: 'http://localhost' }
-const THINKING_MODE_ON = 'on'
-const THINKING_MODE_OFF = 'off'
-const DEFAULT_MODEL = 'gemma4:e2b'
-const LEGACY_DEFAULT_MODEL = 'gemma:2b'
+import {
+  DEFAULT_MODEL,
+  LEGACY_DEFAULT_MODEL,
+  THINKING_MODE_OFF,
+  THINKING_MODE_ON,
+} from './constants'
 const INVALID_RESPONSE_MESSAGE = 'Ollama returned an empty or malformed translation response.'
 const STREAM_UPDATE_INTERVAL_MS = 40
 
@@ -47,15 +53,14 @@ export interface OllamaStreamReader {
   read: () => Promise<ReadableStreamReadResult<Uint8Array>>
 }
 
-export interface OllamaResponse {
-  ok: boolean
-  status: number
-  data?: unknown
+type OllamaResponseExtras = {
   body?: {
     getReader?: () => OllamaStreamReader
   }
   text: () => Promise<string>
 }
+
+export type OllamaResponse = ProviderResponse<OllamaResponseExtras>
 
 export type OllamaRequest = (url: string, init: OllamaRequestInit) => Promise<OllamaResponse>
 
@@ -102,7 +107,7 @@ export async function translateOllama(
   const host = normalizeOllamaBaseUrl(config.requestPath)
   const response = await performRequest(dependencies.request, `${host}/api/chat`, {
     method: 'POST',
-    headers: OLLAMA_HEADERS,
+    headers: {},
     body: { kind: 'json', data: requestBody },
     skipData: config.stream === true,
   })
@@ -216,7 +221,9 @@ async function performRequest(
 
   if (!response.ok) {
     throw new Error(
-      `Ollama chat failed with HTTP ${response.status}: ${responseMessage(response.data)}`,
+      `Ollama chat failed with HTTP ${response.status}: ${responseMessage(response.data, {
+        directError: 'any',
+      })}`,
     )
   }
   return response
@@ -363,25 +370,4 @@ function resolveThinkValue(thinkingMode?: string): boolean | undefined {
   if (thinkingMode === THINKING_MODE_ON) return true
   if (thinkingMode === THINKING_MODE_OFF) return false
   return undefined
-}
-
-function asRecord(value: unknown): Record<string, unknown> | null {
-  return typeof value === 'object' && value !== null && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : null
-}
-
-function responseMessage(data: unknown): string {
-  const record = asRecord(data)
-  const nestedError = asRecord(record?.error)
-  const message = nestedError?.message ?? record?.error ?? record?.message
-  if (typeof message === 'string' && message.trim()) return message.trim()
-  if (typeof data === 'string' && data.trim()) return data.trim()
-  return 'Unexpected response.'
-}
-
-function errorMessage(error: unknown): string {
-  if (error instanceof Error && error.message.trim()) return error.message.trim()
-  if (typeof error === 'string' && error.trim()) return error.trim()
-  return 'Unknown request error.'
 }

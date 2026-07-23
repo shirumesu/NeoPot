@@ -89,13 +89,8 @@ function getShortcutHandler(name: string): (() => void | Promise<void>) | null {
   return null
 }
 
-export function registerGlobalShortcuts(scope: 'all' | string = 'all'): void {
-  const entries =
-    scope === 'all'
-      ? Object.entries(defaultShortcuts)
-      : Object.entries(defaultShortcuts).filter(([name]) => name === scope)
-
-  for (const [name, shortcut] of entries) {
+export function registerGlobalShortcuts(): void {
+  for (const [name, shortcut] of Object.entries(defaultShortcuts)) {
     const accelerator = getShortcutAccelerator(name)
     if (!accelerator) {
       continue
@@ -122,9 +117,7 @@ export function registerGlobalShortcuts(scope: 'all' | string = 'all'): void {
     }
   }
 
-  if (scope === 'all') {
-    void registerInstalledPluginShortcuts()
-  }
+  void registerInstalledPluginShortcuts()
 }
 
 export function unregisterGlobalShortcuts(): void {

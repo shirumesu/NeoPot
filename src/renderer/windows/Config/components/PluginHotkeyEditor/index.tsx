@@ -3,21 +3,12 @@ import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { useEffect, useMemo, useState } from 'react'
 
-import { configApi } from '@/renderer/lib/electron/adapter'
-import { isRegistered, unregister } from '@/renderer/lib/electron/compat/globalShortcut'
-import { invoke } from '@/renderer/lib/electron/compat/core'
+import { isHotkeyRegistered, unregisterHotkey } from '@/renderer/lib/electron/hotkey'
+import { invokeCommand } from '@/renderer/lib/electron/command'
 import { osType } from '@/renderer/lib/config/env'
 import { shortcutFromKeyboardEvent } from '@/shared/hotkeyAccelerator'
-
-type PluginHotkeyRow = {
-  pluginId: string
-  pluginType: string
-  pluginName: string
-  pluginDisplay: string
-  key: string
-  display: string
-  hotkey: string
-}
+import ConfigItem from '../ConfigItem'
+import type { PluginHotkeyRow } from '@/renderer/lib/plugin/pluginHotkeyManifest'
 
 function pluginHotkeyConfigKey(row: PluginHotkeyRow): string {
   return `plugin_hotkey:${row.pluginType}:${row.pluginName}:${row.key}`
@@ -34,7 +25,7 @@ export default function PluginHotkeyEditor(props: { rows: PluginHotkeyRow[] }) {
     Promise.all(
       rows.map(async (row) => {
         const configKey = pluginHotkeyConfigKey(row)
-        const stored = await configApi.get(configKey)
+        const stored = await window.neoPot.config.get(configKey)
         return [configKey, typeof stored === 'string' ? stored : row.hotkey || ''] as const
       }),
     ).then((entries) => {
@@ -51,26 +42,26 @@ export default function PluginHotkeyEditor(props: { rows: PluginHotkeyRow[] }) {
   async function saveHotkey(row: PluginHotkeyRow) {
     const configKey = pluginHotkeyConfigKey(row)
     const nextValue = values[configKey] ?? ''
-    const previousValue = await configApi.get(configKey)
+    const previousValue = await window.neoPot.config.get(configKey)
     const previousShortcut = typeof previousValue === 'string' ? previousValue : ''
 
     try {
-      if (nextValue && nextValue !== previousShortcut && (await isRegistered(nextValue))) {
+      if (nextValue && nextValue !== previousShortcut && (await isHotkeyRegistered(nextValue))) {
         toast.error(t('config.hotkey.is_register'))
         return
       }
 
       if (previousShortcut && previousShortcut !== nextValue) {
-        await unregister(previousShortcut)
+        await unregisterHotkey(previousShortcut)
       }
 
       if (!nextValue) {
-        await configApi.set(configKey, '')
+        await window.neoPot.config.set(configKey, '')
         toast.success(t('config.hotkey.success'))
         return
       }
 
-      const registered = await invoke<boolean>('register_shortcut_by_frontend', {
+      const registered = await invokeCommand('register_shortcut_by_frontend', {
         name: configKey,
         shortcut: nextValue,
       })
@@ -92,11 +83,15 @@ export default function PluginHotkeyEditor(props: { rows: PluginHotkeyRow[] }) {
         const configKey = pluginHotkeyConfigKey(row)
 
         return (
-          <div key={configKey} className="config-item">
-            <div className="min-w-0">
-              <h3 className="my-auto truncate">{row.display}</h3>
-              <p className="text-xs text-default-500 truncate">{row.pluginDisplay}</p>
-            </div>
+          <ConfigItem
+            key={configKey}
+            title={
+              <span className="min-w-0">
+                <span className="my-auto block truncate">{row.display}</span>
+                <span className="block text-xs text-default-500 truncate">{row.pluginDisplay}</span>
+              </span>
+            }
+          >
             <Input
               type="hotkey"
               variant="bordered"
@@ -122,7 +117,7 @@ export default function PluginHotkeyEditor(props: { rows: PluginHotkeyRow[] }) {
                 </Button>
               }
             />
-          </div>
+          </ConfigItem>
         )
       })}
     </div>

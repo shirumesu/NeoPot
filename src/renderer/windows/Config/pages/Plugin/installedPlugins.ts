@@ -1,4 +1,3 @@
-import { pluginApi } from '@/renderer/lib/electron/adapter'
 import type { PluginInfo } from '@/shared/types/electron-api'
 
 const servicePluginTypes = ['translate', 'recognize', 'tts']
@@ -114,11 +113,7 @@ export type InstalledPlugin = Awaited<ReturnType<typeof normalizePlugin>>
 export type EnabledServicePluginList = Record<string, Record<string, InstalledPlugin>>
 
 export async function loadInstalledPlugins(type?: string) {
-  if (!pluginApi?.listInstalled) {
-    return []
-  }
-
-  const plugins = await pluginApi.listInstalled(type)
+  const plugins = await window.neoPot.plugins.listInstalled(type)
   return Promise.all(plugins.map(normalizePlugin))
 }
 

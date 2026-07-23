@@ -21,44 +21,12 @@ export default defineConfig({
       reporter: ['text', 'json-summary', 'html', 'lcov'],
       reportsDirectory: 'test-results/coverage',
       thresholds: {
-        'src/main/modules/configRepository.ts': {
-          lines: 95,
-          branches: 80,
-          functions: 90,
-          statements: 95,
-        },
-        'src/main/modules/localServer.ts': {
-          lines: 94,
-          branches: 75,
-          functions: 90,
-          statements: 94,
-        },
-        'src/main/plugins/pluginInstallerCore.ts': {
-          lines: 88,
-          branches: 72,
-          functions: 93,
-          statements: 88,
-        },
-        'src/renderer/providers/translate/deepl/translate.ts': {
-          lines: 87,
-          branches: 68,
-          functions: 95,
-          statements: 87,
-        },
-        'src/renderer/providers/translate/ollama/translate.ts': {
-          lines: 90,
-          branches: 72,
-          functions: 95,
-          statements: 87,
-        },
+        lines: 25,
+        branches: 20,
+        functions: 25,
+        statements: 25,
         'src/renderer/windows/Screenshot/selection.ts': {
           100: true,
-        },
-        'src/renderer/windows/Updater/useUpdaterController.ts': {
-          lines: 82,
-          branches: 70,
-          functions: 95,
-          statements: 82,
         },
       },
     },

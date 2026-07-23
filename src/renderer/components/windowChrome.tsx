@@ -23,7 +23,7 @@ interface DragRegionProps {
 
 export function DragRegion({ className = '', children }: DragRegionProps) {
   return (
-    <div data-tauri-drag-region="true" className={className}>
+    <div data-window-drag-region="true" className={className}>
       {children}
     </div>
   )

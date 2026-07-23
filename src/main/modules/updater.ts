@@ -1,4 +1,4 @@
-import { BrowserWindow, app, net } from 'electron'
+import { app, net } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import { existsSync } from 'node:fs'
 import path from 'node:path'
@@ -10,14 +10,13 @@ import type {
   UpdateProgress,
 } from '../../shared/types/electron-api'
 import { logger } from '../logger'
-import { getConfig } from './config'
 import {
   compareVersions,
   isPrereleaseVersion,
   isSemanticVersion,
   stripVersionPrefix,
 } from './updateVersion'
-import { openUpdaterNotification, sendToWindow } from './window'
+import { broadcastToAllWindows, openUpdaterNotification, sendToWindow } from './window'
 import { safeOpenExternal } from './shellSafety'
 
 interface GithubRelease {
@@ -62,11 +61,7 @@ function createResult(
 }
 
 function publishEvent(event: UpdateEvent): void {
-  for (const window of BrowserWindow.getAllWindows()) {
-    if (!window.isDestroyed() && !window.webContents.isDestroyed()) {
-      window.webContents.send('update:event', event)
-    }
-  }
+  broadcastToAllWindows('update:event', event)
 }
 
 function publishResultEvent(result: UpdateCheckResult): void {
@@ -166,18 +161,6 @@ async function checkGithubRelease(
   return createResult('not-available', distribution, mode, resultBase)
 }
 
-function applyConfiguredFeed(): void {
-  const feedUrl = getConfig('updater_feed_url')
-  if (typeof feedUrl !== 'string' || feedUrl.trim() === '') {
-    return
-  }
-
-  autoUpdater.setFeedURL({
-    provider: 'generic',
-    url: feedUrl.trim(),
-  })
-}
-
 function attachAutoUpdaterListeners(): void {
   if (autoUpdaterListenersAttached) {
     return
@@ -246,7 +229,6 @@ async function checkSelfUpdate(
   mode: UpdateMode,
 ): Promise<UpdateCheckResult> {
   attachAutoUpdaterListeners()
-  applyConfiguredFeed()
   const updateCheck = await autoUpdater.checkForUpdates()
   const updateInfo = updateCheck?.updateInfo
 
@@ -329,10 +311,6 @@ export async function openReleasePage(): Promise<void> {
 }
 
 async function showStartupNotification(result: UpdateCheckResult): Promise<void> {
-  if (result.status !== 'available') {
-    return
-  }
-
   await openUpdaterNotification()
   sendToWindow('updater', 'startup_update_available', result)
   publishEvent({ type: 'available', result })

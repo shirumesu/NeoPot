@@ -157,6 +157,7 @@ const loggerMock = vi.hoisted(() => ({
 
 const sizingMock = vi.hoisted(() => ({
   calculateAdaptiveTranslateWindowSize: vi.fn(() => ({ width: 640, height: 480 })),
+  MIN_TRANSLATE_WINDOW_SIZE: { width: 350, height: 420 },
 }))
 
 const screenshotMock = vi.hoisted(() => ({
@@ -370,5 +371,26 @@ describe('Main window lifecycle behavior', () => {
     })
     expect(window.setSize).toHaveBeenCalledWith(640, 480)
     expect(window.setPosition).toHaveBeenCalled()
+  })
+
+  it('loads and persists remembered translate size as one atomic config value', async () => {
+    vi.useFakeTimers()
+    configMock.values.set('translate_remember_window_size', true)
+    configMock.values.set('translate_window_size', { width: 680, height: 540 })
+    const windows = await loadWindowModule()
+    await windows.openWindow('translate')
+    const window = lastWindow()
+
+    expect(window.size).toEqual([680, 540])
+
+    window.size = [720, 560]
+    window.trigger('resize')
+    await vi.advanceTimersByTimeAsync(100)
+
+    expect(configMock.setConfig).toHaveBeenCalledOnce()
+    expect(configMock.setConfig).toHaveBeenCalledWith('translate_window_size', {
+      width: 720,
+      height: 560,
+    })
   })
 })

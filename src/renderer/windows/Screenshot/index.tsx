@@ -1,18 +1,16 @@
 import { useEffect, useState, useRef } from 'react'
-import { appCacheDir, join } from '@/renderer/lib/electron/compat/path'
-import { currentMonitor } from '@/renderer/lib/electron/compat/window'
-import { convertFileSrc } from '@/renderer/lib/electron/compat/core'
-import { getCurrentWebviewWindow } from '@/renderer/lib/electron/compat/webviewWindow'
-import { invoke } from '@/renderer/lib/electron/compat/core'
-import { listen } from '@/renderer/lib/electron/compat/event'
+import { getAppCacheDirectory, joinPath } from '@/renderer/lib/electron/paths'
+import { getCurrentWindow } from '@/renderer/lib/electron/window'
+import { invokeCommand } from '@/renderer/lib/electron/command'
+import { onAppEvent } from '@/renderer/lib/electron/events'
 import { logger } from '@/renderer/lib/logger'
 import { calculateCropRect } from './selection'
-const appWindow = getCurrentWebviewWindow()
+const appWindow = getCurrentWindow()
 
 export default function Screenshot() {
   const [imgurl, setImgurl] = useState('')
   const [error, setError] = useState('')
-  const [action, setAction] = useState('recognize')
+  const [action, setAction] = useState<'recognize' | 'translate'>('recognize')
   const [isMoved, setIsMoved] = useState(false)
   const [isDown, setIsDown] = useState(false)
   const [mouseDownX, setMouseDownX] = useState(0)
@@ -25,15 +23,17 @@ export default function Screenshot() {
   const captureScreenshot = async () => {
     try {
       setError('')
-      const monitor = await currentMonitor()
-      const position = monitor?.position ?? { x: 0, y: 0 }
-      const dataUrl = await invoke('screenshot', { x: position.x, y: position.y })
+      const monitor = await appWindow.getDisplay()
+      const dataUrl = await invokeCommand('screenshot', {
+        x: monitor.position.x,
+        y: monitor.position.y,
+      })
       if (typeof dataUrl === 'string' && dataUrl.length > 0) {
         setImgurl(dataUrl)
       } else {
-        const appCacheDirPath = await appCacheDir()
-        const filePath = await join(appCacheDirPath, 'pot_screenshot.png')
-        setImgurl(`${convertFileSrc(filePath)}?t=${Date.now()}`)
+        const appCacheDirPath = await getAppCacheDirectory()
+        const filePath = joinPath(appCacheDirPath, 'pot_screenshot.png')
+        setImgurl(`${filePath}?t=${Date.now()}`)
       }
       await appWindow.show()
       await appWindow.setFocus()
@@ -47,17 +47,15 @@ export default function Screenshot() {
 
   useEffect(() => {
     void captureScreenshot()
-    const unlisten = listen('capture_screenshot', (event) => {
-      if (event.payload === 'translate' || event.payload === 'recognize') {
-        setAction(event.payload)
+    const unlisten = onAppEvent('capture_screenshot', (payload) => {
+      if (payload === 'translate' || payload === 'recognize') {
+        setAction(payload)
       }
       void captureScreenshot()
     })
-    void window.neoPot?.app.rendererReady()
+    void window.neoPot.app.rendererReady()
 
-    return () => {
-      void unlisten.then((f) => f())
-    }
+    return unlisten
   }, [])
 
   return (
@@ -79,7 +77,9 @@ export default function Screenshot() {
         }}
       />
       <div
-        className={`fixed bg-[#2080f020] border border-solid border-sky-500 ${!isMoved && 'hidden'}`}
+        className={`fixed bg-[#2080f020] border border-solid border-sky-500 ${
+          isMoved ? '' : 'hidden'
+        }`}
         style={{
           top: Math.min(mouseDownY, mouseMoveY),
           left: Math.min(mouseDownX, mouseMoveX),
@@ -110,7 +110,7 @@ export default function Screenshot() {
           }
         }}
         onMouseUp={async (e) => {
-          const monitor = await currentMonitor()
+          const monitor = await appWindow.getDisplay()
           const viewportScale = monitor.size.width / window.innerWidth
           logger.debug('Screenshot selection ended.', {
             clientX: e.clientX,
@@ -143,13 +143,13 @@ export default function Screenshot() {
             await appWindow.close()
           } else {
             try {
-              await invoke('cut_image', {
+              await invokeCommand('cut_image', {
                 left: cropRect.left,
                 top: cropRect.top,
                 width: cropRect.width,
                 height: cropRect.height,
               })
-              await invoke('screenshot_complete', { action })
+              await invokeCommand('screenshot_complete', { action })
               await appWindow.close()
             } catch (error) {
               logger.error('Screenshot completion failed.', error, {

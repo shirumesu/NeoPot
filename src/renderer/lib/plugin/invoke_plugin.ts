@@ -1,10 +1,15 @@
-import { BaseDirectory, readFile, readTextFile } from '@/renderer/lib/electron/compat/fs'
-import { appCacheDir, appConfigDir, join } from '@/renderer/lib/electron/compat/path'
-import { invoke } from '@/renderer/lib/electron/compat/core'
+import { FileBase, readBinaryFile, readTextFile } from '@/renderer/lib/electron/files'
+import {
+  getAppCacheDirectory,
+  getAppConfigDirectory,
+  joinPath,
+} from '@/renderer/lib/electron/paths'
+import { invokeCommand, type RunBinaryArgs } from '@/renderer/lib/electron/command'
 import { osType } from '../config/env'
 import * as http from '@/renderer/lib/electron/http'
 import { createPluginLogger } from '@/renderer/lib/logger'
 import { getStoreValue } from '../config/store'
+import type { FsOptions } from '@/shared/types/electron-api'
 
 type HostCallback = (...args: unknown[]) => unknown
 
@@ -90,12 +95,16 @@ async function serializeHttpResponse(response: SerializableHttpResponse, respons
     response.headers instanceof Headers
       ? Object.fromEntries(response.headers.entries())
       : response.headers || {}
+  const responseData = response.data ?? (response.json ? await response.json() : undefined)
   return {
     ok: response.ok,
     status: response.status,
     statusText: response.statusText,
     headers,
-    data: decodeResponseBody(response.data ?? (response.json ? await response.json() : undefined)),
+    data:
+      responseType === 3 && responseData instanceof ArrayBuffer
+        ? Array.from(new Uint8Array(responseData))
+        : decodeResponseBody(responseData),
     responseType,
   }
 }
@@ -118,20 +127,17 @@ async function handleSandboxRequest(message: SandboxRequest): Promise<void> {
         break
       case 'readFile':
         value = Array.from(
-          await readFile(String(args[0] ?? ''), args[1] as Record<string, unknown> | undefined),
+          await readBinaryFile(String(args[0] ?? ''), args[1] as FsOptions | undefined),
         )
         break
       case 'readTextFile':
-        value = await readTextFile(
-          String(args[0] ?? ''),
-          args[1] as Record<string, unknown> | undefined,
-        )
+        value = await readTextFile(String(args[0] ?? ''), args[1] as FsOptions | undefined)
         break
       case 'run':
-        value = await invoke('run_binary', args[0] as Record<string, unknown>)
+        value = await invokeCommand('run_binary', args[0] as RunBinaryArgs)
         break
       case 'openUrl':
-        value = await invoke('open_url', { url: String(args[0] ?? '') })
+        value = await invokeCommand('open_url', { url: String(args[0] ?? '') })
         break
       case 'hostCallback': {
         const callback = callbackMap.get(String(args[0] ?? ''))
@@ -321,7 +327,6 @@ async function fetch(input, init = {}) {
 }
 
 const utils = {
-  tauriFetch: fetch,
   http: { fetch, Body },
   readFile: async (path, options) => new Uint8Array(await rpc('readFile', path, options)),
   readTextFile: (path, options) => rpc('readTextFile', path, options),
@@ -508,15 +513,15 @@ async function getPluginRuntime(pluginType: string, pluginName: string) {
 
   if (!sandbox) {
     const script = await readTextFile(`plugins/${pluginType}/${pluginName}/main.js`, {
-      baseDir: BaseDirectory.AppConfig,
+      baseDir: FileBase.Config,
     })
     sandbox = await createSandbox(pluginType, pluginName, script)
     sandboxMap.set(pluginId, sandbox)
   }
 
-  const configDir = await appConfigDir()
-  const cacheDir = await appCacheDir()
-  const pluginDir = await join(configDir, 'plugins', pluginType, pluginName)
+  const configDir = await getAppConfigDirectory()
+  const cacheDir = await getAppCacheDirectory()
+  const pluginDir = joinPath(configDir, 'plugins', pluginType, pluginName)
   const pluginOptions = (await getStoreValue(`plugin_options:${pluginType}:${pluginName}`)) ?? {}
   const utils = {
     __neopot_utils: true,

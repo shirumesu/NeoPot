@@ -5,11 +5,13 @@ import { DropdownMenu } from '@heroui/react'
 import { DropdownItem } from '@heroui/react'
 import { Dropdown } from '@heroui/react'
 import { useTranslation } from 'react-i18next'
-import { openUrl as open } from '@/renderer/lib/electron/compat/opener'
+import { openUrl } from '@/renderer/lib/electron/opener'
 
 import { useConfig } from '../../../../../hooks'
-import { useConfigSave } from '../../../hooks/useConfigSave'
 import type { ServiceConfigComponentProps } from '../types'
+import ConfigItem from '../../../components/ConfigItem'
+import ProviderConfigForm from '../ProviderConfigForm'
+import InstanceNameInput from '../InstanceNameInput'
 
 interface PluginNeed {
   key: string
@@ -44,140 +46,120 @@ export function PluginConfig(props: ServiceConfigComponentProps) {
     { sync: false },
   )
   const { t } = useTranslation()
-  const { saveConfig } = useConfigSave()
   const pluginNeeds = (pluginList[name].needs as unknown[]).filter(isPluginNeed)
   const configuredInstanceName = pluginConfig?.[INSTANCE_NAME_CONFIG_KEY]
 
   return (
     <>
-      <div className={'config-item'}>
-        <h3 className="my-auto select-none cursor-default">{t('config.service.homepage')}</h3>
+      <ConfigItem
+        title={
+          <span className="my-auto select-none cursor-default">{t('config.service.homepage')}</span>
+        }
+      >
         <Button
           onPress={() => {
-            open(pluginList[name].homepage)
+            openUrl(pluginList[name].homepage)
           }}
         >
           {t('config.service.homepage')}
         </Button>
-      </div>
+      </ConfigItem>
       {pluginConfig && (
-        <div className="config-item">
-          <Input
-            label={t('services.instance_name')}
-            labelPlacement="outside-left"
+        <ProviderConfigForm
+          instanceKey={instanceKey}
+          config={pluginConfig}
+          setConfig={setPluginConfig}
+          updateServiceList={updateServiceList}
+          onClose={onClose}
+        >
+          <InstanceNameInput
             value={
               typeof configuredInstanceName === 'string'
                 ? configuredInstanceName
                 : pluginList[name].display
             }
-            variant="bordered"
-            classNames={{
-              base: 'justify-between',
-              label: 'text-(length:--heroui-font-size-medium)',
-              mainWrapper: 'max-w-[60%]',
-            }}
+            mainWrapperClassName="max-w-[60%]"
             onValueChange={(value) => {
-              setPluginConfig({
+              void setPluginConfig({
                 ...pluginConfig,
                 [INSTANCE_NAME_CONFIG_KEY]: value,
               })
             }}
           />
-        </div>
-      )}
 
-      {pluginNeeds.length === 0 ? (
-        <div>{t('services.no_need')}</div>
-      ) : (
-        pluginNeeds.map((x) => {
-          const options = x.options ?? {}
-          const selectedOptionKey = Object.prototype.hasOwnProperty.call(pluginConfig ?? {}, x.key)
-            ? String(pluginConfig?.[x.key])
-            : Object.keys(options)[0]
+          {pluginNeeds.length === 0 ? (
+            <div>{t('services.no_need')}</div>
+          ) : (
+            pluginNeeds.map((x) => {
+              const options = x.options ?? {}
+              const selectedOptionKey = Object.prototype.hasOwnProperty.call(pluginConfig, x.key)
+                ? String(pluginConfig[x.key])
+                : Object.keys(options)[0]
 
-          return (
-            pluginConfig &&
-            (x.type ? (
-              <div key={x.key} className={`config-item`}>
-                <h3 className="my-auto select-none cursor-default">{x.display}</h3>
-                {x.type === 'input' && (
+              return x.type ? (
+                <ConfigItem
+                  key={x.key}
+                  title={<span className="my-auto select-none cursor-default">{x.display}</span>}
+                >
+                  {x.type === 'input' && (
+                    <Input
+                      value={`${Object.prototype.hasOwnProperty.call(pluginConfig, x.key) ? pluginConfig[x.key] : ''}`}
+                      variant="bordered"
+                      className="max-w-[60%]"
+                      onValueChange={(value) => {
+                        void setPluginConfig({
+                          ...pluginConfig,
+                          [x.key]: value,
+                        })
+                      }}
+                    />
+                  )}
+                  {x.type === 'select' && (
+                    <Dropdown>
+                      <DropdownTrigger>
+                        <Button variant="bordered" className="max-w-[60%]">
+                          {options[selectedOptionKey]}
+                        </Button>
+                      </DropdownTrigger>
+                      <DropdownMenu
+                        aria-label={x.key}
+                        className="max-h-[40vh] overflow-y-auto"
+                        onAction={(key) => {
+                          void setPluginConfig({
+                            ...pluginConfig,
+                            [x.key]: key,
+                          })
+                        }}
+                      >
+                        {Object.keys(options).map((y) => {
+                          return <DropdownItem key={y}>{options[y]}</DropdownItem>
+                        })}
+                      </DropdownMenu>
+                    </Dropdown>
+                  )}
+                </ConfigItem>
+              ) : (
+                <ConfigItem
+                  key={x.key}
+                  title={<span className="my-auto select-none cursor-default">{x.display}</span>}
+                >
                   <Input
                     value={`${Object.prototype.hasOwnProperty.call(pluginConfig, x.key) ? pluginConfig[x.key] : ''}`}
                     variant="bordered"
                     className="max-w-[60%]"
                     onValueChange={(value) => {
-                      setPluginConfig({
+                      void setPluginConfig({
                         ...pluginConfig,
                         [x.key]: value,
                       })
                     }}
                   />
-                )}
-                {x.type === 'select' && (
-                  <Dropdown>
-                    <DropdownTrigger>
-                      <Button variant="bordered" className="max-w-[60%]">
-                        {options[selectedOptionKey]}
-                      </Button>
-                    </DropdownTrigger>
-                    <DropdownMenu
-                      aria-label={x.key}
-                      className="max-h-[40vh] overflow-y-auto"
-                      onAction={(key) => {
-                        setPluginConfig({
-                          ...pluginConfig,
-                          [x.key]: key,
-                        })
-                      }}
-                    >
-                      {Object.keys(options).map((y) => {
-                        return <DropdownItem key={y}>{options[y]}</DropdownItem>
-                      })}
-                    </DropdownMenu>
-                  </Dropdown>
-                )}
-              </div>
-            ) : (
-              <div key={x.key} className={`config-item`}>
-                <h3 className="my-auto select-none cursor-default">{x.display}</h3>
-                <Input
-                  value={`${Object.prototype.hasOwnProperty.call(pluginConfig, x.key) ? pluginConfig[x.key] : ''}`}
-                  variant="bordered"
-                  className="max-w-[60%]"
-                  onValueChange={(value) => {
-                    setPluginConfig({
-                      ...pluginConfig,
-                      [x.key]: value,
-                    })
-                  }}
-                />
-              </div>
-            ))
-          )
-        })
-      )}
-
-      <div>
-        <Button
-          fullWidth
-          color="primary"
-          onPress={async () => {
-            if (pluginConfig === null) {
-              return
-            }
-
-            const saved = await saveConfig(instanceKey, null, setPluginConfig, pluginConfig, {
-              compareCurrent: false,
+                </ConfigItem>
+              )
             })
-            if (saved) {
-              await updateServiceList(instanceKey)
-              onClose()
-            }
-          }}
-        >
-          {t('common.save')}
-        </Button>
-      </div>
+          )}
+        </ProviderConfigForm>
+      )}
     </>
   )
 }

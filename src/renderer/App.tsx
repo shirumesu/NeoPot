@@ -1,4 +1,4 @@
-import { getCurrentWebviewWindow } from '@/renderer/lib/electron/compat/webviewWindow'
+import { getCurrentWindow } from '@/renderer/lib/electron/window'
 import { MemoryRouter } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
@@ -12,7 +12,8 @@ import {
 } from 'react'
 import { useTheme } from 'next-themes'
 
-import { electronCommand } from '@/renderer/lib/electron/command'
+import { invokeCommand } from '@/renderer/lib/electron/command'
+import type { WindowLabel } from '@/shared/types/electron-api'
 import { attachPluginHotkeyListener } from '@/renderer/lib/plugin/plugin_hotkey'
 import ErrorBoundary from './components/ErrorBoundary'
 import RuntimeToaster from './components/RuntimeToaster'
@@ -21,7 +22,7 @@ import { logger } from './lib/logger'
 import './style.css'
 import './i18n'
 
-const appWindow = getCurrentWebviewWindow()
+const appWindow = getCurrentWindow()
 
 const windowMap: Record<string, LazyExoticComponent<ComponentType>> = {
   translate: lazy(() => import('./windows/Translate')),
@@ -59,7 +60,7 @@ function getInitialConfigRoute() {
 }
 
 export default function App() {
-  const [windowLabel, setWindowLabel] = useState<string | null>(null)
+  const [windowLabel, setWindowLabel] = useState<WindowLabel | null>(null)
   const [devMode] = useConfig<boolean>('dev_mode', false)
   const [appTheme] = useConfig<string>('app_theme', 'system')
   const [appLanguage] = useConfig<string>('app_language', 'en')
@@ -75,7 +76,7 @@ export default function App() {
     let cancelled = false
 
     async function syncWindowLabel() {
-      const label = window.neoPot ? await window.neoPot.app.getWindowLabel() : appWindow.label
+      const label = await window.neoPot.app.getWindowLabel()
 
       if (!cancelled) {
         setWindowLabel(label)
@@ -95,17 +96,13 @@ export default function App() {
         e.preventDefault()
       }
       if (devMode && e.key === 'F12') {
-        await electronCommand('open_devtools')
+        await invokeCommand('open_devtools')
       }
       if (e.key.startsWith('F') && e.key.length > 1) {
         e.preventDefault()
       }
       if (e.key === 'Escape') {
-        if (window.neoPot) {
-          await window.neoPot.app.closeCurrentWindow()
-        } else {
-          await appWindow.close()
-        }
+        await appWindow.close()
       }
     }
 
@@ -149,7 +146,11 @@ export default function App() {
     }
   }, [appFont, appFallbackFont, appFontSize])
 
-  const label = windowLabel ?? appWindow.label
+  if (!windowLabel) {
+    return null
+  }
+
+  const label = windowLabel
   const CurrentWindow = windowMap[label]
 
   if (!CurrentWindow) {

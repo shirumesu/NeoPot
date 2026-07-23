@@ -80,6 +80,15 @@ describe('Google translate adapter', () => {
     })
   })
 
+  it('falls back to plain segments when the dictionary has no usable rich fields', async () => {
+    const data = Array.from({ length: 14 }, () => null) as unknown[]
+    data[0] = [['translated', 'source']]
+    data[1] = [[null, null, null]]
+    const request: GoogleRequest = vi.fn(async () => response(data))
+
+    await expect(translateGoogle('source', 'en', 'fr', {}, { request })).resolves.toBe('translated')
+  })
+
   it.each([null, {}, [], [[]], [[null]], [[], []]])(
     'rejects malformed successful data instead of throwing an incidental TypeError',
     async (data) => {

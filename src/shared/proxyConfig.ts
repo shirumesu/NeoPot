@@ -74,3 +74,28 @@ export function normalizeProxyHost(value: unknown): string | undefined {
 
   return normalizeParsedProxyHostname(url.hostname)
 }
+
+function comparableProxyHost(host: string): string {
+  return host
+    .trim()
+    .replace(/^\[|\]$/gu, '')
+    .toLowerCase()
+}
+
+export function createProxyRules(host: string, port: number): string {
+  return `http://${host}:${port}`
+}
+
+export function matchesProxyChallenge(
+  challenge: { isProxy: boolean; host: string; port: number },
+  proxy: { enabled: boolean; host?: string; port?: number },
+): boolean {
+  return (
+    challenge.isProxy &&
+    proxy.enabled &&
+    proxy.host !== undefined &&
+    proxy.port !== undefined &&
+    comparableProxyHost(challenge.host) === comparableProxyHost(proxy.host) &&
+    challenge.port === proxy.port
+  )
+}

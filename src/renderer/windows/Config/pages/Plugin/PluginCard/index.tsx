@@ -3,7 +3,7 @@ import { MdDeleteOutline, MdHome, MdKeyboardAlt, MdSettings } from 'react-icons/
 import { useTranslation } from 'react-i18next'
 
 import { getCardActions } from '../logic'
-import { openUrl } from '@/renderer/lib/electron/compat/opener'
+import { openUrl } from '@/renderer/lib/electron/opener'
 import type { InstalledPlugin } from '../installedPlugins'
 import { ACTION_ICON_CLASS } from '@/renderer/components/uiSize'
 

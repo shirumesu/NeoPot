@@ -1,4 +1,4 @@
-import { app, BrowserWindow, protocol } from 'electron'
+import { app, BrowserWindow, Menu, protocol } from 'electron'
 import log from 'electron-log/main'
 import { APP_USER_MODEL_ID } from './modules/appIdentity'
 import { RENDERER_SCHEME } from './modules/rendererProtocol'
@@ -60,6 +60,7 @@ async function startApp(): Promise<void> {
   ipc.registerIpcHandlers({
     getWindowLabel: (event) => windowModule.getCurrentWindowLabel(event.sender),
   })
+  proxy.registerProxyAuthentication()
 
   app.on('second-instance', () => {
     const [window] = BrowserWindow.getAllWindows()
@@ -72,6 +73,7 @@ async function startApp(): Promise<void> {
   })
 
   app.whenReady().then(async () => {
+    Menu.setApplicationMenu(null)
     windowModule.registerRendererProtocol()
     await config.initializeConfig()
 
@@ -88,7 +90,7 @@ async function startApp(): Promise<void> {
     const proxyReady = proxy.applyProxyToSession()
 
     tray.setupTray()
-    hotkey.registerGlobalShortcuts('all')
+    hotkey.registerGlobalShortcuts()
     clipboard.setClipboardMonitorEnabled(config.getConfig('clipboard_monitor') === true)
 
     const configuredServerPort = config.getConfig('server_port')

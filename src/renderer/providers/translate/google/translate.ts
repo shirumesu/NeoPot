@@ -1,11 +1,10 @@
 import { normalizeGoogleTranslateBaseUrl } from '@/shared/providerUrl'
+import { errorMessage, responseMessage, type ProviderResponse } from '@/renderer/providers/shared'
 
 const INVALID_RESPONSE_MESSAGE = 'Google returned an empty or malformed translation response.'
 
 interface GoogleTranslateOptions {
-  config?: {
-    custom_url?: string
-  }
+  config?: Record<string, unknown>
 }
 
 export interface GoogleRichTranslationResult {
@@ -21,13 +20,7 @@ export interface GoogleRequestInit {
   query: Record<string, string>
 }
 
-export interface GoogleResponse {
-  ok: boolean
-  status: number
-  data?: unknown
-}
-
-export type GoogleRequest = (url: string, init: GoogleRequestInit) => Promise<GoogleResponse>
+export type GoogleRequest = (url: string, init: GoogleRequestInit) => Promise<ProviderResponse>
 
 export async function translateGoogle(
   text: string,
@@ -36,8 +29,10 @@ export async function translateGoogle(
   options: GoogleTranslateOptions = {},
   dependencies: { request: GoogleRequest },
 ): Promise<string | GoogleRichTranslationResult> {
-  const customUrl = normalizeGoogleTranslateBaseUrl(options.config?.custom_url)
-  let response: GoogleResponse
+  const customUrl = normalizeGoogleTranslateBaseUrl(
+    typeof options.config?.custom_url === 'string' ? options.config.custom_url : undefined,
+  )
+  let response: ProviderResponse
   try {
     response = await dependencies.request(
       `${customUrl}/translate_a/single?dt=at&dt=bd&dt=ex&dt=ld&dt=md&dt=qca&dt=rw&dt=rm&dt=ss&dt=t`,
@@ -65,7 +60,9 @@ export async function translateGoogle(
 
   if (!response.ok) {
     throw new Error(
-      `Google request failed with HTTP ${response.status}: ${responseMessage(response.data)}`,
+      `Google request failed with HTTP ${response.status}: ${responseMessage(response.data, {
+        directError: 'non-object',
+      })}`,
     )
   }
 
@@ -126,7 +123,6 @@ function parseGoogleResponse(data: unknown): string | GoogleRichTranslationResul
     ) {
       return richResult
     }
-    throw new Error(INVALID_RESPONSE_MESSAGE)
   }
 
   const target = segments
@@ -142,28 +138,4 @@ function parseGoogleResponse(data: unknown): string | GoogleRichTranslationResul
 
 function asArray(value: unknown): unknown[] | null {
   return Array.isArray(value) ? value : null
-}
-
-function responseMessage(data: unknown): string {
-  if (typeof data === 'string' && data.trim()) {
-    return data.trim()
-  }
-  if (typeof data === 'object' && data !== null && !Array.isArray(data)) {
-    const record = data as Record<string, unknown>
-    const nestedError =
-      typeof record.error === 'object' && record.error !== null && !Array.isArray(record.error)
-        ? (record.error as Record<string, unknown>).message
-        : record.error
-    const message = nestedError ?? record.message
-    if (typeof message === 'string' && message.trim()) {
-      return message.trim()
-    }
-  }
-  return 'Unexpected response.'
-}
-
-function errorMessage(error: unknown): string {
-  if (error instanceof Error && error.message.trim()) return error.message.trim()
-  if (typeof error === 'string' && error.trim()) return error.trim()
-  return 'Unknown request error.'
 }

@@ -1,6 +1,9 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import type {
   NeoPotElectronApi,
+  HttpRequest,
+  HttpResponse,
+  HttpStreamEvent,
   PluginInfo,
   PluginInstallResult,
   PluginMarketplaceEntry,
@@ -10,6 +13,7 @@ import type {
   UpdateEvent,
   WindowLabel,
 } from '../shared/types/electron-api'
+import { runtimePlatform } from '../shared/platform'
 
 type IpcChannel =
   | 'app:get-window-label'
@@ -43,6 +47,7 @@ type IpcChannel =
   | 'hotkey:unregister'
   | 'hotkey:is-registered'
   | 'command:invoke'
+  | 'http:request'
   | 'config:get'
   | 'config:set'
   | 'workflow:selection-translate'
@@ -58,7 +63,6 @@ type IpcChannel =
   | 'plugins:install-url'
   | 'plugins:inspect-source'
   | 'plugins:inspect-marketplace'
-  | 'plugins:list'
   | 'plugins:list-installed'
   | 'plugins:uninstall'
   | 'plugins:set-enabled'
@@ -96,6 +100,7 @@ const channels = new Set<IpcChannel>([
   'hotkey:unregister',
   'hotkey:is-registered',
   'command:invoke',
+  'http:request',
   'config:get',
   'config:set',
   'workflow:selection-translate',
@@ -111,7 +116,6 @@ const channels = new Set<IpcChannel>([
   'plugins:install-url',
   'plugins:inspect-source',
   'plugins:inspect-marketplace',
-  'plugins:list',
   'plugins:list-installed',
   'plugins:uninstall',
   'plugins:set-enabled',
@@ -162,6 +166,7 @@ function isTrustedRendererLocation(): boolean {
 
 const api: NeoPotElectronApi = {
   app: {
+    platform: runtimePlatform(process.platform),
     getWindowLabel: () => invokeChecked<WindowLabel>('app:get-window-label'),
     getVersion: () => invokeChecked<string>('app:get-version'),
     rendererReady: () => invokeChecked<void>('app:renderer-ready'),
@@ -222,6 +227,32 @@ const api: NeoPotElectronApi = {
   command: {
     invoke: (command, payload) => invokeChecked('command:invoke', { command, payload }),
   },
+  http: {
+    request: (request: HttpRequest) => invokeChecked<HttpResponse>('http:request', request),
+    stream: (request: HttpRequest, callback: (event: HttpStreamEvent) => void) => {
+      const { port1, port2 } = new MessageChannel()
+      let closed = false
+
+      port1.onmessage = (event: MessageEvent<HttpStreamEvent>) => {
+        callback(event.data)
+        if (event.data.type === 'end' || event.data.type === 'error') {
+          closed = true
+          port1.close()
+        }
+      }
+      port1.start()
+      ipcRenderer.postMessage('http:stream', request, [port2])
+
+      return () => {
+        if (closed) {
+          return
+        }
+        closed = true
+        port1.postMessage({ type: 'cancel' })
+        port1.close()
+      }
+    },
+  },
   config: {
     get: (key) => invokeChecked<unknown>('config:get', { key }),
     set: (key, value) => invokeChecked<void>('config:set', { key, value }),
@@ -249,21 +280,6 @@ const api: NeoPotElectronApi = {
   services: {
     translate: (request: TranslateRequest) =>
       invokeChecked<TranslateResult>('services:translate', request),
-    onStream: (eventId, callback) => {
-      const listener = (_event: Electron.IpcRendererEvent, payload: unknown) => {
-        if (
-          typeof payload === 'object' &&
-          payload !== null &&
-          'eventId' in payload &&
-          payload.eventId === eventId
-        ) {
-          callback(payload)
-        }
-      }
-
-      ipcRenderer.on('services:stream', listener)
-      return () => ipcRenderer.removeListener('services:stream', listener)
-    },
   },
   plugins: {
     install: (file) => invokeChecked<PluginInstallResult>('plugins:install', { file }),
@@ -271,7 +287,6 @@ const api: NeoPotElectronApi = {
     inspectSource: (url) => invokeChecked<PluginInfo>('plugins:inspect-source', { url }),
     inspectMarketplace: (url) =>
       invokeChecked<PluginMarketplaceEntry[]>('plugins:inspect-marketplace', { url }),
-    list: (type) => invokeChecked<PluginInfo[]>('plugins:list', { type }),
     listInstalled: (type) => invokeChecked<PluginInfo[]>('plugins:list-installed', { type }),
     uninstall: (type, name) => invokeChecked<void>('plugins:uninstall', { type, name }),
     setEnabled: (type, name, enabled) =>

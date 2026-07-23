@@ -6,6 +6,7 @@ const electronMock = vi.hoisted(() => ({
 
 const workflowMock = vi.hoisted(() => ({
   selectionTranslate: vi.fn(),
+  textTranslate: vi.fn(),
 }))
 
 const selectionMock = vi.hoisted(() => ({
@@ -30,6 +31,7 @@ beforeEach(() => {
   vi.useFakeTimers()
   electronMock.readText.mockReturnValue('initial')
   workflowMock.selectionTranslate.mockResolvedValue(undefined)
+  workflowMock.textTranslate.mockResolvedValue(undefined)
 })
 
 describe('clipboard monitor lifecycle', () => {
@@ -55,10 +57,12 @@ describe('clipboard monitor lifecycle', () => {
     electronMock.readText.mockReturnValue('updated')
     await vi.advanceTimersByTimeAsync(500)
 
-    expect(workflowMock.selectionTranslate).toHaveBeenCalledOnce()
+    expect(workflowMock.textTranslate).toHaveBeenCalledOnce()
+    expect(workflowMock.textTranslate).toHaveBeenCalledWith('updated')
+    expect(workflowMock.selectionTranslate).not.toHaveBeenCalled()
 
     await vi.advanceTimersByTimeAsync(500)
-    expect(workflowMock.selectionTranslate).toHaveBeenCalledOnce()
+    expect(workflowMock.textTranslate).toHaveBeenCalledOnce()
   })
 
   it('clears the polling interval after a clipboard read failure', async () => {

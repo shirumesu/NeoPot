@@ -3,16 +3,10 @@ import { test } from 'vitest'
 
 import { toTranslateWorkflowPayload } from '../../src/shared/translateWorkflow.ts'
 
-test('translate workflow payload parser keeps plain text and legacy command strings distinct', () => {
+test('translate workflow payload parser rejects the removed string protocol', () => {
   assert.deepEqual(toTranslateWorkflowPayload('hello'), {
     kind: 'text',
-    text: 'hello',
-  })
-  assert.deepEqual(toTranslateWorkflowPayload('[INPUT_TRANSLATE]'), {
-    kind: 'input',
-  })
-  assert.deepEqual(toTranslateWorkflowPayload('[IMAGE_TRANSLATE]'), {
-    kind: 'image',
+    text: '',
   })
 })
 
@@ -75,11 +69,7 @@ test('translate workflow payload parser preserves structured selection capture r
   )
 })
 
-test('translate workflow payload parser rejects malformed payloads as empty text', () => {
-  assert.deepEqual(toTranslateWorkflowPayload({ kind: 'selection', capture: { ok: true } }), {
-    kind: 'text',
-    text: '',
-  })
+test('translate workflow payload parser rejects unknown workflow kinds', () => {
   assert.deepEqual(toTranslateWorkflowPayload({ kind: 'unknown', text: 'ignored' }), {
     kind: 'text',
     text: '',

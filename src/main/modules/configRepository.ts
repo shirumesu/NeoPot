@@ -2,7 +2,7 @@ import type { AppLogger } from '../../shared/logger'
 import {
   decryptSensitiveConfigValue,
   encryptSensitiveConfigValue,
-  secretKeyFragments,
+  isSecretPath,
   type SecretCipher,
 } from './configSecrets'
 
@@ -34,12 +34,10 @@ export interface ConfigRepository {
   getRedacted(key: string): ConfigValue
 }
 
-const secretKeys = new Set<string>(secretKeyFragments)
 const atomicWriteFallbackErrorCodes = new Set(['EPERM', 'EBUSY'])
 
 function isSecretKey(key: string): boolean {
-  const normalized = key.toLowerCase()
-  return [...secretKeys].some((secretKey) => normalized.includes(secretKey))
+  return isSecretPath([key])
 }
 
 function getErrorCode(error: unknown): string | undefined {

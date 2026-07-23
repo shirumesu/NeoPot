@@ -1,5 +1,11 @@
 import { createDeepLXAuthHeaders, normalizeDeepLConfig } from '@/shared/deeplConfig'
 import { normalizeDeepLXEndpointUrl } from '@/shared/providerUrl'
+import {
+  asRecord,
+  errorMessage,
+  responseMessage,
+  type ProviderResponse,
+} from '@/renderer/providers/shared'
 
 import { normalizeRequiredString } from './normalize'
 
@@ -18,13 +24,10 @@ export interface DeepLRequestInit {
   headers: Record<string, string>
 }
 
-export interface DeepLResponse {
-  ok: boolean
-  status: number
-  data: unknown
-}
-
-export type DeepLRequest = (url: string, init: DeepLRequestInit) => Promise<DeepLResponse>
+export type DeepLRequest = (
+  url: string,
+  init: DeepLRequestInit,
+) => Promise<ProviderResponse<{ data: unknown }>>
 
 export interface DeepLDependencies {
   request: DeepLRequest
@@ -167,8 +170,8 @@ async function performRequest(
   request: DeepLRequest,
   url: string,
   init: DeepLRequestInit,
-): Promise<DeepLResponse> {
-  let response: DeepLResponse
+): Promise<ProviderResponse<{ data: unknown }>> {
+  let response: ProviderResponse<{ data: unknown }>
   try {
     response = await request(url, init)
   } catch (error) {
@@ -190,35 +193,6 @@ function requireTranslation(value: unknown): string {
   }
 
   return value.trim()
-}
-
-function asRecord(value: unknown): Record<string, unknown> | null {
-  return typeof value === 'object' && value !== null && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : null
-}
-
-function responseMessage(data: unknown): string {
-  const record = asRecord(data)
-  const nestedError = asRecord(record?.error)
-  const message = nestedError?.message ?? record?.message
-  if (typeof message === 'string' && message.trim()) {
-    return message.trim()
-  }
-  if (typeof data === 'string' && data.trim()) {
-    return data.trim()
-  }
-  return 'Unexpected response.'
-}
-
-function errorMessage(error: unknown): string {
-  if (error instanceof Error && error.message.trim()) {
-    return error.message.trim()
-  }
-  if (typeof error === 'string' && error.trim()) {
-    return error.trim()
-  }
-  return 'Unknown request error.'
 }
 
 function apiEndpointForKey(authKey: string): string {

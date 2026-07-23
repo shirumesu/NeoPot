@@ -1,4 +1,4 @@
-import { listen } from '@/renderer/lib/electron/compat/event'
+import { onAppEvent } from '@/renderer/lib/electron/events'
 import { useTranslation } from 'react-i18next'
 import { Tabs, Tab } from '@heroui/react'
 import { useEffect, useState } from 'react'
@@ -7,8 +7,6 @@ import Recognize from './Recognize'
 import Tts from './Tts'
 import { EnabledServicePluginList, loadEnabledServicePlugins } from '../Plugin/installedPlugins'
 import { ServiceType } from '@/renderer/lib/service/service_instance'
-
-let unlisten: Promise<() => void> | null = null
 
 export default function Service() {
   const [pluginList, setPluginList] = useState<EnabledServicePluginList | null>(null)
@@ -19,20 +17,8 @@ export default function Service() {
   }
 
   useEffect(() => {
-    loadPluginList()
-    if (unlisten) {
-      unlisten.then((f) => {
-        f()
-      })
-    }
-    unlisten = listen('reload_plugin_list', loadPluginList)
-    return () => {
-      if (unlisten) {
-        unlisten.then((f) => {
-          f()
-        })
-      }
-    }
+    void loadPluginList()
+    return onAppEvent('reload_plugin_list', loadPluginList)
   }, [])
   return (
     pluginList !== null && (

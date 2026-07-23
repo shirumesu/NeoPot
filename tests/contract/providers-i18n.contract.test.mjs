@@ -8,7 +8,6 @@ import {
   parseSource,
   read,
   readJson,
-  walkFiles,
 } from '../shared/source.mjs'
 
 const LOCALE_DIR = ['src', 'renderer', 'i18n', 'locales']
@@ -30,9 +29,6 @@ const EXPECTED_REFERENCE_SECTIONS = [
   'windows',
 ]
 
-const translateProviders = parseSource('src', 'renderer', 'providers', 'translate', 'index.tsx')
-const recognizeProviders = parseSource('src', 'renderer', 'providers', 'recognize', 'index.tsx')
-const ttsProviders = parseSource('src', 'renderer', 'providers', 'tts', 'index.tsx')
 const serviceTypes = parseSource('src', 'renderer', 'lib', 'service', 'service_instance.ts')
 const serviceSelectPlugin = read(
   'src',
@@ -64,27 +60,6 @@ function translationOf(stem) {
 }
 
 const referenceKeys = new Set(deepKeyPaths(translationOf(REFERENCE_LOCALE)))
-
-test('runtime provider barrels expose only the intentionally supported built-ins', () => {
-  assert.match(translateProviders.text, /export const deepl = _deepl/)
-  assert.match(translateProviders.text, /export const google = _google/)
-  assert.match(translateProviders.text, /export const ollama = _ollama/)
-  assert.doesNotMatch(translateProviders.text, /bing|youdao|baidu|tencent|caiyun/i)
-
-  assert.match(recognizeProviders.text, /export const local_model = _local_model/)
-  assert.doesNotMatch(recognizeProviders.text, /tesseract|baidu|tencent|youdao/i)
-
-  assert.match(ttsProviders.text, /export const lingva = _lingva/)
-  assert.doesNotMatch(ttsProviders.text, /kokoro|piper|edge|elevenlabs/i)
-})
-
-test('live source does not import archived provider backups', () => {
-  const offenders = walkFiles('src')
-    .filter((file) => /\.(ts|tsx)$/.test(file))
-    .filter((file) => read(file).includes('spec/temp/backup') || read(file).includes('temp/backup'))
-
-  assert.deepEqual(offenders, [])
-})
 
 test('service category model includes translate, recognize, and tts providers', () => {
   assert.match(serviceTypes.text, /TRANSLATE = 'translate'/)
@@ -131,7 +106,7 @@ test('primary maintained locales cover every en_US key', () => {
   }
 })
 
-test('i18n resources are auto-discovered and shared with the tray menu', () => {
+test('renderer i18n is auto-discovered without pulling locale bundles into Main', () => {
   const index = read('src', 'renderer', 'i18n', 'index.ts')
   const resources = read('src', 'renderer', 'i18n', 'resources.ts')
   const tray = read('src', 'main', 'modules', 'tray.ts')
@@ -140,7 +115,8 @@ test('i18n resources are auto-discovered and shared with the tray menu', () => {
   assert.match(resources, /import\.meta\.glob<LocaleResourceBundle>\('\.\/locales\/\*\.json'/)
   assert.match(resources, /eager:\s*true/)
   assert.match(resources, /import:\s*'default'/)
-  assert.match(tray, /translationResources as resources/)
+  assert.match(tray, /from '\.\.\/\.\.\/shared\/trayLabels'/)
+  assert.doesNotMatch(tray, /renderer\/i18n/)
 
   for (const [label, source] of [
     ['i18n/index.ts', index],

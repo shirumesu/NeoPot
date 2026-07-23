@@ -12,6 +12,7 @@ import { languageList } from '@/renderer/lib/language/language'
 import { useConfig } from '../../../../hooks'
 import { useConfigSave } from '../../hooks/useConfigSave'
 import SafeDropdownMenu from '@/renderer/components/SafeDropdownMenu'
+import ConfigItem from '../../components/ConfigItem'
 
 export default function Recognize() {
   const [recognizeLanguage, setRecognizeLanguage] = useConfig('recognize_language', 'auto')
@@ -24,8 +25,7 @@ export default function Recognize() {
   return (
     <Card className="mb-2.5">
       <CardBody>
-        <div className="config-item">
-          <h3>{t('config.recognize.language')}</h3>
+        <ConfigItem title={t('config.recognize.language')}>
           {recognizeLanguage !== null && (
             <Dropdown>
               <DropdownTrigger>
@@ -50,9 +50,8 @@ export default function Recognize() {
               </SafeDropdownMenu>
             </Dropdown>
           )}
-        </div>
-        <div className="config-item">
-          <h3>{t('config.recognize.delete_newline')}</h3>
+        </ConfigItem>
+        <ConfigItem title={t('config.recognize.delete_newline')}>
           {deleteNewline !== null && (
             <Switch
               isSelected={deleteNewline}
@@ -61,9 +60,8 @@ export default function Recognize() {
               }}
             />
           )}
-        </div>
-        <div className="config-item">
-          <h3>{t('config.recognize.auto_copy')}</h3>
+        </ConfigItem>
+        <ConfigItem title={t('config.recognize.auto_copy')}>
           {autoCopy !== null && (
             <Switch
               isSelected={autoCopy}
@@ -72,9 +70,8 @@ export default function Recognize() {
               }}
             />
           )}
-        </div>
-        <div className="config-item">
-          <h3>{t('config.recognize.close_on_blur')}</h3>
+        </ConfigItem>
+        <ConfigItem title={t('config.recognize.close_on_blur')}>
           {closeOnBlur !== null && (
             <Switch
               isSelected={closeOnBlur}
@@ -83,9 +80,8 @@ export default function Recognize() {
               }}
             />
           )}
-        </div>
-        <div className="config-item">
-          <h3>{t('config.recognize.hide_window')}</h3>
+        </ConfigItem>
+        <ConfigItem title={t('config.recognize.hide_window')}>
           {hideWindow !== null && (
             <Switch
               isSelected={hideWindow}
@@ -94,7 +90,7 @@ export default function Recognize() {
               }}
             />
           )}
-        </div>
+        </ConfigItem>
       </CardBody>
     </Card>
   )

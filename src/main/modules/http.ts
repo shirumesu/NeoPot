@@ -1,13 +1,7 @@
-import axios, { type AxiosRequestConfig } from 'axios'
 import { net } from 'electron'
-import { applyProxyToAxios } from './proxy'
-import {
-  assertPublicHttpRequestUrl,
-  assertPublicHttpUrl,
-  isBlockedNetworkAddress,
-} from './networkSafety'
-import { getConfig } from './config'
+import type { HttpRequest, HttpRequestBody, HttpResponse } from '../../shared/types/electron-api'
 import { getDeepLXCustomUrl, normalizeDeepLServiceType } from '../../shared/deeplConfig'
+import { isLocalOrPrivateHost } from '../../shared/networkAddress'
 import {
   DEFAULT_GOOGLE_TRANSLATE_URL,
   DEFAULT_LINGVA_URL,
@@ -21,23 +15,22 @@ import {
   getServiceSouceType,
   ServiceSourceType,
 } from '../../shared/serviceInstance'
+import { getConfig } from './config'
+import { assertPublicHttpRequestUrl, assertPublicHttpUrl } from './networkSafety'
 
-export interface ProviderRequest extends AxiosRequestConfig {
+export interface ProviderRequest {
+  url?: string
+  baseURL?: string
+  method?: string
+  headers?: HeadersInit
+  params?: Record<string, unknown>
+  data?: BodyInit | null
   timeoutMs?: number
 }
 
-type RendererBody =
-  | { kind: 'json'; data: unknown }
-  | { kind: 'text'; data: string }
-  | { kind: 'form'; data: Record<string, unknown> }
-
-interface RendererHttpRequest {
-  url?: unknown
-  method?: unknown
-  headers?: unknown
-  query?: unknown
-  body?: unknown
-  responseType?: unknown
+export interface StreamResponseHandlers {
+  onResponse(response: HttpResponse & { streaming: boolean }): void
+  onChunk(chunk: Uint8Array): void
 }
 
 const allowedRendererMethods = new Set(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD'])
@@ -45,18 +38,17 @@ const forbiddenRendererHeaders = new Set([
   'connection',
   'content-length',
   'host',
+  'origin',
   'proxy-authorization',
   'te',
   'transfer-encoding',
   'upgrade',
 ])
-
 const defaultServiceInstanceLists: Record<string, string[]> = {
   translate_service_list: ['deepl', 'google'],
   recognize_service_list: ['local_model'],
   tts_service_list: ['lingva'],
 }
-const localHostnames = new Set(['localhost', 'localhost.localdomain'])
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -78,7 +70,7 @@ function addConfiguredOrigin(origins: Set<string>, supplier: () => string): void
   try {
     addOrigin(origins, supplier())
   } catch {
-    // Invalid provider URLs are rejected when that provider builds its request.
+    // Invalid provider URLs are rejected when that provider builds the request.
   }
 }
 
@@ -126,45 +118,26 @@ function configuredProviderOrigins(): Set<string> {
 
   addOrigin(origins, DEFAULT_LINGVA_URL)
   addOrigin(origins, DEFAULT_GOOGLE_TRANSLATE_URL)
-
   return origins
 }
 
 function isConfiguredPrivateProviderTarget(url: URL): boolean {
-  const hostname = url.hostname.toLowerCase()
   return (
-    (localHostnames.has(hostname) || isBlockedNetworkAddress(hostname)) &&
-    configuredProviderOrigins().has(url.origin)
+    isLocalOrPrivateHost(url.hostname.toLowerCase()) && configuredProviderOrigins().has(url.origin)
   )
 }
 
-function resolveAxiosRequestUrl(config: AxiosRequestConfig): string {
-  if (typeof config.url === 'string') {
+function resolveProviderRequestUrl(options: ProviderRequest): string {
+  if (typeof options.url === 'string') {
     try {
-      return new URL(config.url, config.baseURL).toString()
+      return new URL(options.url, options.baseURL).toString()
     } catch {
       throw new Error('Expected a valid HTTP request URL.')
     }
   }
 
-  if (typeof config.baseURL === 'string') {
-    return config.baseURL
-  }
-
-  throw new Error('Expected a valid HTTP request URL.')
-}
-
-function resolveFetchRequestUrl(input: RequestInfo | URL): string {
-  if (input instanceof URL) {
-    return input.toString()
-  }
-
-  if (typeof input === 'string') {
-    return input
-  }
-
-  if (input instanceof Request) {
-    return input.url
+  if (typeof options.baseURL === 'string') {
+    return options.baseURL
   }
 
   throw new Error('Expected a valid HTTP request URL.')
@@ -192,33 +165,65 @@ function normalizeRendererHeaders(headers: unknown): Record<string, string> {
   )
 }
 
-function normalizeRendererBody(body: unknown, headers: Record<string, string>): unknown {
-  if (!isRecord(body) || typeof body.kind !== 'string') {
+function appendQuery(url: URL, query: unknown): void {
+  if (!isRecord(query)) {
+    return
+  }
+
+  for (const [key, value] of Object.entries(query)) {
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        if (item !== undefined && item !== null) {
+          url.searchParams.append(key, String(item))
+        }
+      }
+    } else if (value !== undefined && value !== null) {
+      url.searchParams.set(key, String(value))
+    }
+  }
+}
+
+function isHttpRequestBody(value: unknown): value is HttpRequestBody {
+  return (
+    isRecord(value) &&
+    (value.kind === 'json' || value.kind === 'text' || value.kind === 'form') &&
+    'data' in value
+  )
+}
+
+function normalizeRendererBody(
+  body: unknown,
+  headers: Record<string, string>,
+): BodyInit | null | undefined {
+  if (body === undefined || body === null || typeof body === 'string') {
     return body
   }
 
-  const rendererBody = body as RendererBody
-  if (rendererBody.kind === 'json') {
-    headers['content-type'] ??= 'application/json'
-    return rendererBody.data
+  if (!isHttpRequestBody(body)) {
+    throw new Error('Expected a serializable renderer HTTP request body.')
   }
 
-  if (rendererBody.kind === 'text') {
-    return rendererBody.data
+  if (body.kind === 'json') {
+    headers['content-type'] ??= 'application/json'
+    return JSON.stringify(body.data)
+  }
+
+  if (body.kind === 'text') {
+    return String(body.data)
   }
 
   if (headers['content-type']?.includes('application/x-www-form-urlencoded')) {
     const params = new URLSearchParams()
-    Object.entries(rendererBody.data).forEach(([key, value]) => {
+    Object.entries(body.data).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
         params.set(key, String(value))
       }
     })
-    return params.toString()
+    return params
   }
 
   const params = new FormData()
-  Object.entries(rendererBody.data).forEach(([key, value]) => {
+  Object.entries(body.data).forEach(([key, value]) => {
     if (value !== undefined && value !== null) {
       params.set(key, String(value))
     }
@@ -226,87 +231,177 @@ function normalizeRendererBody(body: unknown, headers: Record<string, string>): 
   return params
 }
 
-export async function request<T = unknown>(options: ProviderRequest): Promise<T> {
-  const url = await assertAllowedProviderRequestUrl(resolveAxiosRequestUrl(options))
-  const requestOptions: ProviderRequest = { ...options }
-  delete requestOptions.baseURL
-  delete requestOptions.maxRedirects
-  delete requestOptions.timeoutMs
-  delete requestOptions.url
-
-  const response = await axios.request<T>(
-    applyProxyToAxios({
-      ...requestOptions,
-      url: url.toString(),
-      maxRedirects: 0,
-      timeout: options.timeoutMs ?? options.timeout ?? 30000,
-    }),
-  )
-
-  return response.data
-}
-
-export async function rendererHttpRequest(input: unknown): Promise<{
-  ok: boolean
-  status: number
-  statusText: string
-  headers: Record<string, string>
-  data: unknown
-}> {
+function normalizeRendererRequest(input: unknown): {
+  request: HttpRequest
+  url: URL
+  init: RequestInit
+} {
   if (!isRecord(input) || typeof input.url !== 'string') {
     throw new Error('Expected renderer HTTP request URL.')
   }
 
-  const requestInput = input as RendererHttpRequest
-  const uncheckedUrl = assertPublicHttpUrl(input.url, { allowPrivateNetwork: true })
-  const url = await assertPublicHttpRequestUrl(input.url, {
-    allowPrivateNetwork: isConfiguredPrivateProviderTarget(uncheckedUrl),
-  })
-  const method = typeof requestInput.method === 'string' ? requestInput.method.toUpperCase() : 'GET'
+  const method = typeof input.method === 'string' ? input.method.toUpperCase() : 'GET'
   if (!allowedRendererMethods.has(method)) {
     throw new Error(`HTTP request method is not allowed: ${method}`)
   }
 
-  const headers = normalizeRendererHeaders(requestInput.headers)
-  const responseType =
-    requestInput.responseType === 3
-      ? 'arraybuffer'
-      : requestInput.responseType === 2
-        ? 'text'
-        : 'json'
-
-  const response = await axios.request(
-    applyProxyToAxios({
-      url: url.toString(),
-      method,
-      headers,
-      params: isRecord(requestInput.query) ? requestInput.query : undefined,
-      data: normalizeRendererBody(requestInput.body, headers),
-      responseType,
-      maxRedirects: 0,
-      timeout: 30000,
-      validateStatus: () => true,
-    }),
-  )
-
-  const data =
-    requestInput.responseType === 3 && response.data instanceof Uint8Array
-      ? Array.from(response.data)
-      : requestInput.responseType === 3 && response.data instanceof ArrayBuffer
-        ? Array.from(new Uint8Array(response.data))
-        : response.data
+  const headers = normalizeRendererHeaders(input.headers)
+  const url = new URL(input.url)
+  appendQuery(url, input.query)
 
   return {
-    ok: response.status >= 200 && response.status < 300,
+    request: input as unknown as HttpRequest,
+    url,
+    init: {
+      method,
+      headers,
+      body: normalizeRendererBody(input.body, headers),
+      redirect: 'manual',
+    },
+  }
+}
+
+function normalizedTimeout(value: unknown, fallback?: number): number | undefined {
+  if (value === undefined) {
+    return fallback
+  }
+
+  return typeof value === 'number' && Number.isFinite(value) && value > 0
+    ? Math.min(value, 10 * 60_000)
+    : fallback
+}
+
+async function fetchWithTimeout(
+  url: string,
+  init: RequestInit,
+  timeoutMs?: number,
+): Promise<Response> {
+  if (timeoutMs === undefined) {
+    return net.fetch(url, init)
+  }
+
+  const controller = new AbortController()
+  const timeout = setTimeout(
+    () => controller.abort(new Error('HTTP request timed out.')),
+    timeoutMs,
+  )
+  const abortFromCaller = () => controller.abort(init.signal?.reason)
+  init.signal?.addEventListener('abort', abortFromCaller, { once: true })
+
+  try {
+    return await net.fetch(url, { ...init, signal: controller.signal })
+  } finally {
+    clearTimeout(timeout)
+    init.signal?.removeEventListener('abort', abortFromCaller)
+  }
+}
+
+function responseHeaders(response: Response): Record<string, string> {
+  return Object.fromEntries(response.headers.entries())
+}
+
+async function decodeResponseData(
+  response: Response,
+  responseType: HttpRequest['responseType'],
+): Promise<unknown> {
+  if (responseType === 'arrayBuffer') {
+    return new Uint8Array(await response.arrayBuffer())
+  }
+
+  const text = await response.text()
+  if (responseType === 'text') {
+    return text
+  }
+
+  if (text === '') {
+    return null
+  }
+
+  try {
+    return JSON.parse(text)
+  } catch {
+    return text
+  }
+}
+
+function responseMetadata(response: Response, data: unknown): HttpResponse {
+  return {
+    ok: response.ok,
     status: response.status,
     statusText: response.statusText,
-    headers: Object.fromEntries(
-      Object.entries(response.headers).map(([key, value]) => [
-        key,
-        Array.isArray(value) ? value.join(', ') : String(value),
-      ]),
-    ),
+    headers: responseHeaders(response),
     data,
+  }
+}
+
+export async function request<T = unknown>(options: ProviderRequest): Promise<T> {
+  const url = await assertAllowedProviderRequestUrl(resolveProviderRequestUrl(options))
+  appendQuery(url, options.params)
+  const response = await fetchWithTimeout(
+    url.toString(),
+    {
+      method: options.method ?? 'GET',
+      headers: options.headers,
+      body: options.data,
+      redirect: 'manual',
+    },
+    normalizedTimeout(options.timeoutMs, 30_000),
+  )
+
+  if (!response.ok) {
+    throw new Error(`SERVICE_HTTP_ERROR:${response.status}`)
+  }
+
+  return (await decodeResponseData(response, 'json')) as T
+}
+
+export async function rendererHttpRequest(input: unknown): Promise<HttpResponse> {
+  const { request: rendererRequest, url, init } = normalizeRendererRequest(input)
+  const allowedUrl = await assertAllowedProviderRequestUrl(url.toString())
+  const response = await fetchWithTimeout(
+    allowedUrl.toString(),
+    init,
+    normalizedTimeout(rendererRequest.timeoutMs, 30_000),
+  )
+  const data = await decodeResponseData(response, rendererRequest.responseType)
+  return responseMetadata(response, data)
+}
+
+export async function streamRendererHttpRequest(
+  input: unknown,
+  handlers: StreamResponseHandlers,
+  signal: AbortSignal,
+): Promise<void> {
+  const { request: rendererRequest, url, init } = normalizeRendererRequest(input)
+  const allowedUrl = await assertAllowedProviderRequestUrl(url.toString())
+  const response = await fetchWithTimeout(
+    allowedUrl.toString(),
+    { ...init, signal },
+    normalizedTimeout(rendererRequest.timeoutMs),
+  )
+
+  if (!response.ok) {
+    const data = await decodeResponseData(response, rendererRequest.responseType)
+    handlers.onResponse({ ...responseMetadata(response, data), streaming: false })
+    return
+  }
+
+  handlers.onResponse({ ...responseMetadata(response, undefined), streaming: true })
+  if (!response.body) {
+    return
+  }
+
+  const reader = response.body.getReader()
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) {
+        return
+      }
+      handlers.onChunk(value)
+    }
+  } finally {
+    reader.releaseLock()
   }
 }
 
@@ -314,12 +409,13 @@ export async function streamRequest(
   input: RequestInfo | URL,
   init: RequestInit = {},
 ): Promise<ReadableStream<Uint8Array> | null> {
-  const url = await assertAllowedProviderRequestUrl(resolveFetchRequestUrl(input))
+  const rawUrl =
+    input instanceof URL ? input.toString() : typeof input === 'string' ? input : input.url
+  const url = await assertAllowedProviderRequestUrl(rawUrl)
   const response = await net.fetch(url.toString(), { ...init, redirect: 'manual' })
   if (!response.ok) {
     throw new Error(`SERVICE_HTTP_ERROR:${response.status}`)
   }
-
   return response.body
 }
 

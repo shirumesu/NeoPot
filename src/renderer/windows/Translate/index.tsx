@@ -1,8 +1,7 @@
-import { getCurrentWebviewWindow } from '@/renderer/lib/electron/compat/webviewWindow'
-import { Spacer, Button } from '@heroui/react'
+import { getCurrentWindow } from '@/renderer/lib/electron/window'
+import { Spacer } from '@heroui/react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { listen } from '@/renderer/lib/electron/compat/event'
-import { BsPinFill } from 'react-icons/bs'
+import { onAppEvent } from '@/renderer/lib/electron/events'
 import { useTranslation } from 'react-i18next'
 
 import WindowControl from '../../components/WindowControl'
@@ -14,11 +13,11 @@ import { osType } from '@/renderer/lib/config/env'
 import {
   DragRegion,
   LINUX_WINDOW_FRAME_CLASS,
-  PIN_ICON_CLASS,
   WINDOW_TOPBAR_HEIGHT_CLASS,
 } from '@/renderer/components/windowChrome'
+import { PinButton, useCloseOnBlur } from '@/renderer/components/WindowPinning'
 import { useConfig } from '../../hooks'
-import { getStoreValue, saveStore, setStoreValue } from '@/renderer/lib/config/store'
+import { setStoreValue } from '@/renderer/lib/config/store'
 import {
   EnabledServicePluginList,
   loadEnabledServicePlugins,
@@ -31,58 +30,14 @@ import {
 } from '@/renderer/lib/service/service_instance'
 import * as builtinTranslateServices from '@/renderer/providers/translate'
 import { logger } from '@/renderer/lib/logger'
-const appWindow = getCurrentWebviewWindow()
+import {
+  loadServiceInstanceConfigMap,
+  type ServiceInstanceConfigMap,
+} from '@/renderer/lib/service/serviceConfig'
+const appWindow = getCurrentWindow()
 const builtinTranslateServiceMap = builtinTranslateServices as BuiltinServices
 
-type ServiceInstanceConfigMap = Record<string, Record<string, unknown>>
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value)
-}
-
-let blurTimeout: ReturnType<typeof setTimeout> | null = null
 let moveTimeout: ReturnType<typeof setTimeout> | null = null
-let skipNextBlurClose = false
-
-const listenBlur = () => {
-  return listen('neopot://blur', () => {
-    if (appWindow.label === 'translate') {
-      if (skipNextBlurClose) {
-        skipNextBlurClose = false
-        return
-      }
-      if (blurTimeout) {
-        clearTimeout(blurTimeout)
-      }
-      // Close the window after 100ms, because dragging the window under windows will switch to blur and then to focus immediately.
-      blurTimeout = setTimeout(async () => {
-        await appWindow.close()
-      }, 100)
-    }
-  })
-}
-
-let unlisten = listenBlur()
-const unlistenBlur = () => {
-  unlisten.then((f) => {
-    f()
-  })
-}
-
-void listen('neopot://focus', () => {
-  skipNextBlurClose = false
-  if (blurTimeout) {
-    clearTimeout(blurTimeout)
-  }
-})
-void listen('neopot://minimize', () => {
-  skipNextBlurClose = true
-})
-void listen('neopot://move', () => {
-  if (blurTimeout) {
-    clearTimeout(blurTimeout)
-  }
-})
 
 export default function Translate() {
   const { t } = useTranslation()
@@ -98,7 +53,11 @@ export default function Translate() {
   ])
   const [ttsServiceInstanceList] = useConfig<string[]>('tts_service_list', ['lingva'])
   const [hideLanguage] = useConfig('hide_language', false)
-  const [pined, setPined] = useState(false)
+  const { isPinned, togglePinned } = useCloseOnBlur({
+    enabled: closeOnBlur === true,
+    delayMs: 100,
+    initiallyPinned: alwaysOnTop === true,
+  })
   const [pluginList, setPluginList] = useState<EnabledServicePluginList>({
     translate: {},
     tts: {},
@@ -149,41 +108,18 @@ export default function Translate() {
     [serviceInstanceConfigMap, validTranslateServiceInstanceList],
   )
   useEffect(() => {
-    if (closeOnBlur !== null && !closeOnBlur) {
-      unlistenBlur()
-    }
-  }, [closeOnBlur])
-  useEffect(() => {
-    if (alwaysOnTop !== null && alwaysOnTop) {
-      appWindow.setAlwaysOnTop(true)
-      unlistenBlur()
-      setPined(true)
-    }
-  }, [alwaysOnTop])
-  useEffect(() => {
     if (windowPosition !== null && windowPosition === 'pre_state') {
-      const unlistenMove = listen('neopot://move', async () => {
+      const unlistenMove = onAppEvent('neopot://move', async () => {
         if (moveTimeout) {
           clearTimeout(moveTimeout)
         }
         moveTimeout = setTimeout(async () => {
-          if (appWindow.label === 'translate') {
-            const position = await appWindow.outerPosition()
-            await setStoreValue('translate_window_position_x', Number(position.x), {
-              save: false,
-            })
-            await setStoreValue('translate_window_position_y', Number(position.y), {
-              save: false,
-            })
-            await saveStore()
-          }
+          const position = await appWindow.outerPosition()
+          await setStoreValue('translate_window_position_x', Number(position.x))
+          await setStoreValue('translate_window_position_y', Number(position.y))
         }, 100)
       })
-      return () => {
-        unlistenMove.then((f) => {
-          f()
-        })
-      }
+      return unlistenMove
     }
   }, [windowPosition])
   const loadPluginList = useCallback(async () => {
@@ -198,13 +134,11 @@ export default function Translate() {
   }, [])
 
   useEffect(() => {
-    loadPluginList()
-    if (!unlisten) {
-      unlisten = listen('reload_plugin_list', loadPluginList)
-    }
+    void loadPluginList()
+    return onAppEvent('reload_plugin_list', loadPluginList)
   }, [loadPluginList])
 
-  const loadServiceInstanceConfigMap = useCallback(async () => {
+  const refreshServiceInstanceConfigMap = useCallback(async () => {
     try {
       const serviceInstanceKeys = [
         ...new Set([
@@ -213,13 +147,7 @@ export default function Translate() {
           ...validTtsServiceInstanceList,
         ]),
       ]
-      const configEntries = await Promise.all(
-        serviceInstanceKeys.map(async (serviceInstanceKey) => {
-          const value = await getStoreValue(serviceInstanceKey)
-          return [serviceInstanceKey, isRecord(value) ? value : {}] as const
-        }),
-      )
-      const config = Object.fromEntries(configEntries) as ServiceInstanceConfigMap
+      const config = await loadServiceInstanceConfigMap(serviceInstanceKeys)
       setServiceConfigError(null)
       setServiceInstanceConfigMap(config)
     } catch (error) {
@@ -238,10 +166,10 @@ export default function Translate() {
       recognizeServiceInstanceList !== null &&
       ttsServiceInstanceList !== null
     ) {
-      loadServiceInstanceConfigMap()
+      void refreshServiceInstanceConfigMap()
     }
   }, [
-    loadServiceInstanceConfigMap,
+    refreshServiceInstanceConfigMap,
     translateServiceInstanceList,
     recognizeServiceInstanceList,
     ttsServiceInstanceList,
@@ -290,7 +218,7 @@ export default function Translate() {
                   </div>
                 )}
               </div>
-              <div className={`${hideLanguage && 'hidden'}`}>
+              <div className={hideLanguage ? 'hidden' : ''}>
                 <LanguageArea
                   translateServiceInstanceList={enabledTranslateServiceInstanceList}
                   pluginList={pluginList}
@@ -322,30 +250,7 @@ export default function Translate() {
           osType === 'Darwin' ? 'justify-end' : 'justify-between'
         }`}
       >
-        <Button
-          isIconOnly
-          size="sm"
-          variant="flat"
-          disableAnimation
-          className="my-auto mx-1.25 bg-transparent"
-          aria-label={t(pined ? 'accessibility.unpin_window' : 'accessibility.pin_window')}
-          onPress={() => {
-            if (pined) {
-              if (closeOnBlur) {
-                unlisten = listenBlur()
-              }
-              appWindow.setAlwaysOnTop(false)
-            } else {
-              unlistenBlur()
-              appWindow.setAlwaysOnTop(true)
-            }
-            setPined(!pined)
-          }}
-        >
-          <BsPinFill
-            className={`${PIN_ICON_CLASS} ${pined ? 'text-primary' : 'text-default-400'}`}
-          />
-        </Button>
+        <PinButton isPinned={isPinned} onToggle={togglePinned} />
         {osType !== 'Darwin' && <WindowControl />}
       </DragRegion>
     </div>

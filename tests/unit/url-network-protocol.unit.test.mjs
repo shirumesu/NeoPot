@@ -23,7 +23,11 @@ import {
   normalizeOllamaBaseUrl,
   normalizeProviderUrl,
 } from '../../src/shared/providerUrl.ts'
-import { normalizeProxyHost } from '../../src/shared/proxyConfig.ts'
+import {
+  createProxyRules,
+  matchesProxyChallenge,
+  normalizeProxyHost,
+} from '../../src/shared/proxyConfig.ts'
 
 test('external URL validation allows only safe default protocols', () => {
   assert.equal(assertSafeExternalUrl('https://example.com/path'), 'https://example.com/path')
@@ -186,6 +190,32 @@ test('proxy host normalization rejects URL components and proxy rule injection i
   ]) {
     assert.equal(normalizeProxyHost(input), undefined, input)
   }
+})
+
+test('session proxy rules use the configured HTTP proxy for Chromium network requests', () => {
+  assert.equal(createProxyRules('proxy.example.com', 7890), 'http://proxy.example.com:7890')
+  assert.equal(createProxyRules('[::1]', 8080), 'http://[::1]:8080')
+})
+
+test('proxy credentials are supplied only to the configured proxy challenge', () => {
+  const proxy = { enabled: true, host: 'proxy.example.com', port: 7890 }
+
+  assert.equal(
+    matchesProxyChallenge({ isProxy: true, host: 'PROXY.EXAMPLE.COM', port: 7890 }, proxy),
+    true,
+  )
+  assert.equal(
+    matchesProxyChallenge({ isProxy: false, host: 'proxy.example.com', port: 7890 }, proxy),
+    false,
+  )
+  assert.equal(
+    matchesProxyChallenge({ isProxy: true, host: 'other.example.com', port: 7890 }, proxy),
+    false,
+  )
+  assert.equal(
+    matchesProxyChallenge({ isProxy: true, host: 'proxy.example.com', port: 7891 }, proxy),
+    false,
+  )
 })
 
 test('packaged renderer protocol resolves only neopot main-window files inside the renderer root', () => {

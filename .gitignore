@@ -26,6 +26,3 @@ test-results
 
 # Spec document
 spec/
-
-# temp
-docs/electron-compat.md

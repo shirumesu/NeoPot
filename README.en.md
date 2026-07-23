@@ -15,15 +15,15 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/shirumesu/NeoPot/releases/latest">下载最新版</a>
+  <a href="https://github.com/shirumesu/NeoPot/releases/latest">Download latest release</a>
   |
-  <a href="https://github.com/shirumesu/NeoPot/issues">反馈问题</a>
+  <a href="https://github.com/shirumesu/NeoPot/issues">Report an issue</a>
 </p>
 
 <p align="center">
   <img alt="Version" src="https://img.shields.io/github/v/release/shirumesu/NeoPot.svg" />
   <img alt="License" src="https://img.shields.io/github/license/shirumesu/NeoPot.svg" />
-  <img alt="Electron" src="https://img.shields.io/badge/Electron-42-blue?logo=electron" />
+  <img alt="Electron" src="https://img.shields.io/badge/Electron-41-blue?logo=electron" />
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.6-blue?logo=typescript&logoColor=white" />
   <img alt="Windows" src="https://img.shields.io/badge/Windows-supported-blue?logo=windows&logoColor=white" />
   <img alt="Linux" src="https://img.shields.io/badge/Linux-supported-yellow?logo=linux&logoColor=white" />
@@ -42,8 +42,6 @@
 - [External Invocation](#external-invocation)
 - [Wayland Support](#wayland-support)
 - [Development and Build](#development-and-build)
-- [Future TODO](#future-todo)
-- [Known Issues](#known-issues)
 - [Acknowledgements](#acknowledgements)
 
 ## Feature Preview
@@ -186,7 +184,7 @@ windowrulev2 = move cursor 0 0, class:(neopot), title:(Translator|Screenshot Tra
 
 ### Technology Stack
 
-- **Desktop framework**: Electron 42+ with electron-vite
+- **Desktop framework**: Electron 41+ with electron-vite
 - **Frontend**: React 19, TypeScript, Vite 7
 - **UI framework**: HeroUI, Tailwind CSS 4
 - **State management**: Jotai
@@ -226,7 +224,7 @@ pnpm run make
 ```
 
 `npm run test` is the complete local quality gate before committing. See
-[`tests/README.md`](tests/README.md) for the fast, coverage, Electron journey, and mutation layers.
+[`tests/README.md`](tests/README.md) for the fast, coverage, and Electron journey layers.
 
 ## Acknowledgements
 

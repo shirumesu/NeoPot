@@ -23,7 +23,7 @@
 <p align="center">
   <img alt="Version" src="https://img.shields.io/github/v/release/shirumesu/NeoPot.svg" />
   <img alt="License" src="https://img.shields.io/github/license/shirumesu/NeoPot.svg" />
-  <img alt="Electron" src="https://img.shields.io/badge/Electron-42-blue?logo=electron" />
+  <img alt="Electron" src="https://img.shields.io/badge/Electron-41-blue?logo=electron" />
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.6-blue?logo=typescript&logoColor=white" />
   <img alt="Windows" src="https://img.shields.io/badge/Windows-supported-blue?logo=windows&logoColor=white" />
   <img alt="Linux" src="https://img.shields.io/badge/Linux-supported-yellow?logo=linux&logoColor=white" />
@@ -42,8 +42,6 @@
 - [外部调用](#外部调用)
 - [Wayland 支持](#wayland-支持)
 - [开发与构建](#开发与构建)
-- [未来TODO](#未来TODO)
-- [已知问题](#已知问题)
 - [致谢](#致谢)
 
 ## 功能预览
@@ -186,7 +184,7 @@ windowrulev2 = move cursor 0 0, class:(neopot), title:(Translator|Screenshot Tra
 
 ### 技术栈
 
-- **桌面框架**: Electron 42+ with electron-vite
+- **桌面框架**: Electron 41+ with electron-vite
 - **前端**: React 19, TypeScript, Vite 7
 - **UI 框架**: HeroUI, Tailwind CSS 4
 - **状态管理**: Jotai
@@ -225,8 +223,8 @@ pnpm run format
 pnpm run make
 ```
 
-`npm run test` 是提交前的完整本地质量门禁；快速测试、覆盖率、Electron 旅程和
-mutation testing 等分层命令见 [`tests/README.md`](tests/README.md)。
+`npm run test` 是提交前的完整本地质量门禁；快速测试、覆盖率和 Electron 旅程等分层命令见
+[`tests/README.md`](tests/README.md)。
 
 ## 致谢
 

@@ -76,7 +76,7 @@ describe('Ollama adapter', () => {
     expect(url).toBe('http://localhost:11434/api/chat')
     expect(init).toEqual({
       method: 'POST',
-      headers: { Origin: 'http://localhost' },
+      headers: {},
       body: {
         kind: 'json',
         data: {

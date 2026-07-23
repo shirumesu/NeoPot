@@ -1,85 +1,69 @@
-import { getCurrentWebviewWindow } from '@/renderer/lib/electron/compat/webviewWindow'
-import { useCallback, useState, useEffect } from 'react'
-import { listen } from '@/renderer/lib/electron/compat/event'
-import { Button } from '@heroui/react'
-import { BsPinFill } from 'react-icons/bs'
+import { useCallback, useState, useEffect, useMemo } from 'react'
+import { onAppEvent } from '@/renderer/lib/electron/events'
 import { atom, useAtom } from 'jotai'
 import { useTranslation } from 'react-i18next'
 
 import WindowControl from '../../components/WindowControl'
 import ErrorPanel from '../../components/ErrorPanel'
-import { getStoreValue } from '@/renderer/lib/config/store'
 import { osType } from '@/renderer/lib/config/env'
 import {
   LINUX_WINDOW_FRAME_CLASS,
-  PIN_ICON_CLASS,
   TopDragRegion,
   WINDOW_TOPBAR_HEIGHT_CLASS,
 } from '@/renderer/components/windowChrome'
+import { PinButton, useCloseOnBlur } from '@/renderer/components/WindowPinning'
 import { useConfig } from '../../hooks'
 import ControlArea from './ControlArea'
 import ImageArea from './ImageArea'
 import TextArea from './TextArea'
 import { logger } from '@/renderer/lib/logger'
 import { loadInstalledPlugins, type InstalledPlugin } from '../Config/pages/Plugin/installedPlugins'
-const appWindow = getCurrentWebviewWindow()
-
-type ServiceInstanceConfigMap = Record<string, Record<string, unknown>>
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value)
-}
+import {
+  ServiceSourceType,
+  isValidServiceInstanceKey,
+  whetherAvailableService,
+} from '@/renderer/lib/service/service_instance'
+import * as builtinRecognizeServices from '@/renderer/providers/recognize'
+import type { BuiltinServices } from '../Config/pages/Service/types'
+import {
+  loadServiceInstanceConfigMap,
+  type ServiceInstanceConfigMap,
+} from '@/renderer/lib/service/serviceConfig'
+const builtinRecognizeServiceMap = builtinRecognizeServices as BuiltinServices
 
 export const pluginListAtom = atom<Record<string, InstalledPlugin>>({})
 
-let blurTimeout: ReturnType<typeof setTimeout> | null = null
-let skipNextBlurClose = false
-
-const listenBlur = () => {
-  return listen('neopot://blur', () => {
-    if (appWindow.label === 'recognize') {
-      if (skipNextBlurClose) {
-        skipNextBlurClose = false
-        return
-      }
-      if (blurTimeout) {
-        clearTimeout(blurTimeout)
-      }
-      // Close the window after 50ms, because dragging a window on windows switches to blur and then immediately to focus.
-      blurTimeout = setTimeout(async () => {
-        await appWindow.close()
-      }, 50)
-    }
-  })
-}
-
-let unlisten = listenBlur()
-const unlistenBlur = () => {
-  unlisten.then((f) => {
-    f()
-  })
-}
-
-void listen('neopot://focus', () => {
-  skipNextBlurClose = false
-  if (blurTimeout) {
-    clearTimeout(blurTimeout)
-  }
-})
-void listen('neopot://minimize', () => {
-  skipNextBlurClose = true
-})
-
 export default function Recognize() {
   const { t } = useTranslation()
-  const [, setPluginList] = useAtom(pluginListAtom)
+  const [pluginList, setPluginList] = useAtom(pluginListAtom)
   const [closeOnBlur] = useConfig('recognize_close_on_blur', false)
-  const [pined, setPined] = useState(false)
+  const { isPinned, togglePinned } = useCloseOnBlur({
+    enabled: closeOnBlur === true,
+    delayMs: 50,
+  })
   const [serviceInstanceList] = useConfig<string[]>('recognize_service_list', ['local_model'])
   const [pluginLoadError, setPluginLoadError] = useState<string | null>(null)
   const [serviceConfigError, setServiceConfigError] = useState<string | null>(null)
   const [serviceInstanceConfigMap, setServiceInstanceConfigMap] =
     useState<ServiceInstanceConfigMap>({})
+  const availableRecognizeServices = useMemo(
+    () => ({
+      [ServiceSourceType.BUILDIN]: builtinRecognizeServiceMap,
+      [ServiceSourceType.PLUGIN]: pluginList,
+    }),
+    [pluginList],
+  )
+  const validServiceInstanceList = useMemo(
+    () =>
+      Array.isArray(serviceInstanceList)
+        ? serviceInstanceList.filter(
+            (key) =>
+              isValidServiceInstanceKey(key) &&
+              whetherAvailableService(key, availableRecognizeServices),
+          )
+        : [],
+    [availableRecognizeServices, serviceInstanceList],
+  )
 
   const loadPluginList = useCallback(async () => {
     try {
@@ -95,46 +79,26 @@ export default function Recognize() {
       setPluginLoadError(error instanceof Error ? error.message : String(error))
     }
   }, [setPluginList])
-  const loadServiceInstanceConfigMap = useCallback(async () => {
+  const refreshServiceInstanceConfigMap = useCallback(async () => {
     try {
-      if (serviceInstanceList === null) {
-        return
-      }
-
-      const configEntries = await Promise.all(
-        [...new Set(serviceInstanceList)].map(async (serviceInstanceKey) => {
-          const value = await getStoreValue(serviceInstanceKey)
-          return [serviceInstanceKey, isRecord(value) ? value : {}] as const
-        }),
-      )
-      const config = Object.fromEntries(configEntries) as ServiceInstanceConfigMap
+      const config = await loadServiceInstanceConfigMap(validServiceInstanceList)
       setServiceConfigError(null)
       setServiceInstanceConfigMap(config)
     } catch (error) {
       logger.error('Failed to load recognize service config map.', error)
       setServiceConfigError(error instanceof Error ? error.message : String(error))
     }
-  }, [serviceInstanceList])
+  }, [validServiceInstanceList])
   useEffect(() => {
     if (serviceInstanceList !== null) {
-      loadServiceInstanceConfigMap()
+      void refreshServiceInstanceConfigMap()
     }
-  }, [serviceInstanceList, loadServiceInstanceConfigMap])
+  }, [serviceInstanceList, refreshServiceInstanceConfigMap])
 
   useEffect(() => {
     loadPluginList()
-    const unlistenPromise = listen('reload_plugin_list', loadPluginList)
-    return () => {
-      unlistenPromise.then((unlisten) => {
-        unlisten()
-      })
-    }
+    return onAppEvent('reload_plugin_list', loadPluginList)
   }, [loadPluginList])
-  useEffect(() => {
-    if (closeOnBlur !== null && !closeOnBlur) {
-      unlistenBlur()
-    }
-  }, [closeOnBlur])
 
   const hasInitError = pluginLoadError !== null || serviceConfigError !== null
   const isRecognizeConfigReady = serviceInstanceList !== null
@@ -147,30 +111,7 @@ export default function Recognize() {
           osType === 'Darwin' ? 'justify-end' : 'justify-between'
         }`}
       >
-        <Button
-          isIconOnly
-          size="sm"
-          variant="flat"
-          disableAnimation
-          className="my-auto mx-1.25 bg-transparent"
-          aria-label={t(pined ? 'accessibility.unpin_window' : 'accessibility.pin_window')}
-          onPress={() => {
-            if (pined) {
-              if (closeOnBlur) {
-                unlisten = listenBlur()
-              }
-              appWindow.setAlwaysOnTop(false)
-            } else {
-              unlistenBlur()
-              appWindow.setAlwaysOnTop(true)
-            }
-            setPined(!pined)
-          }}
-        >
-          <BsPinFill
-            className={`${PIN_ICON_CLASS} ${pined ? 'text-primary' : 'text-default-400'}`}
-          />
-        </Button>
+        <PinButton isPinned={isPinned} onToggle={togglePinned} />
         {osType !== 'Darwin' && <WindowControl />}
       </div>
       {hasInitError ? (
@@ -191,7 +132,7 @@ export default function Recognize() {
           </div>
           <div className="h-12.5">
             <ControlArea
-              serviceInstanceList={serviceInstanceList}
+              serviceInstanceList={validServiceInstanceList}
               serviceInstanceConfigMap={serviceInstanceConfigMap}
             />
           </div>

@@ -43,10 +43,6 @@ export function attachPluginHotkeyListener(): () => void {
     return unsubscribePluginHotkey
   }
 
-  if (!window.neoPot?.app.onEvent) {
-    return () => undefined
-  }
-
   unsubscribePluginHotkey = window.neoPot.app.onEvent('plugin_hotkey_triggered', (payload) => {
     const hotkey = parsePluginHotkeyPayload(payload)
     if (!hotkey) {

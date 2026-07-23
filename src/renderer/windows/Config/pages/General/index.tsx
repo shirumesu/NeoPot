@@ -1,4 +1,8 @@
-import { enable, isEnabled, disable } from '@/renderer/lib/electron/compat/autostart'
+import {
+  disableAutoStart,
+  enableAutoStart,
+  isAutoStartEnabled,
+} from '@/renderer/lib/electron/autoStart'
 import { DropdownTrigger } from '@heroui/react'
 import React, { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
@@ -23,15 +27,13 @@ import flagTrUrl from 'flag-icons/flags/4x3/tr.svg?url'
 import flagUnUrl from 'flag-icons/flags/4x3/un.svg?url'
 import { Input } from '@heroui/react'
 import { Card } from '@heroui/react'
-import { invoke } from '@/renderer/lib/electron/compat/core'
-import { useTheme } from 'next-themes'
+import { invokeCommand } from '@/renderer/lib/electron/command'
 import { applyRendererLogLevel } from '@/renderer/lib/electron/logLevel'
 import { isLogLevel, type AppLogLevel } from '@/shared/logLevel'
 
 import { useConfig } from '../../../../hooks/useConfig'
 import { LanguageFlag } from '@/renderer/lib/language/language'
 import { selectableAppLanguages } from '@/renderer/i18n/resources'
-import { useToastStyle } from '../../../../hooks'
 import { osType } from '@/renderer/lib/config/env'
 import { logger } from '@/renderer/lib/logger'
 import { useConfigSave } from '../../hooks/useConfigSave'
@@ -189,8 +191,6 @@ export default function General() {
   const [proxyPassword, setProxyPassword] = useConfig('proxy_password', '')
   const [noProxy, setNoProxy] = useConfig('no_proxy', 'localhost,127.0.0.1')
   const { t, i18n } = useTranslation()
-  const { setTheme } = useTheme()
-  const toastStyle = useToastStyle()
   const { saveConfig } = useConfigSave()
 
   const appLanguageName = (language: string) =>
@@ -209,10 +209,10 @@ export default function General() {
   ]
 
   useEffect(() => {
-    isEnabled().then((v) => {
+    isAutoStartEnabled().then((v) => {
       setAutoStart(v)
     })
-    invoke<string[]>('font_list').then((v) => {
+    invokeCommand('font_list').then((v) => {
       setFontList(v)
     })
   }, [])
@@ -231,13 +231,13 @@ export default function General() {
                 setAutoStart(v)
                 try {
                   if (v) {
-                    await enable()
+                    await enableAutoStart()
                     logger.info('Auto start enabled.')
                   } else {
-                    await disable()
+                    await disableAutoStart()
                     logger.info('Auto start disabled.')
                   }
-                  const verified = await isEnabled()
+                  const verified = await isAutoStartEnabled()
                   if (verified !== v) {
                     throw new Error('Auto start state did not change')
                   }
@@ -246,7 +246,6 @@ export default function General() {
                   })
                   toast.success(t('config.common.save_success'), {
                     duration: 1500,
-                    style: toastStyle,
                   })
                 } catch (error) {
                   logger.error('Auto start setting change failed.', error, {
@@ -255,7 +254,6 @@ export default function General() {
                   setAutoStart(!v)
                   toast.error(t('config.common.save_failed'), {
                     duration: 3000,
-                    style: toastStyle,
                   })
                 }
               }}
@@ -306,7 +304,7 @@ export default function General() {
                     const language = String(key)
                     saveConfig('app_language', appLanguage, setAppLanguage, language)
                     i18n.changeLanguage(language)
-                    invoke('update_tray', { language, copyMode: '' })
+                    invokeCommand('update_tray', { language, copyMode: '' })
                   }}
                 >
                   {selectableAppLanguages.map((language) => (
@@ -330,26 +328,7 @@ export default function General() {
                 <DropdownMenu
                   aria-label={t('accessibility.app_theme')}
                   onAction={(key) => {
-                    const theme = String(key)
-                    saveConfig('app_theme', appTheme, setAppTheme, theme)
-                    if (theme !== 'system') {
-                      setTheme(theme)
-                    } else {
-                      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                        setTheme('dark')
-                      } else {
-                        setTheme('light')
-                      }
-                      window
-                        .matchMedia('(prefers-color-scheme: dark)')
-                        .addEventListener('change', (e) => {
-                          if (e.matches) {
-                            setTheme('dark')
-                          } else {
-                            setTheme('light')
-                          }
-                        })
-                    }
+                    saveConfig('app_theme', appTheme, setAppTheme, String(key))
                   }}
                 >
                   <DropdownItem key="system">{t('config.general.theme.system')}</DropdownItem>
@@ -449,34 +428,37 @@ export default function General() {
               </Dropdown>
             )}
           </ConfigItem>
-          <ConfigItem
-            title={t('config.general.tray_click_event')}
-            className={osType !== 'Windows_NT' ? 'hidden' : ''}
-          >
-            {trayClickEvent !== null && (
-              <Dropdown>
-                <DropdownTrigger>
-                  <Button variant="bordered">{t(`config.general.event.${trayClickEvent}`)}</Button>
-                </DropdownTrigger>
-                <DropdownMenu
-                  aria-label={t('accessibility.tray_click_event')}
-                  onAction={(key) => {
-                    saveConfig('tray_click_event', trayClickEvent, setTrayClickEvent, String(key))
-                  }}
-                >
-                  <DropdownItem key="config">{t('config.general.event.config')}</DropdownItem>
-                  <DropdownItem key="translate">{t('config.general.event.translate')}</DropdownItem>
-                  <DropdownItem key="ocr_recognize">
-                    {t('config.general.event.ocr_recognize')}
-                  </DropdownItem>
-                  <DropdownItem key="ocr_translate">
-                    {t('config.general.event.ocr_translate')}
-                  </DropdownItem>
-                  <DropdownItem key="disable">{t('config.general.event.disable')}</DropdownItem>
-                </DropdownMenu>
-              </Dropdown>
-            )}
-          </ConfigItem>
+          {osType === 'Windows_NT' && (
+            <ConfigItem title={t('config.general.tray_click_event')}>
+              {trayClickEvent !== null && (
+                <Dropdown>
+                  <DropdownTrigger>
+                    <Button variant="bordered">
+                      {t(`config.general.event.${trayClickEvent}`)}
+                    </Button>
+                  </DropdownTrigger>
+                  <DropdownMenu
+                    aria-label={t('accessibility.tray_click_event')}
+                    onAction={(key) => {
+                      saveConfig('tray_click_event', trayClickEvent, setTrayClickEvent, String(key))
+                    }}
+                  >
+                    <DropdownItem key="config">{t('config.general.event.config')}</DropdownItem>
+                    <DropdownItem key="translate">
+                      {t('config.general.event.translate')}
+                    </DropdownItem>
+                    <DropdownItem key="ocr_recognize">
+                      {t('config.general.event.ocr_recognize')}
+                    </DropdownItem>
+                    <DropdownItem key="ocr_translate">
+                      {t('config.general.event.ocr_translate')}
+                    </DropdownItem>
+                    <DropdownItem key="disable">{t('config.general.event.disable')}</DropdownItem>
+                  </DropdownMenu>
+                </Dropdown>
+              )}
+            </ConfigItem>
+          )}
           <ConfigItem title={t('config.general.dev_mode')}>
             {devMode !== null && (
               <Switch
@@ -507,13 +489,12 @@ export default function General() {
                     }
 
                     applyRendererLogLevel(nextLevel)
-                    const applied = await invoke<boolean>('log:set-level', { level: nextLevel })
+                    const applied = await invokeCommand('log:set-level', { level: nextLevel })
                     if (applied !== true) {
                       await setLogLevel(logLevel, true)
                       applyRendererLogLevel(logLevel)
                       toast.error(t('config.common.save_failed'), {
                         duration: 3000,
-                        style: toastStyle,
                       })
                     }
                   }}
@@ -546,7 +527,6 @@ export default function General() {
                     ) {
                       toast.error(t('config.general.proxy_error'), {
                         duration: 3000,
-                        style: toastStyle,
                       })
                       return
                     }
@@ -560,23 +540,21 @@ export default function General() {
                   }
 
                   try {
-                    await invoke(v ? 'set_proxy' : 'unset_proxy')
+                    await invokeCommand(v ? 'set_proxy' : 'unset_proxy')
                     toast.success(t('config.general.proxy_change'), {
                       duration: 1000,
-                      style: toastStyle,
                     })
                   } catch (e) {
                     await saveConfig('proxy_enable', v, setProxyEnable, !v, {
                       notify: false,
                     })
                     try {
-                      await invoke(v ? 'unset_proxy' : 'set_proxy')
+                      await invokeCommand(v ? 'unset_proxy' : 'set_proxy')
                     } catch (rollbackError) {
                       logger.error('Proxy rollback failed.', rollbackError)
                     }
                     toast.error(String(e), {
                       duration: 3000,
-                      style: toastStyle,
                     })
                   }
                 }}

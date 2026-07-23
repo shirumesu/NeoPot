@@ -1,4 +1,3 @@
-import { configApi, pluginApi } from '@/renderer/lib/electron/adapter'
 import { logger } from '@/renderer/lib/logger'
 import type { PluginInfo, PluginMarketplaceEntry } from '@/shared/types/electron-api'
 import { describeMarketplaceSourceError, type MarketplaceSourceErrorKind } from './marketplaceError'
@@ -71,12 +70,12 @@ function normalizeSourceList(value: unknown): string[] {
 }
 
 export async function loadCustomMarketplaceSources(): Promise<string[]> {
-  return normalizeSourceList(await configApi.get(MARKETPLACE_SOURCES_CONFIG_KEY))
+  return normalizeSourceList(await window.neoPot.config.get(MARKETPLACE_SOURCES_CONFIG_KEY))
 }
 
 export async function saveCustomMarketplaceSources(sources: string[]): Promise<string[]> {
   const normalized = normalizeSourceList(sources)
-  await configApi.set(MARKETPLACE_SOURCES_CONFIG_KEY, normalized)
+  await window.neoPot.config.set(MARKETPLACE_SOURCES_CONFIG_KEY, normalized)
   return normalized
 }
 
@@ -127,7 +126,7 @@ export async function loadMarketplacePlugins(
     MARKETPLACE_SOURCE_CONCURRENCY,
     async (source, index) => {
       try {
-        const plugins = await pluginApi.inspectMarketplace(source)
+        const plugins = await window.neoPot.plugins.inspectMarketplace(source)
         return {
           plugins,
           status: {
@@ -204,7 +203,7 @@ export async function installMarketplacePluginSource(plugin: MarketplacePlugin):
 
   for (const source of sources) {
     try {
-      await pluginApi.installFromUrl(source)
+      await window.neoPot.plugins.installFromUrl(source)
       return source
     } catch (error) {
       lastError = error
@@ -240,10 +239,6 @@ export async function checkPluginUpdates(installedPlugins: InstalledPlugin[]) {
     return { installed, marketplacePlugin, sources }
   })
 
-  if (!pluginApi?.inspectSource) {
-    return []
-  }
-
   const sourceJobs = candidates.flatMap((candidate, candidateIndex) =>
     candidate.sources.map((source) => ({ candidateIndex, source })),
   )
@@ -252,7 +247,7 @@ export async function checkPluginUpdates(installedPlugins: InstalledPlugin[]) {
     PLUGIN_UPDATE_SOURCE_CONCURRENCY,
     async ({ candidateIndex, source }) => {
       try {
-        const sourceManifest = await pluginApi.inspectSource(source)
+        const sourceManifest = await window.neoPot.plugins.inspectSource(source)
         return { candidateIndex, source, sourceManifest }
       } catch {
         return { candidateIndex, source, sourceManifest: null }

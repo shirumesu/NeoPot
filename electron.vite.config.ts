@@ -12,7 +12,6 @@ const external = [
 
 const bundledMainDependencies = [
   'adm-zip',
-  'axios',
   'electron-log',
   'electron-store',
   'electron-updater',

@@ -1,3 +1,5 @@
+import type { RuntimePlatform } from '../platform'
+
 export type WindowLabel = 'config' | 'translate' | 'recognize' | 'screenshot' | 'updater'
 
 export interface TranslateRequest {
@@ -31,6 +33,43 @@ export interface PluginMarketplaceEntry {
 
 export type StreamCallback = (payload: unknown) => void
 export type Unsubscribe = () => void
+
+export type HttpRequestBody =
+  | { kind: 'json'; data: unknown }
+  | { kind: 'text'; data: string }
+  | { kind: 'form'; data: Record<string, unknown> }
+
+export interface HttpRequest {
+  url: string
+  method?: string
+  headers?: Record<string, string>
+  query?: Record<string, unknown>
+  body?: HttpRequestBody | string | null
+  responseType?: 'json' | 'text' | 'arrayBuffer'
+  timeoutMs?: number
+}
+
+export interface HttpResponse {
+  ok: boolean
+  status: number
+  statusText: string
+  headers: Record<string, string>
+  data: unknown
+}
+
+export type HttpStreamEvent =
+  | {
+      type: 'response'
+      ok: boolean
+      status: number
+      statusText: string
+      headers: Record<string, string>
+      data?: unknown
+      streaming: boolean
+    }
+  | { type: 'chunk'; data: Uint8Array }
+  | { type: 'end' }
+  | { type: 'error'; message: string }
 
 export type UpdateDistribution = 'installer' | 'portable' | 'appimage' | 'deb-rpm' | 'unknown'
 export type UpdateMode = 'self-update' | 'manual-download'
@@ -102,6 +141,7 @@ export interface DirectoryEntry {
 
 export interface NeoPotElectronApi {
   app: {
+    platform: RuntimePlatform
     getWindowLabel(): Promise<WindowLabel>
     getVersion(): Promise<string>
     rendererReady(): Promise<void>
@@ -148,6 +188,10 @@ export interface NeoPotElectronApi {
       payload?: Record<string, unknown>,
     ): Promise<TResponse>
   }
+  http: {
+    request(request: HttpRequest): Promise<HttpResponse>
+    stream(request: HttpRequest, callback: (event: HttpStreamEvent) => void): Unsubscribe
+  }
   config: {
     get(key: string): Promise<unknown>
     set(key: string, value: unknown): Promise<void>
@@ -167,14 +211,12 @@ export interface NeoPotElectronApi {
   }
   services: {
     translate(request: TranslateRequest): Promise<TranslateResult>
-    onStream(eventId: string, callback: StreamCallback): Unsubscribe
   }
   plugins: {
     install(file: string): Promise<PluginInstallResult>
     installFromUrl(url: string): Promise<PluginInstallResult>
     inspectSource(url: string): Promise<PluginInfo>
     inspectMarketplace(url: string): Promise<PluginMarketplaceEntry[]>
-    list(type: string): Promise<PluginInfo[]>
     listInstalled(type?: string): Promise<PluginInfo[]>
     uninstall(type: string, name: string): Promise<void>
     setEnabled(type: string, name: string, enabled: boolean): Promise<void>

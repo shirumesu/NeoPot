@@ -2,12 +2,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import type { UpdateCheckResult, UpdateEvent, UpdateProgress } from '@/shared/types/electron-api'
 import {
-  check,
-  download,
-  install,
-  onEvent,
+  checkForUpdates,
+  downloadUpdate,
+  installUpdate,
+  onUpdateEvent,
   openReleasePage,
-} from '@/renderer/lib/electron/compat/updater'
+} from '@/renderer/lib/electron/updater'
 import { getUpdatePrimaryAction, type UpdatePrimaryAction } from './updateActions'
 
 export type UpdaterPhase = 'idle' | 'checking' | 'downloading' | 'ready-restart' | 'installing'
@@ -53,7 +53,7 @@ export function useUpdaterController({
     setMessage('')
 
     try {
-      const nextResult = await check()
+      const nextResult = await checkForUpdates()
       setResult(nextResult)
       setPhase((currentPhase) => (currentPhase === 'checking' ? 'idle' : currentPhase))
 
@@ -75,7 +75,7 @@ export function useUpdaterController({
   }, [onError])
 
   useEffect(() => {
-    const unsubscribeUpdate = onEvent((event: UpdateEvent) => {
+    const unsubscribeUpdate = onUpdateEvent((event: UpdateEvent) => {
       if (event.type === 'checking') {
         setPhase('checking')
         setProgress(null)
@@ -155,11 +155,11 @@ export function useUpdaterController({
           return
         case 'install':
           setPhase('installing')
-          await install()
+          await installUpdate()
           return
         case 'download':
           setPhase('downloading')
-          await download()
+          await downloadUpdate()
           return
         case 'none':
           return

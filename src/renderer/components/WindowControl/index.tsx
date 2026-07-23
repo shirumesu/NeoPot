@@ -5,21 +5,21 @@ import {
   VscChromeRestore,
 } from 'react-icons/vsc'
 import { useEffect, useState } from 'react'
-import { getCurrentWebviewWindow } from '@/renderer/lib/electron/compat/webviewWindow'
-import { listen } from '@/renderer/lib/electron/compat/event'
+import { getCurrentWindow } from '@/renderer/lib/electron/window'
+import { onAppEvent } from '@/renderer/lib/electron/events'
 import { Button } from '@heroui/react'
 import { useTranslation } from 'react-i18next'
 
 import { LINUX_CLOSE_WINDOW_CORNER_CLASS, WINDOW_CONTROL_ICON_CLASS } from '../windowChrome'
 import './style.css'
-const appWindow = getCurrentWebviewWindow()
+const appWindow = getCurrentWindow()
 
 export default function WindowControl() {
   const [isMax, setIsMax] = useState(false)
   const { t } = useTranslation()
 
   useEffect(() => {
-    void listen('neopot://resize', async () => {
+    return onAppEvent('neopot://resize', async () => {
       if (await appWindow.isMaximized()) {
         setIsMax(true)
       } else {

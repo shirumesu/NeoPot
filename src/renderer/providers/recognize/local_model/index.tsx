@@ -3,8 +3,9 @@ import type { OrtOptions } from '@paddleocr/paddleocr-js'
 import textDetectionModelUrl from '@assets/models/ocr/PP-OCRv5_mobile_det_onnx.tar?url'
 import textRecognitionModelUrl from '@assets/models/ocr/PP-OCRv5_mobile_rec_onnx.tar?url'
 import ortWasmUrl from 'onnxruntime-web/ort-wasm-simd-threaded.jsep.wasm?url'
+import { getOrCreateCachedOcr } from './ocrCache'
 
-const paddleLangMap = {
+const paddleLangMap: Partial<Record<string, string>> = {
   [Language.auto]: 'ch',
   [Language.zh_cn]: 'ch',
   [Language.zh_tw]: 'chinese_cht',
@@ -32,33 +33,28 @@ const ortOptions = {
   },
 } as unknown as OrtOptions
 
-async function getOcr(language: Language) {
+async function getOcr(language: string) {
   const paddleLang = paddleLangMap[language]
   if (!paddleLang) {
     throw new Error('Language not supported by PaddleOCR.js local model.')
   }
 
-  if (!ocrCache.has(paddleLang)) {
+  return getOrCreateCachedOcr(ocrCache, paddleLang, async () => {
     const { PaddleOCR } = await import('@paddleocr/paddleocr-js')
-    ocrCache.set(
-      paddleLang,
-      PaddleOCR.create({
-        lang: paddleLang,
-        ocrVersion: 'PP-OCRv5',
-        textDetectionModelName: 'PP-OCRv5_mobile_det',
-        textDetectionModelAsset: {
-          url: textDetectionModelUrl,
-        },
-        textRecognitionModelName: 'PP-OCRv5_mobile_rec',
-        textRecognitionModelAsset: {
-          url: textRecognitionModelUrl,
-        },
-        ortOptions,
-      }) as Promise<LocalOcr>,
-    )
-  }
-
-  return ocrCache.get(paddleLang)!
+    return PaddleOCR.create({
+      lang: paddleLang,
+      ocrVersion: 'PP-OCRv5',
+      textDetectionModelName: 'PP-OCRv5_mobile_det',
+      textDetectionModelAsset: {
+        url: textDetectionModelUrl,
+      },
+      textRecognitionModelName: 'PP-OCRv5_mobile_rec',
+      textRecognitionModelAsset: {
+        url: textRecognitionModelUrl,
+      },
+      ortOptions,
+    }) as Promise<LocalOcr>
+  })
 }
 
 function base64ToBlob(base64: string) {
@@ -70,7 +66,7 @@ function base64ToBlob(base64: string) {
   return new Blob([bytes], { type: 'image/png' })
 }
 
-export async function recognize(base64: string, language: Language) {
+export async function recognize(base64: string, language: string) {
   const ocr = await getOcr(language)
   const [result] = await ocr.predict(base64ToBlob(base64), {
     textRecScoreThresh: 0.3,

@@ -7,6 +7,7 @@ const electronMock = vi.hoisted(() => ({
   exposeInMainWorld: vi.fn(),
   invoke: vi.fn(),
   on: vi.fn(),
+  postMessage: vi.fn(),
   removeListener: vi.fn(),
 }))
 
@@ -17,6 +18,7 @@ vi.mock('electron', () => ({
   ipcRenderer: {
     invoke: electronMock.invoke,
     on: electronMock.on,
+    postMessage: electronMock.postMessage,
     removeListener: electronMock.removeListener,
   },
 }))
@@ -66,7 +68,7 @@ describe('preload bridge origin policy', () => {
     await loadPreload(protocol, hostname)
 
     expect(electronMock.exposeInMainWorld).toHaveBeenCalledTimes(1)
-    exposedApi()
+    expect(exposedApi().app.platform).toBe('Windows_NT')
   })
 
   it.each([
@@ -81,6 +83,58 @@ describe('preload bridge origin policy', () => {
 })
 
 describe('preload bridge IPC behavior', () => {
+  it('forwards buffered HTTP requests through the dedicated typed channel', async () => {
+    const response = {
+      ok: true,
+      status: 200,
+      statusText: 'OK',
+      headers: { 'content-type': 'application/json' },
+      data: { translated: true },
+    }
+    electronMock.invoke.mockResolvedValueOnce(response)
+    await loadPreload('neopot:', 'main_window')
+
+    const request = {
+      url: 'https://example.test/translate',
+      method: 'POST',
+      body: { kind: 'json' as const, data: { text: 'hello' } },
+    }
+    await expect(exposedApi().http.request(request)).resolves.toEqual(response)
+    expect(electronMock.invoke).toHaveBeenCalledWith('http:request', request)
+  })
+
+  it('transfers streaming HTTP events and cancels through the dedicated message port', async () => {
+    const port1 = {
+      onmessage: null as ((event: { data: unknown }) => void) | null,
+      start: vi.fn(),
+      postMessage: vi.fn(),
+      close: vi.fn(),
+    }
+    const port2 = {}
+    vi.stubGlobal(
+      'MessageChannel',
+      class {
+        port1 = port1
+        port2 = port2
+      },
+    )
+    await loadPreload('neopot:', 'main_window')
+    const callback = vi.fn()
+    const request = { url: 'https://example.test/stream' }
+
+    const cancel = exposedApi().http.stream(request, callback)
+    expect(electronMock.postMessage).toHaveBeenCalledWith('http:stream', request, [port2])
+    expect(port1.start).toHaveBeenCalledOnce()
+
+    const chunk = { type: 'chunk' as const, data: new Uint8Array([1, 2, 3]) }
+    port1.onmessage?.({ data: chunk })
+    expect(callback).toHaveBeenCalledWith(chunk)
+
+    cancel()
+    expect(port1.postMessage).toHaveBeenCalledWith({ type: 'cancel' })
+    expect(port1.close).toHaveBeenCalledOnce()
+  })
+
   it('forwards matching app event payloads and removes the exact subscribed listener', async () => {
     await loadPreload('neopot:', 'main_window')
     const api = exposedApi()
@@ -115,24 +169,5 @@ describe('preload bridge IPC behavior', () => {
     unsubscribe()
     expect(electronMock.removeListener).toHaveBeenCalledOnce()
     expect(electronMock.removeListener).toHaveBeenCalledWith('update:event', listener)
-  })
-
-  it('forwards matching service stream payloads and removes the exact subscribed listener', async () => {
-    await loadPreload('http:', '127.0.0.1')
-    const api = exposedApi()
-    const callback = vi.fn()
-    const unsubscribe = api.services.onStream('translate-1', callback)
-    const listener = listenerFor('services:stream')
-    const payload = { eventId: 'translate-1', text: 'translated chunk' }
-
-    listener({}, { eventId: 'translate-2', text: 'ignored' })
-    listener({}, payload)
-
-    expect(callback).toHaveBeenCalledOnce()
-    expect(callback).toHaveBeenCalledWith(payload)
-
-    unsubscribe()
-    expect(electronMock.removeListener).toHaveBeenCalledOnce()
-    expect(electronMock.removeListener).toHaveBeenCalledWith('services:stream', listener)
   })
 })

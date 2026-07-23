@@ -1,7 +1,6 @@
-import { recognize as recognizeUnsupported } from './recognize'
 import { translateGoogle, type GoogleTranslateRequest } from './translate/google'
 
-export type ServiceErrorCode = 'SERVICE_CONFIG_MISSING' | 'SERVICE_NOT_MIGRATED' | 'SERVICE_TIMEOUT'
+export type ServiceErrorCode = 'SERVICE_CONFIG_MISSING' | 'SERVICE_NOT_MIGRATED'
 
 export interface ServiceErrorResult {
   ok: false
@@ -13,15 +12,6 @@ export interface ServiceErrorResult {
 export interface TranslateRequest extends Partial<GoogleTranslateRequest> {
   provider?: string
 }
-
-export interface StreamToken {
-  eventId: string
-  value?: string
-  done?: boolean
-  error?: ServiceErrorResult
-}
-
-const streamListeners = new Map<string, Set<(token: StreamToken) => void>>()
 
 function serviceError(
   code: ServiceErrorCode,
@@ -60,55 +50,4 @@ export async function translate(request: TranslateRequest): Promise<string | Ser
         request.provider,
       )
   }
-}
-
-export async function recognize(): Promise<ServiceErrorResult> {
-  try {
-    await recognizeUnsupported()
-  } catch {
-    return serviceError(
-      'SERVICE_NOT_MIGRATED',
-      'OCR provider is not migrated to Electron Main yet.',
-      'recognize',
-    )
-  }
-
-  return serviceError(
-    'SERVICE_NOT_MIGRATED',
-    'OCR provider is not migrated to Electron Main yet.',
-    'recognize',
-  )
-}
-
-export async function textToSpeech(
-  text: string,
-  lang: string,
-  _config?: Record<string, unknown>,
-): Promise<string | ServiceErrorResult> {
-  if (!text || !lang) {
-    return serviceError('SERVICE_CONFIG_MISSING', 'TTS request is missing text or language.', 'tts')
-  }
-
-  return serviceError('SERVICE_NOT_MIGRATED', 'No TTS service is configured.', 'tts')
-}
-
-export function onServiceStream(
-  eventId: string,
-  callback: (token: StreamToken) => void,
-): () => void {
-  const listeners = streamListeners.get(eventId) ?? new Set()
-  listeners.add(callback)
-  streamListeners.set(eventId, listeners)
-
-  return () => {
-    listeners.delete(callback)
-    if (listeners.size === 0) {
-      streamListeners.delete(eventId)
-    }
-  }
-}
-
-export function emitServiceStream(token: StreamToken): void {
-  const listeners = streamListeners.get(token.eventId)
-  listeners?.forEach((listener) => listener(token))
 }

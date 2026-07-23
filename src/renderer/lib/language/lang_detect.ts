@@ -1,10 +1,10 @@
-import { invoke } from '@/renderer/lib/electron/compat/core'
+import { invokeCommand } from '@/renderer/lib/electron/command'
 import { getStoreValue } from '../config/store'
 import { invoke_plugin } from '../plugin/invoke_plugin'
 import { reportRuntimeError } from '../runtimeError'
 
 async function local_detect(text: string) {
-  return await invoke('lang_detect', { text })
+  return await invokeCommand('lang_detect', { text })
 }
 
 async function fallbackLocalDetect(text: string, failedEngine: string) {

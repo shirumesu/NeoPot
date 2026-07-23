@@ -26,6 +26,7 @@ const EXPECTED_API_NAMESPACES = [
   'dialog',
   'fs',
   'hotkey',
+  'http',
   'path',
   'plugins',
   'services',
@@ -48,11 +49,11 @@ function rendererIssuedCommands() {
   for (const file of rendererFiles) {
     const source = read(file)
     for (const match of source.matchAll(
-      /(?:electronCommand|invoke|command\.invoke)\s*(?:<[^>]+>)?\(\s*'([^']+)'/g,
+      /(?:invokeCommand|command\.invoke)\s*(?:<[^>]+>)?\(\s*'([^']+)'/g,
     )) {
       commands.add(match[1])
     }
-    for (const match of source.matchAll(/invoke\(v \? '([^']+)' : '([^']+)'\)/g)) {
+    for (const match of source.matchAll(/invokeCommand\(v \? '([^']+)' : '([^']+)'\)/g)) {
       commands.add(match[1])
       commands.add(match[2])
     }
@@ -101,7 +102,6 @@ test('renderer declared and actually issued command:invoke commands are dispatch
     'font_list',
     'get_base64',
     'get_text',
-    'http_request',
     'lang_detect',
     'log:set-level',
     'open_config_dir',
@@ -109,7 +109,6 @@ test('renderer declared and actually issued command:invoke commands are dispatch
     'open_log_dir',
     'open_url',
     'register_shortcut_by_frontend',
-    'reload_store',
     'run_binary',
     'screenshot',
     'screenshot_complete',

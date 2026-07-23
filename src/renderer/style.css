@@ -12,7 +12,7 @@ body {
   overflow: hidden;
 }
 
-[data-tauri-drag-region='true'] {
+[data-window-drag-region='true'] {
   -webkit-app-region: drag;
 }
 

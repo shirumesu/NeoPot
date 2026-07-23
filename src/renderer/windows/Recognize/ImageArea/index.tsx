@@ -1,17 +1,17 @@
 import { Card, CardBody, CardFooter, Button, Tooltip } from '@heroui/react'
-import { getCurrentWebviewWindow } from '@/renderer/lib/electron/compat/webviewWindow'
+import { getCurrentWindow } from '@/renderer/lib/electron/window'
 import { useCallback, useEffect, useRef } from 'react'
-import { listen } from '@/renderer/lib/electron/compat/event'
+import { onAppEvent } from '@/renderer/lib/electron/events'
 import { MdContentCopy } from 'react-icons/md'
 import { useTranslation } from 'react-i18next'
-import { invoke } from '@/renderer/lib/electron/compat/core'
+import { invokeCommand } from '@/renderer/lib/electron/command'
 import { atom, useAtom } from 'jotai'
 
 import { useConfig } from '../../../hooks'
-const appWindow = getCurrentWebviewWindow()
+const appWindow = getCurrentWindow()
 
 export const base64Atom = atom('')
-let unlisten: Promise<() => void> | null = null
+let unlisten: (() => void) | null = null
 
 export default function ImageArea() {
   const [hideWindow] = useConfig('recognize_hide_window', false)
@@ -19,7 +19,7 @@ export default function ImageArea() {
   const imgRef = useRef<HTMLImageElement>(null)
   const { t } = useTranslation()
   const load_img = useCallback(() => {
-    invoke('get_base64').then((v) => {
+    invokeCommand('get_base64').then((v) => {
       setBase64(String(v))
       if (hideWindow) {
         appWindow.hide()
@@ -34,14 +34,12 @@ export default function ImageArea() {
     if (hideWindow !== null) {
       load_img()
       if (unlisten) {
-        unlisten.then((f) => {
-          f()
-        })
+        unlisten()
       }
-      unlisten = listen('new_image', (_: unknown) => {
+      unlisten = onAppEvent('new_image', () => {
         load_img()
       })
-      void window.neoPot?.app.rendererReady()
+      void window.neoPot.app.rendererReady()
     }
   }, [hideWindow, load_img])
 
@@ -64,7 +62,7 @@ export default function ImageArea() {
             size="sm"
             variant="light"
             onPress={async () => {
-              await invoke('copy_img', {
+              await invokeCommand('copy_img', {
                 width: imgRef.current?.naturalWidth ?? 0,
                 height: imgRef.current?.naturalHeight ?? 0,
               })

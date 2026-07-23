@@ -1,11 +1,9 @@
-import { existsSync } from 'node:fs'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import {
   app,
   BrowserWindow,
   type Display,
-  Menu,
   net,
   protocol,
   screen,
@@ -20,7 +18,11 @@ import {
   SCREENSHOT_PATH,
 } from './rendererProtocol'
 import { logger } from '../logger'
-import { calculateAdaptiveTranslateWindowSize } from '../../shared/translateWindowSizing'
+import {
+  calculateAdaptiveTranslateWindowSize,
+  MIN_TRANSLATE_WINDOW_SIZE,
+} from '../../shared/translateWindowSizing'
+import { getAppIconPath } from './appIdentity'
 
 export type WindowLabel = 'config' | 'translate' | 'recognize' | 'screenshot' | 'updater'
 type UpdaterPresentation = 'full' | 'notification'
@@ -55,8 +57,8 @@ const windowDefinitions: Record<WindowLabel, WindowDefinition> = {
     resizable: true,
   },
   translate: {
-    width: 350,
-    height: 420,
+    width: MIN_TRANSLATE_WINDOW_SIZE.width,
+    height: MIN_TRANSLATE_WINDOW_SIZE.height,
     transparent: true,
     resizable: true,
   },
@@ -91,15 +93,6 @@ const updaterNotificationDefinition: WindowDefinition = {
   minHeight: 220,
   skipTaskbar: true,
   resizable: false,
-}
-
-function getAppIconPath(): string {
-  const candidates = [
-    path.join(app.getAppPath(), 'public', 'icon.png'),
-    path.join(process.cwd(), 'public', 'icon.png'),
-  ]
-
-  return candidates.find((candidate) => existsSync(candidate)) ?? candidates[0]
 }
 
 function getRendererRoot(): string {
@@ -259,8 +252,17 @@ function getTranslateWindowSize(definition: WindowDefinition): { width: number; 
     }
   }
 
-  const width = Number(getConfig('translate_window_width'))
-  const height = Number(getConfig('translate_window_height'))
+  const savedSize = getConfig('translate_window_size')
+  const width = Number(
+    savedSize && typeof savedSize === 'object' && 'width' in savedSize
+      ? savedSize.width
+      : getConfig('translate_window_width'),
+  )
+  const height = Number(
+    savedSize && typeof savedSize === 'object' && 'height' in savedSize
+      ? savedSize.height
+      : getConfig('translate_window_height'),
+  )
   if (!Number.isFinite(width) || !Number.isFinite(height) || width < 240 || height < 180) {
     return {
       width: definition.width,
@@ -356,7 +358,7 @@ function showWindowInForeground(window: BrowserWindow, label: WindowLabel): void
 
   if (label === 'translate' && !restoreAlwaysOnTop) {
     setTimeout(() => {
-      if (!window.isDestroyed() && !window.webContents.isDestroyed() && !restoreAlwaysOnTop) {
+      if (!window.isDestroyed() && !window.webContents.isDestroyed()) {
         window.setAlwaysOnTop(false)
       }
     }, 300)
@@ -364,7 +366,6 @@ function showWindowInForeground(window: BrowserWindow, label: WindowLabel): void
 }
 
 function createBrowserWindow(label: WindowLabel): BrowserWindow {
-  Menu.setApplicationMenu(null)
   logger.debug('Creating window.', {
     window: label,
   })
@@ -443,10 +444,7 @@ function createBrowserWindow(label: WindowLabel): BrowserWindow {
         return
       }
       const [width, height] = window.getSize()
-      void Promise.all([
-        setConfig('translate_window_width', width),
-        setConfig('translate_window_height', height),
-      ]).catch((error) => {
+      void setConfig('translate_window_size', { width, height }).catch((error) => {
         logger.error('Failed to save translate window size.', error)
       })
     }, 100)
@@ -568,6 +566,14 @@ export function sendToWindow(label: WindowLabel, event: string, payload: unknown
   }
 
   window.webContents.send('app:event', { event, payload })
+}
+
+export function broadcastToAllWindows(channel: string, payload: unknown): void {
+  for (const window of BrowserWindow.getAllWindows()) {
+    if (!window.isDestroyed() && !window.webContents.isDestroyed()) {
+      window.webContents.send(channel, payload)
+    }
+  }
 }
 
 export function sendToPreferredWindow(

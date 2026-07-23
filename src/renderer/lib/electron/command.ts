@@ -17,10 +17,6 @@ export interface ElectronCommandMap {
     args: undefined
     result: void
   }
-  reload_store: {
-    args: undefined
-    result: void
-  }
   set_proxy: {
     args: undefined
     result: boolean
@@ -54,7 +50,7 @@ export interface ElectronCommandMap {
       x: number
       y: number
     }
-    result: void
+    result: string
   }
   cut_image: {
     args: {
@@ -71,6 +67,58 @@ export interface ElectronCommandMap {
     }
     result: void
   }
+  copy_img: {
+    args: {
+      width: number
+      height: number
+    }
+    result: void
+  }
+  lang_detect: {
+    args: {
+      text: string
+    }
+    result: string
+  }
+  font_list: {
+    args: undefined
+    result: string[]
+  }
+  update_tray: {
+    args: {
+      language: string
+      copyMode: string
+    }
+    result: void
+  }
+  updater_window: {
+    args: undefined
+    result: void
+  }
+  open_url: {
+    args: {
+      url: string
+    }
+    result: void
+  }
+  open_log_dir: {
+    args: undefined
+    result: void
+  }
+  open_config_dir: {
+    args: undefined
+    result: void
+  }
+  'log:set-level': {
+    args: {
+      level: string
+    }
+    result: boolean
+  }
+  'log:get-level': {
+    args: undefined
+    result: string | false
+  }
 }
 
 export interface RunBinaryArgs {
@@ -80,50 +128,14 @@ export interface RunBinaryArgs {
   args?: unknown
 }
 
-export interface InvokeOptions<TPayload> {
-  command: string
-  payload?: TPayload
-}
-
-export async function electronInvoke<TResponse = unknown, TPayload = Record<string, unknown>>(
-  options: InvokeOptions<TPayload>,
-): Promise<TResponse> {
-  return electronCommand(
-    options.command as keyof ElectronCommandMap,
-    options.payload as never,
-  ) as Promise<TResponse>
-}
-
-export async function electronCommand<TCommand extends keyof ElectronCommandMap>(
+export async function invokeCommand<TCommand extends keyof ElectronCommandMap>(
   command: TCommand,
-  args?: ElectronCommandMap[TCommand]['args'] | Record<string, unknown>,
+  ...args: ElectronCommandMap[TCommand]['args'] extends undefined
+    ? []
+    : [ElectronCommandMap[TCommand]['args']]
 ): Promise<ElectronCommandMap[TCommand]['result']> {
-  if (window.neoPot?.command) {
-    return window.neoPot.command.invoke<ElectronCommandMap[TCommand]['result']>(
-      String(command),
-      args as Record<string, unknown> | undefined,
-    )
-  }
-
-  switch (command) {
-    case 'get_text':
-      return '' as ElectronCommandMap[TCommand]['result']
-    case 'get_base64':
-      return '' as ElectronCommandMap[TCommand]['result']
-    case 'open_devtools':
-      return undefined as ElectronCommandMap[TCommand]['result']
-    case 'reload_store':
-      return undefined as ElectronCommandMap[TCommand]['result']
-    default:
-      throw new Error(`Unsupported Electron command: ${String(command)}`)
-  }
-}
-
-export async function runPluginBinary<TResponse = unknown>(
-  args: RunBinaryArgs,
-): Promise<TResponse> {
-  return electronInvoke<TResponse, RunBinaryArgs>({
-    command: 'run_binary',
-    payload: args,
-  })
+  return window.neoPot.command.invoke<ElectronCommandMap[TCommand]['result']>(
+    command,
+    args[0] as Record<string, unknown> | undefined,
+  )
 }

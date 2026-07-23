@@ -9,9 +9,8 @@ import { isServiceInstanceForPlugin } from '../../shared/serviceInstance'
 import {
   PLUGIN_METADATA_FILE,
   PluginInstallError,
-  assertValidPluginIdentity as assertValidPluginIdentityCore,
   createPluginInstallerCore,
-  isValidPluginIdentityPart as isValidPluginIdentityPartCore,
+  isValidPluginIdentityPart,
   parsePluginManifest,
   readPluginManifestFromZip,
   resolveInstalledPluginDir,
@@ -81,20 +80,6 @@ function pluginHotkeyConfigKey(type: string, name: string, key: string): string 
   return `plugin_hotkey:${type}:${name}:${key}`
 }
 
-function isValidPluginIdentityPart(value: string): boolean {
-  return isValidPluginIdentityPartCore(value)
-}
-
-export function assertValidPluginIdentity(
-  type: string,
-  name: string,
-): {
-  type: string
-  name: string
-} {
-  return assertValidPluginIdentityCore(type, name)
-}
-
 export function installedPluginDir(type: string, name: string): string {
   return resolveInstalledPluginDir(pluginRoot(), type, name)
 }
@@ -123,10 +108,6 @@ async function isDirectory(filePath: string): Promise<boolean> {
     .catch(() => false)
 }
 
-function parseManifest(text: string): { plugin_type?: string; name?: string } {
-  return parsePluginManifest(text)
-}
-
 async function readInstallMetadata(pluginDir: string): Promise<PluginInstallMetadata> {
   const text = await readFile(path.join(pluginDir, PLUGIN_METADATA_FILE), 'utf8').catch(() => null)
   if (!text) {
@@ -149,7 +130,17 @@ async function readPluginManifest(type: string, name: string): Promise<PluginInf
     return null
   }
 
-  const manifest = JSON.parse(manifestText) as Record<string, unknown>
+  let manifest: Record<string, unknown>
+  try {
+    manifest = parsePluginManifest(manifestText)
+  } catch (error) {
+    logger.warn('Ignoring plugin with an invalid manifest.', {
+      type,
+      name,
+      error: error instanceof Error ? error.message : String(error),
+    })
+    return null
+  }
   const metadata = await readInstallMetadata(pluginDir)
   const display = typeof manifest.display === 'string' ? manifest.display : name
   const icon = normalizeManifestIcon(pluginDir, manifest.icon)
@@ -320,11 +311,11 @@ async function readManifestFromLocalSource(source: string): Promise<PluginSource
 
   if (await isDirectory(localSource)) {
     const text = await readFile(path.join(localSource, 'info.json'), 'utf8')
-    return parseManifest(text) as PluginSourceManifest
+    return parsePluginManifest(text) as PluginSourceManifest
   }
 
   if (path.basename(localSource).toLowerCase() === 'info.json') {
-    return parseManifest(await readFile(localSource, 'utf8')) as PluginSourceManifest
+    return parsePluginManifest(await readFile(localSource, 'utf8')) as PluginSourceManifest
   }
 
   return readPluginManifestFromZip(localSource) as PluginSourceManifest
@@ -341,7 +332,7 @@ async function readManifestFromHttpSource(source: string): Promise<PluginSourceM
           REMOTE_PLUGIN_MAX_MANIFEST_BYTES,
           'Plugin manifest check',
         )
-        return parseManifest(manifest.toString('utf8')) as PluginSourceManifest
+        return parsePluginManifest(manifest.toString('utf8')) as PluginSourceManifest
       }
 
       const tempDir = path.join(app.getPath('temp'), 'neopot-plugin-update-checks')
@@ -498,8 +489,4 @@ export async function listInstalledPlugins(type?: string): Promise<PluginInfo[]>
   }
 
   return plugins
-}
-
-export async function listPlugins(type: string): Promise<PluginInfo[]> {
-  return listInstalledPlugins(type)
 }

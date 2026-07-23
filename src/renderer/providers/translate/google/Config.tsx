@@ -1,16 +1,17 @@
 import { INSTANCE_NAME_CONFIG_KEY } from '@/renderer/lib/service/service_instance'
-import { Input, Button } from '@heroui/react'
-import toast from 'react-hot-toast'
+import { Input } from '@heroui/react'
 import { useTranslation } from 'react-i18next'
 import { useState } from 'react'
 
 import { useConfig } from '../../../hooks/useConfig'
-import { useToastStyle } from '../../../hooks'
 import { translate } from './index'
 import { Language } from './index'
-import { useConfigSave } from '@/renderer/windows/Config/hooks/useConfigSave'
 import { DEFAULT_GOOGLE_TRANSLATE_URL } from '@/shared/providerUrl'
 import type { ServiceConfigComponentProps } from '@/renderer/windows/Config/pages/Service/types'
+import ProviderConfigForm from '@/renderer/windows/Config/pages/Service/ProviderConfigForm'
+import TestButton from '@/renderer/windows/Config/pages/Service/TestButton'
+import InstanceNameInput from '@/renderer/windows/Config/pages/Service/InstanceNameInput'
+import ConfigItem from '@/renderer/windows/Config/components/ConfigItem'
 
 export function Config(props: ServiceConfigComponentProps) {
   const { instanceKey, updateServiceList, onClose } = props
@@ -25,43 +26,33 @@ export function Config(props: ServiceConfigComponentProps) {
   )
   const [isLoading, setIsLoading] = useState(false)
 
-  const toastStyle = useToastStyle()
-  const { saveConfig } = useConfigSave()
-
   return (
     config !== null && (
-      <form
-        onSubmit={async (e) => {
-          e.preventDefault()
-          const saved = await saveConfig(instanceKey, null, setConfig, config, {
-            compareCurrent: false,
-          })
-          if (saved) {
-            await updateServiceList(instanceKey)
-            onClose()
-          }
-        }}
-      >
-        <div className="config-item">
-          <Input
-            label={t('services.instance_name')}
-            labelPlacement="outside-left"
-            value={config[INSTANCE_NAME_CONFIG_KEY]}
-            variant="bordered"
-            classNames={{
-              base: 'justify-between',
-              label: 'text-(length:--heroui-font-size-medium)',
-              mainWrapper: 'max-w-[50%]',
-            }}
-            onValueChange={(value) => {
-              setConfig({
-                ...config,
-                [INSTANCE_NAME_CONFIG_KEY]: value,
-              })
-            }}
+      <ProviderConfigForm
+        instanceKey={instanceKey}
+        config={config}
+        setConfig={setConfig}
+        updateServiceList={updateServiceList}
+        onClose={onClose}
+        isLoading={isLoading}
+        testButton={
+          <TestButton
+            isLoading={isLoading}
+            setIsLoading={setIsLoading}
+            onTest={() => translate('hello', Language.auto, Language.zh_cn, { config })}
           />
-        </div>
-        <div className={'config-item'}>
+        }
+      >
+        <InstanceNameInput
+          value={config[INSTANCE_NAME_CONFIG_KEY]}
+          onValueChange={(value) => {
+            void setConfig({
+              ...config,
+              [INSTANCE_NAME_CONFIG_KEY]: value,
+            })
+          }}
+        />
+        <ConfigItem>
           <Input
             label={t('services.translate.google.custom_url')}
             labelPlacement="outside-left"
@@ -73,39 +64,14 @@ export function Config(props: ServiceConfigComponentProps) {
               mainWrapper: 'max-w-[50%]',
             }}
             onValueChange={(value) => {
-              setConfig({
+              void setConfig({
                 ...config,
                 custom_url: value,
               })
             }}
           />
-        </div>
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            onPress={() => {
-              setIsLoading(true)
-              translate('hello', Language.auto, Language.zh_cn, { config }).then(
-                () => {
-                  setIsLoading(false)
-                  toast.success(t('config.service.test_success'), { style: toastStyle })
-                },
-                (e) => {
-                  setIsLoading(false)
-                  toast.error(t('config.service.test_failed') + e.toString(), { style: toastStyle })
-                },
-              )
-            }}
-            isLoading={isLoading}
-            fullWidth
-          >
-            {t('common.test')}
-          </Button>
-          <Button type="submit" isLoading={isLoading} color="primary" fullWidth>
-            {t('common.save')}
-          </Button>
-        </div>
-      </form>
+        </ConfigItem>
+      </ProviderConfigForm>
     )
   )
 }

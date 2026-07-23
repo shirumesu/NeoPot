@@ -23,8 +23,8 @@ import {
   MarketplaceSourceStatus,
   saveCustomMarketplaceSources,
 } from '../marketplace'
-import { emit } from '@/renderer/lib/electron/compat/event'
-import { open } from '@/renderer/lib/electron/compat/dialog'
+import { emitAppEvent } from '@/renderer/lib/electron/events'
+import { openDialog } from '@/renderer/lib/electron/dialog'
 import { logger } from '@/renderer/lib/logger'
 
 interface MarketplaceModalProps {
@@ -93,7 +93,7 @@ export default function MarketplaceModal(props: MarketplaceModalProps) {
   }
 
   async function addSourceFromFile() {
-    const selected = await open({
+    const selected = await openDialog({
       multiple: false,
       properties: ['openFile'],
       filters: [
@@ -111,7 +111,7 @@ export default function MarketplaceModal(props: MarketplaceModalProps) {
   }
 
   async function addSourceFromFolder() {
-    const selected = await open({
+    const selected = await openDialog({
       multiple: false,
       properties: ['openDirectory'],
     })
@@ -132,7 +132,7 @@ export default function MarketplaceModal(props: MarketplaceModalProps) {
     setInstallingId(plugin.id)
     try {
       const source = await installMarketplacePluginSource(plugin)
-      await emit('reload_plugin_list')
+      await emitAppEvent('reload_plugin_list')
       await onInstalled?.()
       toast.success(t('config.plugin.market.install_success'))
       logger.info('Marketplace plugin installed.', {

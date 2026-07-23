@@ -3,7 +3,6 @@ import { useCallback, useRef } from 'react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 
-import { useToastStyle } from '@/renderer/hooks'
 import { UpdaterPanel } from '@/renderer/windows/Updater/UpdaterPanel'
 import { useUpdaterController } from '@/renderer/windows/Updater/useUpdaterController'
 
@@ -14,20 +13,16 @@ interface AboutUpdateModalProps {
 
 export default function AboutUpdateModal({ isOpen, onOpenChange }: AboutUpdateModalProps) {
   const { t } = useTranslation()
-  const toastStyle = useToastStyle()
   const isOpenRef = useRef(isOpen)
   isOpenRef.current = isOpen
 
-  const showError = useCallback(
-    (message: string) => {
-      if (!isOpenRef.current) {
-        return
-      }
+  const showError = useCallback((message: string) => {
+    if (!isOpenRef.current) {
+      return
+    }
 
-      toast.error(message, { style: toastStyle })
-    },
-    [toastStyle],
-  )
+    toast.error(message)
+  }, [])
   const controller = useUpdaterController({
     autoCheck: isOpen,
     onError: showError,

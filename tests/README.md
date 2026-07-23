@@ -7,12 +7,11 @@ as warnings and recorded under `test-results/`.
 
 ## Commands
 
-- `npm run test`: complete local gate before committing or releasing.
+- `npm run test`: complete local gate before committing or creating a release tag.
 - `npm run test:fast`: executable unit, component, and integration behavior tests.
 - `npm run test:coverage`: the fast suite plus full-source V8 coverage reports.
 - `npm run test:contracts`: cross-file static invariants that cannot be proved by one runtime test.
 - `npm run test:e2e`: Windows Electron journeys against the built `out/` application.
-- `npm run test:mutation`: mutation-quality report for selected high-risk logic.
 
 ## Test layers
 

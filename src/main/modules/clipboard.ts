@@ -1,6 +1,6 @@
 import { clipboard } from 'electron'
 import { logger } from '../logger'
-import { selectionTranslate } from './workflow'
+import { textTranslate } from './workflow'
 import {
   getSelectionClipboardCaptureBaseline,
   isSelectionClipboardCaptureActive,
@@ -46,7 +46,7 @@ export function startClipboardMonitor(): void {
       const nextText = clipboard.readText()
       if (nextText && nextText !== lastText) {
         lastText = nextText
-        void selectionTranslate()
+        void textTranslate(nextText)
       }
     } catch (error) {
       stopClipboardMonitor()

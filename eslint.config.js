@@ -8,17 +8,7 @@ import prettierConfig from 'eslint-config-prettier'
 export default tseslint.config(
   // Ignored paths
   {
-    ignores: [
-      'node_modules',
-      'dist',
-      'out',
-      '.vite',
-      'spec',
-      'docs',
-      '**/*.cjs',
-      'updater',
-      '.tmp-*',
-    ],
+    ignores: ['node_modules', 'dist', 'out', '.vite', 'spec', 'docs', '**/*.cjs'],
   },
 
   // Base JS rules
@@ -96,21 +86,9 @@ export default tseslint.config(
     },
   },
 
-  // Browser helper files kept as JS during migration
-  {
-    files: ['src/**/*.js'],
-    languageOptions: {
-      globals: globals.browser,
-    },
-    rules: {
-      'no-undef': 'error',
-      'prefer-const': 'warn',
-    },
-  },
-
   // Build configuration and scripts
   {
-    files: ['*.config.{js,ts}', 'forge.config.ts', '.scripts/**/*.mjs'],
+    files: ['*.config.{js,ts}', '.scripts/**/*.mjs'],
     languageOptions: {
       globals: globals.node,
     },

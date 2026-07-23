@@ -1,9 +1,15 @@
+import { semanticColors } from '@heroui/theme'
+import { useTheme } from 'next-themes'
 import { Toaster } from 'react-hot-toast'
 
-import { useToastStyle } from '@/renderer/hooks'
+type ToastPalette = {
+  content1: { DEFAULT: string }
+  foreground: { DEFAULT: string }
+}
 
 export default function RuntimeToaster() {
-  const toastStyle = useToastStyle()
+  const { theme } = useTheme()
+  const palette = (theme === 'dark' ? semanticColors.dark : semanticColors.light) as ToastPalette
 
   return (
     <Toaster
@@ -11,7 +17,8 @@ export default function RuntimeToaster() {
       gutter={8}
       toastOptions={{
         style: {
-          ...toastStyle,
+          background: palette.content1.DEFAULT,
+          color: palette.foreground.DEFAULT,
           maxWidth: 'min(520px, calc(100vw - 32px))',
           padding: '10px 12px',
           wordBreak: 'normal',

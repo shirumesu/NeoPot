@@ -94,31 +94,17 @@ const cyrillicLanguagePatterns: Array<{ language: string; pattern: RegExp }> = [
 ]
 
 const latinFeaturePatterns: Array<{ language: string; pattern: RegExp }> = [
-  {
-    language: 'fr',
-    pattern: /[àâæçéèêëîïôœùûüÿ]|(?:\b(?:bonjour|merci|fran[cç]ais|est|une?|des?|pour|avec)\b)/iu,
-  },
-  { language: 'es', pattern: /[áéíñóúü¿¡]|(?:\b(?:hola|esta|espa[nñ]ol|para|con|una?)\b)/iu },
-  { language: 'de', pattern: /[äöüß]|(?:\b(?:guten|morgen|deutsch(?:er|e)?|dies|ist|zur)\b)/iu },
-  {
-    language: 'pt_pt',
-    pattern: /[ãõçáâéêíóôú]|(?:\b(?:ol[áa]|portugu[eê]s|brasil|portugal|para|com)\b)/iu,
-  },
-  { language: 'it', pattern: /[àèéìòù]|(?:\b(?:ciao|questa?|italian[ao]|per|con)\b)/iu },
-  { language: 'tr', pattern: /[çğıİöşü]|(?:\b(?:merhaba|t[uü]rk[cç]e|icin|i[cç]in|dil)\b)/iu },
-  { language: 'sv', pattern: /[åäö]|(?:\b(?:hej|svensk[at]?|det|att|spr[aå]k)\b)/iu },
-  {
-    language: 'pl',
-    pattern: /[ąćęłńóśźż]|(?:\b(?:polsk(?:ie|i|a)|jest|zdanie|jezyka|języka)\b)/iu,
-  },
-  { language: 'nl', pattern: /(?:\b(?:nederlandse?|taal|zin|dit|een|het|om)\b)/iu },
+  { language: 'fr', pattern: /[àâæçéèêëîïôœùûüÿ]/iu },
+  { language: 'es', pattern: /[áéíñóúü¿¡]/iu },
+  { language: 'de', pattern: /[äöüß]/iu },
+  { language: 'pt_pt', pattern: /[ãõçáâéêíóôú]/iu },
+  { language: 'it', pattern: /[àèéìòù]/iu },
+  { language: 'tr', pattern: /[çğıİöşü]/iu },
+  { language: 'sv', pattern: /[åäö]/iu },
+  { language: 'pl', pattern: /[ąćęłńóśźż]/iu },
   {
     language: 'vi',
     pattern: /[ăâđêôơưáàảãạấầẩẫậắằẳẵặéèẻẽẹếềểễệíìỉĩịóòỏõọốồổỗộớờởỡợúùủũụứừửữựýỳỷỹỵ]/iu,
-  },
-  {
-    language: 'id',
-    pattern: /(?:\b(?:bahasa indonesia|selamat|adalah|untuk|menguji|kalimat|ini)\b)/iu,
   },
 ]
 

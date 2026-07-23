@@ -6,10 +6,9 @@ files:
   - out/main/**
   - out/preload/**
   - out/renderer/**
-  - public/**
+  - public/icon.png
   - package.json
   - '!node_modules/**'
-  - '!out/package/**'
   - '!dist/**'
 asar: true
 electronLanguages:

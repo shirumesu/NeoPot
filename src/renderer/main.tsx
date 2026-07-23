@@ -1,6 +1,6 @@
 import { ThemeProvider as NextThemesProvider } from 'next-themes'
 import { HeroUIProvider } from '@heroui/react'
-import { getCurrentWebviewWindow } from '@/renderer/lib/electron/compat/webviewWindow'
+import { getCurrentWindow } from '@/renderer/lib/electron/window'
 import ReactDOM from 'react-dom/client'
 
 import { initStore } from '@/renderer/lib/config/store'
@@ -75,8 +75,8 @@ async function bootstrap() {
     logger.error('Bootstrap failed.', error)
     renderFatalError(error)
     try {
-      await getCurrentWebviewWindow().show()
-      await getCurrentWebviewWindow().setFocus()
+      await getCurrentWindow().show()
+      await getCurrentWindow().setFocus()
     } catch (showError) {
       logger.error('Failed to reveal error window.', showError)
     }

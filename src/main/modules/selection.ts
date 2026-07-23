@@ -12,6 +12,26 @@ import type {
 const execFileAsync = promisify(execFile)
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+const abortableDelay = (ms: number, signal?: AbortSignal): Promise<boolean> => {
+  if (!signal) {
+    return delay(ms).then(() => true)
+  }
+  if (signal.aborted) {
+    return Promise.resolve(false)
+  }
+
+  return new Promise((resolve) => {
+    const timeout = setTimeout(() => {
+      signal.removeEventListener('abort', abort)
+      resolve(true)
+    }, ms)
+    const abort = () => {
+      clearTimeout(timeout)
+      resolve(false)
+    }
+    signal.addEventListener('abort', abort, { once: true })
+  })
+}
 const COPY_POLL_INTERVAL_MS = 30
 const COPY_TIMEOUT_MS = 700
 const COPY_SETTLE_DELAY_MS = 180
@@ -189,7 +209,7 @@ async function sendMacCopyKeystroke(): Promise<CopyCommandResult> {
   }
 }
 
-async function sendWindowsCopyKeystroke(): Promise<CopyCommandResult> {
+async function sendWindowsCopyKeystroke(signal?: AbortSignal): Promise<CopyCommandResult> {
   try {
     await execFileAsync(
       'powershell.exe',
@@ -201,10 +221,14 @@ async function sendWindowsCopyKeystroke(): Promise<CopyCommandResult> {
       {
         windowsHide: true,
         timeout: 2000,
+        signal,
       },
     )
     return { ok: true }
   } catch (error) {
+    if (signal?.aborted) {
+      return { ok: false, reason: 'copy-command-failed' }
+    }
     logger.warn('Windows selection copy command failed.', {
       error: error instanceof Error ? error.message : String(error),
     })
@@ -237,11 +261,16 @@ async function readWindowsUiaSelection(): Promise<SelectionCaptureResult> {
   }
 }
 
-async function waitForCopiedClipboardValue(marker: string): Promise<string | null> {
+async function waitForCopiedClipboardValue(
+  marker: string,
+  signal?: AbortSignal,
+): Promise<string | null> {
   const deadline = Date.now() + COPY_TIMEOUT_MS
 
   while (Date.now() < deadline) {
-    await delay(COPY_POLL_INTERVAL_MS)
+    if (!(await abortableDelay(COPY_POLL_INTERVAL_MS, signal))) {
+      return null
+    }
     const currentText = clipboard.readText()
     if (currentText !== marker) {
       return currentText
@@ -253,8 +282,22 @@ async function waitForCopiedClipboardValue(marker: string): Promise<string | nul
 
 async function readClipboardFallbackSelection(
   method: SelectionCaptureMethod,
-  copySelection: () => Promise<CopyCommandResult>,
-): Promise<SelectionCaptureResult> {
+  copySelection: (signal?: AbortSignal) => Promise<CopyCommandResult>,
+): Promise<SelectionCaptureResult>
+async function readClipboardFallbackSelection(
+  method: SelectionCaptureMethod,
+  copySelection: (signal?: AbortSignal) => Promise<CopyCommandResult>,
+  signal: AbortSignal,
+): Promise<SelectionCaptureResult | null>
+async function readClipboardFallbackSelection(
+  method: SelectionCaptureMethod,
+  copySelection: (signal?: AbortSignal) => Promise<CopyCommandResult>,
+  signal?: AbortSignal,
+): Promise<SelectionCaptureResult | null> {
+  if (signal?.aborted) {
+    return null
+  }
+
   const previousText = clipboard.readText()
   const marker = `__NEOPOT_SELECTION_${randomUUID()}__`
   let copiedClipboardValue: string | null = null
@@ -262,15 +305,23 @@ async function readClipboardFallbackSelection(
 
   selectionClipboardCaptureDepth += 1
   try {
+    if (signal?.aborted) {
+      return null
+    }
     clipboard.writeText(marker)
 
     for (let attempt = 0; attempt < COPY_ATTEMPT_COUNT; attempt += 1) {
-      if (attempt > 0) {
-        await delay(COPY_RETRY_DELAY_MS)
+      if (
+        (attempt > 0 && !(await abortableDelay(COPY_RETRY_DELAY_MS, signal))) ||
+        !(await abortableDelay(COPY_SETTLE_DELAY_MS, signal))
+      ) {
+        return null
       }
-      await delay(COPY_SETTLE_DELAY_MS)
 
-      const copyResult = await copySelection()
+      const copyResult = await copySelection(signal)
+      if (signal?.aborted) {
+        return null
+      }
       if (!copyResult.ok) {
         result = {
           ok: false,
@@ -280,7 +331,10 @@ async function readClipboardFallbackSelection(
         return result
       }
 
-      copiedClipboardValue = await waitForCopiedClipboardValue(marker)
+      copiedClipboardValue = await waitForCopiedClipboardValue(marker, signal)
+      if (signal?.aborted) {
+        return null
+      }
       if (copiedClipboardValue !== null) {
         break
       }
@@ -341,19 +395,32 @@ async function readLinuxSelectedText(): Promise<SelectionCaptureResult> {
 }
 
 async function readWindowsSelectedText(): Promise<SelectionCaptureResult> {
-  const uiaSelection = readWindowsUiaSelection()
+  const fallbackAbortController = new AbortController()
+  const uiaSelection = readWindowsUiaSelection().then((result) => {
+    if (result.ok) {
+      fallbackAbortController.abort()
+    }
+    return result
+  })
   const clipboardFallback = readClipboardFallbackSelection(
     'windows-clipboard-fallback',
     sendWindowsCopyKeystroke,
+    fallbackAbortController.signal,
   )
 
   const first = await Promise.race([uiaSelection, clipboardFallback])
+  if (first === null) {
+    return uiaSelection
+  }
   if (first.ok) {
+    if (first.method === 'windows-uia-selection') {
+      await clipboardFallback
+    }
     return first
   }
 
   if (first.method === 'windows-uia-selection') {
-    return clipboardFallback
+    return (await clipboardFallback) ?? first
   }
 
   const uiaResult = await uiaSelection

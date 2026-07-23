@@ -9,7 +9,7 @@ import {
   selectionTranslate,
   textTranslate,
 } from './workflow'
-import { createLocalServer } from './localServer'
+import { createLocalServer, DEFAULT_LOCAL_SERVER_PORT } from './localServer'
 
 const localServer = createLocalServer({
   actions: {
@@ -25,7 +25,7 @@ const localServer = createLocalServer({
   logger,
 })
 
-export function startServer(port = 60828): void {
+export function startServer(port = DEFAULT_LOCAL_SERVER_PORT): void {
   localServer.start(port)
 }
 

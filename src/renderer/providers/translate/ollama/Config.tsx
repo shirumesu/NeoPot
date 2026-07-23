@@ -20,18 +20,21 @@ import { useTranslation } from 'react-i18next'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { useConfig } from '../../../hooks/useConfig'
-import { useToastStyle } from '../../../hooks'
 import { getModels as getOllamaModels, pullModel as pullOllamaModel, translate } from './index'
 import { Language } from './index'
-import { useConfigSave } from '@/renderer/windows/Config/hooks/useConfigSave'
 import { DEFAULT_OLLAMA_URL, normalizeOllamaBaseUrl } from '@/shared/providerUrl'
 import type { ServiceConfigComponentProps } from '@/renderer/windows/Config/pages/Service/types'
-
-const THINKING_MODE_DEFAULT = 'default'
-const THINKING_MODE_ON = 'on'
-const THINKING_MODE_OFF = 'off'
-const DEFAULT_MODEL = 'gemma4:e2b'
-const LEGACY_DEFAULT_MODEL = 'gemma:2b'
+import ProviderConfigForm from '@/renderer/windows/Config/pages/Service/ProviderConfigForm'
+import TestButton from '@/renderer/windows/Config/pages/Service/TestButton'
+import InstanceNameInput from '@/renderer/windows/Config/pages/Service/InstanceNameInput'
+import ConfigItem from '@/renderer/windows/Config/components/ConfigItem'
+import {
+  DEFAULT_MODEL,
+  LEGACY_DEFAULT_MODEL,
+  THINKING_MODE_DEFAULT,
+  THINKING_MODE_OFF,
+  THINKING_MODE_ON,
+} from './constants'
 
 const DEFAULT_PROMPT_LIST = [
   {
@@ -63,10 +66,21 @@ type OllamaModelList = {
   models?: { name: string }[]
 }
 
+function normalizeServiceConfig(config: OllamaServiceConfig): OllamaServiceConfig {
+  return {
+    ...config,
+    promptList: config.promptList ?? DEFAULT_PROMPT_LIST,
+    temperature: config.temperature ?? '',
+    topP: config.topP ?? '',
+    topK: config.topK ?? '',
+    thinkingMode: config.thinkingMode ?? THINKING_MODE_DEFAULT,
+  }
+}
+
 export function Config(props: ServiceConfigComponentProps) {
   const { instanceKey, updateServiceList, onClose } = props
   const { t } = useTranslation()
-  const [serviceConfig, setServiceConfig] = useConfig<OllamaServiceConfig>(
+  const [storedServiceConfig, setServiceConfig] = useConfig<OllamaServiceConfig>(
     instanceKey,
     {
       [INSTANCE_NAME_CONFIG_KEY]: t('services.translate.ollama.title'),
@@ -81,49 +95,17 @@ export function Config(props: ServiceConfigComponentProps) {
     },
     { sync: false },
   )
+  const serviceConfig =
+    storedServiceConfig === null ? null : normalizeServiceConfig(storedServiceConfig)
   const [isLoading, setIsLoading] = useState(false)
   const [isPulling, setIsPulling] = useState(false)
-  const [progress, setProgress] = useState(0)
   const [pullingStatus, setPullingStatus] = useState('')
   const [installedModels, setInstalledModels] = useState<OllamaModelList | null>(null)
   const serviceConfigRef = useRef(serviceConfig)
 
-  const toastStyle = useToastStyle()
-  const { saveConfig } = useConfigSave()
-
   useEffect(() => {
     serviceConfigRef.current = serviceConfig
   }, [serviceConfig])
-
-  if (serviceConfig) {
-    let changed = false
-    const nextConfig: OllamaServiceConfig = { ...serviceConfig }
-
-    if (nextConfig.promptList === undefined) {
-      nextConfig.promptList = DEFAULT_PROMPT_LIST
-      changed = true
-    }
-    if (nextConfig.temperature === undefined) {
-      nextConfig.temperature = ''
-      changed = true
-    }
-    if (nextConfig.topP === undefined) {
-      nextConfig.topP = ''
-      changed = true
-    }
-    if (nextConfig.topK === undefined) {
-      nextConfig.topK = ''
-      changed = true
-    }
-    if (nextConfig.thinkingMode === undefined) {
-      nextConfig.thinkingMode = THINKING_MODE_DEFAULT
-      changed = true
-    }
-
-    if (changed) {
-      setServiceConfig(nextConfig)
-    }
-  }
 
   const getModels = useCallback(
     async (currentConfig: OllamaServiceConfig | null = serviceConfigRef.current) => {
@@ -159,59 +141,59 @@ export function Config(props: ServiceConfigComponentProps) {
 
     const currentConfig = serviceConfig
     setIsPulling(true)
-    setProgress(0)
     setPullingStatus(currentConfig.model)
     try {
       await pullOllamaModel(normalizeOllamaBaseUrl(currentConfig.requestPath), currentConfig.model)
       await getModels(currentConfig)
     } catch (e) {
-      toast.error(String(e), { style: toastStyle })
+      toast.error(String(e))
     } finally {
-      setProgress(0)
       setPullingStatus('')
       setIsPulling(false)
     }
   }
 
   useEffect(() => {
-    if (serviceConfigRef.current !== null) {
-      void getModels()
+    if (serviceConfigRef.current === null) {
+      return undefined
     }
+
+    const timeout = setTimeout(() => {
+      void getModels()
+    }, 400)
+    return () => clearTimeout(timeout)
   }, [getModels, serviceConfig?.requestPath])
 
   return (
     serviceConfig !== null && (
-      <form
-        onSubmit={async (e) => {
-          e.preventDefault()
-          const saved = await saveConfig(instanceKey, null, setServiceConfig, serviceConfig, {
-            compareCurrent: false,
-          })
-          if (saved) {
-            await updateServiceList(instanceKey)
-            onClose()
-          }
-        }}
-      >
-        <div className="config-item">
-          <Input
-            label={t('services.instance_name')}
-            labelPlacement="outside-left"
-            value={serviceConfig[INSTANCE_NAME_CONFIG_KEY]}
-            variant="bordered"
-            classNames={{
-              base: 'justify-between',
-              label: 'text-(length:--heroui-font-size-medium)',
-              mainWrapper: 'max-w-[50%]',
-            }}
-            onValueChange={(value) => {
-              setServiceConfig({
-                ...serviceConfig,
-                [INSTANCE_NAME_CONFIG_KEY]: value,
+      <ProviderConfigForm
+        instanceKey={instanceKey}
+        config={serviceConfig}
+        setConfig={setServiceConfig}
+        updateServiceList={updateServiceList}
+        onClose={onClose}
+        isLoading={isLoading}
+        testButton={
+          <TestButton
+            isLoading={isLoading}
+            setIsLoading={setIsLoading}
+            onTest={() =>
+              translate('hello', Language.auto, Language.zh_cn, {
+                config: serviceConfig,
               })
-            }}
+            }
           />
-        </div>
+        }
+      >
+        <InstanceNameInput
+          value={serviceConfig[INSTANCE_NAME_CONFIG_KEY]}
+          onValueChange={(value) => {
+            void setServiceConfig({
+              ...serviceConfig,
+              [INSTANCE_NAME_CONFIG_KEY]: value,
+            })
+          }}
+        />
         {installedModels === null && (
           <Card isBlurred className="border-none bg-danger/20 dark:bg-danger/10" shadow="sm">
             <CardBody>
@@ -225,7 +207,7 @@ export function Config(props: ServiceConfigComponentProps) {
             </CardBody>
           </Card>
         )}
-        <div className="config-item">
+        <ConfigItem>
           <Switch
             isSelected={serviceConfig['stream']}
             onValueChange={(value) => {
@@ -240,8 +222,8 @@ export function Config(props: ServiceConfigComponentProps) {
           >
             {t('services.translate.ollama.stream')}
           </Switch>
-        </div>
-        <div className="config-item">
+        </ConfigItem>
+        <ConfigItem>
           <Input
             label={t('services.translate.ollama.request_path')}
             labelPlacement="outside-left"
@@ -259,8 +241,8 @@ export function Config(props: ServiceConfigComponentProps) {
               })
             }}
           />
-        </div>
-        <div className="config-item">
+        </ConfigItem>
+        <ConfigItem>
           <Input
             label={t('services.translate.ollama.model')}
             labelPlacement="outside-left"
@@ -302,13 +284,12 @@ export function Config(props: ServiceConfigComponentProps) {
               )
             }
           />
-        </div>
+        </ConfigItem>
         <h3 className="my-auto">{t('services.translate.ollama.advanced_options')}</h3>
         <p className="text-[10px] text-default-700">
           {t('services.translate.ollama.advanced_description')}
         </p>
-        <div className="config-item">
-          <h3 className="my-auto">{t('services.translate.ollama.thinking_mode')}</h3>
+        <ConfigItem title={t('services.translate.ollama.thinking_mode')}>
           <Dropdown>
             <DropdownTrigger>
               <Button variant="bordered">
@@ -336,8 +317,8 @@ export function Config(props: ServiceConfigComponentProps) {
               </DropdownItem>
             </DropdownMenu>
           </Dropdown>
-        </div>
-        <div className="config-item">
+        </ConfigItem>
+        <ConfigItem>
           <Input
             label={t('services.translate.ollama.temperature')}
             labelPlacement="outside-left"
@@ -358,8 +339,8 @@ export function Config(props: ServiceConfigComponentProps) {
               })
             }}
           />
-        </div>
-        <div className="config-item">
+        </ConfigItem>
+        <ConfigItem>
           <Input
             label={t('services.translate.ollama.top_p')}
             labelPlacement="outside-left"
@@ -380,8 +361,8 @@ export function Config(props: ServiceConfigComponentProps) {
               })
             }}
           />
-        </div>
-        <div className="config-item">
+        </ConfigItem>
+        <ConfigItem>
           <Input
             label={t('services.translate.ollama.top_k')}
             labelPlacement="outside-left"
@@ -402,7 +383,7 @@ export function Config(props: ServiceConfigComponentProps) {
               })
             }}
           />
-        </div>
+        </ConfigItem>
         <Card isBlurred className="border-none bg-success/20 dark:bg-success/10" shadow="sm">
           <CardBody>
             {isPulling && (
@@ -417,8 +398,7 @@ export function Config(props: ServiceConfigComponentProps) {
                   value: 'text-foreground/60',
                 }}
                 label={pullingStatus}
-                value={progress}
-                showValueLabel={true}
+                isIndeterminate
               />
             )}
             <div className="flex justify-center">
@@ -437,7 +417,7 @@ export function Config(props: ServiceConfigComponentProps) {
           {serviceConfig.promptList &&
             serviceConfig.promptList.map((prompt, index) => {
               return (
-                <div key={`${prompt.role}-${index}`} className="config-item">
+                <ConfigItem key={`${prompt.role}-${index}`}>
                   <Textarea
                     label={prompt.role}
                     labelPlacement="outside"
@@ -483,7 +463,7 @@ export function Config(props: ServiceConfigComponentProps) {
                   >
                     <MdDeleteOutline className="text-[18px]" />
                   </Button>
-                </div>
+                </ConfigItem>
               )
             })}
           <Button
@@ -510,32 +490,7 @@ export function Config(props: ServiceConfigComponentProps) {
           </Button>
         </div>
         <br />
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            onPress={() => {
-              setIsLoading(true)
-              translate('hello', Language.auto, Language.zh_cn, { config: serviceConfig }).then(
-                () => {
-                  setIsLoading(false)
-                  toast.success(t('config.service.test_success'), { style: toastStyle })
-                },
-                (e) => {
-                  setIsLoading(false)
-                  toast.error(t('config.service.test_failed') + e.toString(), { style: toastStyle })
-                },
-              )
-            }}
-            isLoading={isLoading}
-            fullWidth
-          >
-            {t('common.test')}
-          </Button>
-          <Button type="submit" isLoading={isLoading} fullWidth color="primary">
-            {t('common.save')}
-          </Button>
-        </div>
-      </form>
+      </ProviderConfigForm>
     )
   )
 }

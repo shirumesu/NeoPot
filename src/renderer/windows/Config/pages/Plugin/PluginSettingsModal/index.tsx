@@ -17,6 +17,7 @@ import type { InstalledPlugin } from '../installedPlugins'
 import { useConfig } from '../../../../../hooks'
 import { useConfigSave } from '../../../hooks/useConfigSave'
 import SafeDropdownMenu from '@/renderer/components/SafeDropdownMenu'
+import ConfigItem from '../../../components/ConfigItem'
 
 function pluginOptionsConfigKey(plugin: InstalledPlugin): string {
   return `plugin_options:${plugin.type}:${plugin.name}`
@@ -83,8 +84,12 @@ export default function PluginSettingsModal(props: {
                         : ''
 
                   return (
-                    <div key={option.key} className="config-item">
-                      <h3 className="my-auto select-none cursor-default">{option.display}</h3>
+                    <ConfigItem
+                      key={option.key}
+                      title={
+                        <span className="my-auto select-none cursor-default">{option.display}</span>
+                      }
+                    >
                       {option.type === 'select' && option.options ? (
                         <Dropdown>
                           <DropdownTrigger>
@@ -120,7 +125,7 @@ export default function PluginSettingsModal(props: {
                           }}
                         />
                       )}
-                    </div>
+                    </ConfigItem>
                   )
                 })}
             </ModalBody>

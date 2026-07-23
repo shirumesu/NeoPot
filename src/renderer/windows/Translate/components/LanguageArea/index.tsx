@@ -137,7 +137,6 @@ export default function LanguageArea(props: LanguageAreaProps) {
             isIconOnly
             size="sm"
             variant="light"
-            className={ACTION_ICON_CLASS}
             isDisabled={!hasSupportedTargetLanguages}
             onPress={async () => {
               if (sourceLanguage !== 'auto') {
@@ -161,7 +160,7 @@ export default function LanguageArea(props: LanguageAreaProps) {
               }
             }}
           >
-            <BiTransferAlt />
+            <BiTransferAlt className={ACTION_ICON_CLASS} />
           </Button>
         </div>
         <div className="flex">

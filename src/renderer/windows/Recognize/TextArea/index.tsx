@@ -1,13 +1,12 @@
 import { Card, CardBody, CardFooter, Button, Skeleton, ButtonGroup, Tooltip } from '@heroui/react'
-import { sendNotification } from '@/renderer/lib/electron/compat/notification'
-import { writeText } from '@/renderer/lib/electron/compat/clipboard'
+import { sendNotification } from '@/renderer/lib/electron/notification'
+import { writeClipboardText } from '@/renderer/lib/electron/clipboard'
 import { atom, useAtom, useAtomValue } from 'jotai'
 import { useEffect, useState } from 'react'
 import { CgSpaceBetween } from 'react-icons/cg'
 import { MdContentCopy } from 'react-icons/md'
 import { MdSmartButton } from 'react-icons/md'
 import { useTranslation } from 'react-i18next'
-import { nanoid } from 'nanoid'
 
 import {
   getServiceName,
@@ -16,7 +15,9 @@ import {
 } from '@/renderer/lib/service/service_instance'
 import { currentServiceInstanceKeyAtom, languageAtom, recognizeFlagAtom } from '../ControlArea'
 import { invoke_plugin } from '@/renderer/lib/plugin/invoke_plugin'
+import type { ServiceInstanceConfigMap } from '@/renderer/lib/service/serviceConfig'
 import * as builtinServices from '@/renderer/providers/recognize'
+import type { RecognizeProvider } from '@/renderer/providers/recognize'
 import { useConfig } from '../../../hooks'
 import { base64Atom } from '../ImageArea'
 import { pluginListAtom } from '..'
@@ -26,22 +27,11 @@ export const textAtom = atom('')
 let recognizeId = ''
 const RECOGNIZE_TIMEOUT_MS = 30000
 
-type ServiceInstanceConfigMap = Record<string, Record<string, unknown>>
-
-interface BuiltinRecognizeService {
-  Language: Record<string, string>
-  recognize(
-    base64: string,
-    language: string,
-    options: { config: Record<string, unknown> },
-  ): Promise<unknown>
-}
-
 interface TextAreaProps {
   serviceInstanceConfigMap: ServiceInstanceConfigMap
 }
 
-const builtinServiceMap = builtinServices as Record<string, BuiltinRecognizeService>
+const builtinServiceMap: Record<string, RecognizeProvider> = builtinServices
 
 function withTimeout<T>(promise: Promise<T>, timeoutMessage: string) {
   let timeout: ReturnType<typeof setTimeout> | null = null
@@ -96,7 +86,7 @@ export default function TextArea(props: TextAreaProps) {
       setLoading(true)
       if (getServiceSouceType(currentServiceInstanceKey) === ServiceSourceType.PLUGIN) {
         if (language in pluginList[getServiceName(currentServiceInstanceKey)].language) {
-          const id = nanoid()
+          const id = crypto.randomUUID()
           recognizeId = id
           const pluginConfig = serviceInstanceConfigMap[currentServiceInstanceKey] ?? {}
 
@@ -119,7 +109,7 @@ export default function TextArea(props: TextAreaProps) {
                   setText(v)
                   setLoading(false)
                   if (autoCopy) {
-                    writeText(v).then(() => {
+                    writeClipboardText(v).then(() => {
                       if (hideWindow) {
                         sendNotification({
                           title: t('common.write_clipboard'),
@@ -165,17 +155,13 @@ export default function TextArea(props: TextAreaProps) {
           setLoading(false)
         }
       } else {
-        const instanceConfig = serviceInstanceConfigMap[currentServiceInstanceKey] ?? {}
         if (language in builtinServiceMap[getServiceName(currentServiceInstanceKey)].Language) {
-          const id = nanoid()
+          const id = crypto.randomUUID()
           recognizeId = id
           withTimeout(
             builtinServiceMap[getServiceName(currentServiceInstanceKey)].recognize(
               base64,
               builtinServiceMap[getServiceName(currentServiceInstanceKey)].Language[language],
-              {
-                config: instanceConfig,
-              },
             ),
             t('errors.recognize_timeout'),
           ).then(
@@ -185,7 +171,7 @@ export default function TextArea(props: TextAreaProps) {
               setText(v)
               setLoading(false)
               if (autoCopy) {
-                writeText(v).then(() => {
+                writeClipboardText(v).then(() => {
                   if (hideWindow) {
                     sendNotification({
                       title: t('common.write_clipboard'),
@@ -260,10 +246,7 @@ export default function TextArea(props: TextAreaProps) {
               <textarea
                 value={error}
                 readOnly
-                className="bg-content1 h-full m-3 mb-0 resize-none focus:outline-none text-red-500"
-                onChange={(e) => {
-                  setText(e.target.value)
-                }}
+                className="m-3 mb-0 h-full resize-none bg-content1 text-danger focus:outline-none"
               />
             )}
           </>
@@ -277,7 +260,7 @@ export default function TextArea(props: TextAreaProps) {
               size="sm"
               variant="light"
               onPress={() => {
-                writeText(text)
+                writeClipboardText(text)
               }}
             >
               <MdContentCopy className="text-[16px]" />

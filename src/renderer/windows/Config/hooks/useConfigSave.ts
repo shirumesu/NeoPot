@@ -3,7 +3,6 @@ import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 
 import { isSameConfigValue } from '@/renderer/hooks/useConfig'
-import { useToastStyle } from '@/renderer/hooks'
 import { getStoreValue } from '@/renderer/lib/config/store'
 import { logger } from '@/renderer/lib/logger'
 
@@ -18,7 +17,6 @@ interface SaveConfigOptions {
 
 export function useConfigSave() {
   const { t } = useTranslation()
-  const toastStyle = useToastStyle()
 
   const verifySavedConfig = useCallback(async (key: string, value: unknown) => {
     const savedValue = await getStoreValue(key)
@@ -58,7 +56,6 @@ export function useConfigSave() {
         if (notify) {
           toast.success(successMessage ?? t('config.common.save_success'), {
             duration: 1500,
-            style: toastStyle,
           })
         }
         return true
@@ -69,13 +66,12 @@ export function useConfigSave() {
         if (notify) {
           toast.error(t('config.common.save_failed'), {
             duration: 3000,
-            style: toastStyle,
           })
         }
         return false
       }
     },
-    [t, toastStyle, verifySavedConfig],
+    [t, verifySavedConfig],
   )
 
   return {

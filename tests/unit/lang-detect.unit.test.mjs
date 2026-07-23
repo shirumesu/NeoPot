@@ -41,17 +41,17 @@ test('local language detection distinguishes Cyrillic languages with script-spec
 
 test('local language detection maps common Latin-family results to NeoPot language keys', async () => {
   const cases = [
-    ['en', 'This is an English sentence for testing language detection.'],
-    ['fr', 'Bonjour, ceci est une phrase francaise pour tester la detection.'],
-    ['de', 'Guten Morgen, dies ist ein deutscher Satz zur Spracherkennung.'],
-    ['es', 'Hola, esta es una frase en espanol para probar la deteccion.'],
-    ['it', 'Ciao, questa e una frase italiana per provare il rilevamento.'],
-    ['sv', 'Hej, det har ar en svensk mening for att testa sprakigenkanning.'],
-    ['pl', 'To jest polskie zdanie do testowania wykrywania jezyka.'],
-    ['nl', 'Dit is een Nederlandse zin om taaldetectie te testen.'],
-    ['vi', 'Xin chào, đây là một câu tiếng Việt để kiểm tra nhận diện ngôn ngữ.'],
-    ['id', 'Ini adalah kalimat bahasa Indonesia untuk menguji deteksi bahasa.'],
-    ['tr', 'Merhaba, bu dil algilamayi test etmek icin Turkce bir cumledir.'],
+    ['en', 'Clouds drift above the quiet harbor while fishermen prepare their boats.'],
+    ['fr', 'Le soleil traverse doucement les fenêtres pendant que la ville se réveille.'],
+    ['de', 'Heute scheint die Sonne durch das Fenster und der Garten wirkt besonders ruhig.'],
+    ['es', 'Los niños juegan junto al río mientras sus familias preparan la cena.'],
+    ['it', 'Quando arriva la sera, le luci della città si riflettono sul fiume.'],
+    ['sv', 'Fåglarna samlas vid sjön när kvällsluften blir svalare.'],
+    ['pl', 'Wczoraj odwiedziliśmy małą księgarnię ukrytą przy rynku.'],
+    ['nl', 'Gisteren fietsten we langs de kust terwijl de wind langzaam afnam.'],
+    ['vi', 'Buổi sáng mọi người thường đi bộ quanh hồ trước khi làm việc.'],
+    ['id', 'Pagi tadi kami berjalan menuju pasar sebelum hujan mulai turun.'],
+    ['tr', 'Bugün sahilde yürürken uzakta birkaç küçük tekne gördük.'],
   ]
 
   for (const [expected, input] of cases) {
@@ -60,18 +60,17 @@ test('local language detection maps common Latin-family results to NeoPot langua
 })
 
 test('local language detection does not let short CJK path fragments override English markdown', async () => {
-  const markdown = `# AGENTS.md - User Preferences and Working Rules
+  const markdown = `# Project Notes
 
-## Common Paths
+## Paths
 
-- Obsidian notes: \`D:\\obsidian\\日常\`
-- Code projects: \`D:\\program\\project\\{project}\`
-- Environment path: \`D:\\program\\env\`. Install reusable tools and environments here whenever possible.
+- Daily notes: \`notes/日常\`
+- Source directory: \`workspace/项目\`
 
-## Core Contract
+## Working Agreement
 
-- Bias toward clear judgment over both speed and excessive caution. Before acting on non-trivial work, state important assumptions, success criteria, and uncertainty that could change the approach.
-- Prefer explanations that make the tradeoff understandable, especially when the decision is not obvious.
+- Keep decisions concise and record the assumptions that affect implementation.
+- Prefer explanations that make tradeoffs understandable.
 `
 
   assert.equal(await detectLanguage(markdown), 'en')

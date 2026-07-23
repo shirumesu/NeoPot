@@ -3,7 +3,6 @@ dist
 out
 .vite
 spec/
-coverage/
 pnpm-lock.yaml
 *.cjs
 *.min.js

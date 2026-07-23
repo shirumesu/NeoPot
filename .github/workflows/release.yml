@@ -84,7 +84,6 @@ jobs:
   release:
     name: Publish GitHub Release
     needs: package
-    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -133,11 +132,10 @@ jobs:
           TAG_NAME: ${{ github.ref_name }}
         shell: bash
         run: |
-          if gh release view "$TAG_NAME" --json tagName --jq .tagName > release-check.txt 2>&1; then
+          if gh release view "$TAG_NAME" --json tagName --jq .tagName > /dev/null 2>&1; then
             gh release edit "$TAG_NAME" --title "$TAG_NAME" --notes-file release-notes.md
           else
             gh release create "$TAG_NAME" --title "$TAG_NAME" --notes-file release-notes.md
           fi
 
-          rm -f release-check.txt
           gh release upload "$TAG_NAME" release-assets/* --clobber

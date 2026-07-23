@@ -9,7 +9,7 @@ export interface TranslateWindowSizingInput {
   fontSize?: number
 }
 
-const MIN_TRANSLATE_WINDOW_SIZE: TranslateWindowSize = {
+export const MIN_TRANSLATE_WINDOW_SIZE: TranslateWindowSize = {
   width: 350,
   height: 420,
 }
@@ -71,10 +71,14 @@ export function calculateAdaptiveTranslateWindowSize(
   const longestLineLength = Math.max(...lines.map(codePointLength))
   const baseWidth = textLength < 80 ? 380 : textLength < 240 ? 480 : textLength < 700 ? 580 : 640
   const longLineWidth = 280 + Math.min(longestLineLength, 42) * charWidth
-  const width = Math.round(clamp(Math.max(baseWidth, longLineWidth), 350, maxWidth))
+  const width = Math.round(
+    clamp(Math.max(baseWidth, longLineWidth), MIN_TRANSLATE_WINDOW_SIZE.width, maxWidth),
+  )
   const charsPerLine = Math.max(24, Math.floor((width - 72) / charWidth))
   const estimatedLines = estimateWrappedLineCount(lines, charsPerLine)
-  const height = Math.round(clamp(360 + estimatedLines * lineHeight, 420, maxHeight))
+  const height = Math.round(
+    clamp(360 + estimatedLines * lineHeight, MIN_TRANSLATE_WINDOW_SIZE.height, maxHeight),
+  )
 
   return {
     width,

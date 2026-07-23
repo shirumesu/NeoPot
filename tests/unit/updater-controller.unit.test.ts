@@ -30,11 +30,11 @@ const updaterMock = vi.hoisted(() => {
   }
 })
 
-vi.mock('@/renderer/lib/electron/compat/updater', () => ({
-  check: updaterMock.check,
-  download: updaterMock.download,
-  install: updaterMock.install,
-  onEvent: updaterMock.onEvent,
+vi.mock('@/renderer/lib/electron/updater', () => ({
+  checkForUpdates: updaterMock.check,
+  downloadUpdate: updaterMock.download,
+  installUpdate: updaterMock.install,
+  onUpdateEvent: updaterMock.onEvent,
   openReleasePage: updaterMock.openReleasePage,
 }))
 

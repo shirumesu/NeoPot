@@ -1,4 +1,4 @@
-import { unregister, isRegistered } from '@/renderer/lib/electron/compat/globalShortcut'
+import { isHotkeyRegistered, unregisterHotkey } from '@/renderer/lib/electron/hotkey'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { CardBody } from '@heroui/react'
@@ -9,46 +9,17 @@ import { useConfig } from '../../../../hooks/useConfig'
 import PluginHotkeyEditor from '../../components/PluginHotkeyEditor'
 import HotkeyField from '../../components/HotkeyField'
 import type { HotkeySetter } from '../../components/HotkeyField'
-import { useToastStyle } from '../../../../hooks'
 import { osType } from '@/renderer/lib/config/env'
 import { shortcutFromKeyboardEvent } from '@/shared/hotkeyAccelerator'
-import { invoke } from '@/renderer/lib/electron/compat/core'
+import { invokeCommand } from '@/renderer/lib/electron/command'
 import { getStoreValue } from '@/renderer/lib/config/store'
 import { loadInstalledPlugins } from '../Plugin/installedPlugins'
 import { useConfigSave } from '../../hooks/useConfigSave'
-import { listen } from '@/renderer/lib/electron/compat/event'
-
-type PluginHotkeyRow = {
-  pluginId: string
-  pluginType: string
-  pluginName: string
-  pluginDisplay: string
-  key: string
-  display: string
-  hotkey: string
-}
-
-type PluginManifestHotkey = {
-  key: string
-  display: string
-  default: string
-  handler: string
-}
-
-function isPluginManifestHotkey(value: unknown): value is PluginManifestHotkey {
-  if (typeof value !== 'object' || value === null) {
-    return false
-  }
-
-  const candidate = value as Record<string, unknown>
-  return (
-    typeof candidate.key === 'string' &&
-    typeof candidate.display === 'string' &&
-    typeof candidate.default === 'string' &&
-    typeof candidate.handler === 'string' &&
-    candidate.handler.trim().length > 0
-  )
-}
+import { onAppEvent } from '@/renderer/lib/electron/events'
+import {
+  createPluginHotkeyRows,
+  type PluginHotkeyRow,
+} from '@/renderer/lib/plugin/pluginHotkeyManifest'
 
 export default function Hotkey() {
   const [selectionTranslate, setSelectionTranslate] = useConfig('hotkey_selection_translate', '', {
@@ -66,40 +37,22 @@ export default function Hotkey() {
   const [pluginHotkeyRows, setPluginHotkeyRows] = useState<PluginHotkeyRow[]>([])
 
   const { t } = useTranslation()
-  const toastStyle = useToastStyle()
   const { saveConfig } = useConfigSave()
 
   useEffect(() => {
     const loadPluginHotkeys = () => {
       loadInstalledPlugins().then((plugins) => {
         setPluginHotkeyRows(
-          plugins
-            .filter((plugin) => plugin.enabled)
-            .flatMap((plugin) => {
-              const hotkeys = Array.isArray(plugin.hotkeys) ? (plugin.hotkeys as unknown[]) : []
-
-              return hotkeys.filter(isPluginManifestHotkey).map((hotkey) => ({
-                pluginId: plugin.id,
-                pluginType: plugin.type,
-                pluginName: plugin.name,
-                pluginDisplay: plugin.display,
-                key: hotkey.key,
-                display: hotkey.display,
-                hotkey: hotkey.default,
-              }))
-            }),
+          plugins.filter((plugin) => plugin.enabled).flatMap(createPluginHotkeyRows),
         )
       })
     }
 
-    let unlisten: (() => void) | undefined
-    void listen('reload_plugin_list', loadPluginHotkeys).then((cleanup) => {
-      unlisten = cleanup
-    })
+    const unlisten = onAppEvent('reload_plugin_list', loadPluginHotkeys)
     loadPluginHotkeys()
 
     return () => {
-      unlisten?.()
+      unlisten()
     }
   }, [])
 
@@ -116,29 +69,29 @@ export default function Hotkey() {
     try {
       const savedValue = await getStoreValue(name)
       if (typeof savedValue === 'string' && savedValue !== '') {
-        unregister(savedValue)
+        unregisterHotkey(savedValue)
       }
       await saveConfig(name, null, setKey, '', {
         compareCurrent: false,
       })
     } catch {
-      toast.error(t('config.common.save_failed'), { style: toastStyle })
+      toast.error(t('config.common.save_failed'))
     }
   }
 
   function registerHandler(name: string, key: string, setKey: HotkeySetter) {
-    isRegistered(key).then((res) => {
+    isHotkeyRegistered(key).then((res) => {
       if (res) {
-        toast.error(t('config.hotkey.is_register'), { style: toastStyle })
+        toast.error(t('config.hotkey.is_register'))
       } else {
-        invoke('register_shortcut_by_frontend', {
-          name: name,
+        invokeCommand('register_shortcut_by_frontend', {
+          name,
           shortcut: key,
         }).then(
           async (registered) => {
             try {
               if (!registered) {
-                toast.error(t('config.common.save_failed'), { style: toastStyle })
+                toast.error(t('config.common.save_failed'))
                 return
               }
 
@@ -146,11 +99,11 @@ export default function Hotkey() {
                 compareCurrent: false,
               })
             } catch {
-              toast.error(t('config.common.save_failed'), { style: toastStyle })
+              toast.error(t('config.common.save_failed'))
             }
           },
           () => {
-            toast.error(t('config.common.save_failed'), { style: toastStyle })
+            toast.error(t('config.common.save_failed'))
           },
         )
       }

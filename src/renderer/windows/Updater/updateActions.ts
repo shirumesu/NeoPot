@@ -1,3 +1,4 @@
+import type { TFunction } from 'i18next'
 import type { UpdateCheckResult } from '@/shared/types/electron-api'
 
 export type UpdatePrimaryAction = 'check' | 'open-release-page' | 'install' | 'download' | 'none'
@@ -27,4 +28,18 @@ export function getUpdatePrimaryAction(
   }
 
   return isReadyToRestart ? 'install' : 'download'
+}
+
+export function getUpdatePrimaryLabel(action: UpdatePrimaryAction, t: TFunction): string {
+  switch (action) {
+    case 'check':
+      return t('updater.check')
+    case 'open-release-page':
+      return t('updater.go_to_download')
+    case 'install':
+      return t('updater.restart')
+    case 'download':
+    case 'none':
+      return t('updater.update')
+  }
 }

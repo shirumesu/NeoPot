@@ -7,7 +7,7 @@ import {
   useDisclosure,
 } from '@heroui/react'
 import { useTranslation } from 'react-i18next'
-import { invoke } from '@/renderer/lib/electron/compat/core'
+import { invokeCommand } from '@/renderer/lib/electron/command'
 
 import { appVersion } from '@/renderer/lib/config/env'
 import AboutUpdateModal from './AboutUpdateModal'
@@ -21,7 +21,7 @@ export default function About() {
       <img src="icon.png" className="mx-auto mb-1.5 h-24" draggable={false} />
       <div className="mx-auto max-w-md">
         <h1 className="font-bold text-2xl text-center">NeoPot</h1>
-        <p className="text-center text-sm text-gray-500 mb-1.5">{appVersion}</p>
+        <p className="text-center text-sm text-default-500 mb-1.5">{appVersion}</p>
         <Divider />
         <div className="flex justify-between">
           <Popover placement="top" offset={10}>
@@ -31,7 +31,7 @@ export default function About() {
               </Button>
             </PopoverTrigger>
             <PopoverContent className="p-2">
-              <div className="text-sm text-gray-600">{t('common.coming')}</div>
+              <div className="text-sm text-default-500">{t('common.coming')}</div>
             </PopoverContent>
           </Popover>
           <Button
@@ -39,7 +39,7 @@ export default function About() {
             className="my-1.5"
             size="sm"
             onPress={() => {
-              invoke('open_url', { url: 'https://github.com/shirumesu/NeoPot' })
+              invokeCommand('open_url', { url: 'https://github.com/shirumesu/NeoPot' })
             }}
           >
             {t('config.about.github')}
@@ -56,7 +56,9 @@ export default function About() {
                   variant="light"
                   size="sm"
                   onPress={() => {
-                    invoke('open_url', { url: 'https://github.com/shirumesu/NeoPot/issues' })
+                    invokeCommand('open_url', {
+                      url: 'https://github.com/shirumesu/NeoPot/issues',
+                    })
                   }}
                 >
                   {t('config.about.issue')}
@@ -68,7 +70,7 @@ export default function About() {
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="p-2">
-                    <div className="text-sm text-gray-600">{t('common.coming')}</div>
+                    <div className="text-sm text-default-500">{t('common.coming')}</div>
                   </PopoverContent>
                 </Popover>
               </div>
@@ -82,7 +84,7 @@ export default function About() {
               </Button>
             </PopoverTrigger>
             <PopoverContent className="p-2">
-              <div className="text-sm text-gray-600">{t('common.coming')}</div>
+              <div className="text-sm text-default-500">{t('common.coming')}</div>
             </PopoverContent>
           </Popover>
         </div>
@@ -98,7 +100,7 @@ export default function About() {
             className="my-1.5"
             size="sm"
             onPress={async () => {
-              await invoke('open_log_dir')
+              await invokeCommand('open_log_dir')
             }}
           >
             {t('config.about.view_log')}
@@ -108,7 +110,7 @@ export default function About() {
             className="my-1.5"
             size="sm"
             onPress={async () => {
-              await invoke('open_config_dir')
+              await invokeCommand('open_config_dir')
             }}
           >
             {t('config.about.view_config')}

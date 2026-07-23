@@ -1,0 +1,5 @@
+export const THINKING_MODE_DEFAULT = 'default'
+export const THINKING_MODE_ON = 'on'
+export const THINKING_MODE_OFF = 'off'
+export const DEFAULT_MODEL = 'gemma4:e2b'
+export const LEGACY_DEFAULT_MODEL = 'gemma:2b'
