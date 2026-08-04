@@ -405,7 +405,13 @@
       "recognize": {
         "local_model": {
           "title": "OCR con modelo local",
-          "description": "Utiliza los recursos del modelo local PaddleOCR.js PP-OCRv6 integrados en la aplicación. El reconocimiento no usa ninguna API de OCR en la nube."
+          "description": "Utiliza los recursos del modelo local PaddleOCR.js PP-OCRv6 integrados en la aplicación. El reconocimiento no usa ninguna API de OCR en la nube.",
+          "model_variant": "Variante del modelo",
+          "model_variants": {
+            "tiny": "Tiny (incluido)",
+            "small": "Small (se descarga en el primer uso)",
+            "medium": "Medium (se descarga en el primer uso)"
+          }
         }
       },
       "tts": {}
