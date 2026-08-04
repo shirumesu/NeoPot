@@ -411,7 +411,10 @@
             "tiny": "Tiny (同梱)",
             "small": "Small (初回使用時にダウンロード)",
             "medium": "Medium (初回使用時にダウンロード)"
-          }
+          },
+          "model_downloading": "OCR モデル {{variant}} をダウンロード中…",
+          "model_ready": "OCR モデル {{variant}} の準備が完了しました",
+          "model_fallback": "OCR モデル {{variant}} のダウンロードに失敗し、同梱の tiny モデルにフォールバックしました"
         }
       },
       "tts": {}

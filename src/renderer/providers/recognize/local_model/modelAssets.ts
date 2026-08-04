@@ -2,6 +2,7 @@ import tinyDetUrl from '@assets/models/ocr/PP-OCRv6_tiny_det_onnx.tar?url'
 import tinyRecUrl from '@assets/models/ocr/PP-OCRv6_tiny_rec_onnx.tar?url'
 import toast from 'react-hot-toast'
 
+import i18n from '@/renderer/i18n'
 import { fetch as electronFetch } from '@/renderer/lib/electron/http'
 import { getStoreValue } from '@/renderer/lib/config/store'
 import { logger } from '@/renderer/lib/logger'
@@ -190,16 +191,21 @@ export async function resolveVariantAssets(
   }
 
   const notifyId = `ocr-model-download-${variant}`
-  toast.loading(`正在下载 OCR 模型 ${variant}…`, { id: notifyId })
+  toast.loading(i18n.t('services.recognize.local_model.model_downloading', { variant }), {
+    id: notifyId,
+  })
   try {
     const [detUrl, recUrl] = await Promise.all([
       getCachedRemoteModelUrl(detName, REMOTE_MODEL_FILES[variant].det),
       getCachedRemoteModelUrl(recName, REMOTE_MODEL_FILES[variant].rec),
     ])
-    toast.success(`OCR 模型 ${variant} 已就绪`, { id: notifyId, duration: 2000 })
+    toast.success(i18n.t('services.recognize.local_model.model_ready', { variant }), {
+      id: notifyId,
+      duration: 2000,
+    })
     return { variant, detUrl, recUrl }
   } catch (error) {
-    toast.error(`OCR 模型 ${variant} 下载失败，已回退到内置 tiny 模型`, {
+    toast.error(i18n.t('services.recognize.local_model.model_fallback', { variant }), {
       id: notifyId,
       duration: 4000,
     })

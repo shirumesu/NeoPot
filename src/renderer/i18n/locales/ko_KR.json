@@ -411,7 +411,10 @@
             "tiny": "Tiny (번들)",
             "small": "Small (최초 사용 시 다운로드)",
             "medium": "Medium (최초 사용 시 다운로드)"
-          }
+          },
+          "model_downloading": "OCR 모델 {{variant}} 다운로드 중…",
+          "model_ready": "OCR 모델 {{variant}} 준비 완료",
+          "model_fallback": "OCR 모델 {{variant}} 다운로드 실패, 번들된 tiny 모델로 대체됨"
         }
       },
       "tts": {}

@@ -440,7 +440,10 @@
             "tiny": "Tiny (bundled)",
             "small": "Small (downloads on first use)",
             "medium": "Medium (downloads on first use)"
-          }
+          },
+          "model_downloading": "Downloading OCR model {{variant}}…",
+          "model_ready": "OCR model {{variant}} is ready",
+          "model_fallback": "Failed to download OCR model {{variant}}, fell back to the bundled tiny model"
         }
       },
       "tts": {

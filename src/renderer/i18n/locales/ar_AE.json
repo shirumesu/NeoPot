@@ -411,7 +411,10 @@
             "tiny": "Tiny (مدمج)",
             "small": "Small (يُحمّل عند أول استخدام)",
             "medium": "Medium (يُحمّل عند أول استخدام)"
-          }
+          },
+          "model_downloading": "جارٍ تنزيل نموذج OCR {{variant}}…",
+          "model_ready": "نموذج OCR {{variant}} جاهز",
+          "model_fallback": "فشل تنزيل نموذج OCR {{variant}}، تم التراجع إلى النموذج المدمج tiny"
         }
       },
       "tts": {}

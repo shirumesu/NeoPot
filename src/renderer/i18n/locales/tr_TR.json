@@ -411,7 +411,10 @@
             "tiny": "Tiny (paket içinde)",
             "small": "Small (ilk kullanımda indirilir)",
             "medium": "Medium (ilk kullanımda indirilir)"
-          }
+          },
+          "model_downloading": "OCR modeli {{variant}} indiriliyor…",
+          "model_ready": "OCR modeli {{variant}} hazır",
+          "model_fallback": "OCR modeli {{variant}} indirilemedi, paketlenen tiny modeline geri dönüldü"
         }
       },
       "tts": {}

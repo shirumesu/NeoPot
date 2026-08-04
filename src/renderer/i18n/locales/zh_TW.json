@@ -411,7 +411,10 @@
             "tiny": "Tiny（內建）",
             "small": "Small（首次使用時下載）",
             "medium": "Medium（首次使用時下載）"
-          }
+          },
+          "model_downloading": "正在下載 OCR 模型 {{variant}}…",
+          "model_ready": "OCR 模型 {{variant}} 已就緒",
+          "model_fallback": "OCR 模型 {{variant}} 下載失敗，已回退到內建 tiny 模型"
         }
       },
       "tts": {}

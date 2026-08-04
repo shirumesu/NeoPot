@@ -411,7 +411,10 @@
             "tiny": "Tiny (intégré)",
             "small": "Small (téléchargé à la première utilisation)",
             "medium": "Medium (téléchargé à la première utilisation)"
-          }
+          },
+          "model_downloading": "Téléchargement du modèle OCR {{variant}}…",
+          "model_ready": "Le modèle OCR {{variant}} est prêt",
+          "model_fallback": "Échec du téléchargement du modèle OCR {{variant}}, repli sur le modèle tiny intégré"
         }
       },
       "tts": {}

@@ -411,7 +411,10 @@
             "tiny": "Tiny (incluído)",
             "small": "Small (baixado no primeiro uso)",
             "medium": "Medium (baixado no primeiro uso)"
-          }
+          },
+          "model_downloading": "Baixando modelo OCR {{variant}}…",
+          "model_ready": "Modelo OCR {{variant}} pronto",
+          "model_fallback": "Falha ao baixar o modelo OCR {{variant}}, revertido para o modelo tiny incluído"
         }
       },
       "tts": {}
