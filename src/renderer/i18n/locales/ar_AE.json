@@ -405,7 +405,7 @@
       "recognize": {
         "local_model": {
           "title": "نموذج OCR المحلي",
-          "description": "يستخدم موارد النموذج المحلي المدمجة PaddleOCR.js PP-OCRv5 في التطبيق. لا يستخدم التعرف واجهة OCR سحابية."
+          "description": "يستخدم موارد النموذج المحلي المدمجة PaddleOCR.js PP-OCRv6 في التطبيق. لا يستخدم التعرف واجهة OCR سحابية."
         }
       },
       "tts": {}

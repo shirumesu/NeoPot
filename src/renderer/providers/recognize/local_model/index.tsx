@@ -1,7 +1,7 @@
 import { Language } from './info'
 import type { OrtOptions } from '@paddleocr/paddleocr-js'
-import textDetectionModelUrl from '@assets/models/ocr/PP-OCRv5_mobile_det_onnx.tar?url'
-import textRecognitionModelUrl from '@assets/models/ocr/PP-OCRv5_mobile_rec_onnx.tar?url'
+import textDetectionModelUrl from '@assets/models/ocr/PP-OCRv6_tiny_det_onnx.tar?url'
+import textRecognitionModelUrl from '@assets/models/ocr/PP-OCRv6_tiny_rec_onnx.tar?url'
 import ortWasmUrl from 'onnxruntime-web/ort-wasm-simd-threaded.jsep.wasm?url'
 import { getOrCreateCachedOcr } from './ocrCache'
 
@@ -24,7 +24,7 @@ interface LocalOcr {
 const ocrCache = new Map<string, Promise<LocalOcr>>()
 
 // PaddleOCR.js forwards this to onnxruntime-web, whose runtime supports a file map
-// even though PaddleOCR.js 0.3.2 declares `wasmPaths` as a string-only option.
+// even though PaddleOCR.js declares `wasmPaths` as a string-only option.
 const ortOptions = {
   backend: 'wasm',
   numThreads: 1,
@@ -43,12 +43,12 @@ async function getOcr(language: string) {
     const { PaddleOCR } = await import('@paddleocr/paddleocr-js')
     return PaddleOCR.create({
       lang: paddleLang,
-      ocrVersion: 'PP-OCRv5',
-      textDetectionModelName: 'PP-OCRv5_mobile_det',
+      ocrVersion: 'PP-OCRv6',
+      textDetectionModelName: 'PP-OCRv6_tiny_det',
       textDetectionModelAsset: {
         url: textDetectionModelUrl,
       },
-      textRecognitionModelName: 'PP-OCRv5_mobile_rec',
+      textRecognitionModelName: 'PP-OCRv6_tiny_rec',
       textRecognitionModelAsset: {
         url: textRecognitionModelUrl,
       },

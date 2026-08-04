@@ -405,7 +405,7 @@
       "recognize": {
         "local_model": {
           "title": "本機模型 OCR",
-          "description": "使用應用程式中內建的 PaddleOCR.js PP-OCRv5 本機模型資源。辨識不使用雲端 OCR API。"
+          "description": "使用應用程式中內建的 PaddleOCR.js PP-OCRv6 本機模型資源。辨識不使用雲端 OCR API。"
         }
       },
       "tts": {}

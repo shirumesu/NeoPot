@@ -405,7 +405,7 @@
       "recognize": {
         "local_model": {
           "title": "로컬 모델 OCR",
-          "description": "앱에 번들된 PaddleOCR.js PP-OCRv5 로컬 모델 자산을 사용합니다. 인식에 클라우드 OCR API를 사용하지 않습니다."
+          "description": "앱에 번들된 PaddleOCR.js PP-OCRv6 로컬 모델 자산을 사용합니다. 인식에 클라우드 OCR API를 사용하지 않습니다."
         }
       },
       "tts": {}

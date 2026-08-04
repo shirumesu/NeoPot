@@ -91,7 +91,7 @@
 <details>
 <summary>文字识别</summary>
 
-- 本地模型 OCR（PaddleOCR.js PP-OCRv5）
+- 本地模型 OCR（PaddleOCR.js PP-OCRv6）
 
 </details>
 

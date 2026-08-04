@@ -91,7 +91,7 @@ The current version ships these built-in services:
 <details>
 <summary>Text Recognition</summary>
 
-- Local Model OCR (PaddleOCR.js PP-OCRv5)
+- Local Model OCR (PaddleOCR.js PP-OCRv6)
 
 </details>
 

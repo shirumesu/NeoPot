@@ -34,8 +34,8 @@ test('electron-vite outputs stay aligned with packaged Main, preload, and render
 
 test('OCR runtime assets are bundled into renderer output and fetched from a non-file origin', () => {
   assert.match(builder, /out\/renderer\/\*\*/)
-  assert.match(localOcrProvider, /PP-OCRv5_mobile_det_onnx\.tar\?url/)
-  assert.match(localOcrProvider, /PP-OCRv5_mobile_rec_onnx\.tar\?url/)
+  assert.match(localOcrProvider, /PP-OCRv6_tiny_det_onnx\.tar\?url/)
+  assert.match(localOcrProvider, /PP-OCRv6_tiny_rec_onnx\.tar\?url/)
   assert.match(localOcrProvider, /ort-wasm-simd-threaded\.jsep\.wasm\?url/)
   assert.match(localOcrProvider, /wasmPaths:\s*\{\s*wasm:\s*ortWasmUrl,?\s*\}/)
   assert.match(functionText(windowSource, 'rendererUrl'), /RENDERER_SCHEME/)
