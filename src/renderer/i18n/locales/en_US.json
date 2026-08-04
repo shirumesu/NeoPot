@@ -434,7 +434,13 @@
       "recognize": {
         "local_model": {
           "title": "Local Model OCR",
-          "description": "Uses the bundled PaddleOCR.js PP-OCRv6 local model assets in the app. Recognition does not use a cloud OCR API."
+          "description": "Uses the bundled PaddleOCR.js PP-OCRv6 local model assets in the app. Recognition does not use a cloud OCR API.",
+          "model_variant": "Model Variant",
+          "model_variants": {
+            "tiny": "Tiny (bundled)",
+            "small": "Small (downloads on first use)",
+            "medium": "Medium (downloads on first use)"
+          }
         }
       },
       "tts": {

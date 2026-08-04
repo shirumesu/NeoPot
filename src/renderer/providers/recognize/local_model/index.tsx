@@ -1,9 +1,8 @@
 import { Language } from './info'
 import type { OrtOptions } from '@paddleocr/paddleocr-js'
-import textDetectionModelUrl from '@assets/models/ocr/PP-OCRv6_tiny_det_onnx.tar?url'
-import textRecognitionModelUrl from '@assets/models/ocr/PP-OCRv6_tiny_rec_onnx.tar?url'
 import ortWasmUrl from 'onnxruntime-web/ort-wasm-simd-threaded.jsep.wasm?url'
 import { getOrCreateCachedOcr } from './ocrCache'
+import { getConfiguredModelVariant, modelName, resolveModelAssetUrl } from './modelAssets'
 
 const paddleLangMap: Partial<Record<string, string>> = {
   [Language.auto]: 'ch',
@@ -39,16 +38,21 @@ async function getOcr(language: string) {
     throw new Error('Language not supported by PaddleOCR.js local model.')
   }
 
-  return getOrCreateCachedOcr(ocrCache, paddleLang, async () => {
-    const { PaddleOCR } = await import('@paddleocr/paddleocr-js')
+  const variant = await getConfiguredModelVariant()
+  return getOrCreateCachedOcr(ocrCache, `${paddleLang}:${variant}`, async () => {
+    const [{ PaddleOCR }, textDetectionModelUrl, textRecognitionModelUrl] = await Promise.all([
+      import('@paddleocr/paddleocr-js'),
+      resolveModelAssetUrl(variant, 'det'),
+      resolveModelAssetUrl(variant, 'rec'),
+    ])
     return PaddleOCR.create({
       lang: paddleLang,
       ocrVersion: 'PP-OCRv6',
-      textDetectionModelName: 'PP-OCRv6_tiny_det',
+      textDetectionModelName: modelName(variant, 'det'),
       textDetectionModelAsset: {
         url: textDetectionModelUrl,
       },
-      textRecognitionModelName: 'PP-OCRv6_tiny_rec',
+      textRecognitionModelName: modelName(variant, 'rec'),
       textRecognitionModelAsset: {
         url: textRecognitionModelUrl,
       },
