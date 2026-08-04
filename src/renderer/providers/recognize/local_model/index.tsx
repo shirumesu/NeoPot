@@ -2,7 +2,7 @@ import { Language } from './info'
 import type { OrtOptions } from '@paddleocr/paddleocr-js'
 import ortWasmUrl from 'onnxruntime-web/ort-wasm-simd-threaded.jsep.wasm?url'
 import { getOrCreateCachedOcr } from './ocrCache'
-import { getConfiguredModelVariant, modelName, resolveModelAssetUrl } from './modelAssets'
+import { getConfiguredModelVariant, modelName, resolveVariantAssets } from './modelAssets'
 
 const paddleLangMap: Partial<Record<string, string>> = {
   [Language.auto]: 'ch',
@@ -40,21 +40,18 @@ async function getOcr(language: string) {
 
   const variant = await getConfiguredModelVariant()
   return getOrCreateCachedOcr(ocrCache, `${paddleLang}:${variant}`, async () => {
-    const [{ PaddleOCR }, textDetectionModelUrl, textRecognitionModelUrl] = await Promise.all([
-      import('@paddleocr/paddleocr-js'),
-      resolveModelAssetUrl(variant, 'det'),
-      resolveModelAssetUrl(variant, 'rec'),
-    ])
+    const { variant: resolvedVariant, detUrl, recUrl } = await resolveVariantAssets(variant)
+    const { PaddleOCR } = await import('@paddleocr/paddleocr-js')
     return PaddleOCR.create({
       lang: paddleLang,
       ocrVersion: 'PP-OCRv6',
-      textDetectionModelName: modelName(variant, 'det'),
+      textDetectionModelName: modelName(resolvedVariant, 'det'),
       textDetectionModelAsset: {
-        url: textDetectionModelUrl,
+        url: detUrl,
       },
-      textRecognitionModelName: modelName(variant, 'rec'),
+      textRecognitionModelName: modelName(resolvedVariant, 'rec'),
       textRecognitionModelAsset: {
-        url: textRecognitionModelUrl,
+        url: recUrl,
       },
       ortOptions,
     }) as Promise<LocalOcr>

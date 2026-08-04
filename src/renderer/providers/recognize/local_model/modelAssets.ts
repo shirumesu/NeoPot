@@ -1,6 +1,8 @@
 import tinyDetUrl from '@assets/models/ocr/PP-OCRv6_tiny_det_onnx.tar?url'
 import tinyRecUrl from '@assets/models/ocr/PP-OCRv6_tiny_rec_onnx.tar?url'
+import toast from 'react-hot-toast'
 
+import { fetch as electronFetch } from '@/renderer/lib/electron/http'
 import { getStoreValue } from '@/renderer/lib/config/store'
 import { logger } from '@/renderer/lib/logger'
 import { errorToLogContext } from '@/shared/logger'
@@ -13,7 +15,7 @@ export type ModelRole = 'det' | 'rec'
 
 export const DEFAULT_MODEL_VARIANT: ModelVariant = 'tiny'
 
-export const MODEL_VARIANT_CONFIG_KEY = 'local_model.model_variant'
+export const MODEL_VARIANT_CONFIG_KEY = 'local_model_ocr_model_variant'
 
 const MODEL_CDN_BASE =
   'https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0'
@@ -36,6 +38,8 @@ const REMOTE_MODEL_FILES: Record<Exclude<ModelVariant, 'tiny'>, Record<ModelRole
 
 const CACHE_DATABASE = 'neopot-ocr-models'
 const CACHE_STORE = 'models'
+
+const DOWNLOAD_TIMEOUT_MS = 120_000
 
 const objectUrlCache = new Map<string, string>()
 const pendingDownloads = new Map<string, Promise<string>>()
@@ -103,7 +107,17 @@ async function writeCachedModel(key: string, bytes: ArrayBuffer): Promise<void> 
   }
 }
 
-async function downloadAndCacheModel(key: string, url: string): Promise<string> {
+function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(message)), ms)
+  })
+  return Promise.race([promise, timeout]).finally(() => {
+    if (timer) clearTimeout(timer)
+  })
+}
+
+async function fetchAndCacheModel(key: string, url: string): Promise<string> {
   const cached = await readCachedModel(key).catch((error) => {
     logger.warn('Failed to read OCR model cache.', { ...errorToLogContext(error), key })
     return undefined
@@ -111,11 +125,20 @@ async function downloadAndCacheModel(key: string, url: string): Promise<string> 
 
   let bytes = cached
   if (!bytes) {
-    const response = await fetch(url)
-    if (!response.ok) {
-      throw new Error(`Failed to download ${key}: HTTP ${String(response.status)}`)
-    }
-    bytes = await response.arrayBuffer()
+    const bytesPromise = electronFetch<ArrayBuffer>(url, {
+      responseType: 3,
+      timeoutMs: DOWNLOAD_TIMEOUT_MS,
+    }).then((res) => {
+      if (!res.ok) {
+        throw new Error(`Failed to download ${key}: HTTP ${String(res.status)}`)
+      }
+      return res.data
+    })
+    bytes = await withTimeout(
+      bytesPromise,
+      DOWNLOAD_TIMEOUT_MS,
+      `Download of ${key} timed out after ${String(DOWNLOAD_TIMEOUT_MS)} ms`,
+    )
     await writeCachedModel(key, bytes).catch((error) => {
       logger.warn('Failed to persist OCR model cache.', { ...errorToLogContext(error), key })
     })
@@ -135,7 +158,7 @@ async function getCachedRemoteModelUrl(key: string, url: string): Promise<string
     return pending
   }
 
-  const download = downloadAndCacheModel(key, url)
+  const download = fetchAndCacheModel(key, url)
     .then((objectUrl) => {
       objectUrlCache.set(key, objectUrl)
       return objectUrl
@@ -149,12 +172,41 @@ async function getCachedRemoteModelUrl(key: string, url: string): Promise<string
   return download
 }
 
-export async function resolveModelAssetUrl(
+export async function resolveVariantAssets(
   variant: ModelVariant,
-  role: ModelRole,
-): Promise<string> {
+): Promise<{ variant: ModelVariant; detUrl: string; recUrl: string }> {
   if (variant === 'tiny') {
-    return BUNDLED_TINY_ASSETS[role]
+    return { variant, detUrl: BUNDLED_TINY_ASSETS.det, recUrl: BUNDLED_TINY_ASSETS.rec }
   }
-  return getCachedRemoteModelUrl(modelName(variant, role), REMOTE_MODEL_FILES[variant][role])
+
+  const detName = modelName(variant, 'det')
+  const recName = modelName(variant, 'rec')
+  if (objectUrlCache.has(detName) && objectUrlCache.has(recName)) {
+    return {
+      variant,
+      detUrl: objectUrlCache.get(detName) as string,
+      recUrl: objectUrlCache.get(recName) as string,
+    }
+  }
+
+  const notifyId = `ocr-model-download-${variant}`
+  toast.loading(`正在下载 OCR 模型 ${variant}…`, { id: notifyId })
+  try {
+    const [detUrl, recUrl] = await Promise.all([
+      getCachedRemoteModelUrl(detName, REMOTE_MODEL_FILES[variant].det),
+      getCachedRemoteModelUrl(recName, REMOTE_MODEL_FILES[variant].rec),
+    ])
+    toast.success(`OCR 模型 ${variant} 已就绪`, { id: notifyId, duration: 2000 })
+    return { variant, detUrl, recUrl }
+  } catch (error) {
+    toast.error(`OCR 模型 ${variant} 下载失败，已回退到内置 tiny 模型`, {
+      id: notifyId,
+      duration: 4000,
+    })
+    logger.warn('Falling back to bundled tiny model after variant download failure.', {
+      ...errorToLogContext(error),
+      variant,
+    })
+    return { variant: 'tiny', detUrl: BUNDLED_TINY_ASSETS.det, recUrl: BUNDLED_TINY_ASSETS.rec }
+  }
 }
