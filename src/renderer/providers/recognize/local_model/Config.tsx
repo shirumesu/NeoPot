@@ -11,9 +11,13 @@ import SafeDropdownMenu from '@/renderer/components/SafeDropdownMenu'
 import ConfigItem from '@/renderer/windows/Config/components/ConfigItem'
 import { useConfigSave } from '@/renderer/windows/Config/hooks/useConfigSave'
 import {
+  COMPUTE_BACKENDS,
+  COMPUTE_BACKEND_CONFIG_KEY,
+  DEFAULT_COMPUTE_BACKEND,
   DEFAULT_MODEL_VARIANT,
   MODEL_VARIANT_CONFIG_KEY,
   MODEL_VARIANTS,
+  type ComputeBackend,
   type ModelVariant,
 } from './modelAssets'
 
@@ -30,6 +34,10 @@ export function Config(props: ServiceConfigComponentProps) {
   const [modelVariant, setModelVariant] = useConfig<ModelVariant>(
     MODEL_VARIANT_CONFIG_KEY,
     DEFAULT_MODEL_VARIANT,
+  )
+  const [computeBackend, setComputeBackend] = useConfig<ComputeBackend>(
+    COMPUTE_BACKEND_CONFIG_KEY,
+    DEFAULT_COMPUTE_BACKEND,
   )
   const { saveConfig } = useConfigSave()
   return (
@@ -76,6 +84,35 @@ export function Config(props: ServiceConfigComponentProps) {
                 {MODEL_VARIANTS.map((variant) => (
                   <DropdownItem key={variant}>
                     {t(`services.recognize.local_model.model_variants.${variant}`)}
+                  </DropdownItem>
+                ))}
+              </SafeDropdownMenu>
+            </Dropdown>
+          </ConfigItem>
+        )}
+        {computeBackend !== null && (
+          <ConfigItem title={t('services.recognize.local_model.compute_backend')}>
+            <Dropdown>
+              <DropdownTrigger>
+                <Button variant="bordered">
+                  {t(`services.recognize.local_model.compute_backends.${computeBackend}`)}
+                </Button>
+              </DropdownTrigger>
+              <SafeDropdownMenu
+                aria-label={t('services.recognize.local_model.compute_backend')}
+                onAction={(key: React.Key) => {
+                  void saveConfig(
+                    COMPUTE_BACKEND_CONFIG_KEY,
+                    computeBackend,
+                    setComputeBackend,
+                    key as ComputeBackend,
+                    { notify: false },
+                  )
+                }}
+              >
+                {COMPUTE_BACKENDS.map((backend) => (
+                  <DropdownItem key={backend}>
+                    {t(`services.recognize.local_model.compute_backends.${backend}`)}
                   </DropdownItem>
                 ))}
               </SafeDropdownMenu>

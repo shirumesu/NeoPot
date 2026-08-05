@@ -414,7 +414,13 @@
           },
           "model_downloading": "جارٍ تنزيل نموذج OCR {{variant}}…",
           "model_ready": "نموذج OCR {{variant}} جاهز",
-          "model_fallback": "فشل تنزيل نموذج OCR {{variant}}، تم التراجع إلى النموذج المدمج tiny"
+          "model_fallback": "فشل تنزيل نموذج OCR {{variant}}، تم التراجع إلى النموذج المدمج tiny",
+          "compute_backend": "الواجهة الخلفية للحساب",
+          "compute_backends": {
+            "wasm": "WASM (وحدة المعالجة المركزية)",
+            "webgpu": "WebGPU (وحدة معالجة الرسومات)",
+            "auto": "تلقائي"
+          }
         }
       },
       "tts": {}

@@ -2,7 +2,13 @@ import { Language } from './info'
 import type { OrtOptions } from '@paddleocr/paddleocr-js'
 import ortWasmUrl from 'onnxruntime-web/ort-wasm-simd-threaded.jsep.wasm?url'
 import { getOrCreateCachedOcr } from './ocrCache'
-import { getConfiguredModelVariant, modelName, resolveVariantAssets } from './modelAssets'
+import {
+  getConfiguredComputeBackend,
+  getConfiguredModelVariant,
+  modelName,
+  resolveVariantAssets,
+  type ComputeBackend,
+} from './modelAssets'
 
 const paddleLangMap: Partial<Record<string, string>> = {
   [Language.auto]: 'ch',
@@ -24,13 +30,15 @@ const ocrCache = new Map<string, Promise<LocalOcr>>()
 
 // PaddleOCR.js forwards this to onnxruntime-web, whose runtime supports a file map
 // even though PaddleOCR.js declares `wasmPaths` as a string-only option.
-const ortOptions = {
-  backend: 'wasm',
-  numThreads: 1,
-  wasmPaths: {
-    wasm: ortWasmUrl,
-  },
-} as unknown as OrtOptions
+function buildOrtOptions(backend: ComputeBackend) {
+  return {
+    backend,
+    numThreads: 1,
+    wasmPaths: {
+      wasm: ortWasmUrl,
+    },
+  } as unknown as OrtOptions
+}
 
 async function getOcr(language: string) {
   const paddleLang = paddleLangMap[language]
@@ -38,8 +46,11 @@ async function getOcr(language: string) {
     throw new Error('Language not supported by PaddleOCR.js local model.')
   }
 
-  const variant = await getConfiguredModelVariant()
-  return getOrCreateCachedOcr(ocrCache, `${paddleLang}:${variant}`, async () => {
+  const [variant, backend] = await Promise.all([
+    getConfiguredModelVariant(),
+    getConfiguredComputeBackend(),
+  ])
+  return getOrCreateCachedOcr(ocrCache, `${paddleLang}:${variant}:${backend}`, async () => {
     const { variant: resolvedVariant, detUrl, recUrl } = await resolveVariantAssets(variant)
     const { PaddleOCR } = await import('@paddleocr/paddleocr-js')
     return PaddleOCR.create({
@@ -53,7 +64,7 @@ async function getOcr(language: string) {
       textRecognitionModelAsset: {
         url: recUrl,
       },
-      ortOptions,
+      ortOptions: buildOrtOptions(backend),
     }) as Promise<LocalOcr>
   })
 }

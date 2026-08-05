@@ -414,7 +414,13 @@
           },
           "model_downloading": "正在下載 OCR 模型 {{variant}}…",
           "model_ready": "OCR 模型 {{variant}} 已就緒",
-          "model_fallback": "OCR 模型 {{variant}} 下載失敗，已回退到內建 tiny 模型"
+          "model_fallback": "OCR 模型 {{variant}} 下載失敗，已回退到內建 tiny 模型",
+          "compute_backend": "運算後端",
+          "compute_backends": {
+            "wasm": "WASM（CPU）",
+            "webgpu": "WebGPU（GPU）",
+            "auto": "自動"
+          }
         }
       },
       "tts": {}

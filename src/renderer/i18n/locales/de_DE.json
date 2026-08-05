@@ -414,7 +414,13 @@
           },
           "model_downloading": "OCR-Modell {{variant}} wird heruntergeladen…",
           "model_ready": "OCR-Modell {{variant}} ist bereit",
-          "model_fallback": "Download des OCR-Modells {{variant}} fehlgeschlagen, auf das integrierte tiny-Modell zurückgefallen"
+          "model_fallback": "Download des OCR-Modells {{variant}} fehlgeschlagen, auf das integrierte tiny-Modell zurückgefallen",
+          "compute_backend": "Rechen-Backend",
+          "compute_backends": {
+            "wasm": "WASM (CPU)",
+            "webgpu": "WebGPU (GPU)",
+            "auto": "Automatisch"
+          }
         }
       },
       "tts": {}

@@ -18,6 +18,14 @@ export const DEFAULT_MODEL_VARIANT: ModelVariant = 'tiny'
 
 export const MODEL_VARIANT_CONFIG_KEY = 'local_model_ocr_model_variant'
 
+export const COMPUTE_BACKENDS = ['wasm', 'webgpu', 'auto'] as const
+
+export type ComputeBackend = (typeof COMPUTE_BACKENDS)[number]
+
+export const DEFAULT_COMPUTE_BACKEND: ComputeBackend = 'wasm'
+
+export const COMPUTE_BACKEND_CONFIG_KEY = 'local_model_ocr_compute_backend'
+
 const MODEL_CDN_BASE =
   'https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0'
 
@@ -62,6 +70,21 @@ export async function getConfiguredModelVariant(): Promise<ModelVariant> {
     })
   }
   return DEFAULT_MODEL_VARIANT
+}
+
+export async function getConfiguredComputeBackend(): Promise<ComputeBackend> {
+  try {
+    const value = await getStoreValue(COMPUTE_BACKEND_CONFIG_KEY)
+    if (typeof value === 'string' && (COMPUTE_BACKENDS as readonly string[]).includes(value)) {
+      return value as ComputeBackend
+    }
+  } catch (error) {
+    logger.warn('Failed to read OCR compute backend config.', {
+      ...errorToLogContext(error),
+      key: COMPUTE_BACKEND_CONFIG_KEY,
+    })
+  }
+  return DEFAULT_COMPUTE_BACKEND
 }
 
 function openCacheDatabase(): Promise<IDBDatabase> {

@@ -414,7 +414,13 @@
           },
           "model_downloading": "OCR 모델 {{variant}} 다운로드 중…",
           "model_ready": "OCR 모델 {{variant}} 준비 완료",
-          "model_fallback": "OCR 모델 {{variant}} 다운로드 실패, 번들된 tiny 모델로 대체됨"
+          "model_fallback": "OCR 모델 {{variant}} 다운로드 실패, 번들된 tiny 모델로 대체됨",
+          "compute_backend": "컴퓨팅 백엔드",
+          "compute_backends": {
+            "wasm": "WASM (CPU)",
+            "webgpu": "WebGPU (GPU)",
+            "auto": "자동"
+          }
         }
       },
       "tts": {}

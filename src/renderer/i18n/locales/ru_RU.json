@@ -414,7 +414,13 @@
           },
           "model_downloading": "Загрузка модели OCR {{variant}}…",
           "model_ready": "Модель OCR {{variant}} готова",
-          "model_fallback": "Не удалось загрузить модель OCR {{variant}}, выполнен откат на встроенную модель tiny"
+          "model_fallback": "Не удалось загрузить модель OCR {{variant}}, выполнен откат на встроенную модель tiny",
+          "compute_backend": "Бэкенд вычислений",
+          "compute_backends": {
+            "wasm": "WASM (ЦП)",
+            "webgpu": "WebGPU (ГП)",
+            "auto": "Авто"
+          }
         }
       },
       "tts": {}

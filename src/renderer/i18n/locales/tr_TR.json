@@ -414,7 +414,13 @@
           },
           "model_downloading": "OCR modeli {{variant}} indiriliyor…",
           "model_ready": "OCR modeli {{variant}} hazır",
-          "model_fallback": "OCR modeli {{variant}} indirilemedi, paketlenen tiny modeline geri dönüldü"
+          "model_fallback": "OCR modeli {{variant}} indirilemedi, paketlenen tiny modeline geri dönüldü",
+          "compute_backend": "Hesaplama arka ucu",
+          "compute_backends": {
+            "wasm": "WASM (CPU)",
+            "webgpu": "WebGPU (GPU)",
+            "auto": "Otomatik"
+          }
         }
       },
       "tts": {}

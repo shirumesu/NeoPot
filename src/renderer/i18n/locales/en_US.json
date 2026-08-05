@@ -443,7 +443,13 @@
           },
           "model_downloading": "Downloading OCR model {{variant}}…",
           "model_ready": "OCR model {{variant}} is ready",
-          "model_fallback": "Failed to download OCR model {{variant}}, fell back to the bundled tiny model"
+          "model_fallback": "Failed to download OCR model {{variant}}, fell back to the bundled tiny model",
+          "compute_backend": "Compute Backend",
+          "compute_backends": {
+            "wasm": "WASM (CPU)",
+            "webgpu": "WebGPU (GPU)",
+            "auto": "Auto"
+          }
         }
       },
       "tts": {
