@@ -64,6 +64,25 @@ async function rewriteZipEntryName(zipPath: string, from: string, to: string) {
   await writeFile(zipPath, archive)
 }
 
+async function rewriteZipEntryDeclaredSize(zipPath: string, entryName: string, size: number) {
+  const archive = await readFile(zipPath)
+  const endOfDirectory = archive.lastIndexOf(Buffer.from([0x50, 0x4b, 0x05, 0x06]))
+  let offset = archive.readUInt32LE(endOfDirectory + 16)
+  while (archive.readUInt32LE(offset) === 0x02014b50) {
+    const nameLength = archive.readUInt16LE(offset + 28)
+    const extraLength = archive.readUInt16LE(offset + 30)
+    const commentLength = archive.readUInt16LE(offset + 32)
+    const name = archive.toString('utf8', offset + 46, offset + 46 + nameLength)
+    if (name === entryName) {
+      archive.writeUInt32LE(size, offset + 24)
+      await writeFile(zipPath, archive)
+      return
+    }
+    offset += 46 + nameLength + extraLength + commentLength
+  }
+  throw new Error(`ZIP entry "${entryName}" was not found.`)
+}
+
 async function readJson(file: string) {
   return JSON.parse(await readFile(file, 'utf8')) as Record<string, unknown>
 }
@@ -156,6 +175,34 @@ describe('plugin installer core', () => {
       /2 entries; the limit is 1/,
     )
   })
+
+  test.each(['info.json', 'main.js'])(
+    'rejects a zip with a falsely declared empty %s entry',
+    async (entryName) => {
+      const zipPath = createZip('false-empty.zip', {
+        'info.json': JSON.stringify({ plugin_type: 'translate', name: 'false_empty' }),
+        'main.js': 'export default () => "nonempty"',
+      })
+      await rewriteZipEntryDeclaredSize(zipPath, entryName, 0)
+      const installer = createPluginInstallerCore({ pluginRoot })
+
+      if (entryName === 'info.json') {
+        expect(() => readPluginManifestFromZip(zipPath)).toThrow(/larger than 1/)
+      }
+      await expect(
+        installer.installFromZip(zipPath, {
+          installSource: zipPath,
+          installSourceType: 'local',
+        }),
+      ).rejects.toMatchObject({ code: 'ERR_BUFFER_TOO_LARGE' })
+      await expect(
+        readFile(path.join(pluginRoot, 'translate', 'false_empty', 'main.js'), 'utf8'),
+      ).rejects.toMatchObject({ code: 'ENOENT' })
+      await expect(
+        readFile(path.join(pluginRoot, 'translate', 'false_empty.tmp', 'info.json'), 'utf8'),
+      ).rejects.toMatchObject({ code: 'ENOENT' })
+    },
+  )
 
   test('rejects directory and zip packages missing required root files', async () => {
     const missingInfo = path.join(tempDir, 'missing-info')
