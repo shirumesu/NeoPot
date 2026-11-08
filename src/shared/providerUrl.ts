@@ -117,6 +117,54 @@ export function normalizeGoogleTranslateBaseUrl(value: unknown): string {
   })
 }
 
+const MAX_CONFIG_URL_SCAN_DEPTH = 3
+
+function collectStringValues(value: unknown, depth: number, output: string[]): void {
+  if (depth > MAX_CONFIG_URL_SCAN_DEPTH) {
+    return
+  }
+
+  if (typeof value === 'string') {
+    output.push(value)
+    return
+  }
+
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      collectStringValues(item, depth + 1, output)
+    }
+    return
+  }
+
+  if (typeof value === 'object' && value !== null) {
+    for (const item of Object.values(value)) {
+      collectStringValues(item, depth + 1, output)
+    }
+  }
+}
+
+/**
+ * Collects the origins of every local/private HTTP endpoint referenced by a
+ * user-editable configuration object (plugin instance settings and plugin
+ * options). Plugin endpoints are free-form, so any string value that parses as
+ * an HTTP URL pointing at a local/private host is treated as a configured
+ * provider target.
+ */
+export function collectConfiguredPrivateOrigins(config: unknown): string[] {
+  const values: string[] = []
+  collectStringValues(config, 0, values)
+
+  const origins = new Set<string>()
+  for (const value of values) {
+    const url = normalizeProviderUrl(value, { defaultScheme: 'local-http' })
+    if (url && isLocalOrPrivateHost(url.hostname)) {
+      origins.add(url.origin)
+    }
+  }
+
+  return [...origins]
+}
+
 export function normalizeDeepLXEndpointUrl(value: unknown): string {
   const url = normalizeProviderUrl(value, { defaultScheme: 'local-http' })
   if (!url) {

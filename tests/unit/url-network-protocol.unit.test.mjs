@@ -14,6 +14,7 @@ import {
   resolveRendererFile,
 } from '../../src/main/modules/rendererProtocol.ts'
 import {
+  collectConfiguredPrivateOrigins,
   DEFAULT_GOOGLE_TRANSLATE_URL,
   DEFAULT_LINGVA_URL,
   DEFAULT_OLLAMA_URL,
@@ -161,6 +162,26 @@ test('provider URL normalization rejects non-HTTP protocols and preserves endpoi
     'http://127.0.0.1:1188/translate',
   )
   assert.equal(normalizeProviderUrl('localhost:3000/api/audio')?.origin, 'http://localhost:3000')
+})
+
+test('configured private origins are collected from free-form plugin settings', () => {
+  assert.deepEqual(
+    collectConfiguredPrivateOrigins({
+      requestPath: '192.168.1.30:8989',
+      token: 'secret-value',
+      instanceName: 'My MTranServer',
+      nested: { endpoint: 'http://[::1]:5000/api' },
+      list: ['localhost:1234', 'https://example.com/api'],
+    }).sort(),
+    ['http://192.168.1.30:8989', 'http://[::1]:5000', 'http://localhost:1234'],
+  )
+
+  assert.deepEqual(collectConfiguredPrivateOrigins(undefined), [])
+  assert.deepEqual(collectConfiguredPrivateOrigins('http://10.0.0.5:8080'), [
+    'http://10.0.0.5:8080',
+  ])
+  assert.deepEqual(collectConfiguredPrivateOrigins({ url: 'not a url' }), [])
+  assert.deepEqual(collectConfiguredPrivateOrigins({ url: 'file:///tmp/socket' }), [])
 })
 
 test('proxy host normalization accepts plain hosts and pasted HTTP proxy URLs', () => {

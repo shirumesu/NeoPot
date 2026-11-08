@@ -138,7 +138,16 @@ test('renderer HTTP bridge blocks local-network abuse and disables redirects', (
   assert.match(http.text, /normalizeGoogleTranslateBaseUrl/)
   assert.match(http.text, /normalizeDeepLXEndpointUrl/)
   assert.match(http.text, /getServiceName/)
-  assert.match(http.text, /ServiceSourceType\.BUILDIN/)
+  assert.match(http.text, /ServiceSourceType\.PLUGIN/)
+  assert.match(functionText(http, 'addPluginConfiguredOrigins'), /collectConfiguredPrivateOrigins/)
+  assert.match(
+    functionText(http, 'pluginOptionsConfigKey'),
+    /plugin_options:\$\{serviceType\}:\$\{serviceName\}/,
+  )
+  assert.match(
+    functionText(http, 'configuredProviderOrigins'),
+    /getServiceSouceType\(serviceInstanceKey\) === ServiceSourceType\.PLUGIN[\s\S]*addPluginConfiguredOrigins/,
+  )
   assert.doesNotMatch(functionText(http, 'configuredProviderOrigins'), /split\('@'\)/)
   assert.match(functionText(http, 'configuredProviderOrigins'), /normalizeOllamaBaseUrl/)
   assert.match(

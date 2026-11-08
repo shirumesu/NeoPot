@@ -3,6 +3,7 @@ import type { HttpRequest, HttpRequestBody, HttpResponse } from '../../shared/ty
 import { getDeepLXCustomUrl, normalizeDeepLServiceType } from '../../shared/deeplConfig'
 import { isLocalOrPrivateHost } from '../../shared/networkAddress'
 import {
+  collectConfiguredPrivateOrigins,
   DEFAULT_GOOGLE_TRANSLATE_URL,
   DEFAULT_LINGVA_URL,
   normalizeDeepLXEndpointUrl,
@@ -83,13 +84,37 @@ function readServiceInstanceList(serviceListKey: string): string[] {
   return [...new Set(configuredList.filter((value): value is string => typeof value === 'string'))]
 }
 
+function pluginOptionsConfigKey(serviceType: string, serviceName: string): string {
+  return `plugin_options:${serviceType}:${serviceName}`
+}
+
+function addPluginConfiguredOrigins(
+  origins: Set<string>,
+  serviceInstanceKey: string,
+  serviceType: string,
+): void {
+  const serviceName = getServiceName(serviceInstanceKey)
+  const configKeys = [serviceInstanceKey, pluginOptionsConfigKey(serviceType, serviceName)]
+
+  for (const configKey of configKeys) {
+    for (const origin of collectConfiguredPrivateOrigins(getConfig(configKey))) {
+      origins.add(origin)
+    }
+  }
+}
+
 function configuredProviderOrigins(): Set<string> {
   const origins = new Set<string>()
   for (const serviceListKey of Object.keys(defaultServiceInstanceLists)) {
     const serviceList = readServiceInstanceList(serviceListKey)
+    const serviceType = serviceListKey.replace(/_service_list$/u, '')
 
     for (const serviceInstanceKey of serviceList) {
-      if (getServiceSouceType(serviceInstanceKey) !== ServiceSourceType.BUILDIN) {
+      if (getServiceSouceType(serviceInstanceKey) === ServiceSourceType.PLUGIN) {
+        // Plugin services own free-form configuration, so their user-configured
+        // local/private endpoints have to be registered as well. Without this,
+        // every self-hosted plugin endpoint is rejected by the public-only rule.
+        addPluginConfiguredOrigins(origins, serviceInstanceKey, serviceType)
         continue
       }
 
