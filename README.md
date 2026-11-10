@@ -8,6 +8,9 @@
   面向 Windows 和 Linux 的划词翻译、输入翻译、截图 OCR 与截图翻译工具。
 </p>
 
+> [!NOTE]
+> 由于我最近几乎完全没用了，也在构思一个更新的翻译方式，因此本 repo 可能暂不维护了
+
 <p align="center">
   <a href="README.en.md">English</a>
   |
